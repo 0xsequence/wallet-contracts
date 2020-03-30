@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.6.4;
 
 
 contract Wallet {
@@ -9,7 +9,7 @@ contract Wallet {
         fallbackModule = _fallbackModule;
     }
 
-    function() external payable {
+    fallback() external {
         address target = modules[msg.sig];
         if (target == address(0)) target = fallbackModule;
 

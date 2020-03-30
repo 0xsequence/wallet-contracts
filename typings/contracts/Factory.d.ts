@@ -13,7 +13,11 @@ import {
 interface FactoryInterface extends Interface {
   functions: {
     deploy: TypedFunctionDescription<{
-      encode([_code, _salt]: [Arrayish, Arrayish]): string;
+      encode([_mainModule, _salt]: [string, Arrayish]): string;
+    }>;
+
+    addressOf: TypedFunctionDescription<{
+      encode([_mainModule, _salt]: [string, Arrayish]): string;
     }>;
   };
 
@@ -35,21 +39,27 @@ export class Factory extends Contract {
 
   functions: {
     deploy(
-      _code: Arrayish,
+      _mainModule: string,
       _salt: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    addressOf(_mainModule: string, _salt: Arrayish): Promise<string>;
   };
 
   deploy(
-    _code: Arrayish,
+    _mainModule: string,
     _salt: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  addressOf(_mainModule: string, _salt: Arrayish): Promise<string>;
+
   filters: {};
 
   estimate: {
-    deploy(_code: Arrayish, _salt: Arrayish): Promise<BigNumber>;
+    deploy(_mainModule: string, _salt: Arrayish): Promise<BigNumber>;
+
+    addressOf(_mainModule: string, _salt: Arrayish): Promise<BigNumber>;
   };
 }
