@@ -12,6 +12,12 @@ import {
 
 interface MainModuleInterface extends Interface {
   functions: {
+    FACTORY: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
+
     isValidSignature: TypedFunctionDescription<{
       encode([_signerAddress, _hash, _data, _signature]: [
         string,
@@ -21,6 +27,8 @@ interface MainModuleInterface extends Interface {
       ]): string;
     }>;
 
+    modules: TypedFunctionDescription<{ encode([]: [string]): string }>;
+
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
 
     recoverSigner: TypedFunctionDescription<{
@@ -28,25 +36,25 @@ interface MainModuleInterface extends Interface {
     }>;
 
     execute: TypedFunctionDescription<{
-      encode([_tx, _signature]: [
+      encode([_txs, _signature]: [
         {
           action: BigNumberish;
           target: string;
           value: BigNumberish;
           data: Arrayish;
-        },
+        }[],
         Arrayish
       ]): string;
     }>;
 
     executeWithFee: TypedFunctionDescription<{
-      encode([_tx, _gasPaymentTx, _signature]: [
+      encode([_txs, _gasPaymentTx, _signature]: [
         {
           action: BigNumberish;
           target: string;
           value: BigNumberish;
           data: Arrayish;
-        },
+        }[],
         {
           action: BigNumberish;
           target: string;
@@ -79,6 +87,12 @@ export class MainModule extends Contract {
   interface: MainModuleInterface;
 
   functions: {
+    FACTORY(): Promise<string>;
+
+    INIT_CODE_HASH(): Promise<string>;
+
+    hooks(arg0: Arrayish): Promise<string>;
+
     isValidSignature(
       _signerAddress: string,
       _hash: Arrayish,
@@ -86,28 +100,30 @@ export class MainModule extends Contract {
       _signature: Arrayish
     ): Promise<boolean>;
 
+    modules(arg0: string): Promise<boolean>;
+
     nonce(): Promise<BigNumber>;
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
     execute(
-      _tx: {
+      _txs: {
         action: BigNumberish;
         target: string;
         value: BigNumberish;
         data: Arrayish;
-      },
+      }[],
       _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
     executeWithFee(
-      _tx: {
+      _txs: {
         action: BigNumberish;
         target: string;
         value: BigNumberish;
         data: Arrayish;
-      },
+      }[],
       _gasPaymentTx: {
         action: BigNumberish;
         target: string;
@@ -119,6 +135,12 @@ export class MainModule extends Contract {
     ): Promise<ContractTransaction>;
   };
 
+  FACTORY(): Promise<string>;
+
+  INIT_CODE_HASH(): Promise<string>;
+
+  hooks(arg0: Arrayish): Promise<string>;
+
   isValidSignature(
     _signerAddress: string,
     _hash: Arrayish,
@@ -126,28 +148,30 @@ export class MainModule extends Contract {
     _signature: Arrayish
   ): Promise<boolean>;
 
+  modules(arg0: string): Promise<boolean>;
+
   nonce(): Promise<BigNumber>;
 
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
   execute(
-    _tx: {
+    _txs: {
       action: BigNumberish;
       target: string;
       value: BigNumberish;
       data: Arrayish;
-    },
+    }[],
     _signature: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
   executeWithFee(
-    _tx: {
+    _txs: {
       action: BigNumberish;
       target: string;
       value: BigNumberish;
       data: Arrayish;
-    },
+    }[],
     _gasPaymentTx: {
       action: BigNumberish;
       target: string;
@@ -163,6 +187,12 @@ export class MainModule extends Contract {
   };
 
   estimate: {
+    FACTORY(): Promise<BigNumber>;
+
+    INIT_CODE_HASH(): Promise<BigNumber>;
+
+    hooks(arg0: Arrayish): Promise<BigNumber>;
+
     isValidSignature(
       _signerAddress: string,
       _hash: Arrayish,
@@ -170,27 +200,29 @@ export class MainModule extends Contract {
       _signature: Arrayish
     ): Promise<BigNumber>;
 
+    modules(arg0: string): Promise<BigNumber>;
+
     nonce(): Promise<BigNumber>;
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
     execute(
-      _tx: {
+      _txs: {
         action: BigNumberish;
         target: string;
         value: BigNumberish;
         data: Arrayish;
-      },
+      }[],
       _signature: Arrayish
     ): Promise<BigNumber>;
 
     executeWithFee(
-      _tx: {
+      _txs: {
         action: BigNumberish;
         target: string;
         value: BigNumberish;
         data: Arrayish;
-      },
+      }[],
       _gasPaymentTx: {
         action: BigNumberish;
         target: string;

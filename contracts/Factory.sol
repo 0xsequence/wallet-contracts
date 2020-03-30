@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 pragma solidity ^0.6.4;
-=======
-pragma solidity ^0.6.2;
->>>>>>> 5ad7041... Base module + cleanup
-
 import "./Wallet.sol";
 
 

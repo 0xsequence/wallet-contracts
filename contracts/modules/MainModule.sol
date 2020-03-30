@@ -1,18 +1,18 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
 import "../utils/SignatureValidator.sol";
 
 /**
  * To do
  *   - Recovery
- *   - nonce logic
- *  - Force module only
- *   - Gas limit logic ? Feels like wrapper contract could choose limit
+ *   - Force module only
  *   - private vs internal
  *   - Public vs External for main module
  */
 contract MainModule is SignatureValidator {
-  mapping(address => bool) internal modules;
+  mapping(bytes4 => address) public hooks;
+  mapping(address => bool) public modules;
 
   /***********************************|
   |             Constants             |
@@ -25,6 +25,8 @@ contract MainModule is SignatureValidator {
     External,     // External call
     AddModule,    // Adding a module
     RemoveModule, // Removing a module
+    AddHook,      // Adding a hook
+    RemoveHook,   // Removing a hook
     NActionTypes  // Number of valid actions
   }
 
@@ -69,11 +71,8 @@ contract MainModule is SignatureValidator {
    *       (bytes32 r, bytes32 s, uint8 v, uint256 nonce, SignatureType sigType)
    */
   function _signatureValidation(bytes memory _data, bytes memory _signature)
-    private returns (bool)
+    private
   {
-    // Need to check security here, seems to force modules to check signature auth
-    if (msg.sender == address(this)) return true;
-
     // Retrieve current nonce for this wallet
     uint256 current_nonce = nonce; // Lowest valid nonce for signer
     uint256 signed_nonce = uint256(_signature.readBytes32(65));  // Nonce passed in the signature object
@@ -95,15 +94,6 @@ contract MainModule is SignatureValidator {
     // Verifier if wallet was created for signer
     address candidate = address(uint256(keccak256(abi.encodePacked(byte(0xff), FACTORY, bytes32(uint256(signer)), INIT_CODE_HASH))));
     require(candidate == address(this), "MainModule#_signatureValidation: INVALID_SIGNATURE");
-    return true;
-  }
-
-  /**
-   * @notice Verify if contract target is a registered module
-   * @param _target Contract to call
-   */
-  function _verifyTargetIsModule(address _target) internal {
-    require(modules[_target], "MainModul:onlyModule# TARGET_IS_NOT_APPROVED_MODULE");
   }
 
 
@@ -113,34 +103,38 @@ contract MainModule is SignatureValidator {
 
   /**
    * @notice Allow wallet owner to execute an action
-   * @param _tx        Transaction to process
+   * @param _txs       Transactions to process
    * @param _signature Encoded signature
    */
-  function execute(Transaction memory _tx, bytes memory _signature)
+  function execute(Transaction[] memory _txs, bytes memory _signature)
     public
   {
     // Check if signature is valid and update nonce
-    _signatureValidation(abi.encode(_tx), _signature);
+    _signatureValidation(abi.encode(_txs), _signature);
 
-    // Execute transaction
-    _actionExecution(_tx);
+    for (uint256 i = 0; i < _txs.length; i++) {
+      // Execute every transaction
+      _actionExecution(_txs[i]);
+    }
   }
 
   /**
    * @notice Allow wallet owner to execute an action
    * @dev Relayer *needs* to verify if _gasPaymentTx is sufficient
-   * @param _tx           Transaction to process
+   * @param _txs          Transactions to process
    * @param _gasPaymentTx Transaction that will be executed to reimburse gas
    * @param _signature    Encoded signature
    */
-  function executeWithFee(Transaction memory _tx, Transaction memory _gasPaymentTx, bytes memory _signature)
+  function executeWithFee(Transaction[] memory _txs, Transaction memory _gasPaymentTx, bytes memory _signature)
     public
   {
     // Check if signature is valid and update nonce
-    _signatureValidation(abi.encode(_tx, _gasPaymentTx), _signature);
+    _signatureValidation(abi.encode(_txs, _gasPaymentTx), _signature);
 
-    // Execute transaction
-    _actionExecution(_tx);
+    for (uint256 i = 0; i < _txs.length; i++) {
+      // Execute every transaction
+      _actionExecution(_txs[i]);
+    }
 
     // Execute fee payment transaction
     _actionExecution(_gasPaymentTx);
@@ -153,30 +147,38 @@ contract MainModule is SignatureValidator {
   function _actionExecution(Transaction memory _tx)
     internal
   {
+    // Performs an external call
     if (_tx.action == Action.External) {
-      // Performs an external call
       // solium-disable-next-line security/no-call-value
       (bool success, bytes memory result) = _tx.target.call.value(_tx.value)(_tx.data);
       require(success, string(result));
 
+    // Delegates a call to a provided implementation
     } else if (_tx.action == Action.Delegate) {
-      // Verify if module is enabled
-      _verifyTargetIsModule(_tx.target);
-
-      // Delegates a call to a provided implementation
       (bool success, bytes memory result) = _tx.target.delegatecall(_tx.data);
       require(success, string(result));
 
+    // Adds a new module to the wallet
     } else if (_tx.action == Action.AddModule) {
-      // Adds a new module to the wallet, reverts if selector is being used
-      require(modules[_tx.target], "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
+      require(!modules[_tx.target], "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
       modules[_tx.target] = true;
 
+    // Adds a new module to the wallet
     } else if (_tx.action == Action.RemoveModule) {
-      // Adds a new module to the wallet, reverts if selector is being used
       require(modules[_tx.target], "MainModule#_actionExecution: MODULE_NOT_REGISTERED");
       modules[_tx.target] = false;
 
+    // Adds a new hook to the wallet
+    } else if (_tx.action == Action.AddHook) {
+      bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
+      require(hooks[hook_signature] == address(0x0), "MainModule#_actionExecution: HOOK_ALREADY_REGISTERED");
+      hooks[hook_signature] = _tx.target;
+
+    // Remove a hook from the wallet
+    } else if (_tx.action == Action.RemoveHook) {
+      bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
+      require(hooks[hook_signature] != address(0x0), "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
+      hooks[hook_signature] = _tx.target;
 
     } else {
       revert("MainModule#_actionExecution: INVALID_ACTION");
