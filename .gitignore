@@ -1,2 +1,7 @@
 build
 typings/contracts/*Factory.ts
+
+.vscode/
+.vs_code/
+
+node_modules/
