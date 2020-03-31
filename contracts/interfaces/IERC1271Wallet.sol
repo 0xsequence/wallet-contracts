@@ -11,7 +11,6 @@ interface  IERC1271Wallet {
    * @param _data       Arbitrary length data signed on the behalf of address(this)
    * @param _signature  Signature byte array associated with _data
    * @return magicValue Magic value 0x20c13b0b if the signature is valid and 0x0 otherwise
-   *
    */
   function isValidSignature(
     bytes calldata _data,

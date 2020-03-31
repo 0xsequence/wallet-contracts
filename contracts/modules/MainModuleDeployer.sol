@@ -4,47 +4,49 @@ import "./MainModule.sol";
 import "../Wallet.sol";
 
 contract MainModuleDeployer {
-    event Deployed(address _module, bytes32 _initCodeHash);
+  event Deployed(address _module, bytes32 _initCodeHash);
 
-    function deploy(address _factory) external {
-        // Calculate address of next deployed contract - keccak256(rlp([sender, nonce]))[12:]
-        address dest = address(uint256(keccak256(abi.encodePacked(byte(0xd6), byte(0x94), address(this), byte(0x01)))));
+  function deploy(address _factory) external {
+    address module;
 
-        // Build init code hash of the deployed wallets using that module
-        bytes32 initCodeHash = keccak256(abi.encodePacked(type(Wallet).creationCode, uint256(dest)));
+    // Calculate address of next deployed contract - keccak256(rlp([sender, nonce]))[12:]
+    address dest = address(uint256(keccak256(abi.encodePacked(byte(0xd6), byte(0x94), address(this), byte(0x01)))));
 
-        // Define placeholders
-        bytes32 initCodeHashPlaceholder = keccak256("placeholder-init-code-hash");
-        address factoryPlaceholder = address(uint256(keccak256("placeholder-factory")));
+    // Build init code hash of the deployed wallets using that module
+    bytes32 initCodeHash = keccak256(abi.encodePacked(type(Wallet).creationCode, uint256(dest)));
 
-        // Load MainModule init code
-        bytes memory code = type(MainModule).creationCode;
+    // Define placeholders
+    bytes32 initCodeHashPlaceholder = keccak256("placeholder-init-code-hash");
+    address factoryPlaceholder = address(uint256(keccak256("placeholder-factory")));
 
-        // Deploy `MainModule.sol` replacing placeholders by their final values
-        address module;
-        assembly {
-            let poi := add(code, 0x20)
-            let end := add(poi, add(mload(code), 0x0c))
+    // Load MainModule init code
+    bytes memory code = type(MainModule).creationCode;
 
-            factoryPlaceholder := shr(0x60, shl(0x60, factoryPlaceholder))
+    // Deploy `MainModule.sol` replacing placeholders by their final values
+    // solium-disable-next-line security/no-inline-assembly
+    assembly {
+      let poi := add(code, 0x20)
+      let end := add(poi, add(mload(code), 0x0c))
 
-            for { } lt(poi, end) { poi := add(poi, 0x01) } {
-                let word := mload(poi)
+      factoryPlaceholder := shr(0x60, shl(0x60, factoryPlaceholder))
 
-                if eq(word, initCodeHashPlaceholder) {
-                    mstore(poi, initCodeHash)
-                }
+      for { } lt(poi, end) { poi := add(poi, 0x01) } {
+        let word := mload(poi)
 
-                if eq(shr(0x60, word), factoryPlaceholder) {
-                    mstore(poi, or(shl(0x60, _factory), shr(0xa0, shl(0xa0, word))))
-                }
-            }
-
-            module := create(0, add(code, 0x20), mload(code))
+        if eq(word, initCodeHashPlaceholder) {
+          mstore(poi, initCodeHash)
         }
 
-        emit Deployed(module, initCodeHash);
+        if eq(shr(0x60, word), factoryPlaceholder) {
+          mstore(poi, or(shl(0x60, _factory), shr(0xa0, shl(0xa0, word))))
+        }
+      }
 
-        selfdestruct(msg.sender);
+      module := create(0, add(code, 0x20), mload(code))
     }
+
+    emit Deployed(module, initCodeHash);
+
+    selfdestruct(msg.sender);
+  }
 }
