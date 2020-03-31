@@ -13,12 +13,16 @@ import {
 interface SignatureValidatorInterface extends Interface {
   functions: {
     isValidSignature: TypedFunctionDescription<{
-      encode([_signerAddress, _hash, _data, _sig]: [
+      encode([_signerAddress, _hash, _data, _signature]: [
         string,
         Arrayish,
         Arrayish,
         Arrayish
       ]): string;
+    }>;
+
+    recoverSigner: TypedFunctionDescription<{
+      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
   };
 
@@ -46,16 +50,20 @@ export class SignatureValidator extends Contract {
       _signerAddress: string,
       _hash: Arrayish,
       _data: Arrayish,
-      _sig: Arrayish
+      _signature: Arrayish
     ): Promise<boolean>;
+
+    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
   };
 
   isValidSignature(
     _signerAddress: string,
     _hash: Arrayish,
     _data: Arrayish,
-    _sig: Arrayish
+    _signature: Arrayish
   ): Promise<boolean>;
+
+  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
   filters: {};
 
@@ -64,7 +72,9 @@ export class SignatureValidator extends Contract {
       _signerAddress: string,
       _hash: Arrayish,
       _data: Arrayish,
-      _sig: Arrayish
+      _signature: Arrayish
     ): Promise<BigNumber>;
+
+    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
   };
 }
