@@ -13,7 +13,7 @@ contract MainModuleDeployer {
     address dest = address(uint256(keccak256(abi.encodePacked(byte(0xd6), byte(0x94), address(this), byte(0x01)))));
 
     // Build init code hash of the deployed wallets using that module
-    bytes32 initCodeHash = keccak256(abi.encodePacked(type(Wallet).creationCode, uint256(dest)));
+    bytes32 initCodeHash = keccak256(abi.encodePacked(Wallet.creationCode, uint256(dest)));
 
     // Define placeholders
     bytes32 initCodeHashPlaceholder = keccak256("placeholder-init-code-hash");
