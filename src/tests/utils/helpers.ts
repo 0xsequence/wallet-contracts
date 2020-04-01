@@ -131,5 +131,6 @@ export const MetaAction = {
   addModule: 3,
   removeModule: 4,
   addHook: 5,
-  removeHook: 6
+  removeHook: 6,
+  updateImp: 7
 }
