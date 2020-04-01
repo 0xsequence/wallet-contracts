@@ -36,7 +36,6 @@ contract MainModule is SignatureValidator {
   // keccak256("placeholder-factory")[12:]
   address public constant FACTORY = address(0x52AA901CAD8AFf3Cf157715c19632F79D9B2d049);
 
-
   /***********************************|
   |             Variables             |
   |__________________________________*/
@@ -95,7 +94,6 @@ contract MainModule is SignatureValidator {
     address candidate = address(uint256(keccak256(abi.encodePacked(byte(0xff), FACTORY, bytes32(uint256(signer)), INIT_CODE_HASH))));
     require(candidate == address(this), "MainModule#_signatureValidation: INVALID_SIGNATURE");
   }
-
 
   /***********************************|
   |      Tx Execution Functions       |
