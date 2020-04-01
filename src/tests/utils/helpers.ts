@@ -1,4 +1,5 @@
 import * as ethers from 'ethers'
+import { BigNumber } from 'ethers/utils'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 // createTestWallet creates a new wallet
@@ -17,7 +18,7 @@ export const createTestWallet = (web3: any, addressIndex: number = 0) => {
 // Check if tx was Reverted with specified message
 export function RevertError(errorMessage?: string) {
   let prefix = 'VM Exception while processing transaction: revert'
-  return errorMessage ? RegExp(`^${prefix + ' ' + errorMessage}$`) : RegExp(`^${prefix}$`)
+  return errorMessage ? `${prefix + ' ' + errorMessage}` : prefix
 }
 
 export interface JSONRPCRequest {
@@ -98,4 +99,37 @@ export class Web3DebugProvider extends ethers.providers.JsonRpcProvider {
     return this.reqLog[this.reqLog.length-reverseIndex-1]
   }
 
+}
+
+// Take a message, hash it and sign it with ETH_SIGN SignatureType
+export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Array) {
+  let hash = ethers.utils.keccak256(message)
+  let hashArray = ethers.utils.arrayify(hash)
+  let ethsigNoType = await wallet.signMessage(hashArray)
+  return ethsigNoType
+}
+
+export const MetaTransactionsType = `tuple(
+  uint256 action,
+  address target,
+  uint256 value,
+  bytes data
+)[]`
+
+export function encodeMetaTransactionsData(wallet: string, txs: Object[], nonce: BigNumber): string {
+  const transactions = ethers.utils.defaultAbiCoder.encode([MetaTransactionsType], [txs])
+  return ethers.utils.defaultAbiCoder.encode(
+    ['address', 'uint256', 'bytes'],
+    [wallet, nonce, transactions]
+  )
+}
+
+export const MetaAction = {
+  illegal: 0,
+  delegate: 1,
+  external: 2,
+  addModule: 3,
+  removeModule: 4,
+  addHook: 5,
+  removeHook: 6
 }
