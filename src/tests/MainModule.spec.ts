@@ -21,56 +21,56 @@ contract('MainModule', (accounts: string[]) => {
   })
 
   describe('Authentication', () => {
-      it('Should accept initial owner signature', async () => {
-        const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-        const salt = web3.utils.padLeft(owner.address, 64)
-        await factory.deploy(module.address, salt)
-        const wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+    it('Should accept initial owner signature', async () => {
+      const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt = web3.utils.padLeft(owner.address, 64)
+      await factory.deploy(module.address, salt)
+      const wallet = await MainModule.at(await factory.addressOf(module.address, salt))
 
-        const nonce = ethers.constants.One
+      const nonce = ethers.constants.One
 
-        const transaction = {
-          action: MetaAction.external,
-          target: ethers.constants.AddressZero,
-          value: ethers.constants.Zero,
-          data: []
-        }
+      const transaction = {
+        action: MetaAction.external,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }
 
-        const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
 
-        const signature = ethers.utils.solidityPack(
-          ['bytes', 'uint256', 'uint8'],
-          [await ethSign(owner, transactionsData), nonce, '2']
-        )
+      const signature = ethers.utils.solidityPack(
+        ['bytes', 'uint256', 'uint8'],
+        [await ethSign(owner, transactionsData), nonce, '2']
+      )
 
-        await wallet.execute([transaction], signature)
-      })
-      it('Should reject non-owner signature', async () => {
-        const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-        const salt = web3.utils.padLeft(owner.address, 64)
-        await factory.deploy(module.address, salt)
-        const wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+      await wallet.execute([transaction], signature)
+    })
+    it('Should reject non-owner signature', async () => {
+      const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt = web3.utils.padLeft(owner.address, 64)
+      await factory.deploy(module.address, salt)
+      const wallet = await MainModule.at(await factory.addressOf(module.address, salt))
 
-        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
-        const nonce = ethers.constants.One
+      const nonce = ethers.constants.One
 
-        const transaction = {
-          action: MetaAction.external,
-          target: ethers.constants.AddressZero,
-          value: ethers.constants.Zero,
-          data: []
-        }
+      const transaction = {
+        action: MetaAction.external,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }
 
-        const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
 
-        const signature = ethers.utils.solidityPack(
-          ['bytes', 'uint256', 'uint8'],
-          [await ethSign(impostor, transactionsData), nonce, '2']
-        )
+      const signature = ethers.utils.solidityPack(
+        ['bytes', 'uint256', 'uint8'],
+        [await ethSign(impostor, transactionsData), nonce, '2']
+      )
 
-        const tx = wallet.execute([transaction], signature)
-        await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
-      })
+      const tx = wallet.execute([transaction], signature)
+      await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
+    })
   })
 })
