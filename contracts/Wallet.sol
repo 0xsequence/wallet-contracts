@@ -2,7 +2,7 @@ pragma solidity ^0.6.4;
 
 /**
     Minimal upgradeable proxy implementation, delegates all calls to the address
-    defined by the storage slot 0.
+    defined by the storage slot matching the wallet address.
 
     Inspired by EIP-1167 Implementation (https://eips.ethereum.org/EIPS/eip-1167)
 
@@ -17,7 +17,7 @@ pragma solidity ^0.6.4;
         0x06    0x3d         0x3d      RETURNDATASIZE    0 0 0
         0x07    0x36         0x36      CALLDATASIZE      cds 0 0 0
         0x08    0x3d         0x3d      RETURNDATASIZE    0 cds 0 0 0
-        0x09    0x3d         0x3d      RETURNDATASIZE    0 0 cds 0 0 0
+        0x09    0x30         0x30      ADDRESS           addr 0 cds 0 0 0
         0x0A    0x54         0x54      SLOAD             imp 0 cds 0 0 0
         0x0B    0x5a         0x5a      GAS               gas imp 0 cds 0 0 0
         0x0C    0xf4         0xf4      DELEGATECALL      suc 0
@@ -34,7 +34,7 @@ pragma solidity ^0.6.4;
     \-> 0x18    0x5b         0x5b      JUMPDEST          0 rds
         0x19    0xf3         0xf3      RETURN
 
-    flat deployed code: 0x363d3d373d3d3d363d3d545af43d82803e903d91601857fd5bf3
+    flat deployed code: 0x363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3
 
     deploy function:
 
@@ -45,14 +45,14 @@ pragma solidity ^0.6.4;
         0x06    0x60 0x1a    0x601a    PUSH1             0x1a
         0x08    0x80         0x80      DUP1              0x1a 0x1a
         0x09    0x51         0x51      MLOAD             imp 0x1a
-        0x0A    0x3d         0x3d      RETURNDATASIZE    0 imp 0x1a
+        0x0A    0x30         0x30      ADDRESS           addr imp 0x1a
         0x0B    0x55         0x55      SSTORE            0x1a
         0x0C    0x3d         0x3d      RETURNDATASIZE    0 0x1a
         0x0D    0xf3         0xf3      RETURN
         [...deployed code]
 
-    flat deploy function: 0x603a600e3d39601a80513d553df3363d3d373d3d3d363d3d545af43d82803e903d91601857fd5bf3
+    flat deploy function: 0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3
 */
 library Wallet {
-  bytes internal constant creationCode = hex"603a600e3d39601a80513d553df3363d3d373d3d3d363d3d545af43d82803e903d91601857fd5bf3";
+  bytes internal constant creationCode = hex"603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3";
 }
