@@ -86,8 +86,8 @@ contract MainModule is Implementation, SignatureValidator {
     );
 
     // Update signature nonce
-    nonce = current_nonce + 1;
-    emit NonceChange(current_nonce + 1);
+    nonce = signed_nonce + 1;
+    emit NonceChange(signed_nonce + 1);
 
     // Retrieve the signer
     bytes32 tx_hash = keccak256(abi.encode(address(this), signed_nonce, _data));

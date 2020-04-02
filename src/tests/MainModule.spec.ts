@@ -74,6 +74,199 @@ contract('MainModule', (accounts: string[]) => {
       const tx = wallet.execute([transaction], signature)
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
     })
+    describe('Nonce', () => {
+      let wallet
+      let owner
+      beforeEach(async () => {
+        owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const salt = web3.utils.padLeft(owner.address, 64)
+        await factory.deploy(module.address, salt)
+        wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+      })
+      it('Should work with zero as initial nonce', async () => {
+        const nonce = ethers.constants.Zero
+
+        const transaction = {
+          action: MetaAction.external,
+          target: ethers.constants.AddressZero,
+          value: ethers.constants.Zero,
+          data: []
+        }
+
+        const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+        const signature = ethers.utils.solidityPack(
+          ['bytes', 'uint256', 'uint8'],
+          [await ethSign(owner, transactionsData), nonce, '2']
+        )
+
+        await wallet.execute([transaction], signature)
+        expect(await wallet.nonce()).to.eq.BN(1)
+      })
+      it('Should emit NonceChange event', async () => {
+        const nonce = ethers.constants.Zero
+
+        const transaction = {
+          action: MetaAction.external,
+          target: ethers.constants.AddressZero,
+          value: ethers.constants.Zero,
+          data: []
+        }
+
+        const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+        const signature = ethers.utils.solidityPack(
+          ['bytes', 'uint256', 'uint8'],
+          [await ethSign(owner, transactionsData), nonce, '2']
+        )
+
+        const receipt = await wallet.execute([transaction], signature)
+        const ev = receipt.logs.pop()
+        expect(ev.event).to.be.eql('NonceChange')
+        expect(ev.args.newNonce).to.eq.BN(1)
+      })
+      context('After a relayed transaction', () => {
+        beforeEach(async () => {
+          const nonce = ethers.constants.One
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+          const signature = ethers.utils.solidityPack(
+            ['bytes', 'uint256', 'uint8'],
+            [await ethSign(owner, transactionsData), nonce, '2']
+          )
+
+          await wallet.execute([transaction], signature)
+        })
+        it('Should accept next consecutive nonce', async () => {
+          const nonce = ethers.constants.Two
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+          const signature = ethers.utils.solidityPack(
+            ['bytes', 'uint256', 'uint8'],
+            [await ethSign(owner, transactionsData), nonce, '2']
+          )
+
+          await wallet.execute([transaction], signature)
+          expect(await wallet.nonce()).to.eq.BN(3)
+        })
+        it('Should accept next incremental nonce', async () => {
+          const nonce = ethers.utils.bigNumberify(20)
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+          const signature = ethers.utils.solidityPack(
+            ['bytes', 'uint256', 'uint8'],
+            [await ethSign(owner, transactionsData), nonce, '2']
+          )
+
+          await wallet.execute([transaction], signature)
+          expect(await wallet.nonce()).to.eq.BN(21)
+        })
+        it('Should accept maximum incremental nonce', async () => {
+          const nonce = ethers.utils.bigNumberify(101)
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+          const signature = ethers.utils.solidityPack(
+            ['bytes', 'uint256', 'uint8'],
+            [await ethSign(owner, transactionsData), nonce, '2']
+          )
+
+          await wallet.execute([transaction], signature)
+          expect(await wallet.nonce()).to.eq.BN(102)
+        })
+        it('Should fail if nonce did not change', async () => {
+          const nonce = ethers.constants.One
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+          const signature = ethers.utils.solidityPack(
+            ['bytes', 'uint256', 'uint8'],
+            [await ethSign(owner, transactionsData), nonce, '2']
+          )
+
+          const tx = wallet.execute([transaction], signature)
+          await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
+        })
+        it('Should fail if nonce delta is above 100', async () => {
+          const nonce = ethers.utils.bigNumberify(102)
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+          const signature = ethers.utils.solidityPack(
+            ['bytes', 'uint256', 'uint8'],
+            [await ethSign(owner, transactionsData), nonce, '2']
+          )
+
+          const tx = wallet.execute([transaction], signature)
+          await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
+        })
+        it('Should fail if nonce decreases', async () => {
+          const nonce = ethers.constants.Zero
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+          const signature = ethers.utils.solidityPack(
+            ['bytes', 'uint256', 'uint8'],
+            [await ethSign(owner, transactionsData), nonce, '2']
+          )
+
+          const tx = wallet.execute([transaction], signature)
+          await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
+        })
+      })
+    })
   })
   describe('Upgradeability', () => {
     let owner
