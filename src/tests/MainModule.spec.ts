@@ -145,5 +145,59 @@ contract('MainModule', (accounts: string[]) => {
     it('Should receive ETH', async () => {
       await wallet.send(1, { from: accounts[0] })
     })
+    it('Should transfer ETH', async () => {
+      await wallet.send(100, { from: accounts[0] })
+
+      const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+      const nonce = ethers.constants.One
+
+      const transaction = {
+        action: MetaAction.external,
+        target: receiver.address,
+        value: 25,
+        data: []
+      }
+
+      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+      const signature = ethers.utils.solidityPack(
+        ['bytes', 'uint256', 'uint8'],
+        [await ethSign(owner, transactionsData), nonce, '2']
+      )
+
+      await wallet.execute([transaction], signature)
+      expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(25)
+    })
+    it('Should call payable function', async () => {
+      await wallet.send(100, { from: accounts[0] })
+
+      const callReceiver = await CallReceiverMock.new()
+
+      const valA = 63129
+      const valB = web3.utils.randomHex(120)
+      const value = 33
+
+      const nonce = ethers.constants.One
+
+      const transaction = {
+        action: MetaAction.external,
+        target: callReceiver.address,
+        value: value,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+
+      const signature = ethers.utils.solidityPack(
+        ['bytes', 'uint256', 'uint8'],
+        [await ethSign(owner, transactionsData), nonce, '2']
+      )
+
+      await wallet.execute([transaction], signature)
+      expect(await web3.eth.getBalance(callReceiver.address)).to.eq.BN(value)
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
+    })
   })
 })
