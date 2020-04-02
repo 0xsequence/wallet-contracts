@@ -23,12 +23,12 @@ contract('Factory', (accounts: string[]) => {
     it('Should predict wallet address', async () => {
       const predict = await factory.addressOf(module.address, accounts[0])
       await factory.deploy(module.address, accounts[0])
-      expect(await web3.eth.getCode(predict)).to.not.eq("0x")
+      expect(await web3.eth.getCode(predict)).to.not.equal("0x")
     })
     it('Should initialize with main module', async () => {
       await factory.deploy(module.address, accounts[0])
       const wallet = await ModuleMock.at(await factory.addressOf(module.address, accounts[0]))
-      expect((await wallet.ping()).logs[0].event).to.eq("Pong")
+      expect((await wallet.ping()).logs[0].event).to.equal("Pong")
     })
   })
 })

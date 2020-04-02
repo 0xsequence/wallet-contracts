@@ -1404,6 +1404,11 @@ bluebird@^3.4.7, bluebird@^3.5.0:
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
   integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
 
+bn-chai@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/bn-chai/-/bn-chai-1.0.1.tgz#5d6e9654162602a527b08a1546e60cfb44213725"
+  integrity sha512-7rJXt21DwYiLLpvzLaACixBBoUGkRV1iuFD3wElEhw8Ji9IiY/QsJRtvW+c7ChRgEOyLQkGaSGFUUqBKm21SNA==
+
 bn.js@4.11.6:
   version "4.11.6"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.6.tgz#53344adb14617a13f6e8dd2ce28905d1c0ba3215"

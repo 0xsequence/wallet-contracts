@@ -18,12 +18,12 @@ contract('MainModuleDeployer', (accounts: string[]) => {
   it('Should deploy MainModule with provided factory', async () => {
     const tx = await (await MainModuleDeployer.new()).deploy(factory.address)
     const module = await MainModule.at(tx.logs[0].args._module)
-    expect(await module.FACTORY()).to.eq(factory.address)
+    expect(await module.FACTORY()).to.equal(factory.address)
   })
 
   it('Should deploy MainModule with derived initCodeHash', async () => {
     const tx = await (await MainModuleDeployer.new()).deploy(factory.address)
     const module = await MainModule.at(tx.logs[0].args._module)
-    expect(await module.INIT_CODE_HASH()).to.eq(tx.logs[0].args._initCodeHash)
+    expect(await module.INIT_CODE_HASH()).to.equal(tx.logs[0].args._initCodeHash)
   })
 })
