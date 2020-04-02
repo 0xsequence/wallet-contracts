@@ -192,4 +192,8 @@ contract MainModule is ModuleStorage, SignatureValidator {
     }
   }
 
+  /**
+   * @notice Allows the wallet to receive ETH
+   */
+  receive() external payable { }
 }
