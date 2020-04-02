@@ -6,6 +6,7 @@ const Factory = artifacts.require('Factory')
 const MainModule = artifacts.require('MainModule')
 const ModuleMock = artifacts.require('ModuleMock')
 const MainModuleDeployer = artifacts.require('MainModuleDeployer')
+const CallReceiverMock = artifacts.require('CallReceiverMock')
 
 const web3 = (global as any).web3
 
@@ -106,7 +107,7 @@ contract('MainModule', (accounts: string[]) => {
       await wallet.execute([transaction], signature)
 
       const mock_wallet = await ModuleMock.at(wallet.address)
-      expect((await mock_wallet.ping()).logs[0].event).to.eq("Pong")
+      expect((await mock_wallet.ping()).logs[0].event).to.equal("Pong")
     })
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
@@ -124,6 +125,63 @@ contract('MainModule', (accounts: string[]) => {
 
       const tx = wallet.execute([transaction], signature)
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_actionExecution: INVALID_IMPLEMENTATION"))
+    })
+  })
+  describe("External calls", () => {
+    let wallet
+    let owner
+    beforeEach(async () => {
+      owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt = web3.utils.padLeft(owner.address, 64)
+      await factory.deploy(module.address, salt)
+      wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+    })
+    it('Should perform call to contract', async () => {
+      const callReceiver = await CallReceiverMock.new()
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const nonce = ethers.constants.One
+
+      const transaction = {
+        action: MetaAction.external,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+      const signature = ethers.utils.solidityPack(
+        ['bytes', 'uint256', 'uint8'],
+        [await ethSign(owner, transactionsData), nonce, '2']
+      )
+
+      await wallet.execute([transaction], signature)
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+    it('Should return error message', async () => {
+      const callReceiver = await CallReceiverMock.new()
+      await callReceiver.setRevertFlag(true)
+
+      const nonce = ethers.constants.One
+
+      const transaction = {
+        action: MetaAction.external,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(0, []).encodeABI()
+      }
+
+      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
+      const signature = ethers.utils.solidityPack(
+        ['bytes', 'uint256', 'uint8'],
+        [await ethSign(owner, transactionsData), nonce, '2']
+      )
+
+      const tx = wallet.execute([transaction], signature)
+      await expect(tx).to.be.rejectedWith(RevertError("CallReceiverMock#testCall: REVERT_FLAG"))
     })
   })
 })
