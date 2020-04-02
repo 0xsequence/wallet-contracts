@@ -18,6 +18,9 @@ contract('MainModule', (accounts: string[]) => {
   let factory
   let module
 
+  let owner
+  let wallet
+
   before(async () => {
     // Deploy wallet factory
     factory = await FactoryArtifact.new() as Factory
@@ -26,13 +29,15 @@ contract('MainModule', (accounts: string[]) => {
     module = await MainModuleArtifact.at(tx.logs[0].args._module) as MainModule
   })
 
+  beforeEach(async () => {
+    owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+    const salt = web3.utils.padLeft(owner.address, 64)
+    await factory.deploy(module.address, salt)
+    wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+  })
+
   describe('Authentication', () => {
     it('Should accept initial owner signature', async () => {
-      const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-      const salt = web3.utils.padLeft(owner.address, 64)
-      await factory.deploy(module.address, salt)
-      const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
-
       const nonce = ethers.constants.One
 
       const transaction = {
@@ -52,11 +57,6 @@ contract('MainModule', (accounts: string[]) => {
       await wallet.execute([transaction], signature)
     })
     it('Should reject non-owner signature', async () => {
-      const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-      const salt = web3.utils.padLeft(owner.address, 64)
-      await factory.deploy(module.address, salt)
-      const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
-
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
       const nonce = ethers.constants.One
@@ -79,14 +79,6 @@ contract('MainModule', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
     })
     describe('Nonce', () => {
-      let wallet
-      let owner
-      beforeEach(async () => {
-        owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-        const salt = web3.utils.padLeft(owner.address, 64)
-        await factory.deploy(module.address, salt)
-        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
-      })
       it('Should work with zero as initial nonce', async () => {
         const nonce = ethers.constants.Zero
 
@@ -231,14 +223,6 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
   describe("External calls", () => {
-    let wallet
-    let owner
-    beforeEach(async () => {
-      owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-      const salt = web3.utils.padLeft(owner.address, 64)
-      await factory.deploy(module.address, salt)
-      wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
-    })
     it('Should perform call to contract', async () => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
 
@@ -290,14 +274,6 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
   describe('Handle ETH', () => {
-    let wallet
-    let owner
-    beforeEach(async () => {
-      owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-      const salt = web3.utils.padLeft(owner.address, 64)
-      await factory.deploy(module.address, salt)
-      wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
-    })
     it('Should receive ETH', async () => {
       await wallet.send(1, { from: accounts[0] })
     })
