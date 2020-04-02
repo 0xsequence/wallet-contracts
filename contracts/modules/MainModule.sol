@@ -149,12 +149,12 @@ contract MainModule is SignatureValidator {
     if (_tx.action == Action.External) {
       // solium-disable-next-line security/no-call-value
       (bool success, bytes memory result) = _tx.target.call.value(_tx.value)(_tx.data);
-      require(success, string(result));
+      if (!success) assembly { revert(add(result, 0x20), mload(result)) }
 
     // Delegates a call to a provided implementation
     } else if (_tx.action == Action.Delegate) {
       (bool success, bytes memory result) = _tx.target.delegatecall(_tx.data);
-      require(success, string(result));
+      if (!success) assembly { revert(add(result, 0x20), mload(result)) }
 
     // Adds a new module to the wallet
     } else if (_tx.action == Action.AddModule) {
