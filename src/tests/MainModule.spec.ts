@@ -133,4 +133,17 @@ contract('MainModule', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith(RevertError("CallReceiverMock#testCall: REVERT_FLAG"))
     })
   })
+  describe('Handle ETH', () => {
+    let wallet
+    let owner
+    beforeEach(async () => {
+      owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt = web3.utils.padLeft(owner.address, 64)
+      await factory.deploy(module.address, salt)
+      wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+    })
+    it('Should receive ETH', async () => {
+      await wallet.send(1, { from: accounts[0] })
+    })
+  })
 })

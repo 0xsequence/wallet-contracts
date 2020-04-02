@@ -183,4 +183,8 @@ contract MainModule is SignatureValidator {
     }
   }
 
+  /**
+   * @notice Allows the wallet to receive ETH
+   */
+  receive() external payable { }
 }
