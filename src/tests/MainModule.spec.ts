@@ -4,6 +4,7 @@ import { expect, ethSign, signMetaTransactions, RevertError, MetaAction } from '
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
+import { ModuleMock } from 'typings/contracts/ModuleMock'
 
 ethers.errors.setLogLevel("error")
 
@@ -11,6 +12,7 @@ const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
 const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
+const ModuleMockArtifact = artifacts.require('ModuleMock')
 
 const web3 = (global as any).web3
 
@@ -80,6 +82,23 @@ contract('MainModule', (accounts: string[]) => {
         await wallet.execute([transaction], signature)
         expect(await wallet.nonce()).to.eq.BN(1)
       })
+      it('Should emit NonceChange event', async () => {
+        const nonce = ethers.constants.Zero
+
+        const transaction = {
+          action: MetaAction.external,
+          target: ethers.constants.AddressZero,
+          value: ethers.constants.Zero,
+          data: []
+        }
+
+        const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
+
+        const receipt = await wallet.execute([transaction], signature)
+        const ev = receipt.logs.pop()
+        expect(ev.event).to.be.eql('NonceChange')
+        expect(ev.args.newNonce).to.eq.BN(1)
+      })
       context('After a relayed transaction', () => {
         beforeEach(async () => {
           const nonce = ethers.constants.One
@@ -124,6 +143,21 @@ contract('MainModule', (accounts: string[]) => {
 
           await wallet.execute([transaction], signature)
           expect(await wallet.nonce()).to.eq.BN(21)
+        })
+        it('Should accept maximum incremental nonce', async () => {
+          const nonce = ethers.utils.bigNumberify(101)
+
+          const transaction = {
+            action: MetaAction.external,
+            target: ethers.constants.AddressZero,
+            value: ethers.constants.Zero,
+            data: []
+          }
+
+          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
+
+          await wallet.execute([transaction], signature)
+          expect(await wallet.nonce()).to.eq.BN(102)
         })
         it('Should fail if nonce did not change', async () => {
           const nonce = ethers.constants.One
@@ -171,6 +205,38 @@ contract('MainModule', (accounts: string[]) => {
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
       })
+    })
+  })
+  describe('Upgradeability', () => {
+    it('Should update implementation', async () => {
+      const newImplementation = await ModuleMockArtifact.new() as ModuleMock
+
+      const transaction = {
+        action: MetaAction.updateImp,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: ethers.utils.defaultAbiCoder.encode(['address'], [newImplementation.address])
+      }
+
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
+
+      await wallet.execute([transaction], signature)
+
+      const mock_wallet = await ModuleMockArtifact.at(wallet.address) as ModuleMock
+      expect((await mock_wallet.ping() as any).logs[0].event).to.equal("Pong")
+    })
+    it('Should fail to set implementation to address 0', async () => {
+      const transaction = {
+        action: MetaAction.updateImp,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
+      }
+
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
+
+      const tx = wallet.execute([transaction], signature)
+      await expect(tx).to.be.rejectedWith(RevertError("MainModule#_actionExecution: INVALID_IMPLEMENTATION"))
     })
   })
   describe("External calls", () => {

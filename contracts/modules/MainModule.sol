@@ -2,6 +2,8 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../utils/SignatureValidator.sol";
+import "./commons/Implementation.sol";
+
 
 /**
  * To do
@@ -10,7 +12,7 @@ import "../utils/SignatureValidator.sol";
  *   - private vs internal
  *   - Public vs External for main module
  */
-contract MainModule is SignatureValidator {
+contract MainModule is Implementation, SignatureValidator {
   mapping(bytes4 => address) public hooks;
   mapping(address => bool) public modules;
 
@@ -27,6 +29,7 @@ contract MainModule is SignatureValidator {
     RemoveModule, // Removing a module
     AddHook,      // Adding a hook
     RemoveHook,   // Removing a hook
+    UpdateImp,    // Replaces the main implementation
     NActionTypes  // Number of valid actions
   }
 
@@ -178,13 +181,23 @@ contract MainModule is SignatureValidator {
       require(hooks[hook_signature] != address(0x0), "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
       hooks[hook_signature] = _tx.target;
 
+    // Update wallet implementation
+    } else if (_tx.action == Action.UpdateImp) {
+      address new_implementation = abi.decode(_tx.data, (address));
+      require(new_implementation != address(0), "MainModule#_actionExecution: INVALID_IMPLEMENTATION");
+      _setImplementation(new_implementation);
+
     } else {
       revert("MainModule#_actionExecution: INVALID_ACTION");
     }
   }
 
+  /* solhint-disable */
+
   /**
    * @notice Allows the wallet to receive ETH
    */
   receive() external payable { }
+
+  /* solhint-enable */
 }
