@@ -1,11 +1,16 @@
 import * as ethers from 'ethers'
 import { expect, ethSign, encodeMetaTransactionsData, RevertError, MetaAction } from './utils';
+
+import { MainModule } from 'typings/contracts/MainModule'
+import { Factory } from 'typings/contracts/Factory'
+import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
+
 ethers.errors.setLogLevel("error")
 
-const Factory = artifacts.require('Factory')
-const MainModule = artifacts.require('MainModule')
-const MainModuleDeployer = artifacts.require('MainModuleDeployer')
-const CallReceiverMock = artifacts.require('CallReceiverMock')
+const FactoryArtifact = artifacts.require('Factory')
+const MainModuleArtifact = artifacts.require('MainModule')
+const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
+const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 
 const web3 = (global as any).web3
 
@@ -15,10 +20,10 @@ contract('MainModule', (accounts: string[]) => {
 
   before(async () => {
     // Deploy wallet factory
-    factory = await Factory.new()
+    factory = await FactoryArtifact.new() as Factory
     // Deploy MainModule
-    const tx = await (await MainModuleDeployer.new()).deploy(factory.address)
-    module = await MainModule.at(tx.logs[0].args._module)
+    const tx = await (await MainModuleDeployerArtifact.new()).deploy(factory.address)
+    module = await MainModuleArtifact.at(tx.logs[0].args._module) as MainModule
   })
 
   describe('Authentication', () => {
@@ -26,7 +31,7 @@ contract('MainModule', (accounts: string[]) => {
       const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt = web3.utils.padLeft(owner.address, 64)
       await factory.deploy(module.address, salt)
-      const wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+      const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
 
       const nonce = ethers.constants.One
 
@@ -50,7 +55,7 @@ contract('MainModule', (accounts: string[]) => {
       const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt = web3.utils.padLeft(owner.address, 64)
       await factory.deploy(module.address, salt)
-      const wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+      const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
 
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
@@ -80,7 +85,7 @@ contract('MainModule', (accounts: string[]) => {
         owner = new ethers.Wallet(ethers.utils.randomBytes(32))
         const salt = web3.utils.padLeft(owner.address, 64)
         await factory.deploy(module.address, salt)
-        wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
       })
       it('Should work with zero as initial nonce', async () => {
         const nonce = ethers.constants.Zero
@@ -232,10 +237,10 @@ contract('MainModule', (accounts: string[]) => {
       owner = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt = web3.utils.padLeft(owner.address, 64)
       await factory.deploy(module.address, salt)
-      wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+      wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
     })
     it('Should perform call to contract', async () => {
-      const callReceiver = await CallReceiverMock.new()
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
 
       const valA = 5423
       const valB = web3.utils.randomHex(120)
@@ -261,7 +266,7 @@ contract('MainModule', (accounts: string[]) => {
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should return error message', async () => {
-      const callReceiver = await CallReceiverMock.new()
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
       await callReceiver.setRevertFlag(true)
 
       const nonce = ethers.constants.One
@@ -291,7 +296,7 @@ contract('MainModule', (accounts: string[]) => {
       owner = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt = web3.utils.padLeft(owner.address, 64)
       await factory.deploy(module.address, salt)
-      wallet = await MainModule.at(await factory.addressOf(module.address, salt))
+      wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
     })
     it('Should receive ETH', async () => {
       await wallet.send(1, { from: accounts[0] })
@@ -323,7 +328,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should call payable function', async () => {
       await wallet.send(100, { from: accounts[0] })
 
-      const callReceiver = await CallReceiverMock.new()
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
 
       const valA = 63129
       const valB = web3.utils.randomHex(120)

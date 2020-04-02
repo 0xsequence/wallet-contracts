@@ -1,9 +1,13 @@
 import * as ethers from 'ethers'
 import { expect } from './utils';
+
+import { ModuleMock } from 'typings/contracts/ModuleMock'
+import { Factory } from 'typings/contracts/Factory'
+
 ethers.errors.setLogLevel("error")
 
-const Factory = artifacts.require('Factory');
-const ModuleMock = artifacts.require('ModuleMock');
+const FactoryArtifact = artifacts.require('Factory');
+const ModuleMockArtifact = artifacts.require('ModuleMock');
 
 const web3 = (global as any).web3
 
@@ -12,8 +16,8 @@ contract('Factory', (accounts: string[]) => {
   let factory
 
   beforeEach(async () => {
-    module        = await ModuleMock.new()
-    factory       = await Factory.new()
+    module        = await ModuleMockArtifact.new() as ModuleMock
+    factory       = await FactoryArtifact.new() as Factory
   })
 
   describe('Deploy wallets', () => {
@@ -27,8 +31,9 @@ contract('Factory', (accounts: string[]) => {
     })
     it('Should initialize with main module', async () => {
       await factory.deploy(module.address, accounts[0])
-      const wallet = await ModuleMock.at(await factory.addressOf(module.address, accounts[0]))
-      expect((await wallet.ping()).logs[0].event).to.equal("Pong")
+      const address = await factory.addressOf(module.address, accounts[0])
+      const wallet = await ModuleMockArtifact.at(address) as ModuleMock
+      expect(((await wallet.ping()) as any).logs[0].event).to.equal("Pong")
     })
   })
 })
