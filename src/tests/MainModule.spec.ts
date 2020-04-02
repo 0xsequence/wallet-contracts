@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, ethSign, encodeMetaTransactionsData, RevertError, MetaAction } from './utils';
+import { expect, ethSign, signMetaTransactions, RevertError, MetaAction } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
@@ -38,8 +38,6 @@ contract('MainModule', (accounts: string[]) => {
 
   describe('Authentication', () => {
     it('Should accept initial owner signature', async () => {
-      const nonce = ethers.constants.One
-
       const transaction = {
         action: MetaAction.external,
         target: ethers.constants.AddressZero,
@@ -47,20 +45,13 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-      const signature = ethers.utils.solidityPack(
-        ['bytes', 'uint256', 'uint8'],
-        [await ethSign(owner, transactionsData), nonce, '2']
-      )
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
 
       await wallet.execute([transaction], signature)
     })
     it('Should reject non-owner signature', async () => {
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
-      const nonce = ethers.constants.One
-
       const transaction = {
         action: MetaAction.external,
         target: ethers.constants.AddressZero,
@@ -68,12 +59,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-      const signature = ethers.utils.solidityPack(
-        ['bytes', 'uint256', 'uint8'],
-        [await ethSign(impostor, transactionsData), nonce, '2']
-      )
+      const signature = await signMetaTransactions(wallet, impostor, [transaction])
 
       const tx = wallet.execute([transaction], signature)
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
@@ -89,12 +75,7 @@ contract('MainModule', (accounts: string[]) => {
           data: []
         }
 
-        const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-        const signature = ethers.utils.solidityPack(
-          ['bytes', 'uint256', 'uint8'],
-          [await ethSign(owner, transactionsData), nonce, '2']
-        )
+        const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
 
         await wallet.execute([transaction], signature)
         expect(await wallet.nonce()).to.eq.BN(1)
@@ -110,12 +91,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-          const signature = ethers.utils.solidityPack(
-            ['bytes', 'uint256', 'uint8'],
-            [await ethSign(owner, transactionsData), nonce, '2']
-          )
+          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
 
           await wallet.execute([transaction], signature)
         })
@@ -129,12 +105,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-          const signature = ethers.utils.solidityPack(
-            ['bytes', 'uint256', 'uint8'],
-            [await ethSign(owner, transactionsData), nonce, '2']
-          )
+          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
 
           await wallet.execute([transaction], signature)
           expect(await wallet.nonce()).to.eq.BN(3)
@@ -149,12 +120,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-          const signature = ethers.utils.solidityPack(
-            ['bytes', 'uint256', 'uint8'],
-            [await ethSign(owner, transactionsData), nonce, '2']
-          )
+          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
 
           await wallet.execute([transaction], signature)
           expect(await wallet.nonce()).to.eq.BN(21)
@@ -169,12 +135,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-          const signature = ethers.utils.solidityPack(
-            ['bytes', 'uint256', 'uint8'],
-            [await ethSign(owner, transactionsData), nonce, '2']
-          )
+          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
 
           const tx = wallet.execute([transaction], signature)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
@@ -189,12 +150,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-          const signature = ethers.utils.solidityPack(
-            ['bytes', 'uint256', 'uint8'],
-            [await ethSign(owner, transactionsData), nonce, '2']
-          )
+          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
 
           const tx = wallet.execute([transaction], signature)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
@@ -209,12 +165,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-          const signature = ethers.utils.solidityPack(
-            ['bytes', 'uint256', 'uint8'],
-            [await ethSign(owner, transactionsData), nonce, '2']
-          )
+          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
 
           const tx = wallet.execute([transaction], signature)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
@@ -229,8 +180,6 @@ contract('MainModule', (accounts: string[]) => {
       const valA = 5423
       const valB = web3.utils.randomHex(120)
 
-      const nonce = ethers.constants.One
-
       const transaction = {
         action: MetaAction.external,
         target: callReceiver.address,
@@ -238,12 +187,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
       }
 
-      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-      const signature = ethers.utils.solidityPack(
-        ['bytes', 'uint256', 'uint8'],
-        [await ethSign(owner, transactionsData), nonce, '2']
-      )
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
 
       await wallet.execute([transaction], signature)
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
@@ -253,8 +197,6 @@ contract('MainModule', (accounts: string[]) => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
       await callReceiver.setRevertFlag(true)
 
-      const nonce = ethers.constants.One
-
       const transaction = {
         action: MetaAction.external,
         target: callReceiver.address,
@@ -262,12 +204,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
       }
 
-      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-      const signature = ethers.utils.solidityPack(
-        ['bytes', 'uint256', 'uint8'],
-        [await ethSign(owner, transactionsData), nonce, '2']
-      )
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
 
       const tx = wallet.execute([transaction], signature)
       await expect(tx).to.be.rejectedWith(RevertError("CallReceiverMock#testCall: REVERT_FLAG"))
@@ -282,8 +219,6 @@ contract('MainModule', (accounts: string[]) => {
 
       const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
 
-      const nonce = ethers.constants.One
-
       const transaction = {
         action: MetaAction.external,
         target: receiver.address,
@@ -291,12 +226,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-      const signature = ethers.utils.solidityPack(
-        ['bytes', 'uint256', 'uint8'],
-        [await ethSign(owner, transactionsData), nonce, '2']
-      )
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
 
       await wallet.execute([transaction], signature)
       expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(25)
@@ -310,8 +240,6 @@ contract('MainModule', (accounts: string[]) => {
       const valB = web3.utils.randomHex(120)
       const value = 33
 
-      const nonce = ethers.constants.One
-
       const transaction = {
         action: MetaAction.external,
         target: callReceiver.address,
@@ -319,12 +247,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
       }
 
-      const transactionsData = encodeMetaTransactionsData(wallet.address, [transaction], nonce)
-
-      const signature = ethers.utils.solidityPack(
-        ['bytes', 'uint256', 'uint8'],
-        [await ethSign(owner, transactionsData), nonce, '2']
-      )
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
 
       await wallet.execute([transaction], signature)
       expect(await web3.eth.getBalance(callReceiver.address)).to.eq.BN(value)
