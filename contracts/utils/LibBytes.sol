@@ -72,11 +72,11 @@ library LibBytes {
     );
 
     // Arrays are prefixed by a 256 bit length parameter
-    index += 32;
+    uint256 pos = index + 32;
 
     // Read the bytes32 from array memory
     assembly {
-      result := mload(add(b, index))
+      result := mload(add(b, pos))
     }
     return result;
   }
