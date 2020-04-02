@@ -192,8 +192,12 @@ contract MainModule is Implementation, SignatureValidator {
     }
   }
 
+  /* solhint-disable */
+
   /**
    * @notice Allows the wallet to receive ETH
    */
   receive() external payable { }
+
+  /* solhint-enable */
 }
