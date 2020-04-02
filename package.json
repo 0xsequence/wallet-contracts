@@ -30,6 +30,12 @@
     "etherBalance": "100000",
     "extra": ""
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint",
+      "pre-push": "yarn lint && yarn test"
+    }
+  },
   "devDependencies": {
     "@nomiclabs/buidler": "^1.2.0",
     "@nomiclabs/buidler-truffle5": "^1.2.0",
@@ -46,6 +52,7 @@
     "ethers": "4.0.40",
     "ganache-cli": "6.4.4",
     "ganache-core": "2.5.6",
+    "husky": "^4.2.3",
     "solc": "0.6.4",
     "solium": "^1.2.4",
     "truffle": "^5.1.3",
