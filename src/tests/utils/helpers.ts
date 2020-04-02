@@ -1,5 +1,6 @@
 import * as ethers from 'ethers'
-import { BigNumber } from 'ethers/utils'
+import { Arrayish, BigNumberish } from 'ethers/utils'
+import { MainModule } from 'typings/contracts/MainModule'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 // createTestWallet creates a new wallet
@@ -116,11 +117,39 @@ export const MetaTransactionsType = `tuple(
   bytes data
 )[]`
 
-export function encodeMetaTransactionsData(wallet: string, txs: Object[], nonce: BigNumber): string {
+export function encodeMetaTransactionsData(
+  owner: string,
+  txs: {
+    action: BigNumberish;
+    target: string;
+    value: BigNumberish;
+    data: Arrayish;
+  }[],
+  nonce: BigNumberish
+): string {
   const transactions = ethers.utils.defaultAbiCoder.encode([MetaTransactionsType], [txs])
   return ethers.utils.defaultAbiCoder.encode(
     ['address', 'uint256', 'bytes'],
-    [wallet, nonce, transactions]
+    [owner, nonce, transactions]
+  )
+}
+
+export async function signMetaTransactions(
+  wallet: MainModule,
+  owner: ethers.Wallet,
+  txs: {
+    action: BigNumberish;
+    target: string;
+    value: BigNumberish;
+    data: Arrayish;
+  }[],
+  nonce: BigNumberish | undefined = undefined
+) {
+  if (!nonce) nonce = (await wallet.nonce()).toNumber()
+  const data = encodeMetaTransactionsData(wallet.address, txs, nonce)
+  return ethers.utils.solidityPack(
+    ['bytes', 'uint256', 'uint8'],
+    [await ethSign(owner, data), nonce, '2']
   )
 }
 
