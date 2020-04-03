@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 import "../utils/SignatureValidator.sol";
 import "./commons/Implementation.sol";
 
+import "../interfaces/receivers/IERC1155Receiver.sol";
+import "../interfaces/receivers/IERC721Receiver.sol";
 
 /**
  * To do
@@ -12,7 +14,12 @@ import "./commons/Implementation.sol";
  *   - private vs internal
  *   - Public vs External for main module
  */
-contract MainModule is Implementation, SignatureValidator {
+contract MainModule is
+  Implementation,
+  SignatureValidator,
+  IERC1155Receiver,
+  IERC721Receiver
+{
   mapping(bytes4 => address) public hooks;
   mapping(address => bool) public modules;
 
@@ -220,7 +227,13 @@ contract MainModule is Implementation, SignatureValidator {
    * @notice Handle the receipt of a single ERC1155 token type.
    * @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
    */
-  function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure returns (bytes4) {
+  function onERC1155Received(
+    address,
+    address,
+    uint256,
+    uint256,
+    bytes calldata
+  ) external override returns (bytes4) {
     return MainModule.onERC1155Received.selector;
   }
 
@@ -228,7 +241,13 @@ contract MainModule is Implementation, SignatureValidator {
    * @notice Handle the receipt of multiple ERC1155 token types.
    * @return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
    */
-  function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata) external pure returns (bytes4) {
+  function onERC1155BatchReceived(
+    address,
+    address,
+    uint256[] calldata,
+    uint256[] calldata,
+    bytes calldata
+  ) external override returns (bytes4) {
     return MainModule.onERC1155BatchReceived.selector;
   }
 
@@ -236,7 +255,7 @@ contract MainModule is Implementation, SignatureValidator {
    * @notice Handle the receipt of a single ERC721 token.
    * @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
    */
-  function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+  function onERC721Received(address, address, uint256, bytes calldata) external override returns (bytes4) {
     return MainModule.onERC721Received.selector;
   }
 
