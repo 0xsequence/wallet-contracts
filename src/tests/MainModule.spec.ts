@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, MetaAction } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, MetaAction, ethSign } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
@@ -574,11 +574,11 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
   describe('Hooks', () => {
+    let hookMock
+    before(async () => {
+      hookMock = await HookCallerMockArtifact.new() as HookCallerMock
+    })
     describe('receive tokens', () => {
-      let hookMock
-      before(async () => {
-        hookMock = await HookCallerMockArtifact.new() as HookCallerMock
-      })
       it('Should implement ERC1155 single transfer hook', async () => {
         await hookMock.callERC1155Received(wallet.address)
       })
@@ -590,6 +590,55 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should implement ERC223 transfer hook', async () => {
         await hookMock.callERC223Received(wallet.address)
+      })
+    })
+    describe('ERC1271 Wallet', () => {
+      let data
+      let message
+      let hash
+      beforeEach(async () => {
+        data = await web3.utils.randomHex(250)
+        message = ethers.utils.defaultAbiCoder.encode(
+          ['address', 'bytes'],
+          [wallet.address, data]
+        )
+        hash = ethers.utils.keccak256(message)
+      })
+      it('Should validate arbitrary signed data', async () => {
+        const signature = await ethSign(owner, message)
+        await hookMock.callERC1271isValidSignatureData(
+          wallet.address,
+          data,
+          signature
+        )
+      })
+      it('Should validate arbitrary signed hash', async () => {
+        const signature = await ethSign(owner, message)
+        await hookMock.callERC1271isValidSignatureHash(
+          wallet.address,
+          hash,
+          signature
+        )
+      })
+      it('Should reject data signed by non-owner', async () => {
+        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const signature = await ethSign(impostor, message)
+        const tx = hookMock.callERC1271isValidSignatureData(
+          wallet.address,
+          data,
+          signature
+        )
+        expect(tx).to.be.rejectedWith("HookCallerMock#callERC1271isValidSignatureData: INVALID_RETURN")
+      })
+      it('Should reject hash signed by non-owner', async () => {
+        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const signature = await ethSign(impostor, message)
+        const tx = hookMock.callERC1271isValidSignatureHash(
+          wallet.address,
+          hash,
+          signature
+        )
+        expect(tx).to.be.rejectedWith("HookCallerMock#callERC1271isValidSignatureHash: INVALID_RETURN")
       })
     })
   })

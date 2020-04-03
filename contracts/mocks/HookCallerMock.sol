@@ -4,6 +4,8 @@ import "../interfaces/receivers/IERC1155Receiver.sol";
 import "../interfaces/receivers/IERC721Receiver.sol";
 import "../interfaces/receivers/IERC223Receiver.sol";
 
+import "../interfaces/IERC1271Wallet.sol";
+
 
 contract HookCallerMock {
   function callERC1155Received(address _addr) external {
@@ -53,5 +55,23 @@ contract HookCallerMock {
 
   function callERC223Received(address _addr) external {
     IERC223Receiver(_addr).tokenFallback(msg.sender, 1, msg.data);
+  }
+
+  function callERC1271isValidSignatureData(
+    address _addr,
+    bytes calldata _data,
+    bytes calldata _signature
+  ) external view {
+    bytes4 result = IERC1271Wallet(_addr).isValidSignature(_data, _signature);
+    require(result == 0x20c13b0b, "HookCallerMock#callERC1271isValidSignatureData: INVALID_RETURN");
+  }
+
+  function callERC1271isValidSignatureHash(
+    address _addr,
+    bytes32 _hash,
+    bytes calldata _signature
+  ) external view {
+    bytes4 result = IERC1271Wallet(_addr).isValidSignature(_hash, _signature);
+    require(result == 0x20c13b0b, "HookCallerMock#callERC1271isValidSignatureHash: INVALID_RETURN");
   }
 }

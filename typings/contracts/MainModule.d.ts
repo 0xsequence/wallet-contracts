@@ -18,15 +18,6 @@ interface MainModuleInterface extends Interface {
 
     hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
 
-    isValidSignature: TypedFunctionDescription<{
-      encode([_signerAddress, _hash, _data, _signature]: [
-        string,
-        Arrayish,
-        Arrayish,
-        Arrayish
-      ]): string;
-    }>;
-
     modules: TypedFunctionDescription<{ encode([]: [string]): string }>;
 
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
@@ -72,6 +63,10 @@ interface MainModuleInterface extends Interface {
     onERC721Received: TypedFunctionDescription<{
       encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
     }>;
+
+    isValidSignature: TypedFunctionDescription<{
+      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+    }>;
   };
 
   events: {
@@ -104,13 +99,6 @@ export class MainModule extends Contract {
     INIT_CODE_HASH(): Promise<string>;
 
     hooks(arg0: Arrayish): Promise<string>;
-
-    isValidSignature(
-      _signerAddress: string,
-      _hash: Arrayish,
-      _data: Arrayish,
-      _signature: Arrayish
-    ): Promise<boolean>;
 
     modules(arg0: string): Promise<boolean>;
 
@@ -156,6 +144,8 @@ export class MainModule extends Contract {
       arg3: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
   };
 
   FACTORY(): Promise<string>;
@@ -163,13 +153,6 @@ export class MainModule extends Contract {
   INIT_CODE_HASH(): Promise<string>;
 
   hooks(arg0: Arrayish): Promise<string>;
-
-  isValidSignature(
-    _signerAddress: string,
-    _hash: Arrayish,
-    _data: Arrayish,
-    _signature: Arrayish
-  ): Promise<boolean>;
 
   modules(arg0: string): Promise<boolean>;
 
@@ -216,6 +199,8 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+
   filters: {
     NonceChange(newNonce: null): EventFilter;
 
@@ -228,13 +213,6 @@ export class MainModule extends Contract {
     INIT_CODE_HASH(): Promise<BigNumber>;
 
     hooks(arg0: Arrayish): Promise<BigNumber>;
-
-    isValidSignature(
-      _signerAddress: string,
-      _hash: Arrayish,
-      _data: Arrayish,
-      _signature: Arrayish
-    ): Promise<BigNumber>;
 
     modules(arg0: string): Promise<BigNumber>;
 
@@ -276,5 +254,7 @@ export class MainModule extends Contract {
       arg2: BigNumberish,
       arg3: Arrayish
     ): Promise<BigNumber>;
+
+    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
   };
 }
