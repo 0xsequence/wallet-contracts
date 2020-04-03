@@ -167,34 +167,48 @@ contract MainModule is Implementation, SignatureValidator {
 
     // Adds a new module to the wallet
     } else if (_tx.action == Action.AddModule) {
-      if (modules[_tx.target]) _revert(_tx, "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
-      modules[_tx.target] = true;
+      if (!modules[_tx.target]) {
+        modules[_tx.target] = true;
+      } else {
+        _revert(_tx, "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
+      }
 
     // Adds a new module to the wallet
     } else if (_tx.action == Action.RemoveModule) {
-      if (!modules[_tx.target]) _revert(_tx, "MainModule#_actionExecution: MODULE_NOT_REGISTERED");
-      modules[_tx.target] = false;
+      if (modules[_tx.target]) {
+        modules[_tx.target] = false;
+      } else {
+        _revert(_tx, "MainModule#_actionExecution: MODULE_NOT_REGISTERED");
+      }
 
     // Adds a new hook to the wallet
     } else if (_tx.action == Action.AddHook) {
       bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
-      if (hooks[hook_signature] != address(0x0)) _revert(_tx, "MainModule#_actionExecution: HOOK_ALREADY_REGISTERED");
-      hooks[hook_signature] = _tx.target;
+      if (hooks[hook_signature] == address(0x0)) {
+        hooks[hook_signature] = _tx.target;
+      } else {
+        _revert(_tx, "MainModule#_actionExecution: HOOK_ALREADY_REGISTERED");
+      }
 
     // Remove a hook from the wallet
     } else if (_tx.action == Action.RemoveHook) {
       bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
-      if (hooks[hook_signature] == address(0x0)) _revert(_tx, "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
-      hooks[hook_signature] = _tx.target;
+      if (hooks[hook_signature] != address(0x0)){
+        hooks[hook_signature] = _tx.target;
+      } else {
+        _revert(_tx, "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
+      }
 
     // Update wallet implementation
     } else if (_tx.action == Action.UpdateImp) {
       address new_implementation = abi.decode(_tx.data, (address));
-      if (new_implementation == address(0x0)) _revert(_tx, "MainModule#_actionExecution: INVALID_IMPLEMENTATION");
-      _setImplementation(new_implementation);
-
+      if (new_implementation != address(0x0)) {
+        _setImplementation(new_implementation);
+      } else {
+        _revert(_tx, "MainModule#_actionExecution: INVALID_IMPLEMENTATION");
+      }
     } else {
-      revert("MainModule#_actionExecution: INVALID_ACTION");
+      _revert(_tx, "MainModule#_actionExecution: INVALID_ACTION");
     }
   }
 
