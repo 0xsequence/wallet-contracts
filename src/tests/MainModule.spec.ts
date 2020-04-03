@@ -42,7 +42,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should accept initial owner signature', async () => {
       const transaction = {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -57,7 +57,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -74,7 +74,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -90,7 +90,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -109,7 +109,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
-            optional: false,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -124,7 +124,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
-            optional: false,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -140,7 +140,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
-            optional: false,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -156,7 +156,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
-            optional: false,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -172,7 +172,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
-            optional: false,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -188,7 +188,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
-            optional: false,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -204,7 +204,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
-            optional: false,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -224,7 +224,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.updateImp,
-        optional: false,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: ethers.utils.defaultAbiCoder.encode(['address'], [newImplementation.address])
@@ -240,7 +240,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
         action: MetaAction.updateImp,
-        optional: false,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
@@ -261,7 +261,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -279,7 +279,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -303,13 +303,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: callReceiver1.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
         },{
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: callReceiver2.address,
           value: ethers.constants.Zero,
           data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
@@ -334,13 +334,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
         }, {
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: receiver.address,
           value: 26,
           data: []
@@ -362,13 +362,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: receiver.address,
           value: 26,
           data: []
         }, {
           action: MetaAction.external,
-          optional: false,
+          skipOnError: false,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -392,7 +392,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: receiver.address,
         value: 25,
         data: []
@@ -414,7 +414,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: callReceiver.address,
         value: value,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -429,7 +429,7 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
   describe('Optional transactions', () => {
-    it('Should skip a optional transaction', async () => {
+    it('Should skip a skipOnError transaction', async () => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
       await callReceiver.setRevertFlag(true)
 
@@ -437,7 +437,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
-        optional: true,
+        skipOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
@@ -468,13 +468,13 @@ contract('MainModule', (accounts: string[]) => {
 
       const transactions = [{
         action: MetaAction.external,
-        optional: true,
+        skipOnError: true,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
         data: data2
@@ -506,19 +506,19 @@ contract('MainModule', (accounts: string[]) => {
 
       const transactions = [{
         action: MetaAction.external,
-        optional: true,
+        skipOnError: true,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         action: MetaAction.external,
-        optional: true,
+        skipOnError: true,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         action: MetaAction.external,
-        optional: false,
+        skipOnError: false,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
         data: data2
@@ -551,13 +551,13 @@ contract('MainModule', (accounts: string[]) => {
 
       const transactions = [{
         action: MetaAction.external,
-        optional: true,
+        skipOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
       }, {
         action: MetaAction.external,
-        optional: true,
+        skipOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
@@ -575,14 +575,14 @@ contract('MainModule', (accounts: string[]) => {
       expect(reason1).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
       expect(reason2).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
     })
-    it('Should skip optional update implementation action', async () => {
+    it('Should skip skipOnError update implementation action', async () => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
 
       await callReceiver.setRevertFlag(true)
 
       const transactions = [{
         action: MetaAction.updateImp,
-        optional: true,
+        skipOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
@@ -598,14 +598,14 @@ contract('MainModule', (accounts: string[]) => {
       expect(reason).to.equal("MainModule#_actionExecution: INVALID_IMPLEMENTATION")
       expect(await wallet.nonce()).to.eq.BN(1)
     })
-    it('Should skip optional invalid action', async () => {
+    it('Should skip skipOnError invalid action', async () => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
 
       await callReceiver.setRevertFlag(true)
 
       const transactions = [{
         action: MetaAction.illegal,
-        optional: true,
+        skipOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []

@@ -58,11 +58,11 @@ contract MainModule is Implementation, SignatureValidator {
   |__________________________________*/
 
   struct Transaction {
-    Action action;  // Action to use for the transaction
-    bool optional;  // Ignored upon failure
-    address target; // Address of the contract to call
-    uint256 value;  // Amount of ETH to pass with the call
-    bytes data;     // calldata to pass
+    Action action;     // Action to use for the transaction
+    bool skipOnError;  // Ignored upon failure
+    address target;    // Address of the contract to call
+    uint256 value;     // Amount of ETH to pass with the call
+    bytes data;        // calldata to pass
   }
 
   /***********************************|
@@ -142,7 +142,7 @@ contract MainModule is Implementation, SignatureValidator {
    * @param _reason  Encoded revert message
    */
   function _revertBytes(Transaction memory _tx, uint256 _index, bytes memory _reason) internal {
-    if (_tx.optional) {
+    if (_tx.skipOnError) {
       emit TxFailed(_index, _reason);
     } else {
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
