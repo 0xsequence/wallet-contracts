@@ -452,12 +452,7 @@ contract('MainModule', (accounts: string[]) => {
 
       expect(reason).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
 
-      const logTx = event.args._transaction
-      expect(logTx.action).to.eq.BN(MetaAction.external)
-      expect(logTx.optional).to.equal(true)
-      expect(logTx.target).to.equal(callReceiver.address)
-      expect(logTx.value).to.eq.BN(0)
-      expect(logTx.data).to.equal(data)
+      expect(event.args._index).to.eq.BN(0)
     })
     it('Should skip failing transaction within batch', async () => {
       const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
@@ -532,14 +527,17 @@ contract('MainModule', (accounts: string[]) => {
       const signature = await signMetaTransactions(wallet, owner, transactions)
 
       const tx = await wallet.execute(transactions, signature)
-      const event1 = tx.logs.pop()
-      const event2 = tx.logs.pop()
+      const event1 = tx.logs[1]
+      const event2 = tx.logs[2]
 
       const reason1 = web3.eth.abi.decodeParameter('string', event1.args._reason.slice(10))
       const reason2 = web3.eth.abi.decodeParameter('string', event2.args._reason.slice(10))
 
       expect(reason1).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
       expect(reason2).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+
+      expect(event1.args._index).to.eq.BN(0)
+      expect(event2.args._index).to.eq.BN(1)
 
       expect(await callReceiver2.lastValA()).to.eq.BN(valA)
       expect(await callReceiver2.lastValB()).to.equal(valB)
