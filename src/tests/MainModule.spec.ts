@@ -428,4 +428,199 @@ contract('MainModule', (accounts: string[]) => {
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
   })
+  describe('Optional transactions', () => {
+    it('Should skip a optional transaction', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+      await callReceiver.setRevertFlag(true)
+
+      const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
+
+      const transaction = {
+        action: MetaAction.external,
+        optional: true,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: data
+      }
+
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
+
+      const tx = await wallet.execute([transaction], signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+
+      const logTx = event.args._transaction
+      expect(logTx.action).to.eq.BN(MetaAction.external)
+      expect(logTx.optional).to.equal(true)
+      expect(logTx.target).to.equal(callReceiver.address)
+      expect(logTx.value).to.eq.BN(0)
+      expect(logTx.data).to.equal(data)
+    })
+    it('Should skip failing transaction within batch', async () => {
+      const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver1.setRevertFlag(true)
+
+      const valA = 912341
+      const valB = web3.utils.randomHex(30)
+
+      const data1 = callReceiver1.contract.methods.testCall(0, []).encodeABI()
+      const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
+
+      const transactions = [{
+        action: MetaAction.external,
+        optional: true,
+        target: callReceiver1.address,
+        value: ethers.constants.Zero,
+        data: data1
+      }, {
+        action: MetaAction.external,
+        optional: false,
+        target: callReceiver2.address,
+        value: ethers.constants.Zero,
+        data: data2
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+
+      expect(await callReceiver2.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver2.lastValB()).to.equal(valB)
+    })
+    it('Should skip multiple failing transactions within batch', async () => {
+      const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver1.setRevertFlag(true)
+
+      const valA = 912341
+      const valB = web3.utils.randomHex(30)
+
+      const data1 = callReceiver1.contract.methods.testCall(0, []).encodeABI()
+      const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
+
+      const transactions = [{
+        action: MetaAction.external,
+        optional: true,
+        target: callReceiver1.address,
+        value: ethers.constants.Zero,
+        data: data1
+      }, {
+        action: MetaAction.external,
+        optional: true,
+        target: callReceiver1.address,
+        value: ethers.constants.Zero,
+        data: data1
+      }, {
+        action: MetaAction.external,
+        optional: false,
+        target: callReceiver2.address,
+        value: ethers.constants.Zero,
+        data: data2
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event1 = tx.logs.pop()
+      const event2 = tx.logs.pop()
+
+      const reason1 = web3.eth.abi.decodeParameter('string', event1.args._reason.slice(10))
+      const reason2 = web3.eth.abi.decodeParameter('string', event2.args._reason.slice(10))
+
+      expect(reason1).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+      expect(reason2).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+
+      expect(await callReceiver2.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver2.lastValB()).to.equal(valB)
+    })
+    it('Should skip all failing transactions within batch', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver.setRevertFlag(true)
+
+      const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
+
+      const transactions = [{
+        action: MetaAction.external,
+        optional: true,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: data
+      }, {
+        action: MetaAction.external,
+        optional: true,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: data
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event1 = tx.logs.pop()
+      const event2 = tx.logs.pop()
+
+      const reason1 = web3.eth.abi.decodeParameter('string', event1.args._reason.slice(10))
+      const reason2 = web3.eth.abi.decodeParameter('string', event2.args._reason.slice(10))
+
+      expect(reason1).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+      expect(reason2).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+    })
+    it('Should skip optional update implementation action', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver.setRevertFlag(true)
+
+      const transactions = [{
+        action: MetaAction.updateImp,
+        optional: true,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("MainModule#_actionExecution: INVALID_IMPLEMENTATION")
+      expect(await wallet.nonce()).to.eq.BN(1)
+    })
+    it('Should skip optional invalid action', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver.setRevertFlag(true)
+
+      const transactions = [{
+        action: MetaAction.illegal,
+        optional: true,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("MainModule#_actionExecution: INVALID_ACTION")
+    })
+  })
 })
