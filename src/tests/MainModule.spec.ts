@@ -275,6 +275,90 @@ contract('MainModule', (accounts: string[]) => {
       const tx = wallet.execute([transaction], signature)
       await expect(tx).to.be.rejectedWith(RevertError("CallReceiverMock#testCall: REVERT_FLAG"))
     })
+    describe('Batch transactions', () => {
+      it('Should perform multiple calls to contracts in one tx', async () => {
+        const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+        const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+        const val1A = 5423
+        const val1B = web3.utils.randomHex(120)
+
+        const val2A = 695412
+        const val2B = web3.utils.randomHex(35)
+
+        const transactions = [{
+          action: MetaAction.external,
+          target: callReceiver1.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
+        },{
+          action: MetaAction.external,
+          target: callReceiver2.address,
+          value: ethers.constants.Zero,
+          data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
+        }]
+
+        const signature = await signMetaTransactions(wallet, owner, transactions)
+
+        await wallet.execute(transactions, signature)
+        expect(await callReceiver1.lastValA()).to.eq.BN(val1A)
+        expect(await callReceiver1.lastValB()).to.equal(val1B)
+        expect(await callReceiver2.lastValA()).to.eq.BN(val2A)
+        expect(await callReceiver2.lastValB()).to.equal(val2B)
+      })
+      it('Should perform call a contract and transfer eth in one tx', async () => {
+        const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+        const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+        await wallet.send(100, { from: accounts[0] })
+
+        const valA = 5423
+        const valB = web3.utils.randomHex(120)
+
+        const transactions = [{
+          action: MetaAction.external,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        }, {
+          action: MetaAction.external,
+          target: receiver.address,
+          value: 26,
+          data: []
+        }]
+
+        const signature = await signMetaTransactions(wallet, owner, transactions)
+
+        await wallet.execute(transactions, signature)
+        expect(await callReceiver.lastValA()).to.eq.BN(valA)
+        expect(await callReceiver.lastValB()).to.equal(valB)
+        expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(26)
+      })
+      it('Should fail if one transaction fails', async () => {
+        const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+        const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+        await callReceiver.setRevertFlag(true)
+        await wallet.send(100, { from: accounts[0] })
+
+        const transactions = [{
+          action: MetaAction.external,
+          target: receiver.address,
+          value: 26,
+          data: []
+        }, {
+          action: MetaAction.external,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(0, []).encodeABI()
+        }]
+
+        const signature = await signMetaTransactions(wallet, owner, transactions)
+
+        const tx = wallet.execute(transactions, signature)
+        await expect(tx).to.be.rejectedWith('CallReceiverMock#testCall: REVERT_FLAG')
+      })
+    })
   })
   describe('Handle ETH', () => {
     it('Should receive ETH', async () => {
