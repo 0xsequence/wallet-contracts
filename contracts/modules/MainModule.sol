@@ -121,28 +121,6 @@ contract MainModule is Implementation, SignatureValidator {
 
   /**
    * @notice Allow wallet owner to execute an action
-   * @dev Relayer *needs* to verify if _gasPaymentTx is sufficient
-   * @param _txs          Transactions to process
-   * @param _gasPaymentTx Transaction that will be executed to reimburse gas
-   * @param _signature    Encoded signature
-   */
-  function executeWithFee(Transaction[] memory _txs, Transaction memory _gasPaymentTx, bytes memory _signature)
-    public
-  {
-    // Check if signature is valid and update nonce
-    _signatureValidation(abi.encode(_txs, _gasPaymentTx), _signature);
-
-    for (uint256 i = 0; i < _txs.length; i++) {
-      // Execute every transaction
-      _actionExecution(_txs[i]);
-    }
-
-    // Execute fee payment transaction
-    _actionExecution(_gasPaymentTx);
-  }
-
-  /**
-   * @notice Allow wallet owner to execute an action
    * @param _tx Transaction to process
    */
   function _actionExecution(Transaction memory _tx)
