@@ -107,7 +107,7 @@ export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Arra
   let hash = ethers.utils.keccak256(message)
   let hashArray = ethers.utils.arrayify(hash)
   let ethsigNoType = await wallet.signMessage(hashArray)
-  return ethsigNoType
+  return ethsigNoType + '02'
 }
 
 export const MetaTransactionsType = `tuple(
@@ -129,10 +129,10 @@ export function encodeMetaTransactionsData(
   }[],
   nonce: BigNumberish
 ): string {
-  const transactions = ethers.utils.defaultAbiCoder.encode([MetaTransactionsType], [txs])
+  const transactions = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [nonce, txs])
   return ethers.utils.defaultAbiCoder.encode(
-    ['address', 'uint256', 'bytes'],
-    [owner, nonce, transactions]
+    ['address', 'bytes'],
+    [owner, transactions]
   )
 }
 
@@ -146,14 +146,31 @@ export async function signMetaTransactions(
     value: BigNumberish;
     data: Arrayish;
   }[],
-  nonce: BigNumberish | undefined = undefined
+  nonce: BigNumberish
 ) {
-  if (!nonce) nonce = (await wallet.nonce()).toNumber()
   const data = encodeMetaTransactionsData(wallet.address, txs, nonce)
-  return ethers.utils.solidityPack(
-    ['bytes', 'uint256', 'uint8'],
-    [await ethSign(owner, data), nonce, '2']
-  )
+  return ethSign(owner, data)
+}
+
+export async function nextNonce(wallet: MainModule) {
+  return (await wallet.nonce()).toNumber()
+}
+
+export async function signAndExecuteMetaTx(
+  wallet: MainModule,
+  owner: ethers.Wallet,
+  txs: {
+    action: BigNumberish;
+    optional: boolean;
+    target: string;
+    value: BigNumberish;
+    data: Arrayish;
+  }[],
+  nonce: BigNumberish | undefined = undefined
+) {
+  if (!nonce) nonce = await nextNonce(wallet)
+  const signature = await signMetaTransactions(wallet, owner, txs, nonce)
+  return wallet.execute(txs, nonce, signature)
 }
 
 export const MetaAction = {

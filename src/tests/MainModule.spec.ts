@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, ethSign, signMetaTransactions, RevertError, MetaAction } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, MetaAction } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
@@ -50,9 +50,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
     })
     it('Should reject non-owner signature', async () => {
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -65,9 +63,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const signature = await signMetaTransactions(wallet, impostor, [transaction])
-
-      const tx = wallet.execute([transaction], signature)
+      const tx = signAndExecuteMetaTx(wallet, impostor, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
     })
     describe('Nonce', () => {
@@ -82,9 +78,7 @@ contract('MainModule', (accounts: string[]) => {
           data: []
         }
 
-        const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-        await wallet.execute([transaction], signature)
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
         expect(await wallet.nonce()).to.eq.BN(1)
       })
       it('Should emit NonceChange event', async () => {
@@ -98,9 +92,7 @@ contract('MainModule', (accounts: string[]) => {
           data: []
         }
 
-        const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-        const receipt = await wallet.execute([transaction], signature)
+        const receipt = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
         const ev = receipt.logs.pop()
         expect(ev.event).to.be.eql('NonceChange')
         expect(ev.args.newNonce).to.eq.BN(1)
@@ -117,9 +109,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
         })
         it('Should accept next consecutive nonce', async () => {
           const nonce = ethers.constants.Two
@@ -132,9 +122,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           expect(await wallet.nonce()).to.eq.BN(3)
         })
         it('Should accept next incremental nonce', async () => {
@@ -148,9 +136,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           expect(await wallet.nonce()).to.eq.BN(21)
         })
         it('Should accept maximum incremental nonce', async () => {
@@ -164,9 +150,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           expect(await wallet.nonce()).to.eq.BN(102)
         })
         it('Should fail if nonce did not change', async () => {
@@ -180,9 +164,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          const tx = wallet.execute([transaction], signature)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
         it('Should fail if nonce delta is above 100', async () => {
@@ -196,9 +178,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          const tx = wallet.execute([transaction], signature)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
         it('Should fail if nonce decreases', async () => {
@@ -212,9 +192,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          const tx = wallet.execute([transaction], signature)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
       })
@@ -232,9 +210,7 @@ contract('MainModule', (accounts: string[]) => {
         data: ethers.utils.defaultAbiCoder.encode(['address'], [newImplementation.address])
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
 
       const mock_wallet = await ModuleMockArtifact.at(wallet.address) as ModuleMock
       expect((await mock_wallet.ping() as any).logs[0].event).to.equal("Pong")
@@ -248,9 +224,7 @@ contract('MainModule', (accounts: string[]) => {
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      const tx = wallet.execute([transaction], signature)
+      const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_actionExecution: INVALID_IMPLEMENTATION"))
     })
   })
@@ -269,9 +243,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
@@ -287,9 +259,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      const tx = wallet.execute([transaction], signature)
+      const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("CallReceiverMock#testCall: REVERT_FLAG"))
     })
     describe('Batch transactions', () => {
@@ -317,9 +287,7 @@ contract('MainModule', (accounts: string[]) => {
           data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
         }]
 
-        const signature = await signMetaTransactions(wallet, owner, transactions)
-
-        await wallet.execute(transactions, signature)
+        await signAndExecuteMetaTx(wallet, owner, transactions)
         expect(await callReceiver1.lastValA()).to.eq.BN(val1A)
         expect(await callReceiver1.lastValB()).to.equal(val1B)
         expect(await callReceiver2.lastValA()).to.eq.BN(val2A)
@@ -348,9 +316,7 @@ contract('MainModule', (accounts: string[]) => {
           data: []
         }]
 
-        const signature = await signMetaTransactions(wallet, owner, transactions)
-
-        await wallet.execute(transactions, signature)
+        await signAndExecuteMetaTx(wallet, owner, transactions)
         expect(await callReceiver.lastValA()).to.eq.BN(valA)
         expect(await callReceiver.lastValB()).to.equal(valB)
         expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(26)
@@ -376,9 +342,7 @@ contract('MainModule', (accounts: string[]) => {
           data: callReceiver.contract.methods.testCall(0, []).encodeABI()
         }]
 
-        const signature = await signMetaTransactions(wallet, owner, transactions)
-
-        const tx = wallet.execute(transactions, signature)
+        const tx = signAndExecuteMetaTx(wallet, owner, transactions)
         await expect(tx).to.be.rejectedWith('CallReceiverMock#testCall: REVERT_FLAG')
       })
     })
@@ -400,9 +364,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
       expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(25)
     })
     it('Should call payable function', async () => {
@@ -422,9 +384,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
       expect(await web3.eth.getBalance(callReceiver.address)).to.eq.BN(value)
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
@@ -445,9 +405,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      const tx = await wallet.execute([transaction], signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
@@ -487,9 +445,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data2
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
@@ -531,9 +487,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data2
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event1 = tx.logs.pop()
       const event2 = tx.logs.pop()
 
@@ -567,9 +521,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event1 = tx.logs.pop()
       const event2 = tx.logs.pop()
 
@@ -592,9 +544,7 @@ contract('MainModule', (accounts: string[]) => {
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
@@ -615,9 +565,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))

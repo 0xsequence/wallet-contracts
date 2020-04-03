@@ -36,7 +36,7 @@ interface MainModuleInterface extends Interface {
     }>;
 
     execute: TypedFunctionDescription<{
-      encode([_txs, _signature]: [
+      encode([_txs, _nonce, _signature]: [
         {
           action: BigNumberish;
           optional: boolean;
@@ -44,6 +44,7 @@ interface MainModuleInterface extends Interface {
           value: BigNumberish;
           data: Arrayish;
         }[],
+        BigNumberish,
         Arrayish
       ]): string;
     }>;
@@ -125,6 +126,7 @@ export class MainModule extends Contract {
         value: BigNumberish;
         data: Arrayish;
       }[],
+      _nonce: BigNumberish,
       _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
@@ -134,23 +136,26 @@ export class MainModule extends Contract {
       arg1: string,
       arg2: BigNumberish,
       arg3: BigNumberish,
-      arg4: Arrayish
-    ): Promise<string>;
+      arg4: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
 
     onERC1155BatchReceived(
       arg0: string,
       arg1: string,
       arg2: BigNumberish[],
       arg3: BigNumberish[],
-      arg4: Arrayish
-    ): Promise<string>;
+      arg4: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
 
     onERC721Received(
       arg0: string,
       arg1: string,
       arg2: BigNumberish,
-      arg3: Arrayish
-    ): Promise<string>;
+      arg3: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
   };
 
   FACTORY(): Promise<string>;
@@ -180,6 +185,7 @@ export class MainModule extends Contract {
       value: BigNumberish;
       data: Arrayish;
     }[],
+    _nonce: BigNumberish,
     _signature: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
@@ -189,23 +195,26 @@ export class MainModule extends Contract {
     arg1: string,
     arg2: BigNumberish,
     arg3: BigNumberish,
-    arg4: Arrayish
-  ): Promise<string>;
+    arg4: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
 
   onERC1155BatchReceived(
     arg0: string,
     arg1: string,
     arg2: BigNumberish[],
     arg3: BigNumberish[],
-    arg4: Arrayish
-  ): Promise<string>;
+    arg4: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
 
   onERC721Received(
     arg0: string,
     arg1: string,
     arg2: BigNumberish,
-    arg3: Arrayish
-  ): Promise<string>;
+    arg3: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
 
   filters: {
     NonceChange(newNonce: null): EventFilter;
@@ -241,6 +250,7 @@ export class MainModule extends Contract {
         value: BigNumberish;
         data: Arrayish;
       }[],
+      _nonce: BigNumberish,
       _signature: Arrayish
     ): Promise<BigNumber>;
 

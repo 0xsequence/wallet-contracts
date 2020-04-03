@@ -80,32 +80,39 @@ contract MainModule is
    * @notice Verify if signer is default wallet owner
    * @param _data Bytes array the user hashed and signed
    * @param _signature Encoded signature
-   *       (bytes32 r, bytes32 s, uint8 v, uint256 nonce, SignatureType sigType)
+   *       (bytes32 r, bytes32 s, uint8 v, SignatureType sigType)
    */
   function _signatureValidation(bytes memory _data, bytes memory _signature)
-    private
+    private view
   {
-    // Retrieve current nonce for this wallet
-    uint256 current_nonce = nonce; // Lowest valid nonce for signer
-    uint256 signed_nonce = uint256(_signature.readBytes32(65));  // Nonce passed in the signature object
-
-    // Verify if nonce is valid
-    require(
-      (signed_nonce >= current_nonce) && (signed_nonce < (current_nonce + 100)),
-      "MainModule#_auth: INVALID_NONCE"
-    );
-
-    // Update signature nonce
-    nonce = signed_nonce + 1;
-    emit NonceChange(signed_nonce + 1);
-
     // Retrieve the signer
-    bytes32 tx_hash = keccak256(abi.encode(address(this), signed_nonce, _data));
+    bytes32 tx_hash = keccak256(abi.encode(address(this), _data));
     address signer = recoverSigner(tx_hash, _signature);
 
     // Verifier if wallet was created for signer
     address candidate = address(uint256(keccak256(abi.encodePacked(byte(0xff), FACTORY, bytes32(uint256(signer)), INIT_CODE_HASH))));
     require(candidate == address(this), "MainModule#_signatureValidation: INVALID_SIGNATURE");
+  }
+
+  /**
+   * @notice Verify if a nonce is valid
+   * @param _nonce Nonce to validate
+   * @dev A valid nonce must be above the last one used
+   *   with a maximum delta of 100
+   */
+  function _validateNonce(uint256 _nonce) private {
+    // Retrieve current nonce for this wallet
+    uint256 current_nonce = nonce; // Lowest valid nonce for signer
+
+    // Verify if nonce is valid
+    require(
+      (_nonce >= current_nonce) && (_nonce < (current_nonce + 100)),
+      "MainModule#_auth: INVALID_NONCE"
+    );
+
+    // Update signature nonce
+    nonce = _nonce + 1;
+    emit NonceChange(_nonce + 1);
   }
 
   /***********************************|
@@ -114,14 +121,18 @@ contract MainModule is
 
   /**
    * @notice Allow wallet owner to execute an action
-   * @param _txs       Transactions to process
-   * @param _signature Encoded signature
+   * @param _txs        Transactions to process
+   * @param _nonce      Signature nonce
+   * @param _signature  Encoded signature
    */
-  function execute(Transaction[] memory _txs, bytes memory _signature)
+  function execute(Transaction[] memory _txs, uint256 _nonce, bytes memory _signature)
     public
   {
-    // Check if signature is valid and update nonce
-    _signatureValidation(abi.encode(_txs), _signature);
+    // Validate and update nonce
+    _validateNonce(_nonce);
+
+    // Check if signature is valid
+    _signatureValidation(abi.encode(_nonce, _txs), _signature);
 
     for (uint256 i = 0; i < _txs.length; i++) {
       // Execute every transaction
