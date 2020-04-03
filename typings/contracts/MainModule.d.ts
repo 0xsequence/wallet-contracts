@@ -47,6 +47,30 @@ interface MainModuleInterface extends Interface {
         Arrayish
       ]): string;
     }>;
+
+    onERC1155Received: TypedFunctionDescription<{
+      encode([, , , ,]: [
+        string,
+        string,
+        BigNumberish,
+        BigNumberish,
+        Arrayish
+      ]): string;
+    }>;
+
+    onERC1155BatchReceived: TypedFunctionDescription<{
+      encode([, , , ,]: [
+        string,
+        string,
+        BigNumberish[],
+        BigNumberish[],
+        Arrayish
+      ]): string;
+    }>;
+
+    onERC721Received: TypedFunctionDescription<{
+      encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
+    }>;
   };
 
   events: {
@@ -104,6 +128,29 @@ export class MainModule extends Contract {
       _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    onERC1155Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BigNumberish,
+      arg4: Arrayish
+    ): Promise<string>;
+
+    onERC1155BatchReceived(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish[],
+      arg3: BigNumberish[],
+      arg4: Arrayish
+    ): Promise<string>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: Arrayish
+    ): Promise<string>;
   };
 
   FACTORY(): Promise<string>;
@@ -136,6 +183,29 @@ export class MainModule extends Contract {
     _signature: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
+
+  onERC1155Received(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish,
+    arg3: BigNumberish,
+    arg4: Arrayish
+  ): Promise<string>;
+
+  onERC1155BatchReceived(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish[],
+    arg3: BigNumberish[],
+    arg4: Arrayish
+  ): Promise<string>;
+
+  onERC721Received(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish,
+    arg3: Arrayish
+  ): Promise<string>;
 
   filters: {
     NonceChange(newNonce: null): EventFilter;
@@ -172,6 +242,29 @@ export class MainModule extends Contract {
         data: Arrayish;
       }[],
       _signature: Arrayish
+    ): Promise<BigNumber>;
+
+    onERC1155Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BigNumberish,
+      arg4: Arrayish
+    ): Promise<BigNumber>;
+
+    onERC1155BatchReceived(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish[],
+      arg3: BigNumberish[],
+      arg4: Arrayish
+    ): Promise<BigNumber>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: Arrayish
     ): Promise<BigNumber>;
   };
 }

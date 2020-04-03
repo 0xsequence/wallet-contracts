@@ -212,7 +212,46 @@ contract MainModule is Implementation, SignatureValidator {
     }
   }
 
+  /***********************************|
+  |           Default hooks           |
+  |__________________________________*/
+
+  /**
+   * @notice Handle the receipt of a single ERC1155 token type.
+   * @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+   */
+  function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure returns (bytes4) {
+    return MainModule.onERC1155Received.selector;
+  }
+
+  /**
+   * @notice Handle the receipt of multiple ERC1155 token types.
+   * @return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+   */
+  function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata) external pure returns (bytes4) {
+    return MainModule.onERC1155BatchReceived.selector;
+  }
+
+  /**
+   * @notice Handle the receipt of a single ERC721 token.
+   * @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
+   */
+  function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+    return MainModule.onERC721Received.selector;
+  }
+
   /* solhint-disable */
+
+  /**
+   * @notice Routes fallback calls through hooks
+   */
+  fallback() external payable {
+    address target = hooks[msg.sig];
+    if (target != address(0)) {
+      (bool success, bytes memory result) = target.delegatecall(msg.data);
+      if (!success) assembly { revert(add(result, 0x20), mload(result)) }
+    }
+  }
 
   /**
    * @notice Allows the wallet to receive ETH

@@ -5,6 +5,7 @@ import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
 import { ModuleMock } from 'typings/contracts/ModuleMock'
+import { HookCallerMock } from 'typings/contracts/HookCallerMock'
 
 ethers.errors.setLogLevel("error")
 
@@ -13,6 +14,7 @@ const MainModuleArtifact = artifacts.require('MainModule')
 const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 const ModuleMockArtifact = artifacts.require('ModuleMock')
+const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 
 const web3 = (global as any).web3
 
@@ -621,6 +623,26 @@ contract('MainModule', (accounts: string[]) => {
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
 
       expect(reason).to.equal("MainModule#_actionExecution: INVALID_ACTION")
+    })
+  })
+  describe('Hooks', () => {
+    describe('receive tokens', () => {
+      let hookMock
+      before(async () => {
+        hookMock = await HookCallerMockArtifact.new() as HookCallerMock
+      })
+      it('Should implement ERC1155 single transfer hook', async () => {
+        await hookMock.callERC1155Received(wallet.address)
+      })
+      it('Should implement ERC1155 batch transfer hook', async () => {
+        await hookMock.callERC1155BatchReceived(wallet.address)
+      })
+      it('Should implement ERC721 transfer hook', async () => {
+        await hookMock.callERC721Received(wallet.address)
+      })
+      it('Should implement ERC223 transfer hook', async () => {
+        await hookMock.callERC223Received(wallet.address)
+      })
     })
   })
 })
