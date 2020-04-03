@@ -39,28 +39,11 @@ interface MainModuleInterface extends Interface {
       encode([_txs, _signature]: [
         {
           action: BigNumberish;
+          optional: boolean;
           target: string;
           value: BigNumberish;
           data: Arrayish;
         }[],
-        Arrayish
-      ]): string;
-    }>;
-
-    executeWithFee: TypedFunctionDescription<{
-      encode([_txs, _gasPaymentTx, _signature]: [
-        {
-          action: BigNumberish;
-          target: string;
-          value: BigNumberish;
-          data: Arrayish;
-        }[],
-        {
-          action: BigNumberish;
-          target: string;
-          value: BigNumberish;
-          data: Arrayish;
-        },
         Arrayish
       ]): string;
     }>;
@@ -69,6 +52,10 @@ interface MainModuleInterface extends Interface {
   events: {
     NonceChange: TypedEventDescription<{
       encodeTopics([newNonce]: [null]): string[];
+    }>;
+
+    TxFailed: TypedEventDescription<{
+      encodeTopics([_transaction, _reason]: [null, null]): string[];
     }>;
   };
 }
@@ -109,27 +96,11 @@ export class MainModule extends Contract {
     execute(
       _txs: {
         action: BigNumberish;
+        optional: boolean;
         target: string;
         value: BigNumberish;
         data: Arrayish;
       }[],
-      _signature: Arrayish,
-      overrides?: TransactionOverrides
-    ): Promise<ContractTransaction>;
-
-    executeWithFee(
-      _txs: {
-        action: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: Arrayish;
-      }[],
-      _gasPaymentTx: {
-        action: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: Arrayish;
-      },
       _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
@@ -157,33 +128,19 @@ export class MainModule extends Contract {
   execute(
     _txs: {
       action: BigNumberish;
+      optional: boolean;
       target: string;
       value: BigNumberish;
       data: Arrayish;
     }[],
-    _signature: Arrayish,
-    overrides?: TransactionOverrides
-  ): Promise<ContractTransaction>;
-
-  executeWithFee(
-    _txs: {
-      action: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: Arrayish;
-    }[],
-    _gasPaymentTx: {
-      action: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: Arrayish;
-    },
     _signature: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
   filters: {
     NonceChange(newNonce: null): EventFilter;
+
+    TxFailed(_transaction: null, _reason: null): EventFilter;
   };
 
   estimate: {
@@ -209,26 +166,11 @@ export class MainModule extends Contract {
     execute(
       _txs: {
         action: BigNumberish;
+        optional: boolean;
         target: string;
         value: BigNumberish;
         data: Arrayish;
       }[],
-      _signature: Arrayish
-    ): Promise<BigNumber>;
-
-    executeWithFee(
-      _txs: {
-        action: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: Arrayish;
-      }[],
-      _gasPaymentTx: {
-        action: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: Arrayish;
-      },
       _signature: Arrayish
     ): Promise<BigNumber>;
   };

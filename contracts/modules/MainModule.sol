@@ -51,12 +51,15 @@ contract MainModule is Implementation, SignatureValidator {
 
   event NonceChange(uint256 newNonce);
 
+  event TxFailed(Transaction _transaction, bytes _reason);
+
   /***********************************|
   |              Structs              |
   |__________________________________*/
 
   struct Transaction {
     Action action;  // Action to use for the transaction
+    bool optional;  // Ignored upon failure
     address target; // Address of the contract to call
     uint256 value;  // Amount of ETH to pass with the call
     bytes data;     // calldata to pass
@@ -120,6 +123,31 @@ contract MainModule is Implementation, SignatureValidator {
   }
 
   /**
+   * @notice Logs a failed transaction, reverts if the transaction is not optional
+   * @param _tx      Transaction that is reverting
+   * @param _reason  Revert message
+   */
+  function _revert(Transaction memory _tx, string memory _reason) internal {
+    // Encoded like a call to a `Error(string)` function, as defined
+    // by the Solidity 0.6.0 documentation
+    // Ref: https://solidity.readthedocs.io/en/v0.6.0/control-structures.html#id4
+    _revertBytes(_tx, abi.encodeWithSelector(0x08c379a0, _reason));
+  }
+
+  /**
+   * @notice Logs a failed transaction, reverts if the transaction is not optional
+   * @param _tx      Transaction that is reverting
+   * @param _reason  Encoded revert message
+   */
+  function _revertBytes(Transaction memory _tx, bytes memory _reason) internal {
+    if (_tx.optional) {
+      emit TxFailed(_tx, _reason);
+    } else {
+      assembly { revert(add(_reason, 0x20), mload(_reason)) }
+    }
+  }
+
+  /**
    * @notice Allow wallet owner to execute an action
    * @param _tx Transaction to process
    */
@@ -130,39 +158,39 @@ contract MainModule is Implementation, SignatureValidator {
     if (_tx.action == Action.External) {
       // solium-disable-next-line security/no-call-value
       (bool success, bytes memory result) = _tx.target.call.value(_tx.value)(_tx.data);
-      if (!success) assembly { revert(add(result, 0x20), mload(result)) }
+      if (!success) _revertBytes(_tx, result);
 
     // Delegates a call to a provided implementation
     } else if (_tx.action == Action.Delegate) {
       (bool success, bytes memory result) = _tx.target.delegatecall(_tx.data);
-      if (!success) assembly { revert(add(result, 0x20), mload(result)) }
+      if (!success) _revertBytes(_tx, result);
 
     // Adds a new module to the wallet
     } else if (_tx.action == Action.AddModule) {
-      require(!modules[_tx.target], "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
+      if (modules[_tx.target]) _revert(_tx, "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
       modules[_tx.target] = true;
 
     // Adds a new module to the wallet
     } else if (_tx.action == Action.RemoveModule) {
-      require(modules[_tx.target], "MainModule#_actionExecution: MODULE_NOT_REGISTERED");
+      if (!modules[_tx.target]) _revert(_tx, "MainModule#_actionExecution: MODULE_NOT_REGISTERED");
       modules[_tx.target] = false;
 
     // Adds a new hook to the wallet
     } else if (_tx.action == Action.AddHook) {
       bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
-      require(hooks[hook_signature] == address(0x0), "MainModule#_actionExecution: HOOK_ALREADY_REGISTERED");
+      if (hooks[hook_signature] != address(0x0)) _revert(_tx, "MainModule#_actionExecution: HOOK_ALREADY_REGISTERED");
       hooks[hook_signature] = _tx.target;
 
     // Remove a hook from the wallet
     } else if (_tx.action == Action.RemoveHook) {
       bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
-      require(hooks[hook_signature] != address(0x0), "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
+      if (hooks[hook_signature] == address(0x0)) _revert(_tx, "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
       hooks[hook_signature] = _tx.target;
 
     // Update wallet implementation
     } else if (_tx.action == Action.UpdateImp) {
       address new_implementation = abi.decode(_tx.data, (address));
-      require(new_implementation != address(0), "MainModule#_actionExecution: INVALID_IMPLEMENTATION");
+      if (new_implementation == address(0x0)) _revert(_tx, "MainModule#_actionExecution: INVALID_IMPLEMENTATION");
       _setImplementation(new_implementation);
 
     } else {

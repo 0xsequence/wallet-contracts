@@ -42,6 +42,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should accept initial owner signature', async () => {
       const transaction = {
         action: MetaAction.external,
+        optional: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -56,6 +57,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        optional: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -72,6 +74,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           action: MetaAction.external,
+          optional: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -87,6 +90,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           action: MetaAction.external,
+          optional: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -105,6 +109,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            optional: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -119,6 +124,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            optional: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -134,6 +140,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            optional: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -149,6 +156,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            optional: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -164,6 +172,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            optional: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -179,6 +188,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            optional: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -194,6 +204,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            optional: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -213,6 +224,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.updateImp,
+        optional: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: ethers.utils.defaultAbiCoder.encode(['address'], [newImplementation.address])
@@ -228,6 +240,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
         action: MetaAction.updateImp,
+        optional: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
@@ -248,6 +261,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        optional: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -265,6 +279,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        optional: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -288,11 +303,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           action: MetaAction.external,
+          optional: false,
           target: callReceiver1.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
         },{
           action: MetaAction.external,
+          optional: false,
           target: callReceiver2.address,
           value: ethers.constants.Zero,
           data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
@@ -317,11 +334,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           action: MetaAction.external,
+          optional: false,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
         }, {
           action: MetaAction.external,
+          optional: false,
           target: receiver.address,
           value: 26,
           data: []
@@ -343,11 +362,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           action: MetaAction.external,
+          optional: false,
           target: receiver.address,
           value: 26,
           data: []
         }, {
           action: MetaAction.external,
+          optional: false,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -371,6 +392,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        optional: false,
         target: receiver.address,
         value: 25,
         data: []
@@ -392,6 +414,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        optional: false,
         target: callReceiver.address,
         value: value,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
