@@ -42,6 +42,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should accept initial owner signature', async () => {
       const transaction = {
         action: MetaAction.external,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -56,6 +57,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -72,6 +74,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           action: MetaAction.external,
+          skipOnError: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -87,6 +90,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           action: MetaAction.external,
+          skipOnError: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -105,6 +109,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -119,6 +124,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -134,6 +140,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -149,6 +156,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -164,6 +172,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -179,6 +188,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -194,6 +204,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             action: MetaAction.external,
+            skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -213,6 +224,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.updateImp,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: ethers.utils.defaultAbiCoder.encode(['address'], [newImplementation.address])
@@ -228,6 +240,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
         action: MetaAction.updateImp,
+        skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
@@ -248,6 +261,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        skipOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -265,6 +279,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        skipOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -274,6 +289,96 @@ contract('MainModule', (accounts: string[]) => {
 
       const tx = wallet.execute([transaction], signature)
       await expect(tx).to.be.rejectedWith(RevertError("CallReceiverMock#testCall: REVERT_FLAG"))
+    })
+    describe('Batch transactions', () => {
+      it('Should perform multiple calls to contracts in one tx', async () => {
+        const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+        const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+        const val1A = 5423
+        const val1B = web3.utils.randomHex(120)
+
+        const val2A = 695412
+        const val2B = web3.utils.randomHex(35)
+
+        const transactions = [{
+          action: MetaAction.external,
+          skipOnError: false,
+          target: callReceiver1.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
+        },{
+          action: MetaAction.external,
+          skipOnError: false,
+          target: callReceiver2.address,
+          value: ethers.constants.Zero,
+          data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
+        }]
+
+        const signature = await signMetaTransactions(wallet, owner, transactions)
+
+        await wallet.execute(transactions, signature)
+        expect(await callReceiver1.lastValA()).to.eq.BN(val1A)
+        expect(await callReceiver1.lastValB()).to.equal(val1B)
+        expect(await callReceiver2.lastValA()).to.eq.BN(val2A)
+        expect(await callReceiver2.lastValB()).to.equal(val2B)
+      })
+      it('Should perform call a contract and transfer eth in one tx', async () => {
+        const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+        const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+        await wallet.send(100, { from: accounts[0] })
+
+        const valA = 5423
+        const valB = web3.utils.randomHex(120)
+
+        const transactions = [{
+          action: MetaAction.external,
+          skipOnError: false,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        }, {
+          action: MetaAction.external,
+          skipOnError: false,
+          target: receiver.address,
+          value: 26,
+          data: []
+        }]
+
+        const signature = await signMetaTransactions(wallet, owner, transactions)
+
+        await wallet.execute(transactions, signature)
+        expect(await callReceiver.lastValA()).to.eq.BN(valA)
+        expect(await callReceiver.lastValB()).to.equal(valB)
+        expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(26)
+      })
+      it('Should fail if one transaction fails', async () => {
+        const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+        const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+        await callReceiver.setRevertFlag(true)
+        await wallet.send(100, { from: accounts[0] })
+
+        const transactions = [{
+          action: MetaAction.external,
+          skipOnError: false,
+          target: receiver.address,
+          value: 26,
+          data: []
+        }, {
+          action: MetaAction.external,
+          skipOnError: false,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(0, []).encodeABI()
+        }]
+
+        const signature = await signMetaTransactions(wallet, owner, transactions)
+
+        const tx = wallet.execute(transactions, signature)
+        await expect(tx).to.be.rejectedWith('CallReceiverMock#testCall: REVERT_FLAG')
+      })
     })
   })
   describe('Handle ETH', () => {
@@ -287,6 +392,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        skipOnError: false,
         target: receiver.address,
         value: 25,
         data: []
@@ -308,6 +414,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         action: MetaAction.external,
+        skipOnError: false,
         target: callReceiver.address,
         value: value,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -319,6 +426,199 @@ contract('MainModule', (accounts: string[]) => {
       expect(await web3.eth.getBalance(callReceiver.address)).to.eq.BN(value)
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+  })
+  describe('Optional transactions', () => {
+    it('Should skip a skipOnError transaction', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+      await callReceiver.setRevertFlag(true)
+
+      const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
+
+      const transaction = {
+        action: MetaAction.external,
+        skipOnError: true,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: data
+      }
+
+      const signature = await signMetaTransactions(wallet, owner, [transaction])
+
+      const tx = await wallet.execute([transaction], signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+
+      expect(event.args._index).to.eq.BN(0)
+    })
+    it('Should skip failing transaction within batch', async () => {
+      const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver1.setRevertFlag(true)
+
+      const valA = 912341
+      const valB = web3.utils.randomHex(30)
+
+      const data1 = callReceiver1.contract.methods.testCall(0, []).encodeABI()
+      const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
+
+      const transactions = [{
+        action: MetaAction.external,
+        skipOnError: true,
+        target: callReceiver1.address,
+        value: ethers.constants.Zero,
+        data: data1
+      }, {
+        action: MetaAction.external,
+        skipOnError: false,
+        target: callReceiver2.address,
+        value: ethers.constants.Zero,
+        data: data2
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+
+      expect(await callReceiver2.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver2.lastValB()).to.equal(valB)
+    })
+    it('Should skip multiple failing transactions within batch', async () => {
+      const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver1.setRevertFlag(true)
+
+      const valA = 912341
+      const valB = web3.utils.randomHex(30)
+
+      const data1 = callReceiver1.contract.methods.testCall(0, []).encodeABI()
+      const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
+
+      const transactions = [{
+        action: MetaAction.external,
+        skipOnError: true,
+        target: callReceiver1.address,
+        value: ethers.constants.Zero,
+        data: data1
+      }, {
+        action: MetaAction.external,
+        skipOnError: true,
+        target: callReceiver1.address,
+        value: ethers.constants.Zero,
+        data: data1
+      }, {
+        action: MetaAction.external,
+        skipOnError: false,
+        target: callReceiver2.address,
+        value: ethers.constants.Zero,
+        data: data2
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event1 = tx.logs[1]
+      const event2 = tx.logs[2]
+
+      const reason1 = web3.eth.abi.decodeParameter('string', event1.args._reason.slice(10))
+      const reason2 = web3.eth.abi.decodeParameter('string', event2.args._reason.slice(10))
+
+      expect(reason1).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+      expect(reason2).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+
+      expect(event1.args._index).to.eq.BN(0)
+      expect(event2.args._index).to.eq.BN(1)
+
+      expect(await callReceiver2.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver2.lastValB()).to.equal(valB)
+    })
+    it('Should skip all failing transactions within batch', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver.setRevertFlag(true)
+
+      const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
+
+      const transactions = [{
+        action: MetaAction.external,
+        skipOnError: true,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: data
+      }, {
+        action: MetaAction.external,
+        skipOnError: true,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: data
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event1 = tx.logs.pop()
+      const event2 = tx.logs.pop()
+
+      const reason1 = web3.eth.abi.decodeParameter('string', event1.args._reason.slice(10))
+      const reason2 = web3.eth.abi.decodeParameter('string', event2.args._reason.slice(10))
+
+      expect(reason1).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+      expect(reason2).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
+    })
+    it('Should skip skipOnError update implementation action', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver.setRevertFlag(true)
+
+      const transactions = [{
+        action: MetaAction.updateImp,
+        skipOnError: true,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("MainModule#_actionExecution: INVALID_IMPLEMENTATION")
+      expect(await wallet.nonce()).to.eq.BN(1)
+    })
+    it('Should skip skipOnError invalid action', async () => {
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      await callReceiver.setRevertFlag(true)
+
+      const transactions = [{
+        action: MetaAction.illegal,
+        skipOnError: true,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }]
+
+      const signature = await signMetaTransactions(wallet, owner, transactions)
+
+      const tx = await wallet.execute(transactions, signature)
+      const event = tx.logs.pop()
+
+      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
+
+      expect(reason).to.equal("MainModule#_actionExecution: INVALID_ACTION")
     })
   })
 })
