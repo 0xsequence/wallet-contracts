@@ -6,6 +6,7 @@ import { Factory } from 'typings/contracts/Factory'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
 import { ModuleMock } from 'typings/contracts/ModuleMock'
 import { HookCallerMock } from 'typings/contracts/HookCallerMock'
+import { HookMock } from 'typings/contracts/HookMock'
 
 ethers.errors.setLogLevel("error")
 
@@ -15,6 +16,7 @@ const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 const ModuleMockArtifact = artifacts.require('ModuleMock')
 const HookCallerMockArtifact = artifacts.require('HookCallerMock')
+const HookMockArtifact = artifacts.require('HookMock')
 
 const web3 = (global as any).web3
 
@@ -637,6 +639,58 @@ contract('MainModule', (accounts: string[]) => {
           signature
         )
         expect(tx).to.be.rejectedWith("HookCallerMock#callERC1271isValidSignatureHash: INVALID_RETURN")
+      })
+    })
+    describe.only('External hooks', () => {
+      let hookMock
+      before(async () => {
+        hookMock = await HookMockArtifact.new() as HookMock
+      })
+      it('Should forward call to external hook', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const transaction = {
+          action: MetaAction.addHook,
+          skipOnError: false,
+          target: hookMock.address,
+          value: ethers.constants.Zero,
+          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
+
+        const walletHook = await HookMockArtifact.at(wallet.address) as HookMock
+        expect(await walletHook.onHookMockCall(21)).to.eq.BN(42)
+      })
+      it('Should not forward call to deregistered hook', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const transaction1 = {
+          action: MetaAction.addHook,
+          skipOnError: false,
+          target: hookMock.address,
+          value: ethers.constants.Zero,
+          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction1])
+
+        const transaction2 = {
+          action: MetaAction.removeHook,
+          skipOnError: false,
+          target: ethers.constants.AddressZero,
+          value: ethers.constants.Zero,
+          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction2])
+
+        const walletHook = await HookMockArtifact.at(wallet.address) as HookMock
+        const tx = walletHook.onHookMockCall(21)
+        await expect(tx).to.be.rejectedWith("Returned values aren't valid, did it run Out of Gas?")
+      })
+      it('Should pass calling a non registered hook', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        await web3.eth.sendTransaction({ from: accounts[0], to: wallet.address, data: data })
       })
     })
   })
