@@ -30,7 +30,7 @@ interface MainModuleInterface extends Interface {
       encode([_txs, _nonce, _signature]: [
         {
           action: BigNumberish;
-          optional: boolean;
+          skipOnError: boolean;
           target: string;
           value: BigNumberish;
           data: Arrayish;
@@ -75,7 +75,7 @@ interface MainModuleInterface extends Interface {
     }>;
 
     TxFailed: TypedEventDescription<{
-      encodeTopics([_transaction, _reason]: [null, null]): string[];
+      encodeTopics([_index, _reason]: [null, null]): string[];
     }>;
   };
 }
@@ -109,7 +109,7 @@ export class MainModule extends Contract {
     execute(
       _txs: {
         action: BigNumberish;
-        optional: boolean;
+        skipOnError: boolean;
         target: string;
         value: BigNumberish;
         data: Arrayish;
@@ -163,7 +163,7 @@ export class MainModule extends Contract {
   execute(
     _txs: {
       action: BigNumberish;
-      optional: boolean;
+      skipOnError: boolean;
       target: string;
       value: BigNumberish;
       data: Arrayish;
@@ -204,7 +204,7 @@ export class MainModule extends Contract {
   filters: {
     NonceChange(newNonce: null): EventFilter;
 
-    TxFailed(_transaction: null, _reason: null): EventFilter;
+    TxFailed(_index: null, _reason: null): EventFilter;
   };
 
   estimate: {
@@ -223,7 +223,7 @@ export class MainModule extends Contract {
     execute(
       _txs: {
         action: BigNumberish;
-        optional: boolean;
+        skipOnError: boolean;
         target: string;
         value: BigNumberish;
         data: Arrayish;

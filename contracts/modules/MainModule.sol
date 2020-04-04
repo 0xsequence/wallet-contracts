@@ -62,18 +62,18 @@ contract MainModule is
 
   event NonceChange(uint256 newNonce);
 
-  event TxFailed(Transaction _transaction, bytes _reason);
+  event TxFailed(uint256 _index, bytes _reason);
 
   /***********************************|
   |              Structs              |
   |__________________________________*/
 
   struct Transaction {
-    Action action;  // Action to use for the transaction
-    bool optional;  // Ignored upon failure
-    address target; // Address of the contract to call
-    uint256 value;  // Amount of ETH to pass with the call
-    bytes data;     // calldata to pass
+    Action action;     // Action to use for the transaction
+    bool skipOnError;  // Ignored upon failure
+    address target;    // Address of the contract to call
+    uint256 value;     // Amount of ETH to pass with the call
+    bytes data;        // calldata to pass
   }
 
   /***********************************|
@@ -153,30 +153,32 @@ contract MainModule is
 
     for (uint256 i = 0; i < _txs.length; i++) {
       // Execute every transaction
-      _actionExecution(_txs[i]);
+      _actionExecution(_txs[i], i);
     }
   }
 
   /**
    * @notice Logs a failed transaction, reverts if the transaction is not optional
    * @param _tx      Transaction that is reverting
+   * @param _index   Index of transaction in batch
    * @param _reason  Revert message
    */
-  function _revert(Transaction memory _tx, string memory _reason) internal {
+  function _revert(Transaction memory _tx, uint256 _index, string memory _reason) internal {
     // Encoded like a call to a `Error(string)` function, as defined
     // by the Solidity 0.6.0 documentation
     // Ref: https://solidity.readthedocs.io/en/v0.6.0/control-structures.html#id4
-    _revertBytes(_tx, abi.encodeWithSelector(0x08c379a0, _reason));
+    _revertBytes(_tx, _index, abi.encodeWithSelector(0x08c379a0, _reason));
   }
 
   /**
    * @notice Logs a failed transaction, reverts if the transaction is not optional
    * @param _tx      Transaction that is reverting
+   * @param _index   Index of transaction in batch
    * @param _reason  Encoded revert message
    */
-  function _revertBytes(Transaction memory _tx, bytes memory _reason) internal {
-    if (_tx.optional) {
-      emit TxFailed(_tx, _reason);
+  function _revertBytes(Transaction memory _tx, uint256 _index, bytes memory _reason) internal {
+    if (_tx.skipOnError) {
+      emit TxFailed(_index, _reason);
     } else {
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
     }
@@ -184,28 +186,29 @@ contract MainModule is
 
   /**
    * @notice Allow wallet owner to execute an action
-   * @param _tx Transaction to process
+   * @param _tx     Transaction to process
+   * @param _index  Index of transaction in batch
    */
-  function _actionExecution(Transaction memory _tx)
+  function _actionExecution(Transaction memory _tx, uint256 _index)
     internal
   {
     // Performs an external call
     if (_tx.action == Action.External) {
       // solium-disable-next-line security/no-call-value
       (bool success, bytes memory result) = _tx.target.call.value(_tx.value)(_tx.data);
-      if (!success) _revertBytes(_tx, result);
+      if (!success) _revertBytes(_tx, _index, result);
 
     // Delegates a call to a provided implementation
     } else if (_tx.action == Action.Delegate) {
       (bool success, bytes memory result) = _tx.target.delegatecall(_tx.data);
-      if (!success) _revertBytes(_tx, result);
+      if (!success) _revertBytes(_tx, _index, result);
 
     // Adds a new module to the wallet
     } else if (_tx.action == Action.AddModule) {
       if (!modules[_tx.target]) {
         modules[_tx.target] = true;
       } else {
-        _revert(_tx, "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
+        _revert(_tx, _index, "MainModule#_actionExecution: MODULE_ALREADY_REGISTERED");
       }
 
     // Adds a new module to the wallet
@@ -213,7 +216,7 @@ contract MainModule is
       if (modules[_tx.target]) {
         modules[_tx.target] = false;
       } else {
-        _revert(_tx, "MainModule#_actionExecution: MODULE_NOT_REGISTERED");
+        _revert(_tx, _index, "MainModule#_actionExecution: MODULE_NOT_REGISTERED");
       }
 
     // Adds a new hook to the wallet
@@ -222,7 +225,7 @@ contract MainModule is
       if (hooks[hook_signature] == address(0x0)) {
         hooks[hook_signature] = _tx.target;
       } else {
-        _revert(_tx, "MainModule#_actionExecution: HOOK_ALREADY_REGISTERED");
+        _revert(_tx, _index, "MainModule#_actionExecution: HOOK_ALREADY_REGISTERED");
       }
 
     // Remove a hook from the wallet
@@ -231,7 +234,7 @@ contract MainModule is
       if (hooks[hook_signature] != address(0x0)){
         hooks[hook_signature] = _tx.target;
       } else {
-        _revert(_tx, "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
+        _revert(_tx, _index, "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
       }
 
     // Update wallet implementation
@@ -240,10 +243,10 @@ contract MainModule is
       if (new_implementation != address(0x0)) {
         _setImplementation(new_implementation);
       } else {
-        _revert(_tx, "MainModule#_actionExecution: INVALID_IMPLEMENTATION");
+        _revert(_tx, _index, "MainModule#_actionExecution: INVALID_IMPLEMENTATION");
       }
     } else {
-      _revert(_tx, "MainModule#_actionExecution: INVALID_ACTION");
+      _revert(_tx, _index, "MainModule#_actionExecution: INVALID_ACTION");
     }
   }
 
