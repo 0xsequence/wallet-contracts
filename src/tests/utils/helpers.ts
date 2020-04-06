@@ -111,7 +111,7 @@ export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Arra
 }
 
 export const MetaTransactionsType = `tuple(
-  uint256 action,
+  bool delegateCall,
   bool skipOnError,
   address target,
   uint256 value,
@@ -121,7 +121,7 @@ export const MetaTransactionsType = `tuple(
 export function encodeMetaTransactionsData(
   owner: string,
   txs: {
-    action: BigNumberish;
+    delegateCall: boolean;
     skipOnError: boolean;
     target: string;
     value: BigNumberish;
@@ -140,7 +140,7 @@ export async function signMetaTransactions(
   wallet: MainModule,
   owner: ethers.Wallet,
   txs: {
-    action: BigNumberish;
+    delegateCall: boolean;
     skipOnError: boolean;
     target: string;
     value: BigNumberish;
@@ -160,7 +160,7 @@ export async function signAndExecuteMetaTx(
   wallet: MainModule,
   owner: ethers.Wallet,
   txs: {
-    action: BigNumberish;
+    delegateCall: boolean;
     skipOnError: boolean;
     target: string;
     value: BigNumberish;
@@ -171,15 +171,4 @@ export async function signAndExecuteMetaTx(
   if (!nonce) nonce = await nextNonce(wallet)
   const signature = await signMetaTransactions(wallet, owner, txs, nonce)
   return wallet.execute(txs, nonce, signature)
-}
-
-export const MetaAction = {
-  illegal: 0,
-  delegate: 1,
-  external: 2,
-  addModule: 3,
-  removeModule: 4,
-  addHook: 5,
-  removeHook: 6,
-  updateImp: 7
 }
