@@ -1,10 +1,12 @@
 import * as ethers from 'ethers'
-import { expect, ethSign, signMetaTransactions, RevertError, MetaAction } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, MetaAction, ethSign } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
 import { ModuleMock } from 'typings/contracts/ModuleMock'
+import { HookCallerMock } from 'typings/contracts/HookCallerMock'
+import { HookMock } from 'typings/contracts/HookMock'
 
 ethers.errors.setLogLevel("error")
 
@@ -13,6 +15,8 @@ const MainModuleArtifact = artifacts.require('MainModule')
 const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 const ModuleMockArtifact = artifacts.require('ModuleMock')
+const HookCallerMockArtifact = artifacts.require('HookCallerMock')
+const HookMockArtifact = artifacts.require('HookMock')
 
 const web3 = (global as any).web3
 
@@ -48,9 +52,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
     })
     it('Should reject non-owner signature', async () => {
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -63,9 +65,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const signature = await signMetaTransactions(wallet, impostor, [transaction])
-
-      const tx = wallet.execute([transaction], signature)
+      const tx = signAndExecuteMetaTx(wallet, impostor, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
     })
     describe('Nonce', () => {
@@ -80,9 +80,7 @@ contract('MainModule', (accounts: string[]) => {
           data: []
         }
 
-        const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-        await wallet.execute([transaction], signature)
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
         expect(await wallet.nonce()).to.eq.BN(1)
       })
       it('Should emit NonceChange event', async () => {
@@ -96,9 +94,7 @@ contract('MainModule', (accounts: string[]) => {
           data: []
         }
 
-        const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-        const receipt = await wallet.execute([transaction], signature)
+        const receipt = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
         const ev = receipt.logs.pop()
         expect(ev.event).to.be.eql('NonceChange')
         expect(ev.args.newNonce).to.eq.BN(1)
@@ -115,9 +111,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
         })
         it('Should accept next consecutive nonce', async () => {
           const nonce = ethers.constants.Two
@@ -130,9 +124,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           expect(await wallet.nonce()).to.eq.BN(3)
         })
         it('Should accept next incremental nonce', async () => {
@@ -146,9 +138,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           expect(await wallet.nonce()).to.eq.BN(21)
         })
         it('Should accept maximum incremental nonce', async () => {
@@ -162,9 +152,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          await wallet.execute([transaction], signature)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           expect(await wallet.nonce()).to.eq.BN(102)
         })
         it('Should fail if nonce did not change', async () => {
@@ -178,9 +166,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          const tx = wallet.execute([transaction], signature)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
         it('Should fail if nonce delta is above 100', async () => {
@@ -194,9 +180,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          const tx = wallet.execute([transaction], signature)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
         it('Should fail if nonce decreases', async () => {
@@ -210,9 +194,7 @@ contract('MainModule', (accounts: string[]) => {
             data: []
           }
 
-          const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
-
-          const tx = wallet.execute([transaction], signature)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
       })
@@ -230,9 +212,7 @@ contract('MainModule', (accounts: string[]) => {
         data: ethers.utils.defaultAbiCoder.encode(['address'], [newImplementation.address])
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
 
       const mock_wallet = await ModuleMockArtifact.at(wallet.address) as ModuleMock
       expect((await mock_wallet.ping() as any).logs[0].event).to.equal("Pong")
@@ -246,9 +226,7 @@ contract('MainModule', (accounts: string[]) => {
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      const tx = wallet.execute([transaction], signature)
+      const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_actionExecution: INVALID_IMPLEMENTATION"))
     })
   })
@@ -267,9 +245,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
@@ -285,9 +261,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      const tx = wallet.execute([transaction], signature)
+      const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("CallReceiverMock#testCall: REVERT_FLAG"))
     })
     describe('Batch transactions', () => {
@@ -315,9 +289,7 @@ contract('MainModule', (accounts: string[]) => {
           data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
         }]
 
-        const signature = await signMetaTransactions(wallet, owner, transactions)
-
-        await wallet.execute(transactions, signature)
+        await signAndExecuteMetaTx(wallet, owner, transactions)
         expect(await callReceiver1.lastValA()).to.eq.BN(val1A)
         expect(await callReceiver1.lastValB()).to.equal(val1B)
         expect(await callReceiver2.lastValA()).to.eq.BN(val2A)
@@ -346,9 +318,7 @@ contract('MainModule', (accounts: string[]) => {
           data: []
         }]
 
-        const signature = await signMetaTransactions(wallet, owner, transactions)
-
-        await wallet.execute(transactions, signature)
+        await signAndExecuteMetaTx(wallet, owner, transactions)
         expect(await callReceiver.lastValA()).to.eq.BN(valA)
         expect(await callReceiver.lastValB()).to.equal(valB)
         expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(26)
@@ -374,9 +344,7 @@ contract('MainModule', (accounts: string[]) => {
           data: callReceiver.contract.methods.testCall(0, []).encodeABI()
         }]
 
-        const signature = await signMetaTransactions(wallet, owner, transactions)
-
-        const tx = wallet.execute(transactions, signature)
+        const tx = signAndExecuteMetaTx(wallet, owner, transactions)
         await expect(tx).to.be.rejectedWith('CallReceiverMock#testCall: REVERT_FLAG')
       })
     })
@@ -398,9 +366,7 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
       expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(25)
     })
     it('Should call payable function', async () => {
@@ -420,9 +386,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      await wallet.execute([transaction], signature)
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
       expect(await web3.eth.getBalance(callReceiver.address)).to.eq.BN(value)
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
@@ -443,9 +407,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data
       }
 
-      const signature = await signMetaTransactions(wallet, owner, [transaction])
-
-      const tx = await wallet.execute([transaction], signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
@@ -480,9 +442,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data2
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
@@ -524,9 +484,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data2
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event1 = tx.logs[1]
       const event2 = tx.logs[2]
 
@@ -563,9 +521,7 @@ contract('MainModule', (accounts: string[]) => {
         data: data
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event1 = tx.logs.pop()
       const event2 = tx.logs.pop()
 
@@ -588,9 +544,7 @@ contract('MainModule', (accounts: string[]) => {
         data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
@@ -611,14 +565,133 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }]
 
-      const signature = await signMetaTransactions(wallet, owner, transactions)
-
-      const tx = await wallet.execute(transactions, signature)
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
       const event = tx.logs.pop()
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
 
       expect(reason).to.equal("MainModule#_actionExecution: INVALID_ACTION")
+    })
+  })
+  describe('Hooks', () => {
+    let hookMock
+    before(async () => {
+      hookMock = await HookCallerMockArtifact.new() as HookCallerMock
+    })
+    describe('receive tokens', () => {
+      it('Should implement ERC1155 single transfer hook', async () => {
+        await hookMock.callERC1155Received(wallet.address)
+      })
+      it('Should implement ERC1155 batch transfer hook', async () => {
+        await hookMock.callERC1155BatchReceived(wallet.address)
+      })
+      it('Should implement ERC721 transfer hook', async () => {
+        await hookMock.callERC721Received(wallet.address)
+      })
+      it('Should implement ERC223 transfer hook', async () => {
+        await hookMock.callERC223Received(wallet.address)
+      })
+    })
+    describe('ERC1271 Wallet', () => {
+      let data
+      let message
+      let hash
+      beforeEach(async () => {
+        data = await web3.utils.randomHex(250)
+        message = ethers.utils.defaultAbiCoder.encode(
+          ['address', 'bytes'],
+          [wallet.address, data]
+        )
+        hash = ethers.utils.keccak256(message)
+      })
+      it('Should validate arbitrary signed data', async () => {
+        const signature = await ethSign(owner, message)
+        await hookMock.callERC1271isValidSignatureData(
+          wallet.address,
+          data,
+          signature
+        )
+      })
+      it('Should validate arbitrary signed hash', async () => {
+        const signature = await ethSign(owner, message)
+        await hookMock.callERC1271isValidSignatureHash(
+          wallet.address,
+          hash,
+          signature
+        )
+      })
+      it('Should reject data signed by non-owner', async () => {
+        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const signature = await ethSign(impostor, message)
+        const tx = hookMock.callERC1271isValidSignatureData(
+          wallet.address,
+          data,
+          signature
+        )
+        expect(tx).to.be.rejectedWith("HookCallerMock#callERC1271isValidSignatureData: INVALID_RETURN")
+      })
+      it('Should reject hash signed by non-owner', async () => {
+        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const signature = await ethSign(impostor, message)
+        const tx = hookMock.callERC1271isValidSignatureHash(
+          wallet.address,
+          hash,
+          signature
+        )
+        expect(tx).to.be.rejectedWith("HookCallerMock#callERC1271isValidSignatureHash: INVALID_RETURN")
+      })
+    })
+    describe('External hooks', () => {
+      let hookMock
+      before(async () => {
+        hookMock = await HookMockArtifact.new() as HookMock
+      })
+      it('Should forward call to external hook', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const transaction = {
+          action: MetaAction.addHook,
+          skipOnError: false,
+          target: hookMock.address,
+          value: ethers.constants.Zero,
+          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
+
+        const walletHook = await HookMockArtifact.at(wallet.address) as HookMock
+        expect(await walletHook.onHookMockCall(21)).to.eq.BN(42)
+      })
+      it('Should not forward call to deregistered hook', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const transaction1 = {
+          action: MetaAction.addHook,
+          skipOnError: false,
+          target: hookMock.address,
+          value: ethers.constants.Zero,
+          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction1])
+
+        const transaction2 = {
+          action: MetaAction.removeHook,
+          skipOnError: false,
+          target: ethers.constants.AddressZero,
+          value: ethers.constants.Zero,
+          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction2])
+
+        const walletHook = await HookMockArtifact.at(wallet.address) as HookMock
+        const tx = walletHook.onHookMockCall(21)
+        await expect(tx).to.be.rejectedWith("Returned values aren't valid, did it run Out of Gas?")
+      })
+      it('Should pass calling a non registered hook', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        await web3.eth.sendTransaction({ from: accounts[0], to: wallet.address, data: data })
+      })
     })
   })
 })

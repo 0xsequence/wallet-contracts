@@ -2,7 +2,15 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../utils/SignatureValidator.sol";
+
 import "./commons/Implementation.sol";
+import "./commons/ModuleAuth.sol";
+import "./commons/ModuleHooks.sol";
+
+import "../interfaces/receivers/IERC1155Receiver.sol";
+import "../interfaces/receivers/IERC721Receiver.sol";
+
+import "../interfaces/IERC1271Wallet.sol";
 
 
 /**
@@ -12,8 +20,7 @@ import "./commons/Implementation.sol";
  *   - private vs internal
  *   - Public vs External for main module
  */
-contract MainModule is Implementation, SignatureValidator {
-  mapping(bytes4 => address) public hooks;
+contract MainModule is Implementation, ModuleAuth, ModuleHooks {
   mapping(address => bool) public modules;
 
   /***********************************|
@@ -32,12 +39,6 @@ contract MainModule is Implementation, SignatureValidator {
     UpdateImp,    // Replaces the main implementation
     NActionTypes  // Number of valid actions
   }
-
-  // keccak256("placeholder-init-code-hash")
-  bytes32 public constant INIT_CODE_HASH = 0xa4e481c95834a9f994a80cd4ecc88bdd3e78ff54100ecf2903aa9ef3eed54a91;
-
-  // keccak256("placeholder-factory")[12:]
-  address public constant FACTORY = address(0x52AA901CAD8AFf3Cf157715c19632F79D9B2d049);
 
   /***********************************|
   |             Variables             |
@@ -70,35 +71,24 @@ contract MainModule is Implementation, SignatureValidator {
   |__________________________________*/
 
   /**
-   * @notice Verify if signer is default wallet owner
-   * @param _data Bytes array the user hashed and signed
-   * @param _signature Encoded signature
-   *       (bytes32 r, bytes32 s, uint8 v, uint256 nonce, SignatureType sigType)
+   * @notice Verify if a nonce is valid
+   * @param _nonce Nonce to validate
+   * @dev A valid nonce must be above the last one used
+   *   with a maximum delta of 100
    */
-  function _signatureValidation(bytes memory _data, bytes memory _signature)
-    private
-  {
+  function _validateNonce(uint256 _nonce) private {
     // Retrieve current nonce for this wallet
     uint256 current_nonce = nonce; // Lowest valid nonce for signer
-    uint256 signed_nonce = uint256(_signature.readBytes32(65));  // Nonce passed in the signature object
 
     // Verify if nonce is valid
     require(
-      (signed_nonce >= current_nonce) && (signed_nonce < (current_nonce + 100)),
+      (_nonce >= current_nonce) && (_nonce < (current_nonce + 100)),
       "MainModule#_auth: INVALID_NONCE"
     );
 
     // Update signature nonce
-    nonce = signed_nonce + 1;
-    emit NonceChange(signed_nonce + 1);
-
-    // Retrieve the signer
-    bytes32 tx_hash = keccak256(abi.encode(address(this), signed_nonce, _data));
-    address signer = recoverSigner(tx_hash, _signature);
-
-    // Verifier if wallet was created for signer
-    address candidate = address(uint256(keccak256(abi.encodePacked(byte(0xff), FACTORY, bytes32(uint256(signer)), INIT_CODE_HASH))));
-    require(candidate == address(this), "MainModule#_signatureValidation: INVALID_SIGNATURE");
+    nonce = _nonce + 1;
+    emit NonceChange(_nonce + 1);
   }
 
   /***********************************|
@@ -107,14 +97,21 @@ contract MainModule is Implementation, SignatureValidator {
 
   /**
    * @notice Allow wallet owner to execute an action
-   * @param _txs       Transactions to process
-   * @param _signature Encoded signature
+   * @param _txs        Transactions to process
+   * @param _nonce      Signature nonce
+   * @param _signature  Encoded signature
    */
-  function execute(Transaction[] memory _txs, bytes memory _signature)
+  function execute(Transaction[] memory _txs, uint256 _nonce, bytes memory _signature)
     public
   {
-    // Check if signature is valid and update nonce
-    _signatureValidation(abi.encode(_txs), _signature);
+    // Validate and update nonce
+    _validateNonce(_nonce);
+
+    // Check if signature is valid
+    require(
+      _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signature),
+      "MainModule#_signatureValidation: INVALID_SIGNATURE"
+    );
 
     for (uint256 i = 0; i < _txs.length; i++) {
       // Execute every transaction
@@ -197,7 +194,7 @@ contract MainModule is Implementation, SignatureValidator {
     } else if (_tx.action == Action.RemoveHook) {
       bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
       if (hooks[hook_signature] != address(0x0)){
-        hooks[hook_signature] = _tx.target;
+        delete hooks[hook_signature];
       } else {
         _revert(_tx, _index, "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
       }
