@@ -5,6 +5,8 @@ import "./ModuleAuth.sol";
 
 
 contract ModuleCalls is ModuleAuth {
+
+  // Transaction structure
   struct Transaction {
     bool delegateCall; // Performs delegatecall
     bool skipOnError;  // Ignored upon failure
@@ -13,10 +15,50 @@ contract ModuleCalls is ModuleAuth {
     bytes data;        // calldata to pass
   }
 
+  // Wallet's signature nonce
   uint256 public nonce = 0;
 
+  // Events
   event NonceChange(uint256 newNonce);
   event TxFailed(uint256 _index, bytes _reason);
+
+  /**
+   * @notice Allow wallet owner to execute an action
+   * @param _txs        Transactions to process
+   * @param _nonce      Signature nonce
+   * @param _signatures Signature stuct array
+   * @param _configs    Multisig configuration struct
+   */
+  function execute(
+    Transaction[] memory _txs,
+    Signature[] memory _signatures,
+    Configs memory _configs,
+    uint256 _nonce
+  )
+    public
+  {
+    // Validate and update nonce
+    _validateNonce(_nonce);
+
+    // Verify that signatures are valid
+    _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signatures, _configs);
+
+    // Execute transaction
+    for (uint256 i = 0; i < _txs.length; i++) {
+      Transaction memory transaction = _txs[i];
+
+      bool success;
+      bytes memory result;
+
+      if (transaction.delegateCall) {
+        (success, result) = transaction.target.delegatecall(transaction.data);
+      } else {
+        (success, result) = transaction.target.call.value(transaction.value)(transaction.data);
+      }
+
+      if (!success) _revertBytes(transaction, i, result);
+    }
+  }
 
   /**
    * @notice Verify if a nonce is valid
@@ -50,40 +92,6 @@ contract ModuleCalls is ModuleAuth {
       emit TxFailed(_index, _reason);
     } else {
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
-    }
-  }
-
-  /**
-   * @notice Allow wallet owner to execute an action
-   * @param _txs        Transactions to process
-   * @param _nonce      Signature nonce
-   * @param _signature  Encoded signature
-   */
-  function execute(Transaction[] memory _txs, uint256 _nonce, bytes memory _signature)
-    public
-  {
-    // Validate and update nonce
-    _validateNonce(_nonce);
-
-    // Check if signature is valid
-    require(
-      _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signature),
-      "MainModule#_signatureValidation: INVALID_SIGNATURE"
-    );
-
-    for (uint256 i = 0; i < _txs.length; i++) {
-      Transaction memory transaction = _txs[i];
-
-      bool success;
-      bytes memory result;
-
-      if (transaction.delegateCall) {
-        (success, result) = transaction.target.delegatecall(transaction.data);
-      } else {
-        (success, result) = transaction.target.call.value(transaction.value)(transaction.data);
-      }
-
-      if (!success) _revertBytes(transaction, i, result);
     }
   }
 }

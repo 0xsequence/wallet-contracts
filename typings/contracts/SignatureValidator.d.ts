@@ -12,17 +12,17 @@ import {
 
 interface SignatureValidatorInterface extends Interface {
   functions: {
-    isValidSignature: TypedFunctionDescription<{
-      encode([_signerAddress, _hash, _data, _signature]: [
-        string,
-        Arrayish,
-        Arrayish,
-        Arrayish
-      ]): string;
-    }>;
-
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+      encode([_hash, _signature]: [
+        Arrayish,
+        {
+          r: Arrayish;
+          s: Arrayish;
+          v: BigNumberish;
+          nonce: BigNumberish;
+          sigType: BigNumberish;
+        }
+      ]): string;
     }>;
   };
 
@@ -46,35 +46,41 @@ export class SignatureValidator extends Contract {
   interface: SignatureValidatorInterface;
 
   functions: {
-    isValidSignature(
-      _signerAddress: string,
+    recoverSigner(
       _hash: Arrayish,
-      _data: Arrayish,
-      _signature: Arrayish
-    ): Promise<boolean>;
-
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+      _signature: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }
+    ): Promise<string>;
   };
 
-  isValidSignature(
-    _signerAddress: string,
+  recoverSigner(
     _hash: Arrayish,
-    _data: Arrayish,
-    _signature: Arrayish
-  ): Promise<boolean>;
-
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    _signature: {
+      r: Arrayish;
+      s: Arrayish;
+      v: BigNumberish;
+      nonce: BigNumberish;
+      sigType: BigNumberish;
+    }
+  ): Promise<string>;
 
   filters: {};
 
   estimate: {
-    isValidSignature(
-      _signerAddress: string,
+    recoverSigner(
       _hash: Arrayish,
-      _data: Arrayish,
-      _signature: Arrayish
+      _signature: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }
     ): Promise<BigNumber>;
-
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
   };
 }

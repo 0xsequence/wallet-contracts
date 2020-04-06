@@ -21,7 +21,7 @@ interface MainModuleInterface extends Interface {
     }>;
 
     execute: TypedFunctionDescription<{
-      encode([_txs, _nonce, _signature]: [
+      encode([_txs, _signatures, _configs, _nonce]: [
         {
           delegateCall: boolean;
           skipOnError: boolean;
@@ -29,15 +29,28 @@ interface MainModuleInterface extends Interface {
           value: BigNumberish;
           data: Arrayish;
         }[],
-        BigNumberish,
-        Arrayish
+        {
+          r: Arrayish;
+          s: Arrayish;
+          v: BigNumberish;
+          nonce: BigNumberish;
+          sigType: BigNumberish;
+        }[],
+        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] },
+        BigNumberish
+      ]): string;
+    }>;
+
+    getConfigAddress: TypedFunctionDescription<{
+      encode([_configs]: [
+        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
       ]): string;
     }>;
 
     hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
 
     isValidSignature: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+      encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
 
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
@@ -67,11 +80,26 @@ interface MainModuleInterface extends Interface {
     }>;
 
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+      encode([_hash, _signature]: [
+        Arrayish,
+        {
+          r: Arrayish;
+          s: Arrayish;
+          v: BigNumberish;
+          nonce: BigNumberish;
+          sigType: BigNumberish;
+        }
+      ]): string;
     }>;
 
     removeHook: TypedFunctionDescription<{
       encode([_signature]: [Arrayish]): string;
+    }>;
+
+    updateConfigs: TypedFunctionDescription<{
+      encode([_newConfigs]: [
+        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
+      ]): string;
     }>;
 
     updateImplementation: TypedFunctionDescription<{
@@ -80,6 +108,10 @@ interface MainModuleInterface extends Interface {
   };
 
   events: {
+    ConfigsUpdated: TypedEventDescription<{
+      encodeTopics([newConfigs, newConfigHash]: [null, null]): string[];
+    }>;
+
     NonceChange: TypedEventDescription<{
       encodeTopics([newNonce]: [null]): string[];
     }>;
@@ -122,14 +154,31 @@ export class MainModule extends Contract {
         value: BigNumberish;
         data: Arrayish;
       }[],
+      _signatures: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }[],
+      _configs: {
+        treshold: BigNumberish;
+        keys: string[];
+        weigths: BigNumberish[];
+      },
       _nonce: BigNumberish,
-      _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    getConfigAddress(_configs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    }): Promise<string>;
+
     hooks(arg0: Arrayish): Promise<string>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
     nonce(): Promise<BigNumber>;
 
@@ -159,10 +208,28 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    recoverSigner(
+      _hash: Arrayish,
+      _signature: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }
+    ): Promise<string>;
 
     removeHook(
       _signature: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    updateConfigs(
+      _newConfigs: {
+        treshold: BigNumberish;
+        keys: string[];
+        weigths: BigNumberish[];
+      },
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
@@ -190,14 +257,31 @@ export class MainModule extends Contract {
       value: BigNumberish;
       data: Arrayish;
     }[],
+    _signatures: {
+      r: Arrayish;
+      s: Arrayish;
+      v: BigNumberish;
+      nonce: BigNumberish;
+      sigType: BigNumberish;
+    }[],
+    _configs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    },
     _nonce: BigNumberish,
-    _signature: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  getConfigAddress(_configs: {
+    treshold: BigNumberish;
+    keys: string[];
+    weigths: BigNumberish[];
+  }): Promise<string>;
+
   hooks(arg0: Arrayish): Promise<string>;
 
-  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
   nonce(): Promise<BigNumber>;
 
@@ -227,10 +311,28 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  recoverSigner(
+    _hash: Arrayish,
+    _signature: {
+      r: Arrayish;
+      s: Arrayish;
+      v: BigNumberish;
+      nonce: BigNumberish;
+      sigType: BigNumberish;
+    }
+  ): Promise<string>;
 
   removeHook(
     _signature: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  updateConfigs(
+    _newConfigs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    },
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
@@ -240,6 +342,8 @@ export class MainModule extends Contract {
   ): Promise<ContractTransaction>;
 
   filters: {
+    ConfigsUpdated(newConfigs: null, newConfigHash: null): EventFilter;
+
     NonceChange(newNonce: null): EventFilter;
 
     TxFailed(_index: null, _reason: null): EventFilter;
@@ -260,13 +364,33 @@ export class MainModule extends Contract {
         value: BigNumberish;
         data: Arrayish;
       }[],
-      _nonce: BigNumberish,
-      _signature: Arrayish
+      _signatures: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }[],
+      _configs: {
+        treshold: BigNumberish;
+        keys: string[];
+        weigths: BigNumberish[];
+      },
+      _nonce: BigNumberish
     ): Promise<BigNumber>;
+
+    getConfigAddress(_configs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    }): Promise<BigNumber>;
 
     hooks(arg0: Arrayish): Promise<BigNumber>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    isValidSignature(
+      _hash: Arrayish,
+      _signatures: Arrayish
+    ): Promise<BigNumber>;
 
     nonce(): Promise<BigNumber>;
 
@@ -293,9 +417,24 @@ export class MainModule extends Contract {
       arg3: Arrayish
     ): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    recoverSigner(
+      _hash: Arrayish,
+      _signature: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }
+    ): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;
+
+    updateConfigs(_newConfigs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    }): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
   };

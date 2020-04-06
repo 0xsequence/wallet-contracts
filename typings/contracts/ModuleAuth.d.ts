@@ -17,15 +17,40 @@ interface ModuleAuthInterface extends Interface {
     INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
 
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+      encode([_hash, _signature]: [
+        Arrayish,
+        {
+          r: Arrayish;
+          s: Arrayish;
+          v: BigNumberish;
+          nonce: BigNumberish;
+          sigType: BigNumberish;
+        }
+      ]): string;
+    }>;
+
+    updateConfigs: TypedFunctionDescription<{
+      encode([_newConfigs]: [
+        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
+      ]): string;
+    }>;
+
+    getConfigAddress: TypedFunctionDescription<{
+      encode([_configs]: [
+        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
+      ]): string;
     }>;
 
     isValidSignature: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+      encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
   };
 
-  events: {};
+  events: {
+    ConfigsUpdated: TypedEventDescription<{
+      encodeTopics([newConfigs, newConfigHash]: [null, null]): string[];
+    }>;
+  };
 }
 
 export class ModuleAuth extends Contract {
@@ -46,28 +71,102 @@ export class ModuleAuth extends Contract {
 
     INIT_CODE_HASH(): Promise<string>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    recoverSigner(
+      _hash: Arrayish,
+      _signature: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }
+    ): Promise<string>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    updateConfigs(
+      _newConfigs: {
+        treshold: BigNumberish;
+        keys: string[];
+        weigths: BigNumberish[];
+      },
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    getConfigAddress(_configs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    }): Promise<string>;
+
+    isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
   };
 
   FACTORY(): Promise<string>;
 
   INIT_CODE_HASH(): Promise<string>;
 
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  recoverSigner(
+    _hash: Arrayish,
+    _signature: {
+      r: Arrayish;
+      s: Arrayish;
+      v: BigNumberish;
+      nonce: BigNumberish;
+      sigType: BigNumberish;
+    }
+  ): Promise<string>;
 
-  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  updateConfigs(
+    _newConfigs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    },
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
 
-  filters: {};
+  getConfigAddress(_configs: {
+    treshold: BigNumberish;
+    keys: string[];
+    weigths: BigNumberish[];
+  }): Promise<string>;
+
+  isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
+
+  filters: {
+    ConfigsUpdated(newConfigs: null, newConfigHash: null): EventFilter;
+  };
 
   estimate: {
     FACTORY(): Promise<BigNumber>;
 
     INIT_CODE_HASH(): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    recoverSigner(
+      _hash: Arrayish,
+      _signature: {
+        r: Arrayish;
+        s: Arrayish;
+        v: BigNumberish;
+        nonce: BigNumberish;
+        sigType: BigNumberish;
+      }
+    ): Promise<BigNumber>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    updateConfigs(_newConfigs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    }): Promise<BigNumber>;
+
+    getConfigAddress(_configs: {
+      treshold: BigNumberish;
+      keys: string[];
+      weigths: BigNumberish[];
+    }): Promise<BigNumber>;
+
+    isValidSignature(
+      _hash: Arrayish,
+      _signatures: Arrayish
+    ): Promise<BigNumber>;
   };
 }
