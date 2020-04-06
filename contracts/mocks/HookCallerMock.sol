@@ -72,6 +72,6 @@ contract HookCallerMock {
     bytes calldata _signature
   ) external view {
     bytes4 result = IERC1271Wallet(_addr).isValidSignature(_hash, _signature);
-    require(result == 0x20c13b0b, "HookCallerMock#callERC1271isValidSignatureHash: INVALID_RETURN");
+    require(result == 0x1626ba7e, "HookCallerMock#callERC1271isValidSignatureHash: INVALID_RETURN");
   }
 }
