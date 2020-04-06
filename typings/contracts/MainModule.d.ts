@@ -16,13 +16,29 @@ interface MainModuleInterface extends Interface {
 
     INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
 
+    addHook: TypedFunctionDescription<{
+      encode([_signature, _implementation]: [Arrayish, string]): string;
+    }>;
+
+    execute: TypedFunctionDescription<{
+      encode([_txs, _nonce, _signature]: [
+        {
+          delegateCall: boolean;
+          skipOnError: boolean;
+          target: string;
+          value: BigNumberish;
+          data: Arrayish;
+        }[],
+        BigNumberish,
+        Arrayish
+      ]): string;
+    }>;
+
     hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
 
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
-
-    modules: TypedFunctionDescription<{ encode([]: [string]): string }>;
 
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
 
@@ -54,18 +70,12 @@ interface MainModuleInterface extends Interface {
       encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
 
-    execute: TypedFunctionDescription<{
-      encode([_txs, _nonce, _signature]: [
-        {
-          action: BigNumberish;
-          skipOnError: boolean;
-          target: string;
-          value: BigNumberish;
-          data: Arrayish;
-        }[],
-        BigNumberish,
-        Arrayish
-      ]): string;
+    removeHook: TypedFunctionDescription<{
+      encode([_signature]: [Arrayish]): string;
+    }>;
+
+    updateImplementation: TypedFunctionDescription<{
+      encode([_implementation]: [string]): string;
     }>;
   };
 
@@ -98,11 +108,28 @@ export class MainModule extends Contract {
 
     INIT_CODE_HASH(): Promise<string>;
 
+    addHook(
+      _signature: Arrayish,
+      _implementation: string,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    execute(
+      _txs: {
+        delegateCall: boolean;
+        skipOnError: boolean;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[],
+      _nonce: BigNumberish,
+      _signature: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
     hooks(arg0: Arrayish): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
-    modules(arg0: string): Promise<boolean>;
 
     nonce(): Promise<BigNumber>;
 
@@ -134,16 +161,13 @@ export class MainModule extends Contract {
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
-    execute(
-      _txs: {
-        action: BigNumberish;
-        skipOnError: boolean;
-        target: string;
-        value: BigNumberish;
-        data: Arrayish;
-      }[],
-      _nonce: BigNumberish,
+    removeHook(
       _signature: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    updateImplementation(
+      _implementation: string,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
   };
@@ -152,11 +176,28 @@ export class MainModule extends Contract {
 
   INIT_CODE_HASH(): Promise<string>;
 
+  addHook(
+    _signature: Arrayish,
+    _implementation: string,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  execute(
+    _txs: {
+      delegateCall: boolean;
+      skipOnError: boolean;
+      target: string;
+      value: BigNumberish;
+      data: Arrayish;
+    }[],
+    _nonce: BigNumberish,
+    _signature: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
   hooks(arg0: Arrayish): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
-  modules(arg0: string): Promise<boolean>;
 
   nonce(): Promise<BigNumber>;
 
@@ -188,16 +229,13 @@ export class MainModule extends Contract {
 
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
-  execute(
-    _txs: {
-      action: BigNumberish;
-      skipOnError: boolean;
-      target: string;
-      value: BigNumberish;
-      data: Arrayish;
-    }[],
-    _nonce: BigNumberish,
+  removeHook(
     _signature: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  updateImplementation(
+    _implementation: string,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
@@ -212,11 +250,23 @@ export class MainModule extends Contract {
 
     INIT_CODE_HASH(): Promise<BigNumber>;
 
+    addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
+
+    execute(
+      _txs: {
+        delegateCall: boolean;
+        skipOnError: boolean;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[],
+      _nonce: BigNumberish,
+      _signature: Arrayish
+    ): Promise<BigNumber>;
+
     hooks(arg0: Arrayish): Promise<BigNumber>;
 
     isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
-    modules(arg0: string): Promise<BigNumber>;
 
     nonce(): Promise<BigNumber>;
 
@@ -245,16 +295,8 @@ export class MainModule extends Contract {
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
-    execute(
-      _txs: {
-        action: BigNumberish;
-        skipOnError: boolean;
-        target: string;
-        value: BigNumberish;
-        data: Arrayish;
-      }[],
-      _nonce: BigNumberish,
-      _signature: Arrayish
-    ): Promise<BigNumber>;
+    removeHook(_signature: Arrayish): Promise<BigNumber>;
+
+    updateImplementation(_implementation: string): Promise<BigNumber>;
   };
 }

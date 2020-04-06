@@ -14,6 +14,14 @@ interface ModuleHooksInterface extends Interface {
   functions: {
     hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
 
+    addHook: TypedFunctionDescription<{
+      encode([_signature, _implementation]: [Arrayish, string]): string;
+    }>;
+
+    removeHook: TypedFunctionDescription<{
+      encode([_signature]: [Arrayish]): string;
+    }>;
+
     onERC1155Received: TypedFunctionDescription<{
       encode([, , , ,]: [
         string,
@@ -58,6 +66,17 @@ export class ModuleHooks extends Contract {
   functions: {
     hooks(arg0: Arrayish): Promise<string>;
 
+    addHook(
+      _signature: Arrayish,
+      _implementation: string,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    removeHook(
+      _signature: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
     onERC1155Received(
       arg0: string,
       arg1: string,
@@ -86,6 +105,17 @@ export class ModuleHooks extends Contract {
   };
 
   hooks(arg0: Arrayish): Promise<string>;
+
+  addHook(
+    _signature: Arrayish,
+    _implementation: string,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  removeHook(
+    _signature: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
 
   onERC1155Received(
     arg0: string,
@@ -117,6 +147,10 @@ export class ModuleHooks extends Contract {
 
   estimate: {
     hooks(arg0: Arrayish): Promise<BigNumber>;
+
+    addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
+
+    removeHook(_signature: Arrayish): Promise<BigNumber>;
 
     onERC1155Received(
       arg0: string,
