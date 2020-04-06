@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, MetaAction, ethSign } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
@@ -45,7 +45,7 @@ contract('MainModule', (accounts: string[]) => {
   describe('Authentication', () => {
     it('Should accept initial owner signature', async () => {
       const transaction = {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
@@ -58,7 +58,7 @@ contract('MainModule', (accounts: string[]) => {
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
       const transaction = {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
@@ -73,7 +73,7 @@ contract('MainModule', (accounts: string[]) => {
         const nonce = ethers.constants.Zero
 
         const transaction = {
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
@@ -87,7 +87,7 @@ contract('MainModule', (accounts: string[]) => {
         const nonce = ethers.constants.Zero
 
         const transaction = {
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
@@ -104,7 +104,7 @@ contract('MainModule', (accounts: string[]) => {
           const nonce = ethers.constants.One
 
           const transaction = {
-            action: MetaAction.external,
+            delegateCall: false,
             skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
@@ -117,7 +117,7 @@ contract('MainModule', (accounts: string[]) => {
           const nonce = ethers.constants.Two
 
           const transaction = {
-            action: MetaAction.external,
+            delegateCall: false,
             skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
@@ -131,7 +131,7 @@ contract('MainModule', (accounts: string[]) => {
           const nonce = ethers.utils.bigNumberify(20)
 
           const transaction = {
-            action: MetaAction.external,
+            delegateCall: false,
             skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
@@ -145,7 +145,7 @@ contract('MainModule', (accounts: string[]) => {
           const nonce = ethers.utils.bigNumberify(101)
 
           const transaction = {
-            action: MetaAction.external,
+            delegateCall: false,
             skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
@@ -159,7 +159,7 @@ contract('MainModule', (accounts: string[]) => {
           const nonce = ethers.constants.One
 
           const transaction = {
-            action: MetaAction.external,
+            delegateCall: false,
             skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
@@ -173,7 +173,7 @@ contract('MainModule', (accounts: string[]) => {
           const nonce = ethers.utils.bigNumberify(102)
 
           const transaction = {
-            action: MetaAction.external,
+            delegateCall: false,
             skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
@@ -187,7 +187,7 @@ contract('MainModule', (accounts: string[]) => {
           const nonce = ethers.constants.Zero
 
           const transaction = {
-            action: MetaAction.external,
+            delegateCall: false,
             skipOnError: false,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
@@ -205,11 +205,11 @@ contract('MainModule', (accounts: string[]) => {
       const newImplementation = await ModuleMockArtifact.new() as ModuleMock
 
       const transaction = {
-        action: MetaAction.updateImp,
+        delegateCall: false,
         skipOnError: false,
-        target: ethers.constants.AddressZero,
+        target: wallet.address,
         value: ethers.constants.Zero,
-        data: ethers.utils.defaultAbiCoder.encode(['address'], [newImplementation.address])
+        data: wallet.contract.methods.updateImplementation(newImplementation.address).encodeABI()
       }
 
       await signAndExecuteMetaTx(wallet, owner, [transaction])
@@ -219,15 +219,15 @@ contract('MainModule', (accounts: string[]) => {
     })
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
-        action: MetaAction.updateImp,
+        delegateCall: false,
         skipOnError: false,
-        target: ethers.constants.AddressZero,
+        target: wallet.address,
         value: ethers.constants.Zero,
-        data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
+        data: wallet.contract.methods.updateImplementation(ethers.constants.AddressZero).encodeABI()
       }
 
       const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
-      await expect(tx).to.be.rejectedWith(RevertError("MainModule#_actionExecution: INVALID_IMPLEMENTATION"))
+      await expect(tx).to.be.rejectedWith(RevertError("ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION"))
     })
   })
   describe("External calls", () => {
@@ -238,7 +238,7 @@ contract('MainModule', (accounts: string[]) => {
       const valB = web3.utils.randomHex(120)
 
       const transaction = {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
@@ -254,7 +254,7 @@ contract('MainModule', (accounts: string[]) => {
       await callReceiver.setRevertFlag(true)
 
       const transaction = {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
@@ -276,13 +276,13 @@ contract('MainModule', (accounts: string[]) => {
         const val2B = web3.utils.randomHex(35)
 
         const transactions = [{
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: callReceiver1.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
         },{
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: callReceiver2.address,
           value: ethers.constants.Zero,
@@ -305,13 +305,13 @@ contract('MainModule', (accounts: string[]) => {
         const valB = web3.utils.randomHex(120)
 
         const transactions = [{
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
         }, {
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: receiver.address,
           value: 26,
@@ -331,13 +331,13 @@ contract('MainModule', (accounts: string[]) => {
         await wallet.send(100, { from: accounts[0] })
 
         const transactions = [{
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: receiver.address,
           value: 26,
           data: []
         }, {
-          action: MetaAction.external,
+          delegateCall: false,
           skipOnError: false,
           target: callReceiver.address,
           value: ethers.constants.Zero,
@@ -359,7 +359,7 @@ contract('MainModule', (accounts: string[]) => {
       const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
 
       const transaction = {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: receiver.address,
         value: 25,
@@ -379,7 +379,7 @@ contract('MainModule', (accounts: string[]) => {
       const value = 33
 
       const transaction = {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: callReceiver.address,
         value: value,
@@ -400,7 +400,7 @@ contract('MainModule', (accounts: string[]) => {
       const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
 
       const transaction = {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
@@ -429,13 +429,13 @@ contract('MainModule', (accounts: string[]) => {
       const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
 
       const transactions = [{
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: true,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
@@ -465,19 +465,19 @@ contract('MainModule', (accounts: string[]) => {
       const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
 
       const transactions = [{
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: true,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: true,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: false,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
@@ -508,13 +508,13 @@ contract('MainModule', (accounts: string[]) => {
       const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
 
       const transactions = [{
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
       }, {
-        action: MetaAction.external,
+        delegateCall: false,
         skipOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
@@ -537,11 +537,11 @@ contract('MainModule', (accounts: string[]) => {
       await callReceiver.setRevertFlag(true)
 
       const transactions = [{
-        action: MetaAction.updateImp,
+        delegateCall: false,
         skipOnError: true,
-        target: ethers.constants.AddressZero,
+        target: wallet.address,
         value: ethers.constants.Zero,
-        data: ethers.utils.defaultAbiCoder.encode(['address'], [ethers.constants.AddressZero])
+        data: wallet.contract.methods.updateImplementation(ethers.constants.AddressZero).encodeABI()
       }]
 
       const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
@@ -549,28 +549,8 @@ contract('MainModule', (accounts: string[]) => {
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
 
-      expect(reason).to.equal("MainModule#_actionExecution: INVALID_IMPLEMENTATION")
+      expect(reason).to.equal("ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION")
       expect(await wallet.nonce()).to.eq.BN(1)
-    })
-    it('Should skip skipOnError invalid action', async () => {
-      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
-
-      await callReceiver.setRevertFlag(true)
-
-      const transactions = [{
-        action: MetaAction.illegal,
-        skipOnError: true,
-        target: ethers.constants.AddressZero,
-        value: ethers.constants.Zero,
-        data: []
-      }]
-
-      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
-      const event = tx.logs.pop()
-
-      const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
-
-      expect(reason).to.equal("MainModule#_actionExecution: INVALID_ACTION")
     })
   })
   describe('Hooks', () => {
@@ -649,11 +629,11 @@ contract('MainModule', (accounts: string[]) => {
       it('Should forward call to external hook', async () => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
         const transaction = {
-          action: MetaAction.addHook,
+          delegateCall: false,
           skipOnError: false,
-          target: hookMock.address,
+          target: wallet.address,
           value: ethers.constants.Zero,
-          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+          data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
         }
 
         await signAndExecuteMetaTx(wallet, owner, [transaction])
@@ -664,21 +644,21 @@ contract('MainModule', (accounts: string[]) => {
       it('Should not forward call to deregistered hook', async () => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
         const transaction1 = {
-          action: MetaAction.addHook,
+          delegateCall: false,
           skipOnError: false,
-          target: hookMock.address,
+          target: wallet.address,
           value: ethers.constants.Zero,
-          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+          data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
         }
 
         await signAndExecuteMetaTx(wallet, owner, [transaction1])
 
         const transaction2 = {
-          action: MetaAction.removeHook,
+          delegateCall: false,
           skipOnError: false,
-          target: ethers.constants.AddressZero,
+          target: wallet.address,
           value: ethers.constants.Zero,
-          data: ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+          data: wallet.contract.methods.removeHook(selector).encodeABI()
         }
 
         await signAndExecuteMetaTx(wallet, owner, [transaction2])
