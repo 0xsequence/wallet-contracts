@@ -53,7 +53,13 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver {
     address target = hooks[msg.sig];
     if (target != address(0)) {
       (bool success, bytes memory result) = target.delegatecall(msg.data);
-      if (!success) assembly { revert(add(result, 0x20), mload(result)) }
+      assembly {
+        if iszero(success)  {
+          revert(add(result, 0x20), mload(result))
+        }
+
+        return(add(result, 0x20), mload(result))
+      }
     }
   }
 
