@@ -194,7 +194,7 @@ contract MainModule is Implementation, ModuleAuth, ModuleHooks {
     } else if (_tx.action == Action.RemoveHook) {
       bytes4 hook_signature = abi.decode(_tx.data, (bytes4));
       if (hooks[hook_signature] != address(0x0)){
-        hooks[hook_signature] = _tx.target;
+        delete hooks[hook_signature];
       } else {
         _revert(_tx, _index, "MainModule#_actionExecution: HOOK_NOT_REGISTERED");
       }
