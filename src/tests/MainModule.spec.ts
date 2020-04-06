@@ -7,6 +7,7 @@ import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
 import { ModuleMock } from 'typings/contracts/ModuleMock'
 import { HookCallerMock } from 'typings/contracts/HookCallerMock'
 import { HookMock } from 'typings/contracts/HookMock'
+import { DelegateCallMock } from 'typings/contracts/DelegateCallMock'
 
 ethers.errors.setLogLevel("error")
 
@@ -17,6 +18,7 @@ const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 const ModuleMockArtifact = artifacts.require('ModuleMock')
 const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 const HookMockArtifact = artifacts.require('HookMock')
+const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
 
 const web3 = (global as any).web3
 
@@ -346,6 +348,71 @@ contract('MainModule', (accounts: string[]) => {
 
         const tx = signAndExecuteMetaTx(wallet, owner, transactions)
         await expect(tx).to.be.rejectedWith('CallReceiverMock#testCall: REVERT_FLAG')
+      })
+    })
+  })
+  describe('Delegate calls', () => {
+    let module
+    beforeEach(async () => {
+      module = await DelegateCallMockArtifact.new() as DelegateCallMock
+    })
+    it('Should delegate call to module', async () => {
+      const transaction1 = {
+        delegateCall: true,
+        skipOnError: false,
+        target: module.address,
+        value: 0,
+        data: module.contract.methods.write(11, 45).encodeABI()
+      }
+
+      await signAndExecuteMetaTx(wallet, owner, [transaction1])
+
+      const transaction2 = {
+        delegateCall: true,
+        skipOnError: false,
+        target: module.address,
+        value: 0,
+        data: module.contract.methods.read(11).encodeABI()
+      }
+
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction2]) as any
+      const val = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
+      expect(val).to.eq.BN(45)
+    })
+    context('on delegate call revert', () => {
+      beforeEach(async () => {
+        const transaction = {
+          delegateCall: true,
+          skipOnError: false,
+          target: module.address,
+          value: 0,
+          data: module.contract.methods.setRevertFlag(true).encodeABI()
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
+      })
+      it('Should pass if delegate call is optional', async () => {  
+        const transaction = {
+          delegateCall: true,
+          skipOnError: true,
+          target: module.address,
+          value: 0,
+          data: module.contract.methods.write(11, 45).encodeABI()
+        }
+  
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
+      })
+      it('Should fail if delegate call fails', async () => {
+        const transaction = {
+          delegateCall: true,
+          skipOnError: false,
+          target: module.address,
+          value: 0,
+          data: module.contract.methods.write(11, 45).encodeABI()
+        }
+  
+        const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
+        await expect(tx).to.be.rejectedWith('DelegateCallMock#write: REVERT_FLAG')
       })
     })
   })
