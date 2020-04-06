@@ -27,6 +27,14 @@ interface HookCallerMockInterface extends Interface {
     callERC223Received: TypedFunctionDescription<{
       encode([_addr]: [string]): string;
     }>;
+
+    callERC1271isValidSignatureData: TypedFunctionDescription<{
+      encode([_addr, _data, _signature]: [string, Arrayish, Arrayish]): string;
+    }>;
+
+    callERC1271isValidSignatureHash: TypedFunctionDescription<{
+      encode([_addr, _hash, _signature]: [string, Arrayish, Arrayish]): string;
+    }>;
   };
 
   events: {};
@@ -68,6 +76,18 @@ export class HookCallerMock extends Contract {
       _addr: string,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    callERC1271isValidSignatureData(
+      _addr: string,
+      _data: Arrayish,
+      _signature: Arrayish
+    ): Promise<void>;
+
+    callERC1271isValidSignatureHash(
+      _addr: string,
+      _hash: Arrayish,
+      _signature: Arrayish
+    ): Promise<void>;
   };
 
   callERC1155Received(
@@ -90,6 +110,18 @@ export class HookCallerMock extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  callERC1271isValidSignatureData(
+    _addr: string,
+    _data: Arrayish,
+    _signature: Arrayish
+  ): Promise<void>;
+
+  callERC1271isValidSignatureHash(
+    _addr: string,
+    _hash: Arrayish,
+    _signature: Arrayish
+  ): Promise<void>;
+
   filters: {};
 
   estimate: {
@@ -100,5 +132,17 @@ export class HookCallerMock extends Contract {
     callERC721Received(_addr: string): Promise<BigNumber>;
 
     callERC223Received(_addr: string): Promise<BigNumber>;
+
+    callERC1271isValidSignatureData(
+      _addr: string,
+      _data: Arrayish,
+      _signature: Arrayish
+    ): Promise<BigNumber>;
+
+    callERC1271isValidSignatureHash(
+      _addr: string,
+      _hash: Arrayish,
+      _signature: Arrayish
+    ): Promise<BigNumber>;
   };
 }

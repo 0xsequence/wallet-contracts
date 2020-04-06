@@ -18,9 +18,37 @@ interface MainModuleInterface extends Interface {
 
     hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
 
+    isValidSignature: TypedFunctionDescription<{
+      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+    }>;
+
     modules: TypedFunctionDescription<{ encode([]: [string]): string }>;
 
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    onERC1155BatchReceived: TypedFunctionDescription<{
+      encode([, , , ,]: [
+        string,
+        string,
+        BigNumberish[],
+        BigNumberish[],
+        Arrayish
+      ]): string;
+    }>;
+
+    onERC1155Received: TypedFunctionDescription<{
+      encode([, , , ,]: [
+        string,
+        string,
+        BigNumberish,
+        BigNumberish,
+        Arrayish
+      ]): string;
+    }>;
+
+    onERC721Received: TypedFunctionDescription<{
+      encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
+    }>;
 
     recoverSigner: TypedFunctionDescription<{
       encode([_hash, _signature]: [Arrayish, Arrayish]): string;
@@ -38,34 +66,6 @@ interface MainModuleInterface extends Interface {
         BigNumberish,
         Arrayish
       ]): string;
-    }>;
-
-    onERC1155Received: TypedFunctionDescription<{
-      encode([, , , ,]: [
-        string,
-        string,
-        BigNumberish,
-        BigNumberish,
-        Arrayish
-      ]): string;
-    }>;
-
-    onERC1155BatchReceived: TypedFunctionDescription<{
-      encode([, , , ,]: [
-        string,
-        string,
-        BigNumberish[],
-        BigNumberish[],
-        Arrayish
-      ]): string;
-    }>;
-
-    onERC721Received: TypedFunctionDescription<{
-      encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
-    }>;
-
-    isValidSignature: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
   };
 
@@ -100,9 +100,37 @@ export class MainModule extends Contract {
 
     hooks(arg0: Arrayish): Promise<string>;
 
+    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+
     modules(arg0: string): Promise<boolean>;
 
     nonce(): Promise<BigNumber>;
+
+    onERC1155BatchReceived(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish[],
+      arg3: BigNumberish[],
+      arg4: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    onERC1155Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BigNumberish,
+      arg4: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
@@ -118,34 +146,6 @@ export class MainModule extends Contract {
       _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
-
-    onERC1155Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BigNumberish,
-      arg4: Arrayish,
-      overrides?: TransactionOverrides
-    ): Promise<ContractTransaction>;
-
-    onERC1155BatchReceived(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish[],
-      arg3: BigNumberish[],
-      arg4: Arrayish,
-      overrides?: TransactionOverrides
-    ): Promise<ContractTransaction>;
-
-    onERC721Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: Arrayish,
-      overrides?: TransactionOverrides
-    ): Promise<ContractTransaction>;
-
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
   };
 
   FACTORY(): Promise<string>;
@@ -154,9 +154,37 @@ export class MainModule extends Contract {
 
   hooks(arg0: Arrayish): Promise<string>;
 
+  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+
   modules(arg0: string): Promise<boolean>;
 
   nonce(): Promise<BigNumber>;
+
+  onERC1155BatchReceived(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish[],
+    arg3: BigNumberish[],
+    arg4: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  onERC1155Received(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish,
+    arg3: BigNumberish,
+    arg4: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  onERC721Received(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish,
+    arg3: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
 
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
@@ -173,34 +201,6 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  onERC1155Received(
-    arg0: string,
-    arg1: string,
-    arg2: BigNumberish,
-    arg3: BigNumberish,
-    arg4: Arrayish,
-    overrides?: TransactionOverrides
-  ): Promise<ContractTransaction>;
-
-  onERC1155BatchReceived(
-    arg0: string,
-    arg1: string,
-    arg2: BigNumberish[],
-    arg3: BigNumberish[],
-    arg4: Arrayish,
-    overrides?: TransactionOverrides
-  ): Promise<ContractTransaction>;
-
-  onERC721Received(
-    arg0: string,
-    arg1: string,
-    arg2: BigNumberish,
-    arg3: Arrayish,
-    overrides?: TransactionOverrides
-  ): Promise<ContractTransaction>;
-
-  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
   filters: {
     NonceChange(newNonce: null): EventFilter;
 
@@ -214,9 +214,34 @@ export class MainModule extends Contract {
 
     hooks(arg0: Arrayish): Promise<BigNumber>;
 
+    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+
     modules(arg0: string): Promise<BigNumber>;
 
     nonce(): Promise<BigNumber>;
+
+    onERC1155BatchReceived(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish[],
+      arg3: BigNumberish[],
+      arg4: Arrayish
+    ): Promise<BigNumber>;
+
+    onERC1155Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BigNumberish,
+      arg4: Arrayish
+    ): Promise<BigNumber>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: Arrayish
+    ): Promise<BigNumber>;
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
@@ -231,30 +256,5 @@ export class MainModule extends Contract {
       _nonce: BigNumberish,
       _signature: Arrayish
     ): Promise<BigNumber>;
-
-    onERC1155Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BigNumberish,
-      arg4: Arrayish
-    ): Promise<BigNumber>;
-
-    onERC1155BatchReceived(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish[],
-      arg3: BigNumberish[],
-      arg4: Arrayish
-    ): Promise<BigNumber>;
-
-    onERC721Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: Arrayish
-    ): Promise<BigNumber>;
-
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
   };
 }
