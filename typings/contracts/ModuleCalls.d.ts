@@ -12,19 +12,7 @@ import {
 
 interface ModuleCallsInterface extends Interface {
   functions: {
-    FACTORY: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    isValidSignature: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
-
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
 
     execute: TypedFunctionDescription<{
       encode([_txs, _nonce, _signature]: [
@@ -66,15 +54,7 @@ export class ModuleCalls extends Contract {
   interface: ModuleCallsInterface;
 
   functions: {
-    FACTORY(): Promise<string>;
-
-    INIT_CODE_HASH(): Promise<string>;
-
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
     nonce(): Promise<BigNumber>;
-
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
     execute(
       _txs: {
@@ -90,15 +70,7 @@ export class ModuleCalls extends Contract {
     ): Promise<ContractTransaction>;
   };
 
-  FACTORY(): Promise<string>;
-
-  INIT_CODE_HASH(): Promise<string>;
-
-  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
   nonce(): Promise<BigNumber>;
-
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
   execute(
     _txs: {
@@ -120,15 +92,7 @@ export class ModuleCalls extends Contract {
   };
 
   estimate: {
-    FACTORY(): Promise<BigNumber>;
-
-    INIT_CODE_HASH(): Promise<BigNumber>;
-
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
     nonce(): Promise<BigNumber>;
-
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
     execute(
       _txs: {

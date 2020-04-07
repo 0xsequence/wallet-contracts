@@ -1,16 +1,20 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
 import "../../utils/SignatureValidator.sol";
 import "../../interfaces/IERC1271Wallet.sol";
 
+import "./interfaces/IModuleAuth.sol";
 
-contract ModuleAuth is SignatureValidator, IERC1271Wallet {
-  // keccak256("placeholder-init-code-hash")
-  bytes32 public constant INIT_CODE_HASH = 0xa4e481c95834a9f994a80cd4ecc88bdd3e78ff54100ecf2903aa9ef3eed54a91;
 
-  // keccak256("placeholder-factory")[12:]
-  address public constant FACTORY = address(0x52AA901CAD8AFf3Cf157715c19632F79D9B2d049);
+contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
+  bytes32 public immutable INIT_CODE_HASH;
+  address public immutable FACTORY;
+
+  constructor(bytes32 _initCodeHash, address _factory) public {
+    INIT_CODE_HASH = _initCodeHash;
+    FACTORY = _factory;
+  }
 
   /**
    * @notice Hashed _data to be signed
@@ -18,7 +22,7 @@ contract ModuleAuth is SignatureValidator, IERC1271Wallet {
    * @return hashed data for this wallet
    *   keccak256(abi.encode(wallet, _data))
    */
-  function _hashData(bytes memory _data) internal view returns (bytes32) {
+  function _hashData(bytes memory _data) internal override view returns (bytes32) {
     return keccak256(abi.encode(address(this), _data));
   }
 
@@ -30,7 +34,7 @@ contract ModuleAuth is SignatureValidator, IERC1271Wallet {
    * @return True is the signature is valid
    */
   function _signatureValidation(bytes32 _hash, bytes memory _signature)
-    internal view returns (bool)
+    internal override view returns (bool)
   {
     // Retrieve the signer
     address signer = recoverSigner(_hash, _signature);

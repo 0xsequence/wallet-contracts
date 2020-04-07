@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
 import "../utils/SignatureValidator.sol";
@@ -27,4 +27,12 @@ contract MainModule is
   ModuleUpdate,
   ModuleHooks,
   ModuleCalls
-{}
+{
+  constructor(
+    bytes32 _initCodeHash,
+    address _factory
+  ) public ModuleAuth(
+    _initCodeHash,
+    _factory
+  ) { }
+}
