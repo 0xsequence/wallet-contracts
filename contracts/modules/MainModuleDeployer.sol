@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.5;
 
 import "./MainModule.sol";
 import "../Wallet.sol";
