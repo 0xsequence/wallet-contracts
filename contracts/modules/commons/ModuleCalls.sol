@@ -26,14 +26,11 @@ contract ModuleCalls is ModuleAuth {
    * @notice Allow wallet owner to execute an action
    * @param _txs        Transactions to process
    * @param _nonce      Signature nonce
-   * @param _signatures Signature stuct array
-   * @param _configs    Multisig configuration struct
    */
   function execute(
     Transaction[] memory _txs,
-    Signature[] memory _signatures,
-    Configs memory _configs,
-    uint256 _nonce
+    uint256 _nonce,
+    bytes memory _signature
   )
     public
   {
@@ -41,7 +38,10 @@ contract ModuleCalls is ModuleAuth {
     _validateNonce(_nonce);
 
     // Verify that signatures are valid
-    _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signatures, _configs);
+    require(
+      _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signature),
+      "MainModule#_signatureValidation: INVALID_SIGNATURE"
+    );
 
     // Execute transaction
     for (uint256 i = 0; i < _txs.length; i++) {

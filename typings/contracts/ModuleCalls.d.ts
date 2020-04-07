@@ -17,9 +17,7 @@ interface ModuleCallsInterface extends Interface {
     INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
 
     getConfigAddress: TypedFunctionDescription<{
-      encode([_configs]: [
-        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
-      ]): string;
+      encode([_configs]: [Arrayish]): string;
     }>;
 
     isValidSignature: TypedFunctionDescription<{
@@ -29,26 +27,23 @@ interface ModuleCallsInterface extends Interface {
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
 
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [
+      encode([_hash, r, s, v, t]: [
         Arrayish,
-        {
-          r: Arrayish;
-          s: Arrayish;
-          v: BigNumberish;
-          nonce: BigNumberish;
-          sigType: BigNumberish;
-        }
+        Arrayish,
+        Arrayish,
+        BigNumberish,
+        BigNumberish
       ]): string;
     }>;
 
     updateConfigs: TypedFunctionDescription<{
       encode([_newConfigs]: [
-        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
+        { threshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
       ]): string;
     }>;
 
     execute: TypedFunctionDescription<{
-      encode([_txs, _signatures, _configs, _nonce]: [
+      encode([_txs, _nonce, _signature]: [
         {
           delegateCall: boolean;
           skipOnError: boolean;
@@ -56,15 +51,8 @@ interface ModuleCallsInterface extends Interface {
           value: BigNumberish;
           data: Arrayish;
         }[],
-        {
-          r: Arrayish;
-          s: Arrayish;
-          v: BigNumberish;
-          nonce: BigNumberish;
-          sigType: BigNumberish;
-        }[],
-        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] },
-        BigNumberish
+        BigNumberish,
+        Arrayish
       ]): string;
     }>;
   };
@@ -102,11 +90,7 @@ export class ModuleCalls extends Contract {
 
     INIT_CODE_HASH(): Promise<string>;
 
-    getConfigAddress(_configs: {
-      treshold: BigNumberish;
-      keys: string[];
-      weigths: BigNumberish[];
-    }): Promise<string>;
+    getConfigAddress(_configs: Arrayish): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
@@ -114,18 +98,15 @@ export class ModuleCalls extends Contract {
 
     recoverSigner(
       _hash: Arrayish,
-      _signature: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }
+      r: Arrayish,
+      s: Arrayish,
+      v: BigNumberish,
+      t: BigNumberish
     ): Promise<string>;
 
     updateConfigs(
       _newConfigs: {
-        treshold: BigNumberish;
+        threshold: BigNumberish;
         keys: string[];
         weigths: BigNumberish[];
       },
@@ -140,19 +121,8 @@ export class ModuleCalls extends Contract {
         value: BigNumberish;
         data: Arrayish;
       }[],
-      _signatures: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }[],
-      _configs: {
-        treshold: BigNumberish;
-        keys: string[];
-        weigths: BigNumberish[];
-      },
       _nonce: BigNumberish,
+      _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
   };
@@ -161,11 +131,7 @@ export class ModuleCalls extends Contract {
 
   INIT_CODE_HASH(): Promise<string>;
 
-  getConfigAddress(_configs: {
-    treshold: BigNumberish;
-    keys: string[];
-    weigths: BigNumberish[];
-  }): Promise<string>;
+  getConfigAddress(_configs: Arrayish): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
@@ -173,18 +139,15 @@ export class ModuleCalls extends Contract {
 
   recoverSigner(
     _hash: Arrayish,
-    _signature: {
-      r: Arrayish;
-      s: Arrayish;
-      v: BigNumberish;
-      nonce: BigNumberish;
-      sigType: BigNumberish;
-    }
+    r: Arrayish,
+    s: Arrayish,
+    v: BigNumberish,
+    t: BigNumberish
   ): Promise<string>;
 
   updateConfigs(
     _newConfigs: {
-      treshold: BigNumberish;
+      threshold: BigNumberish;
       keys: string[];
       weigths: BigNumberish[];
     },
@@ -199,19 +162,8 @@ export class ModuleCalls extends Contract {
       value: BigNumberish;
       data: Arrayish;
     }[],
-    _signatures: {
-      r: Arrayish;
-      s: Arrayish;
-      v: BigNumberish;
-      nonce: BigNumberish;
-      sigType: BigNumberish;
-    }[],
-    _configs: {
-      treshold: BigNumberish;
-      keys: string[];
-      weigths: BigNumberish[];
-    },
     _nonce: BigNumberish,
+    _signature: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
@@ -228,11 +180,7 @@ export class ModuleCalls extends Contract {
 
     INIT_CODE_HASH(): Promise<BigNumber>;
 
-    getConfigAddress(_configs: {
-      treshold: BigNumberish;
-      keys: string[];
-      weigths: BigNumberish[];
-    }): Promise<BigNumber>;
+    getConfigAddress(_configs: Arrayish): Promise<BigNumber>;
 
     isValidSignature(
       _hash: Arrayish,
@@ -243,17 +191,14 @@ export class ModuleCalls extends Contract {
 
     recoverSigner(
       _hash: Arrayish,
-      _signature: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }
+      r: Arrayish,
+      s: Arrayish,
+      v: BigNumberish,
+      t: BigNumberish
     ): Promise<BigNumber>;
 
     updateConfigs(_newConfigs: {
-      treshold: BigNumberish;
+      threshold: BigNumberish;
       keys: string[];
       weigths: BigNumberish[];
     }): Promise<BigNumber>;
@@ -266,19 +211,8 @@ export class ModuleCalls extends Contract {
         value: BigNumberish;
         data: Arrayish;
       }[],
-      _signatures: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }[],
-      _configs: {
-        treshold: BigNumberish;
-        keys: string[];
-        weigths: BigNumberish[];
-      },
-      _nonce: BigNumberish
+      _nonce: BigNumberish,
+      _signature: Arrayish
     ): Promise<BigNumber>;
   };
 }

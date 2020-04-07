@@ -42,29 +42,33 @@ contract SignatureValidator {
   |        Signature Functions        |
   |__________________________________*/
 
-  /**
+ /**
    * @notice Recover the signer of hash, assuming it's an EOA account
    * @dev Only for SignatureType.EIP712 and SignatureType.EthSign signatures
    * @param _hash      Hash that was signed
-   * @param _signature Signature struct
+   *   encoded as (bytes32 r, bytes32 s, uint8 v, ... , SignatureType sigType)
    */
   function recoverSigner(
     bytes32 _hash,
-    Signature memory _signature
-  )
-    public pure returns (address signer)
-  {
+    bytes32 r,
+    bytes32 s,
+    uint8 v,
+    uint8 t
+  ) public pure returns (address signer) {
+    // Extract signature type
+    SignatureType signatureType = SignatureType(t);
+
     // Signature using EIP712
-    if (_signature.sigType == SignatureType.EIP712) {
-      signer = ecrecover(_hash, _signature.v, _signature.r, _signature.s);
+    if (signatureType == SignatureType.EIP712) {
+      signer = ecrecover(_hash, v, r, s);
 
     // Signed using web3.eth_sign() or Ethers wallet.signMessage()
-    } else if (_signature.sigType == SignatureType.EthSign) {
+    } else if (signatureType == SignatureType.EthSign) {
       signer = ecrecover(
         keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _hash)),
-        _signature.v,
-        _signature.r,
-        _signature.s
+        v,
+        r,
+        s
       );
 
     } else {

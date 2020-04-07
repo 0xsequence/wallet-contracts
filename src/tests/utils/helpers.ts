@@ -130,10 +130,19 @@ export function encodeMetaTransactionsData(
   nonce: BigNumberish
 ): string {
   const transactions = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [nonce, txs])
-  return ethers.utils.defaultAbiCoder.encode(
-    ['address', 'bytes'],
-    [owner, transactions]
+
+  return ethers.utils.solidityPack(
+    ['string', 'address', 'bytes'],
+    ['\x19\x01', owner, ethers.utils.keccak256(transactions)]
   )
+}
+
+export async function walletSign(
+  owner: ethers.Wallet,
+  message: string
+) {
+  const singleOwnerPrefix = '0x0100010101'
+  return singleOwnerPrefix + (await ethSign(owner, message)).slice(2)
 }
 
 export async function signMetaTransactions(
@@ -149,7 +158,7 @@ export async function signMetaTransactions(
   nonce: BigNumberish
 ) {
   const data = encodeMetaTransactionsData(wallet.address, txs, nonce)
-  return ethSign(owner, data)
+  return walletSign(owner, data)
 }
 
 export async function nextNonce(wallet: MainModule) {
@@ -171,4 +180,23 @@ export async function signAndExecuteMetaTx(
   if (!nonce) nonce = await nextNonce(wallet)
   const signature = await signMetaTransactions(wallet, owner, txs, nonce)
   return wallet.execute(txs, nonce, signature)
+}
+
+export function encodeSalt(
+  threshold: BigNumberish,
+  accounts: {
+    weight: BigNumberish
+    address: string
+  }[]
+) {
+  const weightedAddresses = accounts.map((a) => ethers.utils.solidityPack(
+    ['uint8', 'address'], [a.weight, a.address]
+  ))
+
+  const image = ethers.utils.solidityPack(
+    ['uint16', ...Array(accounts.length).fill('bytes21')],
+    [threshold, ...weightedAddresses]
+  )
+
+  return ethers.utils.keccak256(image)
 }

@@ -13,15 +13,12 @@ import {
 interface SignatureValidatorInterface extends Interface {
   functions: {
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [
+      encode([_hash, r, s, v, t]: [
         Arrayish,
-        {
-          r: Arrayish;
-          s: Arrayish;
-          v: BigNumberish;
-          nonce: BigNumberish;
-          sigType: BigNumberish;
-        }
+        Arrayish,
+        Arrayish,
+        BigNumberish,
+        BigNumberish
       ]): string;
     }>;
   };
@@ -48,25 +45,19 @@ export class SignatureValidator extends Contract {
   functions: {
     recoverSigner(
       _hash: Arrayish,
-      _signature: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }
+      r: Arrayish,
+      s: Arrayish,
+      v: BigNumberish,
+      t: BigNumberish
     ): Promise<string>;
   };
 
   recoverSigner(
     _hash: Arrayish,
-    _signature: {
-      r: Arrayish;
-      s: Arrayish;
-      v: BigNumberish;
-      nonce: BigNumberish;
-      sigType: BigNumberish;
-    }
+    r: Arrayish,
+    s: Arrayish,
+    v: BigNumberish,
+    t: BigNumberish
   ): Promise<string>;
 
   filters: {};
@@ -74,13 +65,10 @@ export class SignatureValidator extends Contract {
   estimate: {
     recoverSigner(
       _hash: Arrayish,
-      _signature: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }
+      r: Arrayish,
+      s: Arrayish,
+      v: BigNumberish,
+      t: BigNumberish
     ): Promise<BigNumber>;
   };
 }

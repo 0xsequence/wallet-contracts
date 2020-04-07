@@ -17,28 +17,23 @@ interface ModuleAuthInterface extends Interface {
     INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
 
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [
+      encode([_hash, r, s, v, t]: [
         Arrayish,
-        {
-          r: Arrayish;
-          s: Arrayish;
-          v: BigNumberish;
-          nonce: BigNumberish;
-          sigType: BigNumberish;
-        }
+        Arrayish,
+        Arrayish,
+        BigNumberish,
+        BigNumberish
       ]): string;
     }>;
 
     updateConfigs: TypedFunctionDescription<{
       encode([_newConfigs]: [
-        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
+        { threshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
       ]): string;
     }>;
 
     getConfigAddress: TypedFunctionDescription<{
-      encode([_configs]: [
-        { treshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
-      ]): string;
+      encode([_configs]: [Arrayish]): string;
     }>;
 
     isValidSignature: TypedFunctionDescription<{
@@ -73,29 +68,22 @@ export class ModuleAuth extends Contract {
 
     recoverSigner(
       _hash: Arrayish,
-      _signature: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }
+      r: Arrayish,
+      s: Arrayish,
+      v: BigNumberish,
+      t: BigNumberish
     ): Promise<string>;
 
     updateConfigs(
       _newConfigs: {
-        treshold: BigNumberish;
+        threshold: BigNumberish;
         keys: string[];
         weigths: BigNumberish[];
       },
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    getConfigAddress(_configs: {
-      treshold: BigNumberish;
-      keys: string[];
-      weigths: BigNumberish[];
-    }): Promise<string>;
+    getConfigAddress(_configs: Arrayish): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
   };
@@ -106,29 +94,22 @@ export class ModuleAuth extends Contract {
 
   recoverSigner(
     _hash: Arrayish,
-    _signature: {
-      r: Arrayish;
-      s: Arrayish;
-      v: BigNumberish;
-      nonce: BigNumberish;
-      sigType: BigNumberish;
-    }
+    r: Arrayish,
+    s: Arrayish,
+    v: BigNumberish,
+    t: BigNumberish
   ): Promise<string>;
 
   updateConfigs(
     _newConfigs: {
-      treshold: BigNumberish;
+      threshold: BigNumberish;
       keys: string[];
       weigths: BigNumberish[];
     },
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  getConfigAddress(_configs: {
-    treshold: BigNumberish;
-    keys: string[];
-    weigths: BigNumberish[];
-  }): Promise<string>;
+  getConfigAddress(_configs: Arrayish): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
@@ -143,26 +124,19 @@ export class ModuleAuth extends Contract {
 
     recoverSigner(
       _hash: Arrayish,
-      _signature: {
-        r: Arrayish;
-        s: Arrayish;
-        v: BigNumberish;
-        nonce: BigNumberish;
-        sigType: BigNumberish;
-      }
+      r: Arrayish,
+      s: Arrayish,
+      v: BigNumberish,
+      t: BigNumberish
     ): Promise<BigNumber>;
 
     updateConfigs(_newConfigs: {
-      treshold: BigNumberish;
+      threshold: BigNumberish;
       keys: string[];
       weigths: BigNumberish[];
     }): Promise<BigNumber>;
 
-    getConfigAddress(_configs: {
-      treshold: BigNumberish;
-      keys: string[];
-      weigths: BigNumberish[];
-    }): Promise<BigNumber>;
+    getConfigAddress(_configs: Arrayish): Promise<BigNumber>;
 
     isValidSignature(
       _hash: Arrayish,

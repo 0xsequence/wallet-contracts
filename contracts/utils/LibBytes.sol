@@ -66,10 +66,7 @@ library LibBytes {
     pure
     returns (bytes32 result)
   {
-    require(
-      b.length >= index + 32,
-      "LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED"
-    );
+    // TODO Handle array limits
 
     // Arrays are prefixed by a 256 bit length parameter
     uint256 pos = index + 32;
@@ -79,5 +76,18 @@ library LibBytes {
       result := mload(add(b, pos))
     }
     return result;
+  }
+
+  function writeBytes32(
+    bytes memory b,
+    uint256 index,
+    bytes32 val
+  ) internal
+    pure
+  {
+    // TODO Check array size
+    assembly {
+      mstore(add(add(b, 32), index), val)
+    }
   }
 }
