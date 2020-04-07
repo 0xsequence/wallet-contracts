@@ -6,7 +6,6 @@ import "../../utils/LibBytes.sol";
 import "../../utils/SignatureValidator.sol";
 import "../../interfaces/IERC1271Wallet.sol";
 
-import "@nomiclabs/buidler/console.sol";
 
 contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
   using LibBytes for bytes;
