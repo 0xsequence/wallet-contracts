@@ -27,4 +27,12 @@ contract MainModule is
   ModuleUpdate,
   ModuleHooks,
   ModuleCalls
-{}
+{
+  constructor(
+    bytes32 _initCodeHash,
+    address _factory
+  ) public ModuleAuth(
+    _initCodeHash,
+    _factory
+  ) { }
+}
