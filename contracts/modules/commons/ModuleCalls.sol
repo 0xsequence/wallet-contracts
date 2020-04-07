@@ -1,10 +1,10 @@
 pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
-import "./ModuleAuth.sol";
+import "./interfaces/IModuleAuth.sol";
 
 
-contract ModuleCalls is ModuleAuth {
+abstract contract ModuleCalls is IModuleAuth {
   struct Transaction {
     bool delegateCall; // Performs delegatecall
     bool skipOnError;  // Ignored upon failure
