@@ -31,8 +31,8 @@ contract ModuleCalls is ModuleAuth {
    */
   function execute(
     Transaction[] memory _txs,
-    Signature[] memory _signatures,
-    Configs memory _configs,
+    bytes[] memory _signatures,
+    bytes memory _configs,
     uint256 _nonce
   )
     public
@@ -41,7 +41,10 @@ contract ModuleCalls is ModuleAuth {
     _validateNonce(_nonce);
 
     // Verify that signatures are valid
-    _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signatures, _configs);
+    require(
+      _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signatures, _configs),
+      "ModuleCalls#execute: INVALID_SIGNATURE"
+    );
 
     // Execute transaction
     for (uint256 i = 0; i < _txs.length; i++) {

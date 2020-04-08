@@ -1,5 +1,6 @@
 import * as ethers from 'ethers'
-import { Arrayish, BigNumberish } from 'ethers/utils'
+import { Arrayish, joinSignature, BigNumberish } from 'ethers/utils'
+import { SigningKey } from 'ethers/utils/signing-key';
 import { MainModule } from 'typings/contracts/MainModule'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -110,6 +111,14 @@ export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Arra
   return ethsigNoType + '02'
 }
 
+// Take a message, hash it and sign it with EIP_712_SIG SignatureType
+export function eip712Sign(wallet: ethers.Wallet, message: string | Uint8Array) {
+  let hash = ethers.utils.keccak256(message)
+  let signerSigningKey = new SigningKey(wallet.privateKey)
+  let eip712sig = joinSignature(signerSigningKey.signDigest(hash))
+  return eip712sig + '01'
+}
+
 export const MetaTransactionsType = `tuple(
   bool delegateCall,
   bool skipOnError,
@@ -119,7 +128,7 @@ export const MetaTransactionsType = `tuple(
 )[]`
 
 export function encodeMetaTransactionsData(
-  owner: string,
+  walletAddress: string,
   txs: {
     delegateCall: boolean;
     skipOnError: boolean;
@@ -130,9 +139,9 @@ export function encodeMetaTransactionsData(
   nonce: BigNumberish
 ): string {
   const transactions = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [nonce, txs])
-  return ethers.utils.defaultAbiCoder.encode(
-    ['address', 'bytes'],
-    [owner, transactions]
+  return ethers.utils.solidityPack(
+    ['string', 'address', 'bytes32'],
+    ['\x19\x01', walletAddress, ethers.utils.keccak256(transactions)]
   )
 }
 
@@ -149,7 +158,7 @@ export async function signMetaTransactions(
   nonce: BigNumberish
 ) {
   const data = encodeMetaTransactionsData(wallet.address, txs, nonce)
-  return ethSign(owner, data)
+  return eip712Sign(owner, data)
 }
 
 export async function nextNonce(wallet: MainModule) {
@@ -170,5 +179,5 @@ export async function signAndExecuteMetaTx(
 ) {
   if (!nonce) nonce = await nextNonce(wallet)
   const signature = await signMetaTransactions(wallet, owner, txs, nonce)
-  return wallet.execute(txs, nonce, signature)
+  return //wallet.execute(txs, nonce, signature)
 }

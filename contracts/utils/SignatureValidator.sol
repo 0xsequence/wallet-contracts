@@ -30,14 +30,6 @@ contract SignatureValidator {
     NSignatureTypes  // 0x03, number of signature types. Always leave at end.
   }
 
-  // Encoding of signatures
-  struct Signature {
-    bytes32 r;
-    bytes32 s;
-    uint8 v;
-    SignatureType sigType;
-  }
-
   /***********************************|
   |        Signature Functions        |
   |__________________________________*/
@@ -50,21 +42,37 @@ contract SignatureValidator {
    */
   function recoverSigner(
     bytes32 _hash,
-    Signature memory _signature
+    bytes memory _signature
   )
     public pure returns (address signer)
   {
+    // Pop last byte off of signature byte array.
+    uint8 signatureTypeRaw = uint8(_signature.popLastByte());
+
+    // Ensure signature is supported
+    require(
+      signatureTypeRaw < uint8(SignatureType.NSignatureTypes),
+      "SignatureValidator#isValidSignature: UNSUPPORTED_SIGNATURE"
+    );
+
+    bytes32 r = _signature.readBytes32(0);
+    bytes32 s = _signature.readBytes32(32);
+    uint8 v = uint8(_signature[64]);
+
+    // Extract signature type
+    SignatureType signatureType = SignatureType(signatureTypeRaw);
+
     // Signature using EIP712
-    if (_signature.sigType == SignatureType.EIP712) {
-      signer = ecrecover(_hash, _signature.v, _signature.r, _signature.s);
+    if (signatureType == SignatureType.EIP712) {
+      signer = ecrecover(_hash, v, r, s);
 
     // Signed using web3.eth_sign() or Ethers wallet.signMessage()
-    } else if (_signature.sigType == SignatureType.EthSign) {
+    } else if (signatureType == SignatureType.EthSign) {
       signer = ecrecover(
         keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _hash)),
-        _signature.v,
-        _signature.r,
-        _signature.s
+        v,
+        r,
+        s
       );
 
     } else {

@@ -20,7 +20,7 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
   struct Configs {
     uint8 threshold; // Cumulative weigth that needs to be exceeded
     address[] keys;  // Array containing current multisig keys
-    uint8[] weigths; // Weigth each key has for multisig
+    uint8[] weights; // Weigth each key has for multisig
   }
 
   // Event recording the new parameters for multisig
@@ -45,44 +45,60 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
    */
   function _signatureValidation(
     bytes32 _hash,
-    Signature[] memory _signatures,
-    Configs memory _configs
+    bytes[] memory _signatures,
+    bytes memory _configs
   )
-    internal view
+    internal view returns (bool)
   {
     // Initializing variables
     uint256 key_idx; // Index of key in config
     address signer;  // Recovered signer
     uint256 weigth;  // Cumulative siners weights
 
-    // Check if configs provided are correct
-    require(
-      getConfigAddress(_configs) == address(this),
-      "ModuleAuth#_signatureValidation: INVALID_MULTISIG_CONFIGS"
-    );
-
+    // Retrieve configs in struct
+    Configs memory configs = decodeConfigs(_configs);
+ 
     // Check if signer threshold is met by going over signers
     // Assumes signatures are sorted like in Configs
     for (uint256 i = 0; i < _signatures.length; i++) {
       signer = recoverSigner(_hash, _signatures[i]);
 
       // Loop until you find expected signer
-      while (_configs.keys[key_idx] != signer) {
+      while (configs.keys[key_idx] != signer) {
         key_idx++;
       }
 
       // Add signer's weigth
-      weigth += _configs.weigths[key_idx];
+      weigth += configs.weights[key_idx];
 
       // Move to next signer in config (no duplicates)
       key_idx++;
     }
 
-    // Verify that signers weight exceeds threshold
-    require(
-      weigth >= _configs.threshold,
-      "ModuleAuth#_signatureValidation: INSUFFICINET_SIGNATURE_WEIGTH"
-    );
+    return _getConfigAddress(configs) == address(this) && weigth >= configs.threshold;
+  }
+
+  /**
+  * @notice Packed encoded configs
+  * abi.encodePacked(uint8 nSigners, uint8 threshold, uint8 weigth, address signer, uint8 weigth2, address signer2, ...) 
+  */
+  function decodeConfigs(bytes memory _configs) public pure returns (Configs memory) {
+    uint256 index;
+    uint8 n_signers = uint8(_configs[0]);
+
+    Configs memory configs = Configs({
+      threshold: uint8(_configs[1]),
+      keys: new address[](n_signers),
+      weights: new uint8[](n_signers)
+    });
+
+    for (uint256 i=0; i < n_signers; i++) {
+      index = 21*i + 2;
+      configs.weights[i] = uint8(_configs[index]);
+      configs.keys[i] = _configs.readAddress(index + 1);
+    }
+
+    return configs;
   }
 
   /**
@@ -102,9 +118,9 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
 
   /**
    * @notice Will return the wallet address created by the factory for provided configuration struct
-   * @param _configs Multisignature configuration struct
+   * @param _configs Tightly encoded multisig configs
    */
-  function getConfigAddress(Configs memory _configs) public pure returns(address) {
+  function _getConfigAddress(Configs memory _configs) internal pure returns(address) {
     return address(
       uint256(
         keccak256(
@@ -133,11 +149,10 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
     bytes calldata _signatures
   ) external override view returns (bytes4) {
     // Decode signatures and multisig configs
-    (Signature[] memory signatures, Configs memory configs) = abi.decode(_signatures, (Signature[], Configs));
+    (bytes[] memory signatures, bytes memory configs) = abi.decode(_signatures, (bytes[], bytes));
 
     // Validate signatures
-    _signatureValidation(_hashData(_data), signatures, configs);
-    return 0x20c13b0b;
+    return _signatureValidation(_hashData(_data), signatures, configs) ?  bytes4(0x20c13b0b) : bytes4(0x0);
   }
 
   /**
@@ -154,10 +169,9 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
     bytes calldata _signatures
   ) external override view returns (bytes4) {
     // Decode signatures and multisig configs
-    (Signature[] memory signatures, Configs memory configs) = abi.decode(_signatures, (Signature[], Configs));
+    (bytes[] memory signatures, bytes memory configs) = abi.decode(_signatures, (bytes[], bytes));
 
     // Validate signatures
-    _signatureValidation(_hash, signatures, configs);
-    return 0x1626ba7e;
+    return _signatureValidation(_hash, signatures, configs) ? bytes4(0x1626ba7e) : bytes4(0x0);
   }
 }

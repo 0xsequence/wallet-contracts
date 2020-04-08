@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign } from './utils';
+import { expect, signAndExecuteMetaTx, nextNonce, signMetaTransactions, RevertError, ethSign, MetaTransactionsType, encodeMetaTransactionsData } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
@@ -22,30 +22,52 @@ const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
 
 const web3 = (global as any).web3
 
-contract('MainModule', (accounts: string[]) => {
-  let factory
-  let module
+export type Configs = {
+  threshold: number | string;
+  keys: string[];
+  weights: number[];
+};
 
-  let owner
-  let wallet
+
+contract('MainModule', (accounts: string[]) => {
+  let factory: Factory
+  let module: MainModule
+
+  let owner: ethers.Wallet
+  let wallet: MainModule
+  let packed_encoded_configs: string
+  let configs: Configs
+
+  const ConfigsType = `tuple(
+    uint8 threshold,
+    address[] keys,
+    uint8[] weights
+  )`
 
   before(async () => {
     // Deploy wallet factory
-    factory = await FactoryArtifact.new() as Factory
+    factory = await FactoryArtifact.new()
     // Deploy MainModule
     const tx = await (await MainModuleDeployerArtifact.new()).deploy(factory.address)
-    module = await MainModuleArtifact.at(tx.logs[0].args._module) as MainModule
+    module = await MainModuleArtifact.at(tx.logs[0].args._module)
   })
 
   beforeEach(async () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-    const salt = web3.utils.padLeft(owner.address, 64)
+    configs = {
+      threshold: 1,
+      keys: [owner.address],
+      weights: [1]
+    }
+    packed_encoded_configs = ethers.utils.solidityPack(['uint8', 'uint8', 'uint8', 'address'], [1, 1, 1, owner.address])
+    let encoded_configs = ethers.utils.defaultAbiCoder.encode([ConfigsType], [configs])
+    const salt = ethers.utils.keccak256(encoded_configs)
     await factory.deploy(module.address, salt)
-    wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+    wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt))
   })
 
   describe('Authentication', () => {
-    it('Should accept initial owner signature', async () => {
+    it.only('Should accept initial owner signature', async () => {
       const transaction = {
         delegateCall: false,
         skipOnError: false,
@@ -54,7 +76,12 @@ contract('MainModule', (accounts: string[]) => {
         data: []
       }
 
-      await signAndExecuteMetaTx(wallet, owner, [transaction])
+      let nonce = await nextNonce(wallet)
+      const signature = await signMetaTransactions(wallet, owner, [transaction], nonce)
+      let tx = await wallet.execute([transaction], [signature], packed_encoded_configs, nonce)
+
+      //let tx = await signAndExecuteMetaTx(wallet, owner, [transaction])
+      console.log(tx)
     })
     it('Should reject non-owner signature', async () => {
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
