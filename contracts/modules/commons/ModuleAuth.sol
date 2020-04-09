@@ -56,7 +56,7 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
     uint256 weigth;  // Cumulative siners weights
 
     // Retrieve configs in struct
-    Configs memory configs = decodeConfigs(_configs);
+    Configs memory configs = _decodeConfigs(_configs);
  
     // Check if signer threshold is met by going over signers
     // Assumes signatures are sorted like in Configs
@@ -75,14 +75,14 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
       key_idx++;
     }
 
-    return _getConfigAddress(configs) == address(this) && weigth >= configs.threshold;
+    return _getConfigAddress(_configs) == address(this) && weigth >= configs.threshold;
   }
 
   /**
   * @notice Packed encoded configs
   * abi.encodePacked(uint8 nSigners, uint8 threshold, uint8 weigth, address signer, uint8 weigth2, address signer2, ...) 
   */
-  function decodeConfigs(bytes memory _configs) public pure returns (Configs memory) {
+  function _decodeConfigs(bytes memory _configs) internal pure returns (Configs memory) {
     uint256 index;
     uint8 n_signers = uint8(_configs[0]);
 
@@ -120,14 +120,14 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
    * @notice Will return the wallet address created by the factory for provided configuration struct
    * @param _configs Tightly encoded multisig configs
    */
-  function _getConfigAddress(Configs memory _configs) internal pure returns(address) {
+  function _getConfigAddress(bytes memory _configs) internal pure returns(address) {
     return address(
       uint256(
         keccak256(
           abi.encodePacked(
             byte(0xff),
             FACTORY, 
-            keccak256(abi.encode(_configs)),
+            keccak256(_configs),
             INIT_CODE_HASH
           )
         )

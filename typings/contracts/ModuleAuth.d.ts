@@ -26,10 +26,6 @@ interface ModuleAuthInterface extends Interface {
       ]): string;
     }>;
 
-    decodeConfigs: TypedFunctionDescription<{
-      encode([_configs]: [Arrayish]): string;
-    }>;
-
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
@@ -71,10 +67,6 @@ export class ModuleAuth extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    decodeConfigs(
-      _configs: Arrayish
-    ): Promise<{ threshold: number; keys: string[]; weights: number[] }>;
-
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
   };
 
@@ -92,10 +84,6 @@ export class ModuleAuth extends Contract {
     },
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
-
-  decodeConfigs(
-    _configs: Arrayish
-  ): Promise<{ threshold: number; keys: string[]; weights: number[] }>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
@@ -115,8 +103,6 @@ export class ModuleAuth extends Contract {
       keys: string[];
       weights: BigNumberish[];
     }): Promise<BigNumber>;
-
-    decodeConfigs(_configs: Arrayish): Promise<BigNumber>;
 
     isValidSignature(
       _hash: Arrayish,

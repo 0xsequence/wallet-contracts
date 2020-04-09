@@ -20,10 +20,6 @@ interface MainModuleInterface extends Interface {
       encode([_signature, _implementation]: [Arrayish, string]): string;
     }>;
 
-    decodeConfigs: TypedFunctionDescription<{
-      encode([_configs]: [Arrayish]): string;
-    }>;
-
     execute: TypedFunctionDescription<{
       encode([_txs, _signatures, _configs, _nonce]: [
         {
@@ -129,10 +125,6 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    decodeConfigs(
-      _configs: Arrayish
-    ): Promise<{ threshold: number; keys: string[]; weights: number[] }>;
-
     execute(
       _txs: {
         delegateCall: boolean;
@@ -210,10 +202,6 @@ export class MainModule extends Contract {
     _implementation: string,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
-
-  decodeConfigs(
-    _configs: Arrayish
-  ): Promise<{ threshold: number; keys: string[]; weights: number[] }>;
 
   execute(
     _txs: {
@@ -296,8 +284,6 @@ export class MainModule extends Contract {
     INIT_CODE_HASH(): Promise<BigNumber>;
 
     addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
-
-    decodeConfigs(_configs: Arrayish): Promise<BigNumber>;
 
     execute(
       _txs: {

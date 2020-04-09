@@ -61,7 +61,7 @@ contract('MainModule', (accounts: string[]) => {
     }
     packed_encoded_configs = ethers.utils.solidityPack(['uint8', 'uint8', 'uint8', 'address'], [1, 1, 1, owner.address])
     let encoded_configs = ethers.utils.defaultAbiCoder.encode([ConfigsType], [configs])
-    const salt = ethers.utils.keccak256(encoded_configs)
+    const salt = ethers.utils.keccak256(packed_encoded_configs)
     await factory.deploy(module.address, salt)
     wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt))
   })

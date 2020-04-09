@@ -16,10 +16,6 @@ interface ModuleCallsInterface extends Interface {
 
     INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
 
-    decodeConfigs: TypedFunctionDescription<{
-      encode([_configs]: [Arrayish]): string;
-    }>;
-
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
@@ -85,10 +81,6 @@ export class ModuleCalls extends Contract {
 
     INIT_CODE_HASH(): Promise<string>;
 
-    decodeConfigs(
-      _configs: Arrayish
-    ): Promise<{ threshold: number; keys: string[]; weights: number[] }>;
-
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
     nonce(): Promise<BigNumber>;
@@ -122,10 +114,6 @@ export class ModuleCalls extends Contract {
   FACTORY(): Promise<string>;
 
   INIT_CODE_HASH(): Promise<string>;
-
-  decodeConfigs(
-    _configs: Arrayish
-  ): Promise<{ threshold: number; keys: string[]; weights: number[] }>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
@@ -168,8 +156,6 @@ export class ModuleCalls extends Contract {
     FACTORY(): Promise<BigNumber>;
 
     INIT_CODE_HASH(): Promise<BigNumber>;
-
-    decodeConfigs(_configs: Arrayish): Promise<BigNumber>;
 
     isValidSignature(
       _hash: Arrayish,
