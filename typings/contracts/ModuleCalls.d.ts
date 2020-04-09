@@ -27,13 +27,7 @@ interface ModuleCallsInterface extends Interface {
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
 
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, r, s, v, t]: [
-        Arrayish,
-        Arrayish,
-        Arrayish,
-        BigNumberish,
-        BigNumberish
-      ]): string;
+      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
 
     updateConfigs: TypedFunctionDescription<{
@@ -96,13 +90,7 @@ export class ModuleCalls extends Contract {
 
     nonce(): Promise<BigNumber>;
 
-    recoverSigner(
-      _hash: Arrayish,
-      r: Arrayish,
-      s: Arrayish,
-      v: BigNumberish,
-      t: BigNumberish
-    ): Promise<string>;
+    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
     updateConfigs(
       _newConfigs: {
@@ -137,13 +125,7 @@ export class ModuleCalls extends Contract {
 
   nonce(): Promise<BigNumber>;
 
-  recoverSigner(
-    _hash: Arrayish,
-    r: Arrayish,
-    s: Arrayish,
-    v: BigNumberish,
-    t: BigNumberish
-  ): Promise<string>;
+  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
   updateConfigs(
     _newConfigs: {
@@ -189,13 +171,7 @@ export class ModuleCalls extends Contract {
 
     nonce(): Promise<BigNumber>;
 
-    recoverSigner(
-      _hash: Arrayish,
-      r: Arrayish,
-      s: Arrayish,
-      v: BigNumberish,
-      t: BigNumberish
-    ): Promise<BigNumber>;
+    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
     updateConfigs(_newConfigs: {
       threshold: BigNumberish;

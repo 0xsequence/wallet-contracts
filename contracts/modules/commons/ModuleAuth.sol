@@ -51,77 +51,45 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
   )
     internal view returns (bool)
   {
-    // The first byte defines how many address has the wallet
-    // each address requires 21 bytes on the image (1 weight + 20 address)
-    // imageSize aditionally requires 2 bytes for the threshold
-    uint256 imageSize = 2 + uint256(uint8(_signature[0])) * 21;
+    (
+      uint8 total,       // total number of accounts in multisig
+      uint16 threshold,  // required threshold signature
+      uint256 rindex     // read index
+    ) = _signature.readUint8Uint16(0);
+
+    // The first byte defines how many address the wallet has
+    // each address takes 21 bytes on the image (1 weight + 20 address)
+    // imageSize requires 2 aditional bytes for the threshold
+    uint256 imageSize = 2 + total * 21;
     bytes memory image = new bytes(imageSize);
 
-    // The next 2 bytes are used to store the wallet threshold
-    uint256 threshold = uint256(_signature.readBytes32(1) >> 240);
+    // Write threshold to image
+    uint256 windex = image.writeUint16(0, threshold);
 
-    // Write the first 2 bytes of the image, that stores the threshold
-    LibBytes.writeBytes32(image, 0, bytes32(threshold << 240));
-
-    uint256 totalWeight; // Weigth of signatures
-
-    uint256 windex = 2; // write index (starts on threshold)
-    uint256 rindex = 3; // read index (starts on threshold + size)
+    // Acumulated weigth of signatures
+    uint256 totalWeight;
 
     // Iterate until the image is completed
     while (windex < imageSize) {
-      uint256 isAddr;
-      uint256 addrWeigth;
-      address addr;
-
-      { // Create a new scope, avoid `Stack too deep` error
-        // Read a full word to reduce the number of operations
-        bytes32 word = _signature.readBytes32(rindex);
-
-        // First byte defines if the word contains a signature or an address
-        isAddr = uint256(word >> 248);
-
-        // The next byte contains the weigth for the address
-        addrWeigth = uint256(
-          bytes32(word >> 240) &         // Second byte of word
-          bytes32(uint256((1 << 8) - 1)) // 1 byte mask
-        );
-
-        if (isAddr == 0) {
-          // Read raw address from the signature
-          addr = address(uint256(
-            bytes32(word >> 80) &            // 20 bytes after isAddr and weigth
-            bytes32(uint256((1 << 160) - 1)) // address mask
-          ));
-
-          // Advance the read index
-          // 1 isAddr + 1 addrWeigth + 20 addr
-          rindex += 22;
-        }
-      }
+      // Read next item type and addrWeight
+      uint256 isAddr; uint8 addrWeight; address addr;
+      (isAddr, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
 
       if (isAddr != 0) {
         // Read single signature and recover signer
-        addr = recoverSigner(
-          _hash,                               // Hashed message
-          _signature.readBytes32(rindex + 2),  // r
-          _signature.readBytes32(rindex + 34), // s
-          uint8(_signature[rindex + 66]),      // v
-          uint8(_signature[rindex + 67])       // Signature type
-        );
-
-        // Advance the read index
-        // 1 isAddr + 1 addrWeigth + 66 signature
-        rindex += 68;
+        bytes memory signature;
+        (signature, rindex) = _signature.readBytes66(rindex);
+        addr = recoverSigner(_hash, signature);
 
         // Acumulate total weigth of the signature
-        totalWeight += addrWeigth;
+        totalWeight += addrWeight;
+      } else {
+        // Read plain address
+        (addr, rindex) = _signature.readAddress(rindex);
       }
 
-      // Write address to image
-      // 1 byte weigth + 20 bytes addr
-      image.writeBytes32(windex, bytes32(addrWeigth << 248 | uint256(addr) << 88));
-      windex += 21;
+      // Write weight and address to image
+      windex = image.writeUint8Address(windex, addrWeight, addr);
     }
 
     return totalWeight >= threshold && getConfigAddress(image) == address(this);

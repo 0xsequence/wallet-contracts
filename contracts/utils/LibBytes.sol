@@ -53,6 +53,103 @@ library LibBytes {
   |__________________________________*/
 
   /**
+   * @dev Reads consecutive uint8 and uint16 values.
+   * @param data Byte array to be read.
+   * @param index Index in byte array of uint8 and uint16 values.
+   * @return a uint8 value of data at given index.
+   * @return b uint16 value of data at given index + 8.
+   * @return newIndex Updated index after reading the values.
+   */
+  function readUint8Uint16(
+    bytes memory data,
+    uint256 index
+  ) internal pure returns (
+    uint8 a,
+    uint16 b,
+    uint256 newIndex
+  ) {
+    assembly {
+      let word := mload(add(index, add(32, data)))
+      a := shr(248, word)
+      b := and(shr(232, word), 0xffff)
+      newIndex := add(index, 3)
+    }
+    require(newIndex <= data.length, "LibBytes#readUint8Uint16: OUT_OF_BOUNDS");
+  }
+
+  /**
+   * @dev Reads consecutive uint8 and uint8 values.
+   * @param data Byte array to be read.
+   * @param index Index in byte array of uint8 and uint8 values.
+   * @return a uint8 value of data at given index.
+   * @return b uint8 value of data at given index + 8.
+   * @return newIndex Updated index after reading the values.
+   */
+  function readUint8Uint8(
+    bytes memory data,
+    uint256 index
+  ) internal pure returns (
+    uint8 a,
+    uint8 b,
+    uint256 newIndex
+  ) {
+    assembly {
+      let word := mload(add(index, add(32, data)))
+      a := shr(248, word)
+      b := and(shr(240, word), 0xff)
+      newIndex := add(index, 2)
+    }
+    require(newIndex <= data.length, "LibBytes#readUint8Uint8: OUT_OF_BOUNDS");
+  }
+
+  /**
+   * @dev Reads an address value from a position in a byte array.
+   * @param data Byte array to be read.
+   * @param index Index in byte array of address value.
+   * @return a address value of data at given index.
+   * @return newIndex Updated index after reading the value.
+   */
+  function readAddress(
+    bytes memory data,
+    uint256 index
+  ) internal pure returns (
+    address a,
+    uint256 newIndex
+  ) {
+    assembly {
+      let word := mload(add(index, add(32, data)))
+      a := and(shr(96, word), 0xffffffffffffffffffffffffffffffffffffffff)
+      newIndex := add(index, 20)
+    }
+    require(newIndex <= data.length, "LibBytes#readAddress: OUT_OF_BOUNDS");
+  }
+
+  /**
+   * @dev Reads 66 bytes from a position in a byte array.
+   * @param data Byte array to be read.
+   * @param index Index in byte array of 66 bytes value.
+   * @return a 66 bytes bytes array value of data at given index.
+   * @return newIndex Updated index after reading the value.
+   */
+  function readBytes66(
+    bytes memory data,
+    uint256 index
+  ) internal pure returns (
+    bytes memory a,
+    uint256 newIndex
+  ) {
+    a = new bytes(66);
+    assembly {
+      let offset := add(32, add(data, index))
+      mstore(add(a, 32), mload(offset))
+      mstore(add(a, 64), mload(add(offset, 32)))
+      mstore(add(a, 66), mload(add(offset, 34)))
+      newIndex := add(index, 66)
+    }
+    require(newIndex <= data.length, "LibBytes#readBytes66: OUT_OF_BOUNDS");
+  }
+
+  /**
    * @dev Reads a bytes32 value from a position in a byte array.
    * @param b Byte array containing a bytes32 value.
    * @param index Index in byte array of bytes32 value.
@@ -66,7 +163,10 @@ library LibBytes {
     pure
     returns (bytes32 result)
   {
-    // TODO Handle array limits
+    require(
+      b.length >= index + 32,
+      "LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED"
+    );
 
     // Arrays are prefixed by a 256 bit length parameter
     uint256 pos = index + 32;
@@ -78,16 +178,48 @@ library LibBytes {
     return result;
   }
 
-  function writeBytes32(
-    bytes memory b,
+
+  /***********************************|
+  |       Write Bytes Functions       |
+  |__________________________________*/
+
+  /**
+   * @dev Writes uint16 into bytes array.
+   * @param dest Bytes array to be written.
+   * @param index Index to start writing value.
+   * @param a Uint16 value to be written
+   * @return newIndex Updated index after writing the value.
+   */
+  function writeUint16(
+    bytes memory dest,
     uint256 index,
-    bytes32 val
-  ) internal
-    pure
-  {
-    // TODO Check array size
+    uint16 a
+  ) internal pure returns (uint256 newIndex) {
     assembly {
-      mstore(add(add(b, 32), index), val)
+      mstore(add(add(32, index), dest), shl(240, a))
+      newIndex := add(index, 2)
     }
+    require(newIndex <= dest.length, "LibBytes#writeUint16: OUT_OF_BOUNDS");
+  }
+
+  /**
+   * @dev Writes consecutive uint8 and address into bytes array.
+   * @param dest Bytes array to be written.
+   * @param index Index to start writing value.
+   * @param a Uint8 value to be written
+   * @param b Address value to be written
+   * @return newIndex Updated index after writing the value.
+   */
+  function writeUint8Address(
+    bytes memory dest,
+    uint256 index,
+    uint8 a,
+    address b
+  ) internal pure returns (uint256 newIndex) {
+    assembly {
+      mstore(add(add(index, 32), dest), or(shl(248, a), shl(88, b)))
+      newIndex := add(index, 21)
+    }
+    require(newIndex <= dest.length, "LibBytes#writeUint8Address: OUT_OF_BOUNDS");
   }
 }

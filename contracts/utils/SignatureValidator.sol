@@ -50,13 +50,18 @@ contract SignatureValidator {
    */
   function recoverSigner(
     bytes32 _hash,
-    bytes32 r,
-    bytes32 s,
-    uint8 v,
-    uint8 t
+    bytes memory _signature
   ) public pure returns (address signer) {
+    // Pop last byte off of signature byte array.
+    uint8 signatureTypeRaw = uint8(_signature.popLastByte());
+
     // Extract signature type
-    SignatureType signatureType = SignatureType(t);
+    SignatureType signatureType = SignatureType(signatureTypeRaw);
+
+    // Variables are not scoped in Solidity.
+    uint8 v = uint8(_signature[64]);
+    bytes32 r = _signature.readBytes32(0);
+    bytes32 s = _signature.readBytes32(32);
 
     // Signature using EIP712
     if (signatureType == SignatureType.EIP712) {

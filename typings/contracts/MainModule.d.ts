@@ -71,13 +71,7 @@ interface MainModuleInterface extends Interface {
     }>;
 
     recoverSigner: TypedFunctionDescription<{
-      encode([_hash, r, s, v, t]: [
-        Arrayish,
-        Arrayish,
-        Arrayish,
-        BigNumberish,
-        BigNumberish
-      ]): string;
+      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
 
     removeHook: TypedFunctionDescription<{
@@ -181,13 +175,7 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    recoverSigner(
-      _hash: Arrayish,
-      r: Arrayish,
-      s: Arrayish,
-      v: BigNumberish,
-      t: BigNumberish
-    ): Promise<string>;
+    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
     removeHook(
       _signature: Arrayish,
@@ -266,13 +254,7 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  recoverSigner(
-    _hash: Arrayish,
-    r: Arrayish,
-    s: Arrayish,
-    v: BigNumberish,
-    t: BigNumberish
-  ): Promise<string>;
+  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
   removeHook(
     _signature: Arrayish,
@@ -354,13 +336,7 @@ export class MainModule extends Contract {
       arg3: Arrayish
     ): Promise<BigNumber>;
 
-    recoverSigner(
-      _hash: Arrayish,
-      r: Arrayish,
-      s: Arrayish,
-      v: BigNumberish,
-      t: BigNumberish
-    ): Promise<BigNumber>;
+    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;
 
