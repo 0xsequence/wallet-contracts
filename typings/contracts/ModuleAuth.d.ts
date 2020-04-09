@@ -22,7 +22,7 @@ interface ModuleAuthInterface extends Interface {
 
     updateConfigs: TypedFunctionDescription<{
       encode([_newConfigs]: [
-        { threshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
+        { threshold: BigNumberish; keys: string[]; weights: BigNumberish[] }
       ]): string;
     }>;
 
@@ -66,7 +66,7 @@ export class ModuleAuth extends Contract {
       _newConfigs: {
         threshold: BigNumberish;
         keys: string[];
-        weigths: BigNumberish[];
+        weights: BigNumberish[];
       },
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
@@ -86,7 +86,7 @@ export class ModuleAuth extends Contract {
     _newConfigs: {
       threshold: BigNumberish;
       keys: string[];
-      weigths: BigNumberish[];
+      weights: BigNumberish[];
     },
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
@@ -109,7 +109,7 @@ export class ModuleAuth extends Contract {
     updateConfigs(_newConfigs: {
       threshold: BigNumberish;
       keys: string[];
-      weigths: BigNumberish[];
+      weights: BigNumberish[];
     }): Promise<BigNumber>;
 
     getConfigAddress(_configs: Arrayish): Promise<BigNumber>;

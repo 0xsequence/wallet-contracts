@@ -21,9 +21,9 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
 
   // Encoding structure for the multisigHash
   struct Configs {
-    uint8 threshold; // Cumulative weigth that needs to be exceeded
+    uint8 threshold; // Cumulative weight that needs to be exceeded
     address[] keys;  // Array containing current multisig keys
-    uint8[] weigths; // Weigth each key has for multisig
+    uint8[] weights; // weight each key has for multisig
   }
 
   // Event recording the new parameters for multisig
@@ -66,7 +66,7 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
     // Write threshold to image
     uint256 windex = image.writeUint16(0, threshold);
 
-    // Acumulated weigth of signatures
+    // Acumulated weight of signatures
     uint256 totalWeight;
 
     // Iterate until the image is completed
@@ -81,7 +81,7 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
         (signature, rindex) = _signature.readBytes66(rindex);
         addr = recoverSigner(_hash, signature);
 
-        // Acumulate total weigth of the signature
+        // Acumulate total weight of the signature
         totalWeight += addrWeight;
       } else {
         // Read plain address

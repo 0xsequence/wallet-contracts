@@ -754,7 +754,7 @@ contract('MainModule', (accounts: string[]) => {
     context('With 1/2 wallet', () => {
       let owner1
       let owner2
-      let ownerWeigth = 1
+      let ownerweight = 1
       let threshold = 1
 
       beforeEach(async () => {
@@ -764,10 +764,10 @@ contract('MainModule', (accounts: string[]) => {
         const salt = encodeSalt(
           threshold,
           [{
-            weight: ownerWeigth,
+            weight: ownerweight,
             address: owner1.address
           }, {
-            weight: ownerWeigth,
+            weight: ownerweight,
             address: owner2.address
           }]
         )
@@ -777,10 +777,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should accept signed message by first owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }]
 
@@ -788,10 +788,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should accept signed message by second owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }]
 
@@ -799,10 +799,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should accept signed message by both owners', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }]
 
@@ -810,10 +810,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message without signatures', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }]
 
@@ -824,10 +824,10 @@ contract('MainModule', (accounts: string[]) => {
         const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: impostor
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }]
 
@@ -838,7 +838,7 @@ contract('MainModule', (accounts: string[]) => {
     context('With 2/2 wallet', () => {
       let owner1
       let owner2
-      let ownerWeigth = 1
+      let ownerweight = 1
       let threshold = 2
 
       beforeEach(async () => {
@@ -848,10 +848,10 @@ contract('MainModule', (accounts: string[]) => {
         const salt = encodeSalt(
           threshold,
           [{
-            weight: ownerWeigth,
+            weight: ownerweight,
             address: owner1.address
           }, {
-            weight: ownerWeigth,
+            weight: ownerweight,
             address: owner2.address
           }]
         )
@@ -861,10 +861,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should accept signed message by both owners', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }]
 
@@ -872,10 +872,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message without signatures', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }]
 
@@ -884,10 +884,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message signed only by first owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }]
 
@@ -896,10 +896,10 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message signed only by second owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }]
 
@@ -910,10 +910,10 @@ contract('MainModule', (accounts: string[]) => {
         const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: impostor
         }]
 
@@ -926,7 +926,7 @@ contract('MainModule', (accounts: string[]) => {
       let owner2
       let owner3
 
-      let ownerWeigth = 1
+      let ownerweight = 1
       let threshold = 2
 
       beforeEach(async () => {
@@ -937,13 +937,13 @@ contract('MainModule', (accounts: string[]) => {
         const salt = encodeSalt(
           threshold,
           [{
-            weight: ownerWeigth,
+            weight: ownerweight,
             address: owner1.address
           }, {
-            weight: ownerWeigth,
+            weight: ownerweight,
             address: owner2.address
           }, {
-            weight: ownerWeigth,
+            weight: ownerweight,
             address: owner3.address
           }]
         )
@@ -954,13 +954,13 @@ contract('MainModule', (accounts: string[]) => {
 
       it('Should accept signed message by first and second owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3.address
         }]
 
@@ -968,13 +968,13 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should accept signed message by first and last owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3
         }]
 
@@ -982,13 +982,13 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should accept signed message by second and last owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3
         }]
 
@@ -996,13 +996,13 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should accept signed message by all owners', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3
         }]
 
@@ -1010,13 +1010,13 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message signed only by first owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3.address
         }]
 
@@ -1025,13 +1025,13 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message signed only by second owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3.address
         }]
 
@@ -1040,13 +1040,13 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message signed only by last owner', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3
         }]
 
@@ -1055,13 +1055,13 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject message not signed', async () => {
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner1.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2.address
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3.address
         }]
 
@@ -1072,13 +1072,13 @@ contract('MainModule', (accounts: string[]) => {
         const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: impostor
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner3.address
         }]
 
@@ -1089,10 +1089,10 @@ contract('MainModule', (accounts: string[]) => {
         const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
         const accounts = [{
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: impostor
         }, {
-          weight: ownerWeigth,
+          weight: ownerweight,
           owner: owner2
         }]
 

@@ -80,7 +80,7 @@ interface MainModuleInterface extends Interface {
 
     updateConfigs: TypedFunctionDescription<{
       encode([_newConfigs]: [
-        { threshold: BigNumberish; keys: string[]; weigths: BigNumberish[] }
+        { threshold: BigNumberish; keys: string[]; weights: BigNumberish[] }
       ]): string;
     }>;
 
@@ -186,7 +186,7 @@ export class MainModule extends Contract {
       _newConfigs: {
         threshold: BigNumberish;
         keys: string[];
-        weigths: BigNumberish[];
+        weights: BigNumberish[];
       },
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
@@ -265,7 +265,7 @@ export class MainModule extends Contract {
     _newConfigs: {
       threshold: BigNumberish;
       keys: string[];
-      weigths: BigNumberish[];
+      weights: BigNumberish[];
     },
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
@@ -343,7 +343,7 @@ export class MainModule extends Contract {
     updateConfigs(_newConfigs: {
       threshold: BigNumberish;
       keys: string[];
-      weigths: BigNumberish[];
+      weights: BigNumberish[];
     }): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
