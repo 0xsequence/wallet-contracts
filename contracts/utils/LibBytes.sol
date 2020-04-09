@@ -196,7 +196,10 @@ library LibBytes {
     uint16 a
   ) internal pure returns (uint256 newIndex) {
     assembly {
-      mstore(add(add(32, index), dest), shl(240, a))
+      let mask240 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      let indx := add(add(32, index), dest)
+      let prev := and(mload(indx), mask240)
+      mstore(indx, or(shl(240, a), prev))
       newIndex := add(index, 2)
     }
     require(newIndex <= dest.length, "LibBytes#writeUint16: OUT_OF_BOUNDS");
@@ -217,7 +220,10 @@ library LibBytes {
     address b
   ) internal pure returns (uint256 newIndex) {
     assembly {
-      mstore(add(add(index, 32), dest), or(shl(248, a), shl(88, b)))
+      let mask88 := 0xffffffffffffffffffffff
+      let indx := add(add(index, 32), dest)
+      let prev := and(mload(indx), mask88)
+      mstore(indx, or(prev,or(shl(248, a), shl(88, b))))
       newIndex := add(index, 21)
     }
     require(newIndex <= dest.length, "LibBytes#writeUint8Address: OUT_OF_BOUNDS");
