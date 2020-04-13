@@ -78,22 +78,12 @@ interface MainModuleInterface extends Interface {
       encode([_signature]: [Arrayish]): string;
     }>;
 
-    updateConfigs: TypedFunctionDescription<{
-      encode([_newConfigs]: [
-        { threshold: BigNumberish; keys: string[]; weights: BigNumberish[] }
-      ]): string;
-    }>;
-
     updateImplementation: TypedFunctionDescription<{
       encode([_implementation]: [string]): string;
     }>;
   };
 
   events: {
-    ConfigsUpdated: TypedEventDescription<{
-      encodeTopics([newConfigs, newConfigHash]: [null, null]): string[];
-    }>;
-
     NonceChange: TypedEventDescription<{
       encodeTopics([newNonce]: [null]): string[];
     }>;
@@ -182,15 +172,6 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    updateConfigs(
-      _newConfigs: {
-        threshold: BigNumberish;
-        keys: string[];
-        weights: BigNumberish[];
-      },
-      overrides?: TransactionOverrides
-    ): Promise<ContractTransaction>;
-
     updateImplementation(
       _implementation: string,
       overrides?: TransactionOverrides
@@ -261,23 +242,12 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  updateConfigs(
-    _newConfigs: {
-      threshold: BigNumberish;
-      keys: string[];
-      weights: BigNumberish[];
-    },
-    overrides?: TransactionOverrides
-  ): Promise<ContractTransaction>;
-
   updateImplementation(
     _implementation: string,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
   filters: {
-    ConfigsUpdated(newConfigs: null, newConfigHash: null): EventFilter;
-
     NonceChange(newNonce: null): EventFilter;
 
     TxFailed(_index: null, _reason: null): EventFilter;
@@ -339,12 +309,6 @@ export class MainModule extends Contract {
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;
-
-    updateConfigs(_newConfigs: {
-      threshold: BigNumberish;
-      keys: string[];
-      weights: BigNumberish[];
-    }): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
   };

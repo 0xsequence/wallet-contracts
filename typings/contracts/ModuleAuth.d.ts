@@ -20,12 +20,6 @@ interface ModuleAuthInterface extends Interface {
       encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
 
-    updateConfigs: TypedFunctionDescription<{
-      encode([_newConfigs]: [
-        { threshold: BigNumberish; keys: string[]; weights: BigNumberish[] }
-      ]): string;
-    }>;
-
     getConfigAddress: TypedFunctionDescription<{
       encode([_configs]: [Arrayish]): string;
     }>;
@@ -35,11 +29,7 @@ interface ModuleAuthInterface extends Interface {
     }>;
   };
 
-  events: {
-    ConfigsUpdated: TypedEventDescription<{
-      encodeTopics([newConfigs, newConfigHash]: [null, null]): string[];
-    }>;
-  };
+  events: {};
 }
 
 export class ModuleAuth extends Contract {
@@ -62,15 +52,6 @@ export class ModuleAuth extends Contract {
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
-    updateConfigs(
-      _newConfigs: {
-        threshold: BigNumberish;
-        keys: string[];
-        weights: BigNumberish[];
-      },
-      overrides?: TransactionOverrides
-    ): Promise<ContractTransaction>;
-
     getConfigAddress(_configs: Arrayish): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
@@ -82,22 +63,11 @@ export class ModuleAuth extends Contract {
 
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
-  updateConfigs(
-    _newConfigs: {
-      threshold: BigNumberish;
-      keys: string[];
-      weights: BigNumberish[];
-    },
-    overrides?: TransactionOverrides
-  ): Promise<ContractTransaction>;
-
   getConfigAddress(_configs: Arrayish): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
-  filters: {
-    ConfigsUpdated(newConfigs: null, newConfigHash: null): EventFilter;
-  };
+  filters: {};
 
   estimate: {
     FACTORY(): Promise<BigNumber>;
@@ -105,12 +75,6 @@ export class ModuleAuth extends Contract {
     INIT_CODE_HASH(): Promise<BigNumber>;
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
-    updateConfigs(_newConfigs: {
-      threshold: BigNumberish;
-      keys: string[];
-      weights: BigNumberish[];
-    }): Promise<BigNumber>;
 
     getConfigAddress(_configs: Arrayish): Promise<BigNumber>;
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
 import "./ModuleBase.sol";
@@ -6,37 +6,18 @@ import "../../utils/LibBytes.sol";
 import "../../utils/SignatureValidator.sol";
 import "../../interfaces/IERC1271Wallet.sol";
 
+import "./interfaces/IModuleAuth.sol";
 
-contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
+
+contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
   using LibBytes for bytes;
 
-  // keccak256("placeholder-init-code-hash")
-  bytes32 public constant INIT_CODE_HASH = 0xa4e481c95834a9f994a80cd4ecc88bdd3e78ff54100ecf2903aa9ef3eed54a91;
+  bytes32 public immutable INIT_CODE_HASH;
+  address public immutable FACTORY;
 
-  // keccak256("placeholder-factory")[12:]
-  address public constant FACTORY = address(0x52AA901CAD8AFf3Cf157715c19632F79D9B2d049);
-
-  // Hash of the multisig information
-  bytes32 internal configsHash;
-
-  // Encoding structure for the multisigHash
-  struct Configs {
-    uint8 threshold; // Cumulative weight that needs to be exceeded
-    address[] keys;  // Array containing current multisig keys
-    uint8[] weights; // weight each key has for multisig
-  }
-
-  // Event recording the new parameters for multisig
-  event ConfigsUpdated(Configs newConfigs, bytes32 newConfigHash);
-
-  /**
-   * @notice Update the multisig configurations
-   * @param _newConfigs New multisig configurations
-   */
-  function updateConfigs(Configs calldata _newConfigs) external onlySelf {
-    bytes32 new_config_hash = keccak256(abi.encode(_newConfigs));
-    configsHash = new_config_hash;
-    emit ConfigsUpdated(_newConfigs, new_config_hash);
+  constructor(bytes32 _initCodeHash, address _factory) public {
+    INIT_CODE_HASH = _initCodeHash;
+    FACTORY = _factory;
   }
 
   /**
@@ -49,7 +30,7 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
     bytes32 _hash,
     bytes memory _signature
   )
-    internal view returns (bool)
+    internal override view returns (bool)
   {
     (
       uint8 total,       // total number of accounts in multisig
@@ -100,7 +81,7 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
    * @param _data Data to be hashed
    * @return hashed data for this wallet
    */
-  function _hashData(bytes memory _data) internal view returns (bytes32) {
+  function _hashData(bytes memory _data) internal override view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -114,7 +95,7 @@ contract ModuleAuth is ModuleBase, SignatureValidator, IERC1271Wallet {
    * @notice Will return the wallet address created by the factory for provided configuration struct
    * @param _configs Multisignature configuration struct
    */
-  function getConfigAddress(bytes memory _configs) public pure returns(address) {
+  function getConfigAddress(bytes memory _configs) public view returns(address) {
     return address(
       uint256(
         keccak256(

@@ -12,29 +12,7 @@ import {
 
 interface ModuleCallsInterface extends Interface {
   functions: {
-    FACTORY: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    getConfigAddress: TypedFunctionDescription<{
-      encode([_configs]: [Arrayish]): string;
-    }>;
-
-    isValidSignature: TypedFunctionDescription<{
-      encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
-    }>;
-
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
-
-    updateConfigs: TypedFunctionDescription<{
-      encode([_newConfigs]: [
-        { threshold: BigNumberish; keys: string[]; weights: BigNumberish[] }
-      ]): string;
-    }>;
 
     execute: TypedFunctionDescription<{
       encode([_txs, _nonce, _signature]: [
@@ -52,10 +30,6 @@ interface ModuleCallsInterface extends Interface {
   };
 
   events: {
-    ConfigsUpdated: TypedEventDescription<{
-      encodeTopics([newConfigs, newConfigHash]: [null, null]): string[];
-    }>;
-
     NonceChange: TypedEventDescription<{
       encodeTopics([newNonce]: [null]): string[];
     }>;
@@ -80,26 +54,7 @@ export class ModuleCalls extends Contract {
   interface: ModuleCallsInterface;
 
   functions: {
-    FACTORY(): Promise<string>;
-
-    INIT_CODE_HASH(): Promise<string>;
-
-    getConfigAddress(_configs: Arrayish): Promise<string>;
-
-    isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
-
     nonce(): Promise<BigNumber>;
-
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
-    updateConfigs(
-      _newConfigs: {
-        threshold: BigNumberish;
-        keys: string[];
-        weights: BigNumberish[];
-      },
-      overrides?: TransactionOverrides
-    ): Promise<ContractTransaction>;
 
     execute(
       _txs: {
@@ -115,26 +70,7 @@ export class ModuleCalls extends Contract {
     ): Promise<ContractTransaction>;
   };
 
-  FACTORY(): Promise<string>;
-
-  INIT_CODE_HASH(): Promise<string>;
-
-  getConfigAddress(_configs: Arrayish): Promise<string>;
-
-  isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
-
   nonce(): Promise<BigNumber>;
-
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
-  updateConfigs(
-    _newConfigs: {
-      threshold: BigNumberish;
-      keys: string[];
-      weights: BigNumberish[];
-    },
-    overrides?: TransactionOverrides
-  ): Promise<ContractTransaction>;
 
   execute(
     _txs: {
@@ -150,34 +86,13 @@ export class ModuleCalls extends Contract {
   ): Promise<ContractTransaction>;
 
   filters: {
-    ConfigsUpdated(newConfigs: null, newConfigHash: null): EventFilter;
-
     NonceChange(newNonce: null): EventFilter;
 
     TxFailed(_index: null, _reason: null): EventFilter;
   };
 
   estimate: {
-    FACTORY(): Promise<BigNumber>;
-
-    INIT_CODE_HASH(): Promise<BigNumber>;
-
-    getConfigAddress(_configs: Arrayish): Promise<BigNumber>;
-
-    isValidSignature(
-      _hash: Arrayish,
-      _signatures: Arrayish
-    ): Promise<BigNumber>;
-
     nonce(): Promise<BigNumber>;
-
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
-    updateConfigs(_newConfigs: {
-      threshold: BigNumberish;
-      keys: string[];
-      weights: BigNumberish[];
-    }): Promise<BigNumber>;
 
     execute(
       _txs: {
