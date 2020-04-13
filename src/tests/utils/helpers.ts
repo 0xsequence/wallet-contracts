@@ -255,7 +255,7 @@ export async function multiSignAndExecuteMetaTx(
   return wallet.execute(txs, nonce, signature)
 }
 
-export function encodeSalt(
+export function encodeImageHash(
   threshold: BigNumberish,
   accounts: {
     weight: BigNumberish

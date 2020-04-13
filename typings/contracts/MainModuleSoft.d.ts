@@ -10,12 +10,8 @@ import {
   TypedFunctionDescription
 } from ".";
 
-interface MainModuleInterface extends Interface {
+interface MainModuleSoftInterface extends Interface {
   functions: {
-    FACTORY: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
-
     addHook: TypedFunctionDescription<{
       encode([_signature, _implementation]: [Arrayish, string]): string;
     }>;
@@ -35,6 +31,8 @@ interface MainModuleInterface extends Interface {
     }>;
 
     hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
+
+    imageHash: TypedFunctionDescription<{ encode([]: []): string }>;
 
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
@@ -74,6 +72,10 @@ interface MainModuleInterface extends Interface {
       encode([_signature]: [Arrayish]): string;
     }>;
 
+    updateImageHash: TypedFunctionDescription<{
+      encode([_imageHash]: [Arrayish]): string;
+    }>;
+
     updateImplementation: TypedFunctionDescription<{
       encode([_implementation]: [string]): string;
     }>;
@@ -90,24 +92,23 @@ interface MainModuleInterface extends Interface {
   };
 }
 
-export class MainModule extends Contract {
-  connect(signerOrProvider: Signer | Provider | string): MainModule;
-  attach(addressOrName: string): MainModule;
-  deployed(): Promise<MainModule>;
+export class MainModuleSoft extends Contract {
+  connect(signerOrProvider: Signer | Provider | string): MainModuleSoft;
+  attach(addressOrName: string): MainModuleSoft;
+  deployed(): Promise<MainModuleSoft>;
 
-  on(event: EventFilter | string, listener: Listener): MainModule;
-  once(event: EventFilter | string, listener: Listener): MainModule;
-  addListener(eventName: EventFilter | string, listener: Listener): MainModule;
-  removeAllListeners(eventName: EventFilter | string): MainModule;
-  removeListener(eventName: any, listener: Listener): MainModule;
+  on(event: EventFilter | string, listener: Listener): MainModuleSoft;
+  once(event: EventFilter | string, listener: Listener): MainModuleSoft;
+  addListener(
+    eventName: EventFilter | string,
+    listener: Listener
+  ): MainModuleSoft;
+  removeAllListeners(eventName: EventFilter | string): MainModuleSoft;
+  removeListener(eventName: any, listener: Listener): MainModuleSoft;
 
-  interface: MainModuleInterface;
+  interface: MainModuleSoftInterface;
 
   functions: {
-    FACTORY(): Promise<string>;
-
-    INIT_CODE_HASH(): Promise<string>;
-
     addHook(
       _signature: Arrayish,
       _implementation: string,
@@ -128,6 +129,8 @@ export class MainModule extends Contract {
     ): Promise<ContractTransaction>;
 
     hooks(arg0: Arrayish): Promise<string>;
+
+    imageHash(): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
@@ -166,15 +169,16 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    updateImageHash(
+      _imageHash: Arrayish,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
     updateImplementation(
       _implementation: string,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
   };
-
-  FACTORY(): Promise<string>;
-
-  INIT_CODE_HASH(): Promise<string>;
 
   addHook(
     _signature: Arrayish,
@@ -196,6 +200,8 @@ export class MainModule extends Contract {
   ): Promise<ContractTransaction>;
 
   hooks(arg0: Arrayish): Promise<string>;
+
+  imageHash(): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
@@ -234,6 +240,11 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  updateImageHash(
+    _imageHash: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
   updateImplementation(
     _implementation: string,
     overrides?: TransactionOverrides
@@ -246,10 +257,6 @@ export class MainModule extends Contract {
   };
 
   estimate: {
-    FACTORY(): Promise<BigNumber>;
-
-    INIT_CODE_HASH(): Promise<BigNumber>;
-
     addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
 
     execute(
@@ -265,6 +272,8 @@ export class MainModule extends Contract {
     ): Promise<BigNumber>;
 
     hooks(arg0: Arrayish): Promise<BigNumber>;
+
+    imageHash(): Promise<BigNumber>;
 
     isValidSignature(
       _hash: Arrayish,
@@ -299,6 +308,8 @@ export class MainModule extends Contract {
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;
+
+    updateImageHash(_imageHash: Arrayish): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
   };

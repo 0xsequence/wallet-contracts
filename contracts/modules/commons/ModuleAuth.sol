@@ -1,7 +1,6 @@
 pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
-import "./ModuleBase.sol";
 import "../../utils/LibBytes.sol";
 import "../../utils/SignatureValidator.sol";
 import "../../interfaces/IERC1271Wallet.sol";
@@ -9,16 +8,8 @@ import "../../interfaces/IERC1271Wallet.sol";
 import "./interfaces/IModuleAuth.sol";
 
 
-contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
+abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
   using LibBytes for bytes;
-
-  bytes32 public immutable INIT_CODE_HASH;
-  address public immutable FACTORY;
-
-  constructor(bytes32 _initCodeHash, address _factory) public {
-    INIT_CODE_HASH = _initCodeHash;
-    FACTORY = _factory;
-  }
 
   /**
    * @notice Verify if signer is default wallet owner
@@ -73,8 +64,15 @@ contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
       windex = image.writeUint8Address(windex, addrWeight, addr);
     }
 
-    return totalWeight >= threshold && getConfigAddress(image) == address(this);
+    return totalWeight >= threshold && _isValidImage(image);
   }
+
+  /**
+   * @notice Validates the signature image
+   * @param _image Image of signature
+   * @return true if the signature image is valid
+   */
+  function _isValidImage(bytes memory _image) internal virtual view returns (bool);
 
   /**
    * @notice Will hash _data to be signed (similar to EIP-712)
@@ -87,25 +85,6 @@ contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
         "\x19\x01",
         address(this),
         keccak256(_data)
-      )
-    );
-  }
-
-  /**
-   * @notice Will return the wallet address created by the factory for provided configuration struct
-   * @param _configs Multisignature configuration struct
-   */
-  function getConfigAddress(bytes memory _configs) public view returns(address) {
-    return address(
-      uint256(
-        keccak256(
-          abi.encodePacked(
-            byte(0xff),
-            FACTORY,
-            keccak256(_configs),
-            INIT_CODE_HASH
-          )
-        )
       )
     );
   }

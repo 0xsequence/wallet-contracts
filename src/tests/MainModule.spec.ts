@@ -1,7 +1,8 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeSalt, walletSign, walletMultiSign, multiSignAndExecuteMetaTx } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
+import { MainModuleSoft } from 'typings/contracts/MainModuleSoft'
 import { Factory } from 'typings/contracts/Factory'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
 import { ModuleMock } from 'typings/contracts/ModuleMock'
@@ -20,6 +21,7 @@ const ModuleMockArtifact = artifacts.require('ModuleMock')
 const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 const HookMockArtifact = artifacts.require('HookMock')
 const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
+const MainModuleSoftArtifact = artifacts.require('MainModuleSoft')
 
 const web3 = (global as any).web3
 
@@ -30,17 +32,20 @@ contract('MainModule', (accounts: string[]) => {
   let owner
   let wallet
 
+  let moduleSoft
+
   before(async () => {
     // Deploy wallet factory
     factory = await FactoryArtifact.new() as Factory
     // Deploy MainModule
     const tx = await (await MainModuleDeployerArtifact.new()).deploy(factory.address)
     module = await MainModuleArtifact.at(tx.logs[0].args._module) as MainModule
+    moduleSoft = (await MainModuleSoftArtifact.new()) as MainModuleSoft
   })
 
   beforeEach(async () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-    const salt = encodeSalt(1, [{ weight: 1, address: owner.address }])
+    const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
     await factory.deploy(module.address, salt)
     wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
   })
@@ -742,6 +747,112 @@ contract('MainModule', (accounts: string[]) => {
       })
     })
   })
+  describe('Update owners', async () => {
+    const transaction = {
+      delegateCall: false,
+      skipOnError: false,
+      target: ethers.constants.AddressZero,
+      value: 0,
+      data: []
+    }
+
+    let newOwnerA
+    let newImageHash
+
+    context('After a migration', async () => {
+      beforeEach(async () => {
+        newOwnerA = new ethers.Wallet(ethers.utils.randomBytes(32))
+        newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
+
+        const newWallet = (await MainModuleSoftArtifact.at(wallet.address)) as MainModuleSoft
+
+        const migrateTransactions = [
+          {
+            delegateCall: false,
+            skipOnError: false,
+            target: wallet.address,
+            value: ethers.constants.Zero,
+            data: wallet.contract.methods.updateImplementation(moduleSoft.address).encodeABI()
+          },
+          {
+            delegateCall: false,
+            skipOnError: false,
+            target: wallet.address,
+            value: ethers.constants.Zero,
+            data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+          }
+        ]
+
+        await signAndExecuteMetaTx(wallet, owner, migrateTransactions)
+        wallet = newWallet
+      })
+      it('Should implement new soft module', async () => {
+        expect(await wallet.imageHash()).to.equal(newImageHash)
+      })
+      it('Should accept new owner signature', async () => {
+        await signAndExecuteMetaTx(wallet, newOwnerA, [transaction])
+      })
+      it('Should reject old owner signature', async () => {
+        const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
+        await expect(tx).to.be.rejectedWith('MainModule#_signatureValidation: INVALID_SIGNATURE')
+      })
+      it('Should fail to update to invalid image hash', async () => {
+        const transaction = {
+          delegateCall: false,
+          skipOnError: false,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.updateImageHash("0x").encodeABI()
+        }
+        const tx = signAndExecuteMetaTx(wallet, newOwnerA, [transaction])
+        await expect(tx).to.be.rejectedWith('ModuleAuthSoft#updateImageHash INVALID_IMAGE_HASH')
+      })
+      it('Should fail to change image hash from non-self address', async () => {
+        const tx = wallet.updateImageHash(ethers.utils.randomBytes(32), { from: accounts[0] })
+        await expect(tx).to.be.rejectedWith('ModuleBase#onlySelf: NOT_AUTHORIZED')
+      })
+      context('After updating the image hash', () => {
+        let threshold = 2
+        let newOwnerB
+        let newOwnerC
+
+        beforeEach(async () => {
+          newOwnerB = new ethers.Wallet(ethers.utils.randomBytes(32))
+          newOwnerC = new ethers.Wallet(ethers.utils.randomBytes(32))
+          newImageHash = encodeImageHash(threshold,
+            [{ weight: 1, address: newOwnerB.address },
+            { weight: 1, address: newOwnerC.address }]
+          )
+          const migrateTransactions = [{
+            delegateCall: false,
+            skipOnError: false,
+            target: wallet.address,
+            value: ethers.constants.Zero,
+            data: wallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+          }]
+  
+          await signAndExecuteMetaTx(wallet, newOwnerA, migrateTransactions)
+        })
+        it('Should have updated the image hash', async () => {
+          expect(await wallet.imageHash()).to.equal(newImageHash)
+        })
+        it('Should accept new owners signatures', async () => {
+          const accounts = [{
+            weight: 1,
+            owner: newOwnerB
+          }, {
+            weight: 1,
+            owner: newOwnerC
+          }]
+          await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction])
+        })
+        it('Should reject old owner signatures', async () => {
+          const tx = signAndExecuteMetaTx(wallet, newOwnerA, [transaction])
+          await expect(tx).to.be.rejectedWith('MainModule#_signatureValidation: INVALID_SIGNATURE')
+        })
+      })
+    })
+  })
   describe('Multisignature', async () => {
     const transaction = {
       delegateCall: false,
@@ -761,7 +872,7 @@ contract('MainModule', (accounts: string[]) => {
         owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
         owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
 
-        const salt = encodeSalt(
+        const salt = encodeImageHash(
           threshold,
           [{
             weight: ownerweight,
@@ -845,7 +956,7 @@ contract('MainModule', (accounts: string[]) => {
         owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
         owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
 
-        const salt = encodeSalt(
+        const salt = encodeImageHash(
           threshold,
           [{
             weight: ownerweight,
@@ -934,7 +1045,7 @@ contract('MainModule', (accounts: string[]) => {
         owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
         owner3 = new ethers.Wallet(ethers.utils.randomBytes(32))
 
-        const salt = encodeSalt(
+        const salt = encodeImageHash(
           threshold,
           [{
             weight: ownerweight,
@@ -1109,7 +1220,7 @@ contract('MainModule', (accounts: string[]) => {
         owners = Array(5).fill(new ethers.Wallet(ethers.utils.randomBytes(32)))
         weights = [3, 3, 1, 1, 1]
 
-        const salt = encodeSalt(
+        const salt = encodeImageHash(
           threshold,
           owners.map((owner, i) => ({
             weight: weights[i],
