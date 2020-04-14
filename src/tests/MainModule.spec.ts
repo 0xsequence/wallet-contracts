@@ -231,6 +231,18 @@ contract('MainModule', (accounts: string[]) => {
       const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION"))
     })
+    it('Should fail to set implementation to non-contract', async () => {
+      const transaction = {
+        delegateCall: false,
+        skipOnError: false,
+        target: wallet.address,
+        value: ethers.constants.Zero,
+        data: wallet.contract.methods.updateImplementation(accounts[1]).encodeABI()
+      }
+
+      const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
+      await expect(tx).to.be.rejectedWith(RevertError("ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION"))
+    })
   })
   describe("External calls", () => {
     it('Should perform call to contract', async () => {
