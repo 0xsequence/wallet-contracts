@@ -173,12 +173,12 @@ export async function walletMultiSign(
     sorted.map(async (a) => 
       a.owner instanceof ethers.Wallet ?
         ethers.utils.solidityPack(
-          ['uint8', 'uint8', 'bytes'],
-          [1, a.weight, await ethSign(a.owner, message)]
+          ['bool', 'uint8', 'bytes'],
+          [false, a.weight, await ethSign(a.owner, message)]
         ) : 
         ethers.utils.solidityPack(
-          ['uint8', 'uint8', 'address'],
-          [0, a.weight, a.owner]
+          ['bool', 'uint8', 'address'],
+          [true, a.weight, a.owner]
         )
     )
   )

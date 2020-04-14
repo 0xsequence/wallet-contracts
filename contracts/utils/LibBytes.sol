@@ -78,18 +78,18 @@ library LibBytes {
   }
 
   /**
-   * @dev Reads consecutive uint8 and uint8 values.
+   * @dev Reads consecutive bool (8 bits) and uint8 values.
    * @param data Byte array to be read.
    * @param index Index in byte array of uint8 and uint8 values.
-   * @return a uint8 value of data at given index.
+   * @return a bool (8 bits) value of data at given index.
    * @return b uint8 value of data at given index + 8.
    * @return newIndex Updated index after reading the values.
    */
-  function readUint8Uint8(
+  function readBoolUint8(
     bytes memory data,
     uint256 index
   ) internal pure returns (
-    uint8 a,
+    bool a,
     uint8 b,
     uint256 newIndex
   ) {

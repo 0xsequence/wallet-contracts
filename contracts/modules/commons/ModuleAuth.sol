@@ -53,10 +53,13 @@ contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
     // Iterate until the image is completed
     while (windex < imageSize) {
       // Read next item type and addrWeight
-      uint256 isAddr; uint8 addrWeight; address addr;
-      (isAddr, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
+      bool isAddr; uint8 addrWeight; address addr;
+      (isAddr, addrWeight, rindex) = _signature.readBoolUint8(rindex);
 
-      if (isAddr != 0) {
+      if (isAddr) {
+        // Read plain address
+        (addr, rindex) = _signature.readAddress(rindex);
+      } else {
         // Read single signature and recover signer
         bytes memory signature;
         (signature, rindex) = _signature.readBytes66(rindex);
@@ -64,9 +67,6 @@ contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
 
         // Acumulate total weight of the signature
         totalWeight += addrWeight;
-      } else {
-        // Read plain address
-        (addr, rindex) = _signature.readAddress(rindex);
       }
 
       // Write weight and address to image

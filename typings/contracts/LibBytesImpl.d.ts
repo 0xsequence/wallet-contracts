@@ -20,7 +20,7 @@ interface LibBytesImplInterface extends Interface {
       encode([_data, _index]: [Arrayish, BigNumberish]): string;
     }>;
 
-    readUint8Uint8: TypedFunctionDescription<{
+    readBoolUint8: TypedFunctionDescription<{
       encode([_data, _index]: [Arrayish, BigNumberish]): string;
     }>;
 
@@ -90,11 +90,11 @@ export class LibBytesImpl extends Contract {
       2: BigNumber;
     }>;
 
-    readUint8Uint8(
+    readBoolUint8(
       _data: Arrayish,
       _index: BigNumberish
     ): Promise<{
-      0: number;
+      0: boolean;
       1: number;
       2: BigNumber;
     }>;
@@ -153,11 +153,11 @@ export class LibBytesImpl extends Contract {
     2: BigNumber;
   }>;
 
-  readUint8Uint8(
+  readBoolUint8(
     _data: Arrayish,
     _index: BigNumberish
   ): Promise<{
-    0: number;
+    0: boolean;
     1: number;
     2: BigNumber;
   }>;
@@ -206,7 +206,7 @@ export class LibBytesImpl extends Contract {
 
     readUint8Uint16(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
 
-    readUint8Uint8(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
+    readBoolUint8(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
 
     readAddress(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
 
