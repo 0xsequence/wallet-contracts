@@ -25,6 +25,7 @@ abstract contract ModuleCalls is IModuleAuth {
    * @notice Allow wallet owner to execute an action
    * @param _txs        Transactions to process
    * @param _nonce      Signature nonce
+   * @param _signature  Encoded signature
    */
   function execute(
     Transaction[] memory _txs,
