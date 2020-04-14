@@ -25,6 +25,21 @@ contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
    * @param _hash       Hashed signed message
    * @param _signature  Array of signatures with signers ordered
    *                    like the the keys in the multisig configs
+   *
+   * @dev The signature must be solidity packed and contain the total number of owners,
+   *      the threshold, the weigth and either the address or a signature for each owner.
+   *
+   *      Each weight & (address or signature) pair is prefixed by a boolean that signals if such pair
+   *      contains an address or a signature. The aggregated weight of the signatures must surpass the threshold.
+   *
+   *      E.g:
+   *      abi.encodePacked(
+   *        uint8 nSigners, uint16 threshold,
+   *        bool true,  uint8 weight_1, address signer_1,
+   *        bool false, uint8 weight_2, bytes signature_2,
+   *        ...
+   *        bool true,  uint8 weight_5, address signer_5
+   *      )
    */
   function _signatureValidation(
     bytes32 _hash,
