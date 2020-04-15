@@ -9,7 +9,7 @@ import "./ModuleAuth.sol";
  *  This module allows wallets to be deployed with a default configuration
  *  without using any aditional contract storage
  */
-abstract contract ModuleAuthHard is ModuleAuth {
+abstract contract ModuleAuthFixed is ModuleAuth {
   bytes32 public immutable INIT_CODE_HASH;
   address public immutable FACTORY;
 

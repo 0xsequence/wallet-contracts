@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../utils/SignatureValidator.sol";
 
 import "./commons/Implementation.sol";
-import "./commons/ModuleAuthHard.sol";
+import "./commons/ModuleAuthFixed.sol";
 import "./commons/ModuleHooks.sol";
 import "./commons/ModuleCalls.sol";
 import "./commons/ModuleUpdate.sol";
@@ -23,7 +23,7 @@ import "../interfaces/IERC1271Wallet.sol";
  *   - Public vs External for main module
  */
 contract MainModule is
-  ModuleAuthHard,
+  ModuleAuthFixed,
   ModuleUpdate,
   ModuleHooks,
   ModuleCalls
@@ -31,7 +31,7 @@ contract MainModule is
   constructor(
     bytes32 _initCodeHash,
     address _factory
-  ) public ModuleAuthHard(
+  ) public ModuleAuthFixed(
     _initCodeHash,
     _factory
   ) { }

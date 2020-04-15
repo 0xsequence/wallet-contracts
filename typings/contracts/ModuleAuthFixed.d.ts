@@ -10,7 +10,7 @@ import {
   TypedFunctionDescription
 } from ".";
 
-interface ModuleAuthHardInterface extends Interface {
+interface ModuleAuthFixedInterface extends Interface {
   functions: {
     FACTORY: TypedFunctionDescription<{ encode([]: []): string }>;
 
@@ -28,21 +28,21 @@ interface ModuleAuthHardInterface extends Interface {
   events: {};
 }
 
-export class ModuleAuthHard extends Contract {
-  connect(signerOrProvider: Signer | Provider | string): ModuleAuthHard;
-  attach(addressOrName: string): ModuleAuthHard;
-  deployed(): Promise<ModuleAuthHard>;
+export class ModuleAuthFixed extends Contract {
+  connect(signerOrProvider: Signer | Provider | string): ModuleAuthFixed;
+  attach(addressOrName: string): ModuleAuthFixed;
+  deployed(): Promise<ModuleAuthFixed>;
 
-  on(event: EventFilter | string, listener: Listener): ModuleAuthHard;
-  once(event: EventFilter | string, listener: Listener): ModuleAuthHard;
+  on(event: EventFilter | string, listener: Listener): ModuleAuthFixed;
+  once(event: EventFilter | string, listener: Listener): ModuleAuthFixed;
   addListener(
     eventName: EventFilter | string,
     listener: Listener
-  ): ModuleAuthHard;
-  removeAllListeners(eventName: EventFilter | string): ModuleAuthHard;
-  removeListener(eventName: any, listener: Listener): ModuleAuthHard;
+  ): ModuleAuthFixed;
+  removeAllListeners(eventName: EventFilter | string): ModuleAuthFixed;
+  removeListener(eventName: any, listener: Listener): ModuleAuthFixed;
 
-  interface: ModuleAuthHardInterface;
+  interface: ModuleAuthFixedInterface;
 
   functions: {
     FACTORY(): Promise<string>;
