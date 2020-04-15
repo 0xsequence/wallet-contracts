@@ -73,7 +73,10 @@ The example shows the image of a wallet with a threshold of 4 and the following 
 
 ```
 flat signers image:
-0x0004013ff9b9b9739d71adc834ac4ed28c7db4ec9c3f6e01a924932d16e15786deadb7002a216458fad9fab603bc3b96b40c49ea41d01093bd8b7d4c9b6dc2a69503c807caa254aa6db747d9c1a3b377fc06b28692b001ff60a7ae7eee0ac50cf67796c10001ee4a48c679
+0x0004013ff9b9b9739d71adc834ac4ed28c7db4ec9c3f6e01a924932d16e15786
+deadb7002a216458fad9fab603bc3b96b40c49ea41d01093bd8b7d4c9b6dc2a695
+03c807caa254aa6db747d9c1a3b377fc06b28692b001ff60a7ae7eee0ac50cf677
+96c10001ee4a48c679
 
 0004                                      Threshold
 01                                        Weigth of signer 4
