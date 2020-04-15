@@ -5,7 +5,7 @@ TODO
 # Table of contents
 
 1. [Wallet creation](#wallet-creation)
-    1. [Weighted signatures](#weigthed-signatures)
+    1. [Weigthed signatures](#weigthed-signatures)
     2. [Signers image](#signers-image)
     3. [Wallet deployment](#deployment)
 2. [Signing messages](#signing)
