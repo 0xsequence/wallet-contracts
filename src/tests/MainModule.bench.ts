@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { signAndExecuteMetaTx, encodeSalt, multiSignAndExecuteMetaTx } from './utils';
+import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
@@ -41,7 +41,7 @@ contract('MainModule', () => {
 
       for (let i = 0; i < runs; i++) {
         const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-        const salt = encodeSalt(1, [{ weight: 1, address: owner.address }])
+        const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
         const tx = await factory.deploy(module.address, salt)
         results.push(tx.receipt.gasUsed)
       }
@@ -62,7 +62,7 @@ contract('MainModule', () => {
 
       for (let i = 0; i < runs; i++) {
         const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-        const salt = encodeSalt(1, [{ weight: 1, address: owner.address }])
+        const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
         await factory.deploy(module.address, salt)
         const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
 
@@ -89,7 +89,7 @@ contract('MainModule', () => {
         const owners = Array(5).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
         const weights = [3, 3, 1, 1, 1]
 
-        const salt = encodeSalt(
+        const salt = encodeImageHash(
           threshold,
           owners.map((owner, i) => ({
             weight: weights[i],

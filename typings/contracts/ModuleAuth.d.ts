@@ -12,16 +12,8 @@ import {
 
 interface ModuleAuthInterface extends Interface {
   functions: {
-    FACTORY: TypedFunctionDescription<{ encode([]: []): string }>;
-
-    INIT_CODE_HASH: TypedFunctionDescription<{ encode([]: []): string }>;
-
     recoverSigner: TypedFunctionDescription<{
       encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
-
-    getConfigAddress: TypedFunctionDescription<{
-      encode([_configs]: [Arrayish]): string;
     }>;
 
     isValidSignature: TypedFunctionDescription<{
@@ -46,37 +38,19 @@ export class ModuleAuth extends Contract {
   interface: ModuleAuthInterface;
 
   functions: {
-    FACTORY(): Promise<string>;
-
-    INIT_CODE_HASH(): Promise<string>;
-
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
-    getConfigAddress(_configs: Arrayish): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
   };
 
-  FACTORY(): Promise<string>;
-
-  INIT_CODE_HASH(): Promise<string>;
-
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
-  getConfigAddress(_configs: Arrayish): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
   filters: {};
 
   estimate: {
-    FACTORY(): Promise<BigNumber>;
-
-    INIT_CODE_HASH(): Promise<BigNumber>;
-
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
-    getConfigAddress(_configs: Arrayish): Promise<BigNumber>;
 
     isValidSignature(
       _hash: Arrayish,
