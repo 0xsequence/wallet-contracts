@@ -7,11 +7,11 @@ import "./interfaces/IModuleAuth.sol";
 abstract contract ModuleCalls is IModuleAuth {
   // Transaction structure
   struct Transaction {
-    bool delegateCall; // Performs delegatecall
-    bool skipOnError;  // Ignored upon failure
-    address target;    // Address of the contract to call
-    uint256 value;     // Amount of ETH to pass with the call
-    bytes data;        // calldata to pass
+    bool delegateCall;   // Performs delegatecall
+    bool revertOnError;  // Reverts transaction bundle if tx fails
+    address target;      // Address of the contract to call
+    uint256 value;       // Amount of ETH to pass with the call
+    bytes data;          // calldata to pass
   }
 
   // Wallet's signature nonce
@@ -88,10 +88,10 @@ abstract contract ModuleCalls is IModuleAuth {
    * @param _reason  Encoded revert message
    */
   function _revertBytes(Transaction memory _tx, uint256 _index, bytes memory _reason) internal {
-    if (_tx.skipOnError) {
-      emit TxFailed(_index, _reason);
-    } else {
+    if (_tx.revertOnError) {
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
+    } else {
+      emit TxFailed(_index, _reason);
     }
   }
 }

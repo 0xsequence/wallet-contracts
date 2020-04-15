@@ -112,7 +112,7 @@ export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Arra
 
 export const MetaTransactionsType = `tuple(
   bool delegateCall,
-  bool skipOnError,
+  bool revertOnError,
   address target,
   uint256 value,
   bytes data
@@ -122,7 +122,7 @@ export function encodeMetaTransactionsData(
   owner: string,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;
@@ -198,7 +198,7 @@ export async function multiSignMetaTransactions(
   threshold: BigNumberish,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;
@@ -218,7 +218,7 @@ export async function signAndExecuteMetaTx(
   owner: ethers.Wallet,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;

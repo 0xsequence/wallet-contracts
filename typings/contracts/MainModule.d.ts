@@ -24,7 +24,7 @@ interface MainModuleInterface extends Interface {
       encode([_txs, _nonce, _signature]: [
         {
           delegateCall: boolean;
-          skipOnError: boolean;
+          revertOnError: boolean;
           target: string;
           value: BigNumberish;
           data: Arrayish;
@@ -121,7 +121,7 @@ export class MainModule extends Contract {
     execute(
       _txs: {
         delegateCall: boolean;
-        skipOnError: boolean;
+        revertOnError: boolean;
         target: string;
         value: BigNumberish;
         data: Arrayish;
@@ -191,7 +191,7 @@ export class MainModule extends Contract {
   execute(
     _txs: {
       delegateCall: boolean;
-      skipOnError: boolean;
+      revertOnError: boolean;
       target: string;
       value: BigNumberish;
       data: Arrayish;
@@ -263,7 +263,7 @@ export class MainModule extends Contract {
     execute(
       _txs: {
         delegateCall: boolean;
-        skipOnError: boolean;
+        revertOnError: boolean;
         target: string;
         value: BigNumberish;
         data: Arrayish;
