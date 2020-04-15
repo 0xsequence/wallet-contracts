@@ -54,7 +54,7 @@ contract('MainModule', () => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -79,14 +79,14 @@ contract('MainModule', () => {
       const threshold = 4
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
       }
 
       for (let i = 0; i < runs; i++) {
-        const owners = Array(5).fill(new ethers.Wallet(ethers.utils.randomBytes(32)))
+        const owners = Array(5).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
         const weights = [3, 3, 1, 1, 1]
 
         const salt = encodeSalt(

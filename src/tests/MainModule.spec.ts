@@ -757,7 +757,7 @@ contract('MainModule', (accounts: string[]) => {
   describe('Multisignature', async () => {
     const transaction = {
       delegateCall: false,
-      skipOnError: false,
+      revertOnError: true,
       target: ethers.constants.AddressZero,
       value: 0,
       data: []
@@ -1118,7 +1118,7 @@ contract('MainModule', (accounts: string[]) => {
       let threshold = 4
 
       beforeEach(async () => {
-        owners = Array(5).fill(new ethers.Wallet(ethers.utils.randomBytes(32)))
+        owners = Array(5).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
         weights = [3, 3, 1, 1, 1]
 
         const salt = encodeSalt(

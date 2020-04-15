@@ -243,7 +243,7 @@ export async function multiSignAndExecuteMetaTx(
   threshold: BigNumberish,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;
