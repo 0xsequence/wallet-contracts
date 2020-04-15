@@ -54,7 +54,7 @@ contract('MainModule', () => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -79,7 +79,7 @@ contract('MainModule', () => {
       const threshold = 4
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []

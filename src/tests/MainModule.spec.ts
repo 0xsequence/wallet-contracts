@@ -757,7 +757,7 @@ contract('MainModule', (accounts: string[]) => {
   describe('Multisignature', async () => {
     const transaction = {
       delegateCall: false,
-      skipOnError: false,
+      revertOnError: true,
       target: ethers.constants.AddressZero,
       value: 0,
       data: []
