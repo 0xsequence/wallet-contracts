@@ -65,8 +65,6 @@ contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
     return ModuleHooks.onERC721Received.selector;
   }
 
-  /* solhint-disable */
-
   /**
    * @notice Routes fallback calls through hooks
    */
@@ -88,6 +86,4 @@ contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
    * @notice Allows the wallet to receive ETH
    */
   receive() external payable { }
-
-  /* solhint-disable */
 }

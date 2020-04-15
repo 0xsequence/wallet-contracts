@@ -20,8 +20,12 @@ interface ModuleAuthInterface extends Interface {
       encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
 
+    getConfigAddress: TypedFunctionDescription<{
+      encode([_configs]: [Arrayish]): string;
+    }>;
+
     isValidSignature: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+      encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
   };
 
@@ -48,7 +52,9 @@ export class ModuleAuth extends Contract {
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    getConfigAddress(_configs: Arrayish): Promise<string>;
+
+    isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
   };
 
   FACTORY(): Promise<string>;
@@ -57,7 +63,9 @@ export class ModuleAuth extends Contract {
 
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
-  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  getConfigAddress(_configs: Arrayish): Promise<string>;
+
+  isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
   filters: {};
 
@@ -68,6 +76,11 @@ export class ModuleAuth extends Contract {
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    getConfigAddress(_configs: Arrayish): Promise<BigNumber>;
+
+    isValidSignature(
+      _hash: Arrayish,
+      _signatures: Arrayish
+    ): Promise<BigNumber>;
   };
 }

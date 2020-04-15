@@ -34,10 +34,14 @@ interface MainModuleInterface extends Interface {
       ]): string;
     }>;
 
+    getConfigAddress: TypedFunctionDescription<{
+      encode([_configs]: [Arrayish]): string;
+    }>;
+
     hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
 
     isValidSignature: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+      encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
 
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
@@ -127,9 +131,11 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    getConfigAddress(_configs: Arrayish): Promise<string>;
+
     hooks(arg0: Arrayish): Promise<string>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
     nonce(): Promise<BigNumber>;
 
@@ -195,9 +201,11 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  getConfigAddress(_configs: Arrayish): Promise<string>;
+
   hooks(arg0: Arrayish): Promise<string>;
 
-  isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
   nonce(): Promise<BigNumber>;
 
@@ -264,9 +272,14 @@ export class MainModule extends Contract {
       _signature: Arrayish
     ): Promise<BigNumber>;
 
+    getConfigAddress(_configs: Arrayish): Promise<BigNumber>;
+
     hooks(arg0: Arrayish): Promise<BigNumber>;
 
-    isValidSignature(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    isValidSignature(
+      _hash: Arrayish,
+      _signatures: Arrayish
+    ): Promise<BigNumber>;
 
     nonce(): Promise<BigNumber>;
 

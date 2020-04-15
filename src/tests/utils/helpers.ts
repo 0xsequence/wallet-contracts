@@ -130,15 +130,72 @@ export function encodeMetaTransactionsData(
   nonce: BigNumberish
 ): string {
   const transactions = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [nonce, txs])
-  return ethers.utils.defaultAbiCoder.encode(
-    ['address', 'bytes'],
-    [owner, transactions]
+
+  return ethers.utils.solidityPack(
+    ['string', 'address', 'bytes'],
+    ['\x19\x01', owner, ethers.utils.keccak256(transactions)]
   )
 }
 
-export async function signMetaTransactions(
-  wallet: MainModule,
+export async function walletSign(
   owner: ethers.Wallet,
+  message: string
+) {
+  return walletMultiSign([{ weight: 1, owner: owner }], 1, message)
+}
+
+export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Wallet) {
+  const addrA = a instanceof ethers.Wallet ? a.address : a
+  const addrB = b instanceof ethers.Wallet ? b.address : b
+
+  const bigA = ethers.utils.bigNumberify(addrA)
+  const bigB = ethers.utils.bigNumberify(addrB)
+
+  if (bigA.lt(bigB)) {
+    return -1
+  } else if (bigA.eq(bigB)) {
+    return 0
+  } else {
+    return 1
+  }
+}
+
+export async function walletMultiSign(
+  accounts: {
+    weight: BigNumberish,
+    owner: string | ethers.Wallet
+  }[],
+  threshold: BigNumberish,
+  message: string
+) {
+  const sorted = accounts.sort((a, b) => compareAddr(a.owner, b.owner))
+  const accountBytes = await Promise.all(
+    sorted.map(async (a) => 
+      a.owner instanceof ethers.Wallet ?
+        ethers.utils.solidityPack(
+          ['bool', 'uint8', 'bytes'],
+          [false, a.weight, await ethSign(a.owner, message)]
+        ) : 
+        ethers.utils.solidityPack(
+          ['bool', 'uint8', 'address'],
+          [true, a.weight, a.owner]
+        )
+    )
+  )
+
+  return ethers.utils.solidityPack(
+    ['uint8', 'uint16', ...Array(accounts.length).fill('bytes')],
+    [accounts.length, threshold, ...accountBytes]
+  )
+}
+
+export async function multiSignMetaTransactions(
+  wallet: MainModule,
+  accounts: {
+    weight: BigNumberish,
+    owner: string | ethers.Wallet
+  }[],
+  threshold: BigNumberish,
   txs: {
     delegateCall: boolean;
     skipOnError: boolean;
@@ -149,7 +206,7 @@ export async function signMetaTransactions(
   nonce: BigNumberish
 ) {
   const data = encodeMetaTransactionsData(wallet.address, txs, nonce)
-  return ethSign(owner, data)
+  return walletMultiSign(accounts, threshold, data)
 }
 
 export async function nextNonce(wallet: MainModule) {
@@ -168,7 +225,53 @@ export async function signAndExecuteMetaTx(
   }[],
   nonce: BigNumberish | undefined = undefined
 ) {
+  return multiSignAndExecuteMetaTx(
+    wallet,
+    [{ weight: 1, owner: owner }],
+    1,
+    txs,
+    nonce
+  )
+}
+
+export async function multiSignAndExecuteMetaTx(
+  wallet: MainModule,
+  accounts: {
+    weight: BigNumberish,
+    owner: string | ethers.Wallet
+  }[],
+  threshold: BigNumberish,
+  txs: {
+    delegateCall: boolean;
+    skipOnError: boolean;
+    target: string;
+    value: BigNumberish;
+    data: Arrayish;
+  }[],
+  nonce: BigNumberish | undefined = undefined
+) {
   if (!nonce) nonce = await nextNonce(wallet)
-  const signature = await signMetaTransactions(wallet, owner, txs, nonce)
+  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, nonce)
   return wallet.execute(txs, nonce, signature)
+}
+
+export function encodeSalt(
+  threshold: BigNumberish,
+  accounts: {
+    weight: BigNumberish
+    address: string
+  }[]
+) {
+  const sorted = accounts.sort((a, b) => compareAddr(a.address, b.address))
+
+  const weightedAddresses = sorted.map((a) => ethers.utils.solidityPack(
+    ['uint8', 'address'], [a.weight, a.address]
+  ))
+
+  const image = ethers.utils.solidityPack(
+    ['uint16', ...Array(sorted.length).fill('bytes21')],
+    [threshold, ...weightedAddresses]
+  )
+
+  return ethers.utils.keccak256(image)
 }
