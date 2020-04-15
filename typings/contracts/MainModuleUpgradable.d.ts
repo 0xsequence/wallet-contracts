@@ -10,7 +10,7 @@ import {
   TypedFunctionDescription
 } from ".";
 
-interface MainModuleSoftInterface extends Interface {
+interface MainModuleUpgradableInterface extends Interface {
   functions: {
     addHook: TypedFunctionDescription<{
       encode([_signature, _implementation]: [Arrayish, string]): string;
@@ -92,21 +92,21 @@ interface MainModuleSoftInterface extends Interface {
   };
 }
 
-export class MainModuleSoft extends Contract {
-  connect(signerOrProvider: Signer | Provider | string): MainModuleSoft;
-  attach(addressOrName: string): MainModuleSoft;
-  deployed(): Promise<MainModuleSoft>;
+export class MainModuleUpgradable extends Contract {
+  connect(signerOrProvider: Signer | Provider | string): MainModuleUpgradable;
+  attach(addressOrName: string): MainModuleUpgradable;
+  deployed(): Promise<MainModuleUpgradable>;
 
-  on(event: EventFilter | string, listener: Listener): MainModuleSoft;
-  once(event: EventFilter | string, listener: Listener): MainModuleSoft;
+  on(event: EventFilter | string, listener: Listener): MainModuleUpgradable;
+  once(event: EventFilter | string, listener: Listener): MainModuleUpgradable;
   addListener(
     eventName: EventFilter | string,
     listener: Listener
-  ): MainModuleSoft;
-  removeAllListeners(eventName: EventFilter | string): MainModuleSoft;
-  removeListener(eventName: any, listener: Listener): MainModuleSoft;
+  ): MainModuleUpgradable;
+  removeAllListeners(eventName: EventFilter | string): MainModuleUpgradable;
+  removeListener(eventName: any, listener: Listener): MainModuleUpgradable;
 
-  interface: MainModuleSoftInterface;
+  interface: MainModuleUpgradableInterface;
 
   functions: {
     addHook(

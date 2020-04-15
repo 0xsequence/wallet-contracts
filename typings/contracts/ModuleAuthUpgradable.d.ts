@@ -10,7 +10,7 @@ import {
   TypedFunctionDescription
 } from ".";
 
-interface ModuleAuthSoftInterface extends Interface {
+interface ModuleAuthUpgradableInterface extends Interface {
   functions: {
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
@@ -30,21 +30,21 @@ interface ModuleAuthSoftInterface extends Interface {
   events: {};
 }
 
-export class ModuleAuthSoft extends Contract {
-  connect(signerOrProvider: Signer | Provider | string): ModuleAuthSoft;
-  attach(addressOrName: string): ModuleAuthSoft;
-  deployed(): Promise<ModuleAuthSoft>;
+export class ModuleAuthUpgradable extends Contract {
+  connect(signerOrProvider: Signer | Provider | string): ModuleAuthUpgradable;
+  attach(addressOrName: string): ModuleAuthUpgradable;
+  deployed(): Promise<ModuleAuthUpgradable>;
 
-  on(event: EventFilter | string, listener: Listener): ModuleAuthSoft;
-  once(event: EventFilter | string, listener: Listener): ModuleAuthSoft;
+  on(event: EventFilter | string, listener: Listener): ModuleAuthUpgradable;
+  once(event: EventFilter | string, listener: Listener): ModuleAuthUpgradable;
   addListener(
     eventName: EventFilter | string,
     listener: Listener
-  ): ModuleAuthSoft;
-  removeAllListeners(eventName: EventFilter | string): ModuleAuthSoft;
-  removeListener(eventName: any, listener: Listener): ModuleAuthSoft;
+  ): ModuleAuthUpgradable;
+  removeAllListeners(eventName: EventFilter | string): ModuleAuthUpgradable;
+  removeListener(eventName: any, listener: Listener): ModuleAuthUpgradable;
 
-  interface: ModuleAuthSoftInterface;
+  interface: ModuleAuthUpgradableInterface;
 
   functions: {
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;

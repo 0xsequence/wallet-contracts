@@ -4,7 +4,7 @@ import "./ModuleBase.sol";
 import "./ModuleAuth.sol";
 
 
-abstract contract ModuleAuthSoft is ModuleBase, ModuleAuth {
+abstract contract ModuleAuthUpgradable is ModuleBase, ModuleAuth {
   bytes32 private constant IMAGE_HASH_KEY = keccak256("org.arcadeum.module.auth.soft.image.hash");
 
   /**
@@ -12,7 +12,7 @@ abstract contract ModuleAuthSoft is ModuleBase, ModuleAuth {
    * @param _imageHash New required image hash of the signature
    */
   function updateImageHash(bytes32 _imageHash) external onlySelf {
-    require(_imageHash != bytes32(0), "ModuleAuthSoft#updateImageHash INVALID_IMAGE_HASH");
+    require(_imageHash != bytes32(0), "ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH");
     _writeBytes32(IMAGE_HASH_KEY, _imageHash);
   }
 

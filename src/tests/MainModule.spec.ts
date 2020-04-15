@@ -2,7 +2,7 @@ import * as ethers from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
-import { MainModuleSoft } from 'typings/contracts/MainModuleSoft'
+import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
 import { Factory } from 'typings/contracts/Factory'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
 import { ModuleMock } from 'typings/contracts/ModuleMock'
@@ -21,7 +21,7 @@ const ModuleMockArtifact = artifacts.require('ModuleMock')
 const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 const HookMockArtifact = artifacts.require('HookMock')
 const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
-const MainModuleSoftArtifact = artifacts.require('MainModuleSoft')
+const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 
 const web3 = (global as any).web3
 
@@ -32,7 +32,7 @@ contract('MainModule', (accounts: string[]) => {
   let owner
   let wallet
 
-  let moduleSoft
+  let moduleUpgradable
 
   before(async () => {
     // Deploy wallet factory
@@ -40,7 +40,7 @@ contract('MainModule', (accounts: string[]) => {
     // Deploy MainModule
     const tx = await (await MainModuleDeployerArtifact.new()).deploy(factory.address)
     module = await MainModuleArtifact.at(tx.logs[0].args._module) as MainModule
-    moduleSoft = (await MainModuleSoftArtifact.new()) as MainModuleSoft
+    moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
   })
 
   beforeEach(async () => {
@@ -764,7 +764,7 @@ contract('MainModule', (accounts: string[]) => {
         newOwnerA = new ethers.Wallet(ethers.utils.randomBytes(32))
         newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
 
-        const newWallet = (await MainModuleSoftArtifact.at(wallet.address)) as MainModuleSoft
+        const newWallet = (await MainModuleUpgradableArtifact.at(wallet.address)) as MainModuleUpgradable
 
         const migrateTransactions = [
           {
@@ -772,7 +772,7 @@ contract('MainModule', (accounts: string[]) => {
             skipOnError: false,
             target: wallet.address,
             value: ethers.constants.Zero,
-            data: wallet.contract.methods.updateImplementation(moduleSoft.address).encodeABI()
+            data: wallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
           },
           {
             delegateCall: false,
@@ -786,7 +786,7 @@ contract('MainModule', (accounts: string[]) => {
         await signAndExecuteMetaTx(wallet, owner, migrateTransactions)
         wallet = newWallet
       })
-      it('Should implement new soft module', async () => {
+      it('Should implement new upgradable module', async () => {
         expect(await wallet.imageHash()).to.equal(newImageHash)
       })
       it('Should accept new owner signature', async () => {
@@ -805,7 +805,7 @@ contract('MainModule', (accounts: string[]) => {
           data: wallet.contract.methods.updateImageHash("0x").encodeABI()
         }
         const tx = signAndExecuteMetaTx(wallet, newOwnerA, [transaction])
-        await expect(tx).to.be.rejectedWith('ModuleAuthSoft#updateImageHash INVALID_IMAGE_HASH')
+        await expect(tx).to.be.rejectedWith('ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH')
       })
       it('Should fail to change image hash from non-self address', async () => {
         const tx = wallet.updateImageHash(ethers.utils.randomBytes(32), { from: accounts[0] })
