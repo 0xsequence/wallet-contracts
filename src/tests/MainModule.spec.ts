@@ -54,7 +54,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should accept initial owner signature', async () => {
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -67,7 +67,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -82,7 +82,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -96,7 +96,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction = {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -113,7 +113,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -126,7 +126,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -140,7 +140,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -154,7 +154,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -168,7 +168,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -182,7 +182,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -196,7 +196,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const transaction = {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -214,7 +214,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: wallet.address,
         value: ethers.constants.Zero,
         data: wallet.contract.methods.updateImplementation(newImplementation.address).encodeABI()
@@ -228,10 +228,22 @@ contract('MainModule', (accounts: string[]) => {
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: wallet.address,
         value: ethers.constants.Zero,
         data: wallet.contract.methods.updateImplementation(ethers.constants.AddressZero).encodeABI()
+      }
+
+      const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
+      await expect(tx).to.be.rejectedWith(RevertError("ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION"))
+    })
+    it('Should fail to set implementation to non-contract', async () => {
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        target: wallet.address,
+        value: ethers.constants.Zero,
+        data: wallet.contract.methods.updateImplementation(accounts[1]).encodeABI()
       }
 
       const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
@@ -247,7 +259,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -263,7 +275,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -285,13 +297,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: callReceiver1.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
         },{
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: callReceiver2.address,
           value: ethers.constants.Zero,
           data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
@@ -314,13 +326,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
         }, {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: receiver.address,
           value: 26,
           data: []
@@ -340,13 +352,13 @@ contract('MainModule', (accounts: string[]) => {
 
         const transactions = [{
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: receiver.address,
           value: 26,
           data: []
         }, {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -365,7 +377,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should delegate call to module', async () => {
       const transaction1 = {
         delegateCall: true,
-        skipOnError: false,
+        revertOnError: true,
         target: module.address,
         value: 0,
         data: module.contract.methods.write(11, 45).encodeABI()
@@ -375,7 +387,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction2 = {
         delegateCall: true,
-        skipOnError: false,
+        revertOnError: true,
         target: module.address,
         value: 0,
         data: module.contract.methods.read(11).encodeABI()
@@ -389,7 +401,7 @@ contract('MainModule', (accounts: string[]) => {
       beforeEach(async () => {
         const transaction = {
           delegateCall: true,
-          skipOnError: false,
+          revertOnError: true,
           target: module.address,
           value: 0,
           data: module.contract.methods.setRevertFlag(true).encodeABI()
@@ -400,7 +412,7 @@ contract('MainModule', (accounts: string[]) => {
       it('Should pass if delegate call is optional', async () => {  
         const transaction = {
           delegateCall: true,
-          skipOnError: true,
+          revertOnError: false,
           target: module.address,
           value: 0,
           data: module.contract.methods.write(11, 45).encodeABI()
@@ -411,7 +423,7 @@ contract('MainModule', (accounts: string[]) => {
       it('Should fail if delegate call fails', async () => {
         const transaction = {
           delegateCall: true,
-          skipOnError: false,
+          revertOnError: true,
           target: module.address,
           value: 0,
           data: module.contract.methods.write(11, 45).encodeABI()
@@ -433,7 +445,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: receiver.address,
         value: 25,
         data: []
@@ -453,7 +465,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: callReceiver.address,
         value: value,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -474,7 +486,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         delegateCall: false,
-        skipOnError: true,
+        revertOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
@@ -503,13 +515,13 @@ contract('MainModule', (accounts: string[]) => {
 
       const transactions = [{
         delegateCall: false,
-        skipOnError: true,
+        revertOnError: false,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
         data: data2
@@ -539,19 +551,19 @@ contract('MainModule', (accounts: string[]) => {
 
       const transactions = [{
         delegateCall: false,
-        skipOnError: true,
+        revertOnError: false,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         delegateCall: false,
-        skipOnError: true,
+        revertOnError: false,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         delegateCall: false,
-        skipOnError: false,
+        revertOnError: true,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
         data: data2
@@ -582,13 +594,13 @@ contract('MainModule', (accounts: string[]) => {
 
       const transactions = [{
         delegateCall: false,
-        skipOnError: true,
+        revertOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
       }, {
         delegateCall: false,
-        skipOnError: true,
+        revertOnError: false,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
@@ -611,7 +623,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transactions = [{
         delegateCall: false,
-        skipOnError: true,
+        revertOnError: false,
         target: wallet.address,
         value: ethers.constants.Zero,
         data: wallet.contract.methods.updateImplementation(ethers.constants.AddressZero).encodeABI()
@@ -703,7 +715,7 @@ contract('MainModule', (accounts: string[]) => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
         const transaction = {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
@@ -718,7 +730,7 @@ contract('MainModule', (accounts: string[]) => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
         const transaction1 = {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
@@ -728,7 +740,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const transaction2 = {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.removeHook(selector).encodeABI()
@@ -750,7 +762,7 @@ contract('MainModule', (accounts: string[]) => {
   describe('Update owners', async () => {
     const transaction = {
       delegateCall: false,
-      skipOnError: false,
+      revertOnError: true,
       target: ethers.constants.AddressZero,
       value: 0,
       data: []
@@ -769,14 +781,14 @@ contract('MainModule', (accounts: string[]) => {
         const migrateTransactions = [
           {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: wallet.address,
             value: ethers.constants.Zero,
             data: wallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
           },
           {
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: wallet.address,
             value: ethers.constants.Zero,
             data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
@@ -799,7 +811,7 @@ contract('MainModule', (accounts: string[]) => {
       it('Should fail to update to invalid image hash', async () => {
         const transaction = {
           delegateCall: false,
-          skipOnError: false,
+          revertOnError: true,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.updateImageHash("0x").encodeABI()
@@ -825,7 +837,7 @@ contract('MainModule', (accounts: string[]) => {
           )
           const migrateTransactions = [{
             delegateCall: false,
-            skipOnError: false,
+            revertOnError: true,
             target: wallet.address,
             value: ethers.constants.Zero,
             data: wallet.contract.methods.updateImageHash(newImageHash).encodeABI()
@@ -856,7 +868,7 @@ contract('MainModule', (accounts: string[]) => {
   describe('Multisignature', async () => {
     const transaction = {
       delegateCall: false,
-      skipOnError: false,
+      revertOnError: true,
       target: ethers.constants.AddressZero,
       value: 0,
       data: []
@@ -1217,7 +1229,7 @@ contract('MainModule', (accounts: string[]) => {
       let threshold = 4
 
       beforeEach(async () => {
-        owners = Array(5).fill(new ethers.Wallet(ethers.utils.randomBytes(32)))
+        owners = Array(5).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
         weights = [3, 3, 1, 1, 1]
 
         const salt = encodeImageHash(

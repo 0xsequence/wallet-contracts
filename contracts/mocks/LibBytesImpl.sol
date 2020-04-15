@@ -15,8 +15,8 @@ contract LibBytesImpl {
     return _data.readUint8Uint16(_index);
   }
 
-  function readUint8Uint8(bytes calldata _data, uint256 _index) external pure returns (uint8, uint8, uint256) {
-    return _data.readUint8Uint8(_index);
+  function readBoolUint8(bytes calldata _data, uint256 _index) external pure returns (bool, uint8, uint256) {
+    return _data.readBoolUint8(_index);
   }
 
   function readAddress(bytes calldata _data, uint256 _index) external pure returns (address, uint256) {

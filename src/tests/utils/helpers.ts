@@ -112,7 +112,7 @@ export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Arra
 
 export const MetaTransactionsType = `tuple(
   bool delegateCall,
-  bool skipOnError,
+  bool revertOnError,
   address target,
   uint256 value,
   bytes data
@@ -122,7 +122,7 @@ export function encodeMetaTransactionsData(
   owner: string,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;
@@ -173,12 +173,12 @@ export async function walletMultiSign(
     sorted.map(async (a) => 
       a.owner instanceof ethers.Wallet ?
         ethers.utils.solidityPack(
-          ['uint8', 'uint8', 'bytes'],
-          [1, a.weight, await ethSign(a.owner, message)]
+          ['bool', 'uint8', 'bytes'],
+          [false, a.weight, await ethSign(a.owner, message)]
         ) : 
         ethers.utils.solidityPack(
-          ['uint8', 'uint8', 'address'],
-          [0, a.weight, a.owner]
+          ['bool', 'uint8', 'address'],
+          [true, a.weight, a.owner]
         )
     )
   )
@@ -198,7 +198,7 @@ export async function multiSignMetaTransactions(
   threshold: BigNumberish,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;
@@ -218,7 +218,7 @@ export async function signAndExecuteMetaTx(
   owner: ethers.Wallet,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;
@@ -243,7 +243,7 @@ export async function multiSignAndExecuteMetaTx(
   threshold: BigNumberish,
   txs: {
     delegateCall: boolean;
-    skipOnError: boolean;
+    revertOnError: boolean;
     target: string;
     value: BigNumberish;
     data: Arrayish;
