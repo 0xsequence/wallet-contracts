@@ -113,5 +113,43 @@ contract('MainModule', () => {
 
       report('relay 2/5 transaction', results)
     })
+    it('Relay 255/255 transaction', async () => {
+      const results: number[] = []
+
+      const threshold = 255
+      const weight = 1
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }
+
+      for (let i = 0; i < runs; i++) {
+        const owners = Array(255).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+
+        const salt = encodeImageHash(
+          threshold,
+          owners.map((owner) => ({
+            weight: weight,
+            address: owner.address
+          }))
+        )
+
+        await factory.deploy(module.address, salt)
+        const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+
+        const accounts = owners.map((owner) => ({
+          weight: weight,
+          owner: owner
+        }))
+
+        const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction]) as any
+        results.push(tx.receipt.gasUsed)
+      }
+
+      report('relay 255/255 transaction', results)
+    })
   })
 })
