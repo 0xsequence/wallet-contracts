@@ -25,6 +25,7 @@ interface MainModuleInterface extends Interface {
         {
           delegateCall: boolean;
           revertOnError: boolean;
+          gasLimit: BigNumberish;
           target: string;
           value: BigNumberish;
           data: Arrayish;
@@ -118,6 +119,7 @@ export class MainModule extends Contract {
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
+        gasLimit: BigNumberish;
         target: string;
         value: BigNumberish;
         data: Arrayish;
@@ -186,6 +188,7 @@ export class MainModule extends Contract {
     _txs: {
       delegateCall: boolean;
       revertOnError: boolean;
+      gasLimit: BigNumberish;
       target: string;
       value: BigNumberish;
       data: Arrayish;
@@ -256,6 +259,7 @@ export class MainModule extends Contract {
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
+        gasLimit: BigNumberish;
         target: string;
         value: BigNumberish;
         data: Arrayish;

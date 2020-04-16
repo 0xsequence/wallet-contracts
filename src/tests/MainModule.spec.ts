@@ -55,6 +55,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -68,6 +69,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -83,6 +85,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction = {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -97,6 +100,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction = {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: ethers.constants.AddressZero,
           value: ethers.constants.Zero,
           data: []
@@ -114,6 +118,7 @@ contract('MainModule', (accounts: string[]) => {
           const transaction = {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -127,6 +132,7 @@ contract('MainModule', (accounts: string[]) => {
           const transaction = {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -141,6 +147,7 @@ contract('MainModule', (accounts: string[]) => {
           const transaction = {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -155,6 +162,7 @@ contract('MainModule', (accounts: string[]) => {
           const transaction = {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -169,6 +177,7 @@ contract('MainModule', (accounts: string[]) => {
           const transaction = {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -183,6 +192,7 @@ contract('MainModule', (accounts: string[]) => {
           const transaction = {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -197,6 +207,7 @@ contract('MainModule', (accounts: string[]) => {
           const transaction = {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
             data: []
@@ -215,6 +226,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: wallet.address,
         value: ethers.constants.Zero,
         data: wallet.contract.methods.updateImplementation(newImplementation.address).encodeABI()
@@ -229,6 +241,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: wallet.address,
         value: ethers.constants.Zero,
         data: wallet.contract.methods.updateImplementation(ethers.constants.AddressZero).encodeABI()
@@ -241,6 +254,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: wallet.address,
         value: ethers.constants.Zero,
         data: wallet.contract.methods.updateImplementation(accounts[1]).encodeABI()
@@ -260,6 +274,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -276,6 +291,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -298,12 +314,14 @@ contract('MainModule', (accounts: string[]) => {
         const transactions = [{
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: callReceiver1.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
         },{
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: callReceiver2.address,
           value: ethers.constants.Zero,
           data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
@@ -327,12 +345,14 @@ contract('MainModule', (accounts: string[]) => {
         const transactions = [{
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
         }, {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: receiver.address,
           value: 26,
           data: []
@@ -353,12 +373,14 @@ contract('MainModule', (accounts: string[]) => {
         const transactions = [{
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: receiver.address,
           value: 26,
           data: []
         }, {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: callReceiver.address,
           value: ethers.constants.Zero,
           data: callReceiver.contract.methods.testCall(0, []).encodeABI()
@@ -378,6 +400,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction1 = {
         delegateCall: true,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: module.address,
         value: 0,
         data: module.contract.methods.write(11, 45).encodeABI()
@@ -388,6 +411,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction2 = {
         delegateCall: true,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: module.address,
         value: 0,
         data: module.contract.methods.read(11).encodeABI()
@@ -402,6 +426,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction = {
           delegateCall: true,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: module.address,
           value: 0,
           data: module.contract.methods.setRevertFlag(true).encodeABI()
@@ -413,6 +438,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction = {
           delegateCall: true,
           revertOnError: false,
+          gasLimit: ethers.constants.MaxUint256,
           target: module.address,
           value: 0,
           data: module.contract.methods.write(11, 45).encodeABI()
@@ -424,6 +450,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction = {
           delegateCall: true,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: module.address,
           value: 0,
           data: module.contract.methods.write(11, 45).encodeABI()
@@ -446,6 +473,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: receiver.address,
         value: 25,
         data: []
@@ -466,6 +494,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver.address,
         value: value,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -487,6 +516,7 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         delegateCall: false,
         revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
@@ -516,12 +546,14 @@ contract('MainModule', (accounts: string[]) => {
       const transactions = [{
         delegateCall: false,
         revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
         data: data2
@@ -552,18 +584,21 @@ contract('MainModule', (accounts: string[]) => {
       const transactions = [{
         delegateCall: false,
         revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         delegateCall: false,
         revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver1.address,
         value: ethers.constants.Zero,
         data: data1
       }, {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver2.address,
         value: ethers.constants.Zero,
         data: data2
@@ -595,12 +630,14 @@ contract('MainModule', (accounts: string[]) => {
       const transactions = [{
         delegateCall: false,
         revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
       }, {
         delegateCall: false,
         revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: data
@@ -624,6 +661,7 @@ contract('MainModule', (accounts: string[]) => {
       const transactions = [{
         delegateCall: false,
         revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
         target: wallet.address,
         value: ethers.constants.Zero,
         data: wallet.contract.methods.updateImplementation(ethers.constants.AddressZero).encodeABI()
@@ -716,6 +754,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction = {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
@@ -731,6 +770,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction1 = {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
@@ -741,6 +781,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction2 = {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.removeHook(selector).encodeABI()
@@ -763,6 +804,7 @@ contract('MainModule', (accounts: string[]) => {
     const transaction = {
       delegateCall: false,
       revertOnError: true,
+      gasLimit: ethers.constants.MaxUint256,
       target: ethers.constants.AddressZero,
       value: 0,
       data: []
@@ -782,6 +824,7 @@ contract('MainModule', (accounts: string[]) => {
           {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: wallet.address,
             value: ethers.constants.Zero,
             data: wallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
@@ -789,6 +832,7 @@ contract('MainModule', (accounts: string[]) => {
           {
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: wallet.address,
             value: ethers.constants.Zero,
             data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
@@ -812,6 +856,7 @@ contract('MainModule', (accounts: string[]) => {
         const transaction = {
           delegateCall: false,
           revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
           target: wallet.address,
           value: ethers.constants.Zero,
           data: wallet.contract.methods.updateImageHash("0x").encodeABI()
@@ -838,6 +883,7 @@ contract('MainModule', (accounts: string[]) => {
           const migrateTransactions = [{
             delegateCall: false,
             revertOnError: true,
+            gasLimit: ethers.constants.MaxUint256,
             target: wallet.address,
             value: ethers.constants.Zero,
             data: wallet.contract.methods.updateImageHash(newImageHash).encodeABI()
@@ -869,6 +915,7 @@ contract('MainModule', (accounts: string[]) => {
     const transaction = {
       delegateCall: false,
       revertOnError: true,
+      gasLimit: ethers.constants.MaxUint256,
       target: ethers.constants.AddressZero,
       value: 0,
       data: []
