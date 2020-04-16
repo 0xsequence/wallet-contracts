@@ -9,6 +9,8 @@ import { ModuleMock } from 'typings/contracts/ModuleMock'
 import { HookCallerMock } from 'typings/contracts/HookCallerMock'
 import { HookMock } from 'typings/contracts/HookMock'
 import { DelegateCallMock } from 'typings/contracts/DelegateCallMock'
+import { GasBurnerMock } from 'typings/contracts/GasBurnerMock'
+
 import { BigNumberish } from 'ethers/utils';
 
 ethers.errors.setLogLevel("error")
@@ -22,6 +24,7 @@ const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 const HookMockArtifact = artifacts.require('HookMock')
 const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
+const GasBurnerMockArtifact = artifacts.require('GasBurnerMock')
 
 const web3 = (global as any).web3
 
@@ -1400,6 +1403,121 @@ contract('MainModule', (accounts: string[]) => {
         const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction])
         await expect(tx).to.be.rejectedWith("MainModule#_signatureValidation: INVALID_SIGNATURE")
       })
+    })
+  })
+  describe('Gas limit', () => {
+    let gasBurner
+
+    before(async () => {
+      gasBurner = await GasBurnerMockArtifact.new() as GasBurnerMock
+    })
+
+    it('Should forward the defined amount of gas', async () => {
+      const gas = 10000
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: gas,
+        target: gasBurner.address,
+        value: ethers.constants.Zero,
+        data: gasBurner.contract.methods.burnGas(0).encodeABI()
+      }
+
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
+      const reported = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
+      expect(reported).to.be.lt.BN(gas)
+    })
+    it('Should forward different amounts of gas', async () => {
+      const gasA = 10000
+      const gasB = 350000
+
+      const transactions = [{
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: gasA,
+        target: gasBurner.address,
+        value: ethers.constants.Zero,
+        data: gasBurner.contract.methods.burnGas(8000).encodeABI()
+      }, {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: gasB,
+        target: gasBurner.address,
+        value: ethers.constants.Zero,
+        data: gasBurner.contract.methods.burnGas(340000).encodeABI()
+      }]
+
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
+
+      const reportedB = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
+      const reportedA = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
+
+      expect(reportedA).to.be.lt.BN(gasA)
+      expect(reportedB).to.be.lt.BN(gasB)
+      expect(reportedB).to.be.gt.BN(gasA)
+    })
+    it('Should fail if forwarded call runs out of gas', async () => {
+      const gas = 10000
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: gas,
+        target: gasBurner.address,
+        value: ethers.constants.Zero,
+        data: gasBurner.contract.methods.burnGas(11000).encodeABI()
+      }
+
+      const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
+      expect(tx).to.be.rejected
+    })
+    it('Should fail without reverting if optional call runs out of gas', async () => {
+      const gas = 10000
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: false,
+        gasLimit: gas,
+        target: gasBurner.address,
+        value: ethers.constants.Zero,
+        data: gasBurner.contract.methods.burnGas(200000).encodeABI()
+      }
+
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
+      const log = tx.receipt.logs.pop()
+      expect(log.event).to.be.equal('TxFailed')
+    })
+    it('Should continue execution if optional call runs out of gas', async () => {
+      const gas = 10000
+
+      const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      const valA = 9512358833
+      const valB = web3.utils.randomHex(1600)
+
+      const transactions = [{
+        delegateCall: false,
+        revertOnError: false,
+        gasLimit: gas,
+        target: gasBurner.address,
+        value: ethers.constants.Zero,
+        data: gasBurner.contract.methods.burnGas(200000).encodeABI()
+      }, {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }]
+
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
+      const log = tx.receipt.logs.pop()
+      expect(log.event).to.be.equal('TxFailed')
+
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
     })
   })
 })

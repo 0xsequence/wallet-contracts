@@ -12,4 +12,7 @@ declare namespace Chai {
   interface Equal {
     BN: any
   }
+  interface NumberComparer {
+    BN: any
+  }
 }
