@@ -20,17 +20,17 @@ abstract contract ModuleAuthFixed is ModuleAuth {
 
   /**
    * @notice Validates the signature image with the salt used to deploy the contract
-   * @param _image Image of signature
+   * @param _imageHash Hash image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes memory _image) internal override view returns (bool) {
+  function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
     return address(
       uint256(
         keccak256(
           abi.encodePacked(
             byte(0xff),
             FACTORY,
-            keccak256(_image),
+            _imageHash,
             INIT_CODE_HASH
           )
         )

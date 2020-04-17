@@ -16,8 +16,8 @@ interface LibBytesImplInterface extends Interface {
       encode([_data]: [Arrayish]): string;
     }>;
 
-    readUint8Uint16: TypedFunctionDescription<{
-      encode([_data, _index]: [Arrayish, BigNumberish]): string;
+    readFirstUint16: TypedFunctionDescription<{
+      encode([_data]: [Arrayish]): string;
     }>;
 
     readBoolUint8: TypedFunctionDescription<{
@@ -34,23 +34,6 @@ interface LibBytesImplInterface extends Interface {
 
     readBytes32: TypedFunctionDescription<{
       encode([_data, _index]: [Arrayish, BigNumberish]): string;
-    }>;
-
-    writeUint16: TypedFunctionDescription<{
-      encode([_dest, _index, _a]: [
-        Arrayish,
-        BigNumberish,
-        BigNumberish
-      ]): string;
-    }>;
-
-    writeUint8Address: TypedFunctionDescription<{
-      encode([_dest, _index, _a, _b]: [
-        Arrayish,
-        BigNumberish,
-        BigNumberish,
-        string
-      ]): string;
     }>;
   };
 
@@ -81,13 +64,11 @@ export class LibBytesImpl extends Contract {
       1: string;
     }>;
 
-    readUint8Uint16(
-      _data: Arrayish,
-      _index: BigNumberish
+    readFirstUint16(
+      _data: Arrayish
     ): Promise<{
       0: number;
-      1: number;
-      2: BigNumber;
+      1: BigNumber;
     }>;
 
     readBoolUint8(
@@ -116,25 +97,6 @@ export class LibBytesImpl extends Contract {
     }>;
 
     readBytes32(_data: Arrayish, _index: BigNumberish): Promise<string>;
-
-    writeUint16(
-      _dest: Arrayish,
-      _index: BigNumberish,
-      _a: BigNumberish
-    ): Promise<{
-      0: string;
-      1: BigNumber;
-    }>;
-
-    writeUint8Address(
-      _dest: Arrayish,
-      _index: BigNumberish,
-      _a: BigNumberish,
-      _b: string
-    ): Promise<{
-      0: string;
-      1: BigNumber;
-    }>;
   };
 
   popLastByte(
@@ -144,13 +106,11 @@ export class LibBytesImpl extends Contract {
     1: string;
   }>;
 
-  readUint8Uint16(
-    _data: Arrayish,
-    _index: BigNumberish
+  readFirstUint16(
+    _data: Arrayish
   ): Promise<{
     0: number;
-    1: number;
-    2: BigNumber;
+    1: BigNumber;
   }>;
 
   readBoolUint8(
@@ -180,31 +140,12 @@ export class LibBytesImpl extends Contract {
 
   readBytes32(_data: Arrayish, _index: BigNumberish): Promise<string>;
 
-  writeUint16(
-    _dest: Arrayish,
-    _index: BigNumberish,
-    _a: BigNumberish
-  ): Promise<{
-    0: string;
-    1: BigNumber;
-  }>;
-
-  writeUint8Address(
-    _dest: Arrayish,
-    _index: BigNumberish,
-    _a: BigNumberish,
-    _b: string
-  ): Promise<{
-    0: string;
-    1: BigNumber;
-  }>;
-
   filters: {};
 
   estimate: {
     popLastByte(_data: Arrayish): Promise<BigNumber>;
 
-    readUint8Uint16(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
+    readFirstUint16(_data: Arrayish): Promise<BigNumber>;
 
     readBoolUint8(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
 
@@ -213,18 +154,5 @@ export class LibBytesImpl extends Contract {
     readBytes66(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
 
     readBytes32(_data: Arrayish, _index: BigNumberish): Promise<BigNumber>;
-
-    writeUint16(
-      _dest: Arrayish,
-      _index: BigNumberish,
-      _a: BigNumberish
-    ): Promise<BigNumber>;
-
-    writeUint8Address(
-      _dest: Arrayish,
-      _index: BigNumberish,
-      _a: BigNumberish,
-      _b: string
-    ): Promise<BigNumber>;
   };
 }

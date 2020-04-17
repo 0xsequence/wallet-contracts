@@ -184,8 +184,8 @@ export async function walletMultiSign(
   )
 
   return ethers.utils.solidityPack(
-    ['uint8', 'uint16', ...Array(accounts.length).fill('bytes')],
-    [accounts.length, threshold, ...accountBytes]
+    ['uint16', ...Array(accounts.length).fill('bytes')],
+    [threshold, ...accountBytes]
   )
 }
 
@@ -263,15 +263,16 @@ export function encodeImageHash(
   }[]
 ) {
   const sorted = accounts.sort((a, b) => compareAddr(a.address, b.address))
+  let imageHash = ethers.utils.solidityPack(['uint256'], [threshold])
 
-  const weightedAddresses = sorted.map((a) => ethers.utils.solidityPack(
-    ['uint8', 'address'], [a.weight, a.address]
-  ))
-
-  const image = ethers.utils.solidityPack(
-    ['uint16', ...Array(sorted.length).fill('bytes21')],
-    [threshold, ...weightedAddresses]
+  sorted.forEach((a) => 
+    imageHash = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ['bytes32', 'uint8', 'address'],
+        [imageHash, a.weight, a.address]
+      )
+    )
   )
 
-  return ethers.utils.keccak256(image)
+  return imageHash
 }
