@@ -30,19 +30,4 @@ contract LibBytesImpl {
   function readBytes32(bytes calldata _data, uint256 _index) external pure returns (bytes32) {
     return _data.readBytes32(_index);
   }
-
-  function writeUint16(bytes memory _dest, uint256 _index, uint16 _a) public pure returns (bytes memory, uint256) {
-    uint256 newIndex = _dest.writeUint16(_index, _a);
-    return (_dest, newIndex);
-  }
-
-  function writeUint8Address(
-    bytes memory _dest,
-    uint256 _index,
-    uint8 _a,
-    address _b
-  ) public pure returns (bytes memory, uint256) {
-    uint256 newIndex = _dest.writeUint8Address(_index, _a, _b);
-    return (_dest, newIndex);
-  }
 }

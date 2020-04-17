@@ -264,13 +264,12 @@ export function encodeImageHash(
 ) {
   const sorted = accounts.sort((a, b) => compareAddr(a.address, b.address))
 
-  const weightedAddresses = sorted.map((a) => ethers.utils.solidityPack(
-    ['uint8', 'address'], [a.weight, a.address]
-  ))
+  const weigths = sorted.map((a) => a.weight)
+  const addresses = sorted.map((a) => a.address)
 
   const image = ethers.utils.solidityPack(
-    ['uint16', ...Array(sorted.length).fill('bytes21')],
-    [threshold, ...weightedAddresses]
+    ['uint16', 'uint256[]', 'address[]'],
+    [threshold, weigths, addresses]
   )
 
   return ethers.utils.keccak256(image)

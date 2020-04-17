@@ -26,10 +26,10 @@ abstract contract ModuleAuthUpgradable is ModuleBase, ModuleAuth {
   /**
    * @notice Validates the signature image with a valid image hash defined
    *   in the contract storage
-   * @param _image Image of signature
+   * @param _imageHash Hash image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes memory _image) internal override view returns (bool) {
-    return keccak256(_image) == _readBytes32(IMAGE_HASH_KEY);
+  function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
+    return _imageHash == _readBytes32(IMAGE_HASH_KEY);
   }
 }
