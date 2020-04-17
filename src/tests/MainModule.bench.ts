@@ -12,6 +12,8 @@ const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 
 const runs = 1000
 
+const optimalGasLimit = ethers.constants.Two.pow(255)
+
 function report(test: string, values: number[]) {
   const min = Math.min(...values)
   const max = Math.max(...values)
@@ -55,6 +57,7 @@ contract('MainModule', () => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: optimalGasLimit,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
@@ -80,6 +83,7 @@ contract('MainModule', () => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: optimalGasLimit,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []

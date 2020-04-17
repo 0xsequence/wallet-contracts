@@ -9,6 +9,7 @@ abstract contract ModuleCalls is IModuleAuth {
   struct Transaction {
     bool delegateCall;   // Performs delegatecall
     bool revertOnError;  // Reverts transaction bundle if tx fails
+    uint256 gasLimit;    // Maximum gas to be forwarded
     address target;      // Address of the contract to call
     uint256 value;       // Amount of ETH to pass with the call
     bytes data;          // calldata to pass
@@ -51,9 +52,14 @@ abstract contract ModuleCalls is IModuleAuth {
       bytes memory result;
 
       if (transaction.delegateCall) {
-        (success, result) = transaction.target.delegatecall(transaction.data);
+        (success, result) = transaction.target.delegatecall{
+          gas: transaction.gasLimit
+        }(transaction.data);
       } else {
-        (success, result) = transaction.target.call.value(transaction.value)(transaction.data);
+        (success, result) = transaction.target.call{
+          value: transaction.value,
+          gas: transaction.gasLimit
+        }(transaction.data);
       }
 
       if (!success) _revertBytes(transaction, i, result);
