@@ -1223,6 +1223,57 @@ contract('MainModule', (accounts: string[]) => {
         await expect(tx).to.be.rejectedWith("MainModule#_signatureValidation: INVALID_SIGNATURE")
       })
     })
+    context('With 255/255 wallet', () => {
+      let owners: ethers.Wallet[]
+      let weight = 1
+      let threshold = 255
+
+      beforeEach(async () => {
+        owners = Array(255).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+
+        const salt = encodeImageHash(
+          threshold,
+          owners.map((owner) => ({
+            weight: weight,
+            address: owner.address
+          }))
+        )
+
+        await factory.deploy(module.address, salt)
+        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+      })
+
+      it('Should accept message signed by all owners', async () => {
+        const accounts = owners.map((owner) => ({
+          weight: weight,
+          owner: owner
+        }))
+
+        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction])
+      })
+      it('Should reject message signed by non-owner', async () => {
+        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const accounts = [...owners.slice(1).map((owner) => ({
+          weight: weight,
+          owner: owner
+        })), {
+          weight: weight,
+          owner: impostor
+        }]
+
+        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction])
+        await expect(tx).to.be.rejectedWith("MainModule#_signatureValidation: INVALID_SIGNATURE")
+      })
+      it('Should reject message missing a signature', async () => {
+        const accounts = owners.slice(1).map((owner) => ({
+          weight: weight,
+          owner: owner
+        }))
+
+        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction])
+        await expect(tx).to.be.rejectedWith("MainModule#_signatureValidation: INVALID_SIGNATURE")
+      })
+    })
     context('With weighted owners', () => {
       let owners: ethers.Wallet[]
       let weights: BigNumberish[]

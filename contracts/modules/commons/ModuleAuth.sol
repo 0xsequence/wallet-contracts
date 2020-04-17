@@ -39,7 +39,7 @@ abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet 
     internal override view returns (bool)
   {
     (
-      uint8 total,       // total number of accounts in multisig
+      uint256 total,       // total number of accounts in multisig
       uint16 threshold,  // required threshold signature
       uint256 rindex     // read index
     ) = _signature.readUint8Uint16(0);
