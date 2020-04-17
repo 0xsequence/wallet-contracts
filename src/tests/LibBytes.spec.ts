@@ -33,32 +33,20 @@ contract('LibBytes', (accounts: string[]) => {
     })
   })
 
-  describe('readUint8Uint16', () => {
-    it('Should read uint8 and uint16 at index zero', async () => {
-      const res = await libBytes.readUint8Uint16('0x03021e4453120a', 0)
-      expect(res[0]).to.eq.BN(3)
-      expect(res[1]).to.eq.BN(542)
-      expect(res[2]).to.eq.BN(3)
+  describe('readFirstUint16', () => {
+    it('Should read first uint16', async () => {
+      const res = await libBytes.readFirstUint16('0x03021e4453120a')
+      expect(res[0]).to.eq.BN(770)
+      expect(res[1]).to.eq.BN(2)
     })
-    it('Should read uint8 and uint16 at given index', async () => {
-      const res = await libBytes.readUint8Uint16('0x5a9c2a6519d401d3', 3)
-      expect(res[0]).to.eq.BN(101)
-      expect(res[1]).to.eq.BN(6612)
-      expect(res[2]).to.eq.BN(6)
+    it('Should read first uint16 of 2 byte array', async () => {
+      const res = await libBytes.readFirstUint16('0xff0a')
+      expect(res[0]).to.eq.BN(65290)
+      expect(res[1]).to.eq.BN(2)
     })
-    it('Should read uint8 and uint16 at last index', async () => {
-      const res = await libBytes.readUint8Uint16('0x02010004', 1)
-      expect(res[0]).to.eq.BN(1)
-      expect(res[1]).to.eq.BN(4)
-      expect(res[2]).to.eq.BN(4)
-    })
-    it('Should fail read uint8 and uint16 out of bounds', async () => {
-      const tx = libBytes.readUint8Uint16('0x5a9c', 0)
-      await expect(tx).to.be.rejectedWith('LibBytes#readUint8Uint16: OUT_OF_BOUNDS')
-    })
-    it('Should fail read uint8 and uint16 fully out of bounds', async () => {
-      const tx = libBytes.readUint8Uint16('0x5a9ca2', 12)
-      await expect(tx).to.be.rejectedWith('LibBytes#readUint8Uint16: OUT_OF_BOUNDS')
+    it('Should fail first uint16 out of bounds', async () => {
+      const tx = libBytes.readFirstUint16('0x5a')
+      await expect(tx).to.be.rejectedWith('LibBytes#readFirstUint16: OUT_OF_BOUNDS')
     })
   })
 
@@ -202,120 +190,6 @@ contract('LibBytes', (accounts: string[]) => {
     it('Should fail read bytes32 totally out of bounds', async () => {
       const tx = libBytes.readBytes32("0x010203", 3145)
       await expect(tx).to.be.rejectedWith('LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED')
-    })
-  })
-
-  describe('writeUint16', () => {
-    it('Should write uint16 at index zero', async () => {
-      const res = await libBytes.writeUint16("0x0000", 0, 42)
-      expect(res[0]).to.be.equal("0x002a")
-      expect(res[1]).to.eq.BN(2)
-    })
-    it('Should write uint16 at given index', async () => {
-      const res = await libBytes.writeUint16("0x010200000000", 2, 8843)
-      expect(res[0]).to.be.equal("0x0102228b0000")
-      expect(res[1]).to.eq.BN(4)
-    })
-    it('Should write uint16 between bytes', async () => {
-      const res = await libBytes.writeUint16("0x010200000304", 2, 8843)
-      expect(res[0]).to.be.equal("0x0102228b0304")
-      expect(res[1]).to.eq.BN(4)
-    })
-    it('Should write uint16 at last index', async () => {
-      const res = await libBytes.writeUint16("0x110000", 1, 9999)
-      expect(res[0]).to.be.equal("0x11270f")
-      expect(res[1]).to.eq.BN(3)
-    })
-    it('Should overwrite uint16 between bytes', async () => {
-      const res = await libBytes.writeUint16("0x010211110304", 2, 8843)
-      expect(res[0]).to.be.equal("0x0102228b0304")
-      expect(res[1]).to.eq.BN(4)
-    })
-    it('Should fail write uint16 out of bounds', async () => {
-      const tx = libBytes.writeUint16("0x110000", 2, 9999)
-      await expect(tx).to.be.rejectedWith('LibBytes#writeUint16: OUT_OF_BOUNDS')
-    })
-    it('Should fail write uint16 totally out of bounds', async () => {
-      const tx = libBytes.writeUint16("0x110000", 22, 9999)
-      await expect(tx).to.be.rejectedWith('LibBytes#writeUint16: OUT_OF_BOUNDS')
-    })
-  })
-
-  describe('writeUint8Address', () => {
-    let addr
-    let uint8
-    beforeEach(async () => {
-      addr = web3.utils.randomHex(20)
-      uint8 = web3.utils.randomHex(1)
-    })
-    it('Should write uint8 and address at index zero', async () => {
-      const res = await libBytes.writeUint8Address(
-        "0x" + "00".repeat(21) + "0000", 0, uint8, addr
-      )
-
-      const expected = uint8.concat(addr.slice(2)).concat("0000")
-
-      expect(res[0]).to.be.equal(expected)
-      expect(res[1]).to.eq.BN(21)
-    })
-    it('Should write uint8 and address at given index', async () => {
-      const res = await libBytes.writeUint8Address(
-        "0x0102" + "00".repeat(21) + "0000", 2, uint8, addr
-      )
-
-      const expected = "0x0102"
-        .concat(uint8.slice(2))
-        .concat(addr.slice(2))
-        .concat("0000")
-
-      expect(res[0]).to.be.equal(expected)
-      expect(res[1]).to.eq.BN(23)
-    })
-    it('Should write uint8 and address between bytes', async () => {
-      const res = await libBytes.writeUint8Address(
-        "0x010203" + "00".repeat(21) + "9988", 3, uint8, addr
-      )
-
-      const expected = "0x010203"
-        .concat(uint8.slice(2))
-        .concat(addr.slice(2))
-        .concat("9988")
-
-      expect(res[0]).to.be.equal(expected)
-      expect(res[1]).to.eq.BN(24)
-    })
-    it('Should write uint8 and address at last index', async () => {
-      const res = await libBytes.writeUint8Address(
-        "0xaa23abcd" + "00".repeat(21), 4, uint8, addr
-      )
-
-      const expected = "0xaa23abcd"
-        .concat(uint8.slice(2))
-        .concat(addr.slice(2))
-
-      expect(res[0]).to.be.equal(expected)
-      expect(res[1]).to.eq.BN(25)
-    })
-    it('Should overwrite uint8 and address between bytes', async () => {
-      const res = await libBytes.writeUint8Address(
-        "0x45a933" + web3.utils.randomHex(21).slice(2) + "0a4b", 3, uint8, addr
-      )
-
-      const expected = "0x45a933"
-        .concat(uint8.slice(2))
-        .concat(addr.slice(2))
-        .concat("0a4b")
-
-      expect(res[0]).to.be.equal(expected)
-      expect(res[1]).to.eq.BN(24)
-    })
-    it('Should fail write uint8 and address out of bounds', async () => {
-      const tx = libBytes.writeUint8Address("0xaa23abcd" + "00".repeat(21), 5, uint8, addr)
-      await expect(tx).to.be.rejectedWith('LibBytes#writeUint8Address: OUT_OF_BOUNDS')
-    })
-    it('Should fail write uint8 and address totally out of bounds', async () => {
-      const tx = libBytes.writeUint8Address("0xaa23abcd" + "00".repeat(21), 125, uint8, addr)
-      await expect(tx).to.be.rejectedWith('LibBytes#writeUint8Address: OUT_OF_BOUNDS')
     })
   })
 })

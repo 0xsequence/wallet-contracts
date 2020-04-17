@@ -39,27 +39,20 @@ abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet 
     internal override view returns (bool)
   {
     (
-      uint256 total,       // total number of accounts in multisig
       uint16 threshold,  // required threshold signature
       uint256 rindex     // read index
-    ) = _signature.readUint8Uint16(0);
+    ) = _signature.readFirstUint16();
 
-    // The first byte defines how many address the wallet has
-    // each address takes 21 bytes on the image (1 weight + 20 address)
-    // imageSize requires 2 aditional bytes for the threshold
-    uint256 imageSize = 2 + total * 21;
-    bytes memory image = new bytes(imageSize);
-
-    // Write threshold to image
-    uint256 windex = image.writeUint16(0, threshold);
+    // Start image hash generation
+    bytes32 imageHash = bytes32(uint256(threshold));
 
     // Acumulated weight of signatures
     uint256 totalWeight;
 
     // Iterate until the image is completed
-    while (windex < imageSize) {
+    while (rindex < _signature.length) {
       // Read next item type and addrWeight
-      bool isAddr; uint8 addrWeight; address addr;
+      bool isAddr; uint256 addrWeight; address addr;
       (isAddr, addrWeight, rindex) = _signature.readBoolUint8(rindex);
 
       if (isAddr) {
@@ -76,18 +69,18 @@ abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet 
       }
 
       // Write weight and address to image
-      windex = image.writeUint8Address(windex, addrWeight, addr);
+      imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
     }
 
-    return totalWeight >= threshold && _isValidImage(image);
+    return totalWeight >= threshold && _isValidImage(imageHash);
   }
 
   /**
    * @notice Validates the signature image
-   * @param _image Image of signature
+   * @param _imageHash Hashed image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes memory _image) internal virtual view returns (bool);
+  function _isValidImage(bytes32 _imageHash) internal virtual view returns (bool);
 
   /**
    * @notice Will hash _data to be signed (similar to EIP-712)
