@@ -17,7 +17,6 @@ ethers.errors.setLogLevel("error")
 
 const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
-const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 const ModuleMockArtifact = artifacts.require('ModuleMock')
 const HookCallerMockArtifact = artifacts.require('HookCallerMock')
@@ -41,8 +40,7 @@ contract('MainModule', (accounts: string[]) => {
     // Deploy wallet factory
     factory = await FactoryArtifact.new() as Factory
     // Deploy MainModule
-    const tx = await (await MainModuleDeployerArtifact.new()).deploy(factory.address)
-    module = await MainModuleArtifact.at(tx.logs[0].args._module) as MainModule
+    module = await MainModuleArtifact.new(factory.address) as MainModule
     moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
   })
 

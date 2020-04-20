@@ -1,6 +1,7 @@
 pragma solidity ^0.6.5;
 
 import "./ModuleAuth.sol";
+import "../../Wallet.sol";
 
 /**
  *  Implements ModuleAuth by validating the signature image against
@@ -13,8 +14,11 @@ abstract contract ModuleAuthFixed is ModuleAuth {
   bytes32 public immutable INIT_CODE_HASH;
   address public immutable FACTORY;
 
-  constructor(bytes32 _initCodeHash, address _factory) public {
-    INIT_CODE_HASH = _initCodeHash;
+  constructor(address _factory) public {
+    // Build init code hash of the deployed wallets using that module
+    bytes32 initCodeHash = keccak256(abi.encodePacked(Wallet.creationCode, uint256(address(this))));
+
+    INIT_CODE_HASH = initCodeHash;
     FACTORY = _factory;
   }
 
