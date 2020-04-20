@@ -125,6 +125,7 @@ contract('MainModule', () => {
       const transaction = {
         delegateCall: false,
         revertOnError: true,
+        gasLimit: optimalGasLimit,
         target: ethers.constants.AddressZero,
         value: ethers.constants.Zero,
         data: []
