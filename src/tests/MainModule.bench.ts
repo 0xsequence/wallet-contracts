@@ -8,7 +8,6 @@ ethers.errors.setLogLevel("error")
 
 const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
-const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 
 const runs = 1000
 
@@ -31,8 +30,7 @@ contract('MainModule', () => {
     // Deploy wallet factory
     factory = await FactoryArtifact.new() as Factory
     // Deploy MainModule
-    const tx = await (await MainModuleDeployerArtifact.new()).deploy(factory.address)
-    module = await MainModuleArtifact.at(tx.logs[0].args._module) as MainModule
+    module = await MainModuleArtifact.new(factory.address) as MainModule
   })
 
   describe.skip('Benchmark', function () {

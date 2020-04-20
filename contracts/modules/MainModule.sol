@@ -29,10 +29,8 @@ contract MainModule is
   ModuleCalls
 {
   constructor(
-    bytes32 _initCodeHash,
     address _factory
   ) public ModuleAuthFixed(
-    _initCodeHash,
     _factory
   ) { }
 }
