@@ -4,6 +4,7 @@
   "private": true,
   "license": "none",
   "scripts": {
+    "prepare": "npm run build",
     "build": "rm -rf build && truffle compile --all && yarn gen:contract-typings && tsc -b",
     "clean": "rm -rf build && rm -rf typings/contracts",
     "test": "buidler test",
