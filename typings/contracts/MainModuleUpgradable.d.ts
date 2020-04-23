@@ -16,6 +16,10 @@ interface MainModuleUpgradableInterface extends Interface {
       encode([_signature, _implementation]: [Arrayish, string]): string;
     }>;
 
+    createContract: TypedFunctionDescription<{
+      encode([_code]: [Arrayish]): string;
+    }>;
+
     execute: TypedFunctionDescription<{
       encode([_txs, _nonce, _signature]: [
         {
@@ -83,6 +87,10 @@ interface MainModuleUpgradableInterface extends Interface {
   };
 
   events: {
+    CreatedContract: TypedEventDescription<{
+      encodeTopics([_contract]: [null]): string[];
+    }>;
+
     NonceChange: TypedEventDescription<{
       encodeTopics([newNonce]: [null]): string[];
     }>;
@@ -113,6 +121,11 @@ export class MainModuleUpgradable extends Contract {
     addHook(
       _signature: Arrayish,
       _implementation: string,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    createContract(
+      _code: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
@@ -188,6 +201,11 @@ export class MainModuleUpgradable extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  createContract(
+    _code: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
   execute(
     _txs: {
       delegateCall: boolean;
@@ -254,6 +272,8 @@ export class MainModuleUpgradable extends Contract {
   ): Promise<ContractTransaction>;
 
   filters: {
+    CreatedContract(_contract: null): EventFilter;
+
     NonceChange(newNonce: null): EventFilter;
 
     TxFailed(_index: null, _reason: null): EventFilter;
@@ -261,6 +281,8 @@ export class MainModuleUpgradable extends Contract {
 
   estimate: {
     addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
+
+    createContract(_code: Arrayish): Promise<BigNumber>;
 
     execute(
       _txs: {
