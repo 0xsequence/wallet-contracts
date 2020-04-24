@@ -16,11 +16,7 @@ import "../interfaces/IERC1271Wallet.sol";
 
 
 /**
- * To do
- *   - Recovery
- *   - Force module only
- *   - private vs internal
- *   - Public vs External for main module
+ * Contains the core functionality arcadeum wallets will inherit.
  */
 contract MainModule is
   ModuleAuthFixed,
