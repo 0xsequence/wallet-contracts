@@ -7,6 +7,8 @@ contract CallReceiverMock {
 
   bool revertFlag;
 
+  constructor() public payable { }
+
   function setRevertFlag(bool _revertFlag) external {
     revertFlag = _revertFlag;
   }

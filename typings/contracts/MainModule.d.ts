@@ -20,6 +20,10 @@ interface MainModuleInterface extends Interface {
       encode([_signature, _implementation]: [Arrayish, string]): string;
     }>;
 
+    createContract: TypedFunctionDescription<{
+      encode([_code]: [Arrayish]): string;
+    }>;
+
     execute: TypedFunctionDescription<{
       encode([_txs, _nonce, _signature]: [
         {
@@ -81,6 +85,10 @@ interface MainModuleInterface extends Interface {
   };
 
   events: {
+    CreatedContract: TypedEventDescription<{
+      encodeTopics([_contract]: [null]): string[];
+    }>;
+
     NonceChange: TypedEventDescription<{
       encodeTopics([newNonce]: [null]): string[];
     }>;
@@ -112,6 +120,11 @@ export class MainModule extends Contract {
     addHook(
       _signature: Arrayish,
       _implementation: string,
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
+    createContract(
+      _code: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
@@ -184,6 +197,11 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  createContract(
+    _code: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
   execute(
     _txs: {
       delegateCall: boolean;
@@ -243,6 +261,8 @@ export class MainModule extends Contract {
   ): Promise<ContractTransaction>;
 
   filters: {
+    CreatedContract(_contract: null): EventFilter;
+
     NonceChange(newNonce: null): EventFilter;
 
     TxFailed(_index: null, _reason: null): EventFilter;
@@ -254,6 +274,8 @@ export class MainModule extends Contract {
     INIT_CODE_HASH(): Promise<BigNumber>;
 
     addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
+
+    createContract(_code: Arrayish): Promise<BigNumber>;
 
     execute(
       _txs: {

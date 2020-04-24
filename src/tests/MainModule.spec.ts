@@ -1569,4 +1569,54 @@ contract('MainModule', (accounts: string[]) => {
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
   })
+  describe('Create contracts', () => {
+    it('Should create a contract', async () => {
+      const deployCode = CallReceiverMockArtifact.bytecode
+
+      const transactions = [{
+        delegateCall: false,
+        revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
+        target: wallet.address,
+        value: ethers.constants.Zero,
+        data: wallet.contract.methods.createContract(deployCode).encodeABI()
+      }]
+
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
+      const log = tx.receipt.logs.pop()
+
+      expect(log.event).to.equal('CreatedContract')
+
+      const deployed = await CallReceiverMockArtifact.at(log.args._contract) as CallReceiverMock
+      await deployed.testCall(12345, '0x552299')
+
+      expect(await deployed.lastValA()).to.eq.BN(12345)
+      expect(await deployed.lastValB()).to.equal('0x552299')
+    })
+    it('Should create a contract with value', async () => {
+      const deployCode = CallReceiverMockArtifact.bytecode
+
+      await wallet.send(100, { from: accounts[0] })
+
+      const transactions = [{
+        delegateCall: false,
+        revertOnError: false,
+        gasLimit: ethers.constants.MaxUint256,
+        target: wallet.address,
+        value: 99,
+        data: wallet.contract.methods.createContract(deployCode).encodeABI()
+      }]
+
+      const tx = await signAndExecuteMetaTx(wallet, owner, transactions) as any
+      const log = tx.receipt.logs.pop()
+
+      expect(await web3.eth.getBalance(log.args._contract)).to.eq.BN(99)
+    })
+    it('Should fail to create a contract from non-self', async () => {
+      const deployCode = CallReceiverMockArtifact.bytecode
+
+      const tx = wallet.createContract(deployCode)
+      expect(tx).to.be.rejectedWith('ModuleBase#onlySelf: NOT_AUTHORIZED')
+    })
+  })
 })
