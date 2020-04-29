@@ -2,9 +2,17 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./interfaces/IModuleAuth.sol";
+import "./ModuleBase.sol";
 
 
-abstract contract ModuleCalls is IModuleAuth {
+abstract contract ModuleCalls is ModuleBase, IModuleAuth {
+  bytes32 private constant NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
+
+  uint256 private constant NONCE_BITS = 96;
+  uint256 private constant NONCE_SPACE_BITS = 160;
+
+  bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
+
   // Transaction structure
   struct Transaction {
     bool delegateCall;   // Performs delegatecall
@@ -15,17 +23,43 @@ abstract contract ModuleCalls is IModuleAuth {
     bytes data;          // calldata to pass
   }
 
-  // Wallet's signature nonce
-  uint256 public nonce = 0;
+  /**
+   * @notice Returns the next nonce of the default nonce space
+   * @dev The default nonce space is 0x00
+   * @return The next nonce
+   */
+  function nonce() external view returns (uint256) {
+    return readNonce(0);
+  }
+
+  /**
+   * @notice Returns the next nonce of the given nonce space
+   * @param _space Nonce space, each space keeps an independent nonce count
+   * @return The next nonce
+   */
+  function readNonce(uint256 _space) public view returns (uint256) {
+    bytes32 key = keccak256(abi.encodePacked(_space, NONCE_KEY));
+    return uint256(_readBytes32(key));
+  }
+
+  /**
+   * @notice Changes the next nonce of th given nonce space
+   * @param _space Nonce space, each space keeps an independent nonce count
+   * @param _nonce Nonce to write on the space
+   */
+  function _writeNonce(uint256 _space, uint256 _nonce) private {
+    bytes32 key = keccak256(abi.encodePacked(_space, NONCE_KEY));
+    _writeBytes32(key, bytes32(_nonce));
+  }
 
   // Events
-  event NonceChange(uint256 newNonce);
+  event NonceChange(uint256 _space, uint256 _newNonce);
   event TxFailed(uint256 _index, bytes _reason);
 
   /**
    * @notice Allow wallet owner to execute an action
    * @param _txs        Transactions to process
-   * @param _nonce      Signature nonce
+   * @param _nonce      Signature nonce (may contain an encoded space)
    * @param _signature  Encoded signature
    */
   function execute(
@@ -68,23 +102,25 @@ abstract contract ModuleCalls is IModuleAuth {
 
   /**
    * @notice Verify if a nonce is valid
-   * @param _nonce Nonce to validate
+   * @param _rawNonce Nonce to validate (may contain an encoded space)
    * @dev A valid nonce must be above the last one used
    *   with a maximum delta of 100
    */
-  function _validateNonce(uint256 _nonce) private {
+  function _validateNonce(uint256 _rawNonce) private {
     // Retrieve current nonce for this wallet
-    uint256 current_nonce = nonce; // Lowest valid nonce for signer
+    (uint256 space, uint256 providedNonce) = _decodeNonce(_rawNonce);
+    uint256 currentNonce = readNonce(space);
 
     // Verify if nonce is valid
     require(
-      (_nonce >= current_nonce) && (_nonce < (current_nonce + 100)),
+      providedNonce == currentNonce,
       "MainModule#_auth: INVALID_NONCE"
     );
 
     // Update signature nonce
-    nonce = _nonce + 1;
-    emit NonceChange(_nonce + 1);
+    providedNonce++;
+    _writeNonce(space, providedNonce);
+    emit NonceChange(space, providedNonce);
   }
 
   /**
@@ -99,5 +135,18 @@ abstract contract ModuleCalls is IModuleAuth {
     } else {
       emit TxFailed(_index, _reason);
     }
+  }
+
+  /**
+   * @notice Decodes a raw nonce
+   * @dev A raw nonce is encoded using the first 160 bits for the space
+   *  and the last 96 bits for the nonce
+   * @param _rawNonce Nonce to be decoded
+   * @return _space The nonce space of the raw nonce
+   * @return _nonce The nonce of the raw nonce
+   */
+  function _decodeNonce(uint256 _rawNonce) private pure returns (uint256 _space, uint256 _nonce) {
+    _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
+    _space = _rawNonce >> NONCE_BITS;
   }
 }

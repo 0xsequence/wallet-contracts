@@ -281,3 +281,8 @@ export function encodeImageHash(
 
   return imageHash
 }
+
+export function encodeNonce(space: BigNumberish, nonce: BigNumberish) {
+  const shiftedSpace = ethers.utils.bigNumberify(space).mul(ethers.constants.Two.pow(96))
+  return ethers.utils.bigNumberify(nonce).add(shiftedSpace)
+}
