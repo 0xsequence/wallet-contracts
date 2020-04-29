@@ -8,7 +8,8 @@ import "../../interfaces/receivers/IERC721Receiver.sol";
 
 
 contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
-  bytes32 private constant HOOKS_KEY = keccak256("org.arcadeum.module.hooks.hooks");
+  //                       HOOKS_KEY = keccak256("org.arcadeum.module.hooks.hooks");
+  bytes32 private constant HOOKS_KEY = bytes32(0xbe27a319efc8734e89e26ba4bc95f5c788584163b959f03fa04e2d7ab4b9a120);
 
   /**
    * @notice Adds a new hook to handle a given function selector
