@@ -6,7 +6,8 @@ import "./ModuleBase.sol";
 
 
 abstract contract ModuleCalls is ModuleBase, IModuleAuth {
-  bytes32 private constant NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
+  //                       NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
+  bytes32 private constant NONCE_KEY = bytes32(0x8d0bf1fd623d628c741362c1289948e57b3e2905218c676d3e69abee36d6ae2e);
 
   uint256 private constant NONCE_BITS = 96;
   uint256 private constant NONCE_SPACE_BITS = 160;
@@ -38,7 +39,7 @@ abstract contract ModuleCalls is ModuleBase, IModuleAuth {
    * @return The next nonce
    */
   function readNonce(uint256 _space) public view returns (uint256) {
-    bytes32 key = keccak256(abi.encodePacked(_space, NONCE_KEY));
+    bytes32 key = keccak256(abi.encode(_space, NONCE_KEY));
     return uint256(_readBytes32(key));
   }
 
@@ -48,7 +49,7 @@ abstract contract ModuleCalls is ModuleBase, IModuleAuth {
    * @param _nonce Nonce to write on the space
    */
   function _writeNonce(uint256 _space, uint256 _nonce) private {
-    bytes32 key = keccak256(abi.encodePacked(_space, NONCE_KEY));
+    bytes32 key = keccak256(abi.encode(_space, NONCE_KEY));
     _writeBytes32(key, bytes32(_nonce));
   }
 
