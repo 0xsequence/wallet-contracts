@@ -10,8 +10,6 @@ abstract contract ModuleCalls is ModuleBase, IModuleAuth {
   bytes32 private constant NONCE_KEY = bytes32(0x8d0bf1fd623d628c741362c1289948e57b3e2905218c676d3e69abee36d6ae2e);
 
   uint256 private constant NONCE_BITS = 96;
-  uint256 private constant NONCE_SPACE_BITS = 160;
-
   bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
 
   // Transaction structure
