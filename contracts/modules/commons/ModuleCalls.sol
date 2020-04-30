@@ -117,9 +117,9 @@ abstract contract ModuleCalls is ModuleBase, IModuleAuth {
     );
 
     // Update signature nonce
-    providedNonce++;
-    _writeNonce(space, providedNonce);
-    emit NonceChange(space, providedNonce);
+    uint256 newNonce = providedNonce + 1;
+    _writeNonce(space, newNonce);
+    emit NonceChange(space, newNonce);
   }
 
   /**
