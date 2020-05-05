@@ -1,14 +1,25 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
-import "./ModuleBase.sol";
+import "./ModuleSelfAuth.sol";
+import "./ModuleStorage.sol";
 
 import "../../interfaces/receivers/IERC1155Receiver.sol";
 import "../../interfaces/receivers/IERC721Receiver.sol";
 
 
-contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
-  mapping(bytes4 => address) public hooks;
+contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
+  //                       HOOKS_KEY = keccak256("org.arcadeum.module.hooks.hooks");
+  bytes32 private constant HOOKS_KEY = bytes32(0xbe27a319efc8734e89e26ba4bc95f5c788584163b959f03fa04e2d7ab4b9a120);
+
+  /**
+   * @notice Reads the implementation hook of a signature
+   * @param _signature Signature function
+   * @return The address of the implementation hook, address(0) if none
+  */
+  function readHook(bytes4 _signature) external view returns (address) {
+    return _readHook(_signature);
+  }
 
   /**
    * @notice Adds a new hook to handle a given function selector
@@ -16,8 +27,8 @@ contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
    * @param _implementation Hook implementation contract
    */
   function addHook(bytes4 _signature, address _implementation) external onlySelf {
-    require(hooks[_signature] == address(0), "ModuleHooks#addHook: HOOK_ALREADY_REGISTERED");
-    hooks[_signature] = _implementation;
+    require(_readHook(_signature) == address(0), "ModuleHooks#addHook: HOOK_ALREADY_REGISTERED");
+    _writeHook(_signature, _implementation);
   }
 
   /**
@@ -25,8 +36,28 @@ contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
    * @param _signature Signature function linked to the hook
    */
   function removeHook(bytes4 _signature) external onlySelf {
-    require(hooks[_signature] != address(0), "ModuleHooks#removeHook: HOOK_NOT_REGISTERED");
-    delete hooks[_signature];
+    require(_readHook(_signature) != address(0), "ModuleHooks#removeHook: HOOK_NOT_REGISTERED");
+    _writeHook(_signature, address(0));
+  }
+
+  /**
+   * @notice Reads the implementation hook of a signature
+   * @param _signature Signature function
+   * @return The address of the implementation hook, address(0) if none
+  */
+  function _readHook(bytes4 _signature) private view returns (address) {
+    bytes32 key = keccak256(abi.encode(_signature, HOOKS_KEY));
+    return address(uint256(ModuleStorage.readBytes32(key)));
+  }
+
+  /**
+   * @notice Writes the implementation hook of a signature
+   * @param _signature Signature function
+   * @param _implementation Hook implementation contract
+  */
+  function _writeHook(bytes4 _signature, address _implementation) private {
+    bytes32 key = keccak256(abi.encode(_signature, HOOKS_KEY));
+    ModuleStorage.writeBytes32(key, bytes32(uint256(_implementation)));
   }
 
   /**
@@ -69,7 +100,7 @@ contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
    * @notice Routes fallback calls through hooks
    */
   fallback() external payable {
-    address target = hooks[msg.sig];
+    address target = _readHook(msg.sig);
     if (target != address(0)) {
       (bool success, bytes memory result) = target.delegatecall(msg.data);
       assembly {
