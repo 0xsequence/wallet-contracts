@@ -1,11 +1,11 @@
 pragma solidity ^0.6.6;
 
-import "./ModuleBase.sol";
+import "./ModuleSelfAuth.sol";
 import "./ModuleAuth.sol";
 import "./ModuleStorage.sol";
 
 
-abstract contract ModuleAuthUpgradable is ModuleBase, ModuleAuth {
+abstract contract ModuleAuthUpgradable is ModuleSelfAuth, ModuleAuth {
   //                       IMAGE_HASH_KEY = keccak256("org.arcadeum.module.auth.upgradable.image.hash");
   bytes32 private constant IMAGE_HASH_KEY = bytes32(0xea7157fa25e3aa17d0ae2d5280fa4e24d421c61842aa85e45194e1145aa72bf8);
 

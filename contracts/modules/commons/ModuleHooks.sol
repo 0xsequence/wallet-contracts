@@ -1,14 +1,14 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "./ModuleBase.sol";
+import "./ModuleSelfAuth.sol";
 import "./ModuleStorage.sol";
 
 import "../../interfaces/receivers/IERC1155Receiver.sol";
 import "../../interfaces/receivers/IERC721Receiver.sol";
 
 
-contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
+contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
   //                       HOOKS_KEY = keccak256("org.arcadeum.module.hooks.hooks");
   bytes32 private constant HOOKS_KEY = bytes32(0xbe27a319efc8734e89e26ba4bc95f5c788584163b959f03fa04e2d7ab4b9a120);
 

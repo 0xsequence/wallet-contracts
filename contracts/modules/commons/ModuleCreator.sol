@@ -1,10 +1,10 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "./ModuleBase.sol";
+import "./ModuleSelfAuth.sol";
 
 
-contract ModuleCreator is ModuleBase {
+contract ModuleCreator is ModuleSelfAuth {
   event CreatedContract(address _contract);
 
   /**

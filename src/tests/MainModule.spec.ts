@@ -880,7 +880,7 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should fail to change image hash from non-self address', async () => {
         const tx = wallet.updateImageHash(ethers.utils.randomBytes(32), { from: accounts[0] })
-        await expect(tx).to.be.rejectedWith('ModuleBase#onlySelf: NOT_AUTHORIZED')
+        await expect(tx).to.be.rejectedWith('ModuleSelfAuth#onlySelf: NOT_AUTHORIZED')
       })
       context('After updating the image hash', () => {
         let threshold = 2

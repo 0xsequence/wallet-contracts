@@ -2,12 +2,12 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./Implementation.sol";
-import "./ModuleBase.sol";
+import "./ModuleSelfAuth.sol";
 
 import "../../utils/LibAddress.sol";
 
 
-contract ModuleUpdate is ModuleBase, Implementation {
+contract ModuleUpdate is ModuleSelfAuth, Implementation {
   using LibAddress for address;
 
   /**

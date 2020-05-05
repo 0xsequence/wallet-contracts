@@ -1,13 +1,12 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "./ModuleBase.sol";
 import "./ModuleStorage.sol";
 
 import "./interfaces/IModuleAuth.sol";
 
 
-abstract contract ModuleCalls is ModuleBase, IModuleAuth {
+abstract contract ModuleCalls is IModuleAuth {
   //                       NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
   bytes32 private constant NONCE_KEY = bytes32(0x8d0bf1fd623d628c741362c1289948e57b3e2905218c676d3e69abee36d6ae2e);
 
