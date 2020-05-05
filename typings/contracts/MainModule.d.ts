@@ -71,6 +71,10 @@ interface MainModuleInterface extends Interface {
       encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
     }>;
 
+    readNonce: TypedFunctionDescription<{
+      encode([_space]: [BigNumberish]): string;
+    }>;
+
     recoverSigner: TypedFunctionDescription<{
       encode([_hash, _signature]: [Arrayish, Arrayish]): string;
     }>;
@@ -90,7 +94,7 @@ interface MainModuleInterface extends Interface {
     }>;
 
     NonceChange: TypedEventDescription<{
-      encodeTopics([newNonce]: [null]): string[];
+      encodeTopics([_space, _newNonce]: [null, null]): string[];
     }>;
 
     TxFailed: TypedEventDescription<{
@@ -174,6 +178,8 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    readNonce(_space: BigNumberish): Promise<BigNumber>;
+
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
     removeHook(
@@ -248,6 +254,8 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  readNonce(_space: BigNumberish): Promise<BigNumber>;
+
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
   removeHook(
@@ -263,7 +271,7 @@ export class MainModule extends Contract {
   filters: {
     CreatedContract(_contract: null): EventFilter;
 
-    NonceChange(newNonce: null): EventFilter;
+    NonceChange(_space: null, _newNonce: null): EventFilter;
 
     TxFailed(_index: null, _reason: null): EventFilter;
   };
@@ -321,6 +329,8 @@ export class MainModule extends Contract {
       arg2: BigNumberish,
       arg3: Arrayish
     ): Promise<BigNumber>;
+
+    readNonce(_space: BigNumberish): Promise<BigNumber>;
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
 
