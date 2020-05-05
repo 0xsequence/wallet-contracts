@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.7;
 
 import "./ModuleBase.sol";
 import "./ModuleAuth.sol";

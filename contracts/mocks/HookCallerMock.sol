@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.7;
 
 import "../interfaces/receivers/IERC1155Receiver.sol";
 import "../interfaces/receivers/IERC721Receiver.sol";
