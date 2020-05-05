@@ -41,4 +41,20 @@ abstract contract ModuleAuthFixed is ModuleAuth {
       )
     ) == address(this);
   }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
+    if (
+      _interfaceID == this.INIT_CODE_HASH.selector ||
+      _interfaceID == this.FACTORY.selector
+    ) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
+  }
 }

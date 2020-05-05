@@ -77,16 +77,16 @@ interface MainModuleInterface extends Interface {
       encode([_space]: [BigNumberish]): string;
     }>;
 
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
-
     removeHook: TypedFunctionDescription<{
       encode([_signature]: [Arrayish]): string;
     }>;
 
     updateImplementation: TypedFunctionDescription<{
       encode([_implementation]: [string]): string;
+    }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
     }>;
   };
 
@@ -182,8 +182,6 @@ export class MainModule extends Contract {
 
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
     removeHook(
       _signature: Arrayish,
       overrides?: TransactionOverrides
@@ -193,6 +191,8 @@ export class MainModule extends Contract {
       _implementation: string,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   FACTORY(): Promise<string>;
@@ -258,8 +258,6 @@ export class MainModule extends Contract {
 
   readNonce(_space: BigNumberish): Promise<BigNumber>;
 
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
   removeHook(
     _signature: Arrayish,
     overrides?: TransactionOverrides
@@ -269,6 +267,8 @@ export class MainModule extends Contract {
     _implementation: string,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
+
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
 
   filters: {
     CreatedContract(_contract: null): EventFilter;
@@ -334,10 +334,10 @@ export class MainModule extends Contract {
 
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
     removeHook(_signature: Arrayish): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

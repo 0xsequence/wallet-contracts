@@ -7,9 +7,14 @@ import "../../interfaces/IERC1271Wallet.sol";
 
 import "./interfaces/IModuleAuth.sol";
 
+import "./ModuleERC165.sol";
 
-abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet {
+
+abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, IERC1271Wallet {
   using LibBytes for bytes;
+
+  bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
+  bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
 
   /**
    * @notice Verify if signer is default wallet owner
@@ -112,7 +117,7 @@ abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet 
   ) external override view returns (bytes4) {
     // Validate signatures
     if (_signatureValidation(_hashData(_data), _signatures)) {
-      return 0x20c13b0b;
+      return SELECTOR_ERC1271_BYTES_BYTES;
     }
   }
 
@@ -131,7 +136,25 @@ abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet 
   ) external override view returns (bytes4) {
     // Validate signatures
     if (_signatureValidation(_hash, _signatures)) {
-      return 0x1626ba7e;
+      return SELECTOR_ERC1271_BYTES32_BYTES;
     }
+  }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
+    if (
+      _interfaceID == SELECTOR_ERC1271_BYTES_BYTES ||
+      _interfaceID == SELECTOR_ERC1271_BYTES32_BYTES ||
+      _interfaceID == type(IModuleAuth).interfaceId ||
+      _interfaceID == type(IERC1271Wallet).interfaceId
+    ) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
   }
 }

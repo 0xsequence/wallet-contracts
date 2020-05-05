@@ -1,11 +1,13 @@
 pragma solidity ^0.6.7;
 
+import "./interfaces/IModuleAuthUpgradable.sol";
+
 import "./ModuleSelfAuth.sol";
 import "./ModuleAuth.sol";
 import "./ModuleStorage.sol";
 
 
-abstract contract ModuleAuthUpgradable is ModuleSelfAuth, ModuleAuth {
+abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, ModuleSelfAuth {
   //                       IMAGE_HASH_KEY = keccak256("org.arcadeum.module.auth.upgradable.image.hash");
   bytes32 private constant IMAGE_HASH_KEY = bytes32(0xea7157fa25e3aa17d0ae2d5280fa4e24d421c61842aa85e45194e1145aa72bf8);
 
@@ -13,7 +15,7 @@ abstract contract ModuleAuthUpgradable is ModuleSelfAuth, ModuleAuth {
    * @notice Updates the signers configuration of the wallet
    * @param _imageHash New required image hash of the signature
    */
-  function updateImageHash(bytes32 _imageHash) external onlySelf {
+  function updateImageHash(bytes32 _imageHash) external override onlySelf {
     require(_imageHash != bytes32(0), "ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH");
     ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
   }
@@ -21,7 +23,7 @@ abstract contract ModuleAuthUpgradable is ModuleSelfAuth, ModuleAuth {
   /**
    * @notice Returns the current image hash of the wallet
    */
-  function imageHash() external view returns (bytes32) {
+  function imageHash() external override view returns (bytes32) {
     return ModuleStorage.readBytes32(IMAGE_HASH_KEY);
   }
 
@@ -33,5 +35,22 @@ abstract contract ModuleAuthUpgradable is ModuleSelfAuth, ModuleAuth {
    */
   function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
     return _imageHash == ModuleStorage.readBytes32(IMAGE_HASH_KEY);
+  }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
+    if (
+      _interfaceID == this.updateImageHash.selector ||
+      _interfaceID == this.imageHash.selector ||
+      _interfaceID == type(IModuleAuthUpgradable).interfaceId
+    ) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
   }
 }

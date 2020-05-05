@@ -12,12 +12,12 @@ import {
 
 interface ModuleAuthInterface extends Interface {
   functions: {
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
-
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
+    }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
     }>;
   };
 
@@ -38,23 +38,23 @@ export class ModuleAuth extends Contract {
   interface: ModuleAuthInterface;
 
   functions: {
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
+
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
 
   filters: {};
 
   estimate: {
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
     isValidSignature(
       _hash: Arrayish,
       _signatures: Arrayish
     ): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

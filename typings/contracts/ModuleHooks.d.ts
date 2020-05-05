@@ -47,6 +47,10 @@ interface ModuleHooksInterface extends Interface {
     onERC721Received: TypedFunctionDescription<{
       encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
     }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
+    }>;
   };
 
   events: {};
@@ -104,6 +108,8 @@ export class ModuleHooks extends Contract {
       arg3: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   readHook(_signature: Arrayish): Promise<string>;
@@ -145,6 +151,8 @@ export class ModuleHooks extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
+
   filters: {};
 
   estimate: {
@@ -176,5 +184,7 @@ export class ModuleHooks extends Contract {
       arg2: BigNumberish,
       arg3: Arrayish
     ): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

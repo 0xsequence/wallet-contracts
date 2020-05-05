@@ -10,6 +10,7 @@ import { HookCallerMock } from 'typings/contracts/HookCallerMock'
 import { HookMock } from 'typings/contracts/HookMock'
 import { DelegateCallMock } from 'typings/contracts/DelegateCallMock'
 import { GasBurnerMock } from 'typings/contracts/GasBurnerMock'
+import { ERC165CheckerMock } from 'typings/contracts/ERC165CheckerMock'
 
 import { BigNumberish } from 'ethers/utils';
 
@@ -24,6 +25,7 @@ const HookMockArtifact = artifacts.require('HookMock')
 const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const GasBurnerMockArtifact = artifacts.require('GasBurnerMock')
+const ERC165CheckerMockArtifact = artifacts.require('ERC165CheckerMock')
 
 const web3 = (global as any).web3
 
@@ -781,6 +783,22 @@ contract('MainModule', (accounts: string[]) => {
       it('Should return zero if hook is not registered', async () => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
         expect(await wallet.readHook(selector)).to.be.equal(ethers.constants.AddressZero)
+      })
+      it('Should implement hook on ERC165', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const transaction = {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
+        const erc165checker = await ERC165CheckerMockArtifact.new() as ERC165CheckerMock
+        const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, selector)
+        expect(erc165result).to.be.true
       })
       it('Should forward call to external hook', async () => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature

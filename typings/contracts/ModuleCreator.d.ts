@@ -15,6 +15,10 @@ interface ModuleCreatorInterface extends Interface {
     createContract: TypedFunctionDescription<{
       encode([_code]: [Arrayish]): string;
     }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
+    }>;
   };
 
   events: {
@@ -45,6 +49,8 @@ export class ModuleCreator extends Contract {
       _code: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   createContract(
@@ -52,11 +58,15 @@ export class ModuleCreator extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
+
   filters: {
     CreatedContract(_contract: null): EventFilter;
   };
 
   estimate: {
     createContract(_code: Arrayish): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }
