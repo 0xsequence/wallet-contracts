@@ -14,6 +14,10 @@ interface ModuleCallsInterface extends Interface {
   functions: {
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
 
+    readNonce: TypedFunctionDescription<{
+      encode([_space]: [BigNumberish]): string;
+    }>;
+
     execute: TypedFunctionDescription<{
       encode([_txs, _nonce, _signature]: [
         {
@@ -32,7 +36,7 @@ interface ModuleCallsInterface extends Interface {
 
   events: {
     NonceChange: TypedEventDescription<{
-      encodeTopics([newNonce]: [null]): string[];
+      encodeTopics([_space, _newNonce]: [null, null]): string[];
     }>;
 
     TxFailed: TypedEventDescription<{
@@ -57,6 +61,8 @@ export class ModuleCalls extends Contract {
   functions: {
     nonce(): Promise<BigNumber>;
 
+    readNonce(_space: BigNumberish): Promise<BigNumber>;
+
     execute(
       _txs: {
         delegateCall: boolean;
@@ -74,6 +80,8 @@ export class ModuleCalls extends Contract {
 
   nonce(): Promise<BigNumber>;
 
+  readNonce(_space: BigNumberish): Promise<BigNumber>;
+
   execute(
     _txs: {
       delegateCall: boolean;
@@ -89,13 +97,15 @@ export class ModuleCalls extends Contract {
   ): Promise<ContractTransaction>;
 
   filters: {
-    NonceChange(newNonce: null): EventFilter;
+    NonceChange(_space: null, _newNonce: null): EventFilter;
 
     TxFailed(_index: null, _reason: null): EventFilter;
   };
 
   estimate: {
     nonce(): Promise<BigNumber>;
+
+    readNonce(_space: BigNumberish): Promise<BigNumber>;
 
     execute(
       _txs: {

@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -80,141 +80,154 @@ contract('MainModule', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith(RevertError("MainModule#_signatureValidation: INVALID_SIGNATURE"))
     })
     describe('Nonce', () => {
-      it('Should work with zero as initial nonce', async () => {
-        const nonce = ethers.constants.Zero
+      const spaces = [
+        ethers.utils.bigNumberify(0),
+        ethers.utils.bigNumberify(1),
+        ethers.utils.bigNumberify(7342),
+        ethers.utils.bigNumberify(ethers.utils.randomBytes(20)),
+        ethers.constants.Two.pow(160).sub(ethers.constants.One)
+      ]
 
-        const transaction = {
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: ethers.constants.MaxUint256,
-          target: ethers.constants.AddressZero,
-          value: ethers.constants.Zero,
-          data: []
-        }
-
-        await signAndExecuteMetaTx(wallet, owner, [transaction])
-        expect(await wallet.nonce()).to.eq.BN(1)
-      })
-      it('Should emit NonceChange event', async () => {
-        const nonce = ethers.constants.Zero
-
-        const transaction = {
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: ethers.constants.MaxUint256,
-          target: ethers.constants.AddressZero,
-          value: ethers.constants.Zero,
-          data: []
-        }
-
-        const receipt = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
-        const ev = receipt.logs.pop()
-        expect(ev.event).to.be.eql('NonceChange')
-        expect(ev.args.newNonce).to.eq.BN(1)
-      })
-      context('After a relayed transaction', () => {
-        beforeEach(async () => {
-          const nonce = ethers.constants.One
-
-          const transaction = {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.MaxUint256,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          }
-
-          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
-        })
-        it('Should accept next consecutive nonce', async () => {
-          const nonce = ethers.constants.Two
-
-          const transaction = {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.MaxUint256,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          }
-
-          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
-          expect(await wallet.nonce()).to.eq.BN(3)
-        })
-        it('Should accept next incremental nonce', async () => {
-          const nonce = ethers.utils.bigNumberify(20)
-
-          const transaction = {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.MaxUint256,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          }
-
-          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
-          expect(await wallet.nonce()).to.eq.BN(21)
-        })
-        it('Should accept maximum incremental nonce', async () => {
-          const nonce = ethers.utils.bigNumberify(101)
-
-          const transaction = {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.MaxUint256,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          }
-
-          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
-          expect(await wallet.nonce()).to.eq.BN(102)
-        })
-        it('Should fail if nonce did not change', async () => {
-          const nonce = ethers.constants.One
-
-          const transaction = {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.MaxUint256,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          }
-
-          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
-          await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
-        })
-        it('Should fail if nonce delta is above 100', async () => {
-          const nonce = ethers.utils.bigNumberify(102)
-
-          const transaction = {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.MaxUint256,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          }
-
-          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
-          await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
-        })
-        it('Should fail if nonce decreases', async () => {
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }
+      context('Using non-encoded nonce', () => {
+        it('Should default to space zero', async () => {
           const nonce = ethers.constants.Zero
 
-          const transaction = {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.MaxUint256,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          }
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
+          expect(await wallet.nonce()).to.eq.BN(1)
+        })
+        it('Should work with zero as initial nonce', async () => {
+          const nonce = ethers.constants.Zero
 
-          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
+          await signAndExecuteMetaTx(wallet, owner, [transaction], nonce)
+          expect(await wallet.readNonce(0)).to.eq.BN(1)
+        })
+        it('Should emit NonceChange event', async () => {  
+          const receipt1 = await signAndExecuteMetaTx(wallet, owner, [transaction], 0) as any
+          const receipt2 = await signAndExecuteMetaTx(wallet, owner, [transaction], 1) as any
+
+          const ev1 = receipt1.logs.pop()
+          expect(ev1.event).to.be.eql('NonceChange')
+          expect(ev1.args._space).to.eq.BN(0)
+          expect(ev1.args._newNonce).to.eq.BN(1)
+
+          const ev2 = receipt2.logs.pop()
+          expect(ev2.event).to.be.eql('NonceChange')
+          expect(ev1.args._space).to.eq.BN(0)
+          expect(ev2.args._newNonce).to.eq.BN(2)
+        })
+        it('Should fail if nonce did not change', async () => {
+          await signAndExecuteMetaTx(wallet, owner, [transaction], ethers.constants.Zero)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], ethers.constants.Zero)
+
+          await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
+        })
+        it('Should fail if nonce increased by two', async () => {
+          await signAndExecuteMetaTx(wallet, owner, [transaction], 0)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], 2)
+
+          await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
+        })
+      })
+      spaces.forEach((space) => {
+        context(`using ${space.toHexString()} space`, () => {
+          it('Should work with zero as initial nonce', async () => {
+            const nonce = ethers.constants.Zero
+
+            const encodedNonce = encodeNonce(space, nonce)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], encodedNonce)
+            expect(await wallet.readNonce(space)).to.eq.BN(1)
+          })
+          it('Should emit NonceChange event', async () => {  
+            const encodedFirstNonce = encodeNonce(space, ethers.constants.Zero)
+            const encodedSecondNonce = encodeNonce(space, ethers.constants.One)
+
+            const receipt1 = await signAndExecuteMetaTx(wallet, owner, [transaction], encodedFirstNonce) as any
+            const receipt2 = await signAndExecuteMetaTx(wallet, owner, [transaction], encodedSecondNonce) as any
+
+            const ev1 = receipt1.logs.pop()
+            expect(ev1.event).to.be.eql('NonceChange')
+            expect(ev1.args._space).to.eq.BN(space.toString())
+            expect(ev1.args._newNonce).to.eq.BN(1)
+
+            const ev2 = receipt2.logs.pop()
+            expect(ev2.event).to.be.eql('NonceChange')
+            expect(ev2.args._space).to.eq.BN(space.toString())
+            expect(ev2.args._newNonce).to.eq.BN(2)
+          })
+          it('Should accept next nonce', async () => {
+            const encodedFirstNonce = encodeNonce(space, ethers.constants.Zero)
+            const encodedSecondNonce = encodeNonce(space, ethers.constants.One)
+
+            await signAndExecuteMetaTx(wallet, owner, [transaction], encodedFirstNonce)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], encodedSecondNonce)
+
+            expect(await wallet.readNonce(space)).to.eq.BN(2)
+          })
+          it('Should fail if nonce did not change', async () => {
+            const encodedNonce = encodeNonce(space, ethers.constants.Zero)
+
+            await signAndExecuteMetaTx(wallet, owner, [transaction], encodedNonce)
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], encodedNonce)
+
+            await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
+          })
+          it('Should fail if nonce increased by two', async () => {
+            const encodedFirstNonce = encodeNonce(space, ethers.constants.Zero)
+            const encodedSecondNonce = encodeNonce(space, ethers.constants.Two)
+
+            await signAndExecuteMetaTx(wallet, owner, [transaction], encodedFirstNonce)
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], encodedSecondNonce)
+
+            await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
+          })
+        })
+      })
+      context('using two spaces simultaneously', () => {
+        it('Should keep separated nonce counts', async () => {
+          await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(1, 0))
+
+          expect(await wallet.readNonce(1)).to.eq.BN(1)
+          expect(await wallet.readNonce(2)).to.eq.BN(0)
+
+          await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(2, 0))
+
+          expect(await wallet.readNonce(1)).to.eq.BN(1)
+          expect(await wallet.readNonce(2)).to.eq.BN(1)
+
+          await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(2, 1))
+          await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(2, 2))
+
+          expect(await wallet.readNonce(1)).to.eq.BN(1)
+          expect(await wallet.readNonce(2)).to.eq.BN(3)
+        })
+        it('Should emit different events', async () => {
+          await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(1, 0))
+          await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(1, 1))
+
+          const receipt1 = await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(1, 2)) as any
+          const receipt2 = await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(2, 0)) as any
+
+          const ev1 = receipt1.logs.pop()
+          expect(ev1.event).to.be.eql('NonceChange')
+          expect(ev1.args._space).to.eq.BN(1)
+          expect(ev1.args._newNonce).to.eq.BN(3)
+
+          const ev2 = receipt2.logs.pop()
+          expect(ev2.event).to.be.eql('NonceChange')
+          expect(ev2.args._space).to.eq.BN(2)
+          expect(ev2.args._newNonce).to.eq.BN(1)
+        })
+        it('Should not accept nonce of different space', async () => {
+          await signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(1, 0))
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], encodeNonce(2, 1))
           await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
         })
       })
