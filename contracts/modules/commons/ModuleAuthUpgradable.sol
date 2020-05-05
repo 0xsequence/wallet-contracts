@@ -2,6 +2,7 @@ pragma solidity ^0.6.6;
 
 import "./ModuleBase.sol";
 import "./ModuleAuth.sol";
+import "./ModuleStorage.sol";
 
 
 abstract contract ModuleAuthUpgradable is ModuleBase, ModuleAuth {
@@ -14,14 +15,14 @@ abstract contract ModuleAuthUpgradable is ModuleBase, ModuleAuth {
    */
   function updateImageHash(bytes32 _imageHash) external onlySelf {
     require(_imageHash != bytes32(0), "ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH");
-    _writeBytes32(IMAGE_HASH_KEY, _imageHash);
+    ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
   }
 
   /**
    * @notice Returns the current image hash of the wallet
    */
   function imageHash() external view returns (bytes32) {
-    return _readBytes32(IMAGE_HASH_KEY);
+    return ModuleStorage.readBytes32(IMAGE_HASH_KEY);
   }
 
   /**
@@ -31,6 +32,6 @@ abstract contract ModuleAuthUpgradable is ModuleBase, ModuleAuth {
    * @return true if the signature image is valid
    */
   function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
-    return _imageHash == _readBytes32(IMAGE_HASH_KEY);
+    return _imageHash == ModuleStorage.readBytes32(IMAGE_HASH_KEY);
   }
 }

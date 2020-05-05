@@ -1,8 +1,10 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "./interfaces/IModuleAuth.sol";
 import "./ModuleBase.sol";
+import "./ModuleStorage.sol";
+
+import "./interfaces/IModuleAuth.sol";
 
 
 abstract contract ModuleCalls is ModuleBase, IModuleAuth {
@@ -38,7 +40,7 @@ abstract contract ModuleCalls is ModuleBase, IModuleAuth {
    */
   function readNonce(uint256 _space) public view returns (uint256) {
     bytes32 key = keccak256(abi.encode(_space, NONCE_KEY));
-    return uint256(_readBytes32(key));
+    return uint256(ModuleStorage.readBytes32(key));
   }
 
   /**
@@ -48,7 +50,7 @@ abstract contract ModuleCalls is ModuleBase, IModuleAuth {
    */
   function _writeNonce(uint256 _space, uint256 _nonce) private {
     bytes32 key = keccak256(abi.encode(_space, NONCE_KEY));
-    _writeBytes32(key, bytes32(_nonce));
+    ModuleStorage.writeBytes32(key, bytes32(_nonce));
   }
 
   // Events

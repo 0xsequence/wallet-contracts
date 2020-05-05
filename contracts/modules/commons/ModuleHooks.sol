@@ -2,6 +2,7 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./ModuleBase.sol";
+import "./ModuleStorage.sol";
 
 import "../../interfaces/receivers/IERC1155Receiver.sol";
 import "../../interfaces/receivers/IERC721Receiver.sol";
@@ -37,7 +38,7 @@ contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
   */
   function _readHook(bytes4 _signature) private view returns (address) {
     bytes32 key = keccak256(abi.encode(_signature, HOOKS_KEY));
-    return address(uint256(_readBytes32(key)));
+    return address(uint256(ModuleStorage.readBytes32(key)));
   }
 
   /**
@@ -47,7 +48,7 @@ contract ModuleHooks is ModuleBase, IERC1155Receiver, IERC721Receiver {
   */
   function _writeHook(bytes4 _signature, address _implementation) private {
     bytes32 key = keccak256(abi.encode(_signature, HOOKS_KEY));
-    _writeBytes32(key, bytes32(uint256(_implementation)));
+    ModuleStorage.writeBytes32(key, bytes32(uint256(_implementation)));
   }
 
   /**
