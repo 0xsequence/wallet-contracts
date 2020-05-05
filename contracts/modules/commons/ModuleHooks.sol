@@ -13,6 +13,15 @@ contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
   bytes32 private constant HOOKS_KEY = bytes32(0xbe27a319efc8734e89e26ba4bc95f5c788584163b959f03fa04e2d7ab4b9a120);
 
   /**
+   * @notice Reads the implementation hook of a signature
+   * @param _signature Signature function
+   * @return The address of the implementation hook, address(0) if none
+  */
+  function readHook(bytes4 _signature) external view returns (address) {
+    return _readHook(_signature);
+  }
+
+  /**
    * @notice Adds a new hook to handle a given function selector
    * @param _signature Signature function linked to the hook
    * @param _implementation Hook implementation contract

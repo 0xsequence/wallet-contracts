@@ -763,6 +763,25 @@ contract('MainModule', (accounts: string[]) => {
       before(async () => {
         hookMock = await HookMockArtifact.new() as HookMock
       })
+      it('Should read added hook', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const transaction = {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
+
+        expect(await wallet.readHook(selector)).to.be.equal(hookMock.address)
+      })
+      it('Should return zero if hook is not registered', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        expect(await wallet.readHook(selector)).to.be.equal(ethers.constants.AddressZero)
+      })
       it('Should forward call to external hook', async () => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
         const transaction = {

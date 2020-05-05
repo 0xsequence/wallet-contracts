@@ -67,6 +67,10 @@ interface MainModuleUpgradableInterface extends Interface {
       encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
     }>;
 
+    readHook: TypedFunctionDescription<{
+      encode([_signature]: [Arrayish]): string;
+    }>;
+
     readNonce: TypedFunctionDescription<{
       encode([_space]: [BigNumberish]): string;
     }>;
@@ -177,6 +181,8 @@ export class MainModuleUpgradable extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    readHook(_signature: Arrayish): Promise<string>;
+
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
     recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
@@ -254,6 +260,8 @@ export class MainModuleUpgradable extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  readHook(_signature: Arrayish): Promise<string>;
+
   readNonce(_space: BigNumberish): Promise<BigNumber>;
 
   recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
@@ -330,6 +338,8 @@ export class MainModuleUpgradable extends Contract {
       arg2: BigNumberish,
       arg3: Arrayish
     ): Promise<BigNumber>;
+
+    readHook(_signature: Arrayish): Promise<BigNumber>;
 
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
