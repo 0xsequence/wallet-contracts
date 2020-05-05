@@ -39,8 +39,6 @@ interface MainModuleInterface extends Interface {
       ]): string;
     }>;
 
-    hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
-
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
@@ -146,8 +144,6 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    hooks(arg0: Arrayish): Promise<string>;
-
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
     nonce(): Promise<BigNumber>;
@@ -222,8 +218,6 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  hooks(arg0: Arrayish): Promise<string>;
-
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
   nonce(): Promise<BigNumber>;
@@ -297,8 +291,6 @@ export class MainModule extends Contract {
       _nonce: BigNumberish,
       _signature: Arrayish
     ): Promise<BigNumber>;
-
-    hooks(arg0: Arrayish): Promise<BigNumber>;
 
     isValidSignature(
       _hash: Arrayish,

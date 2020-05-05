@@ -12,8 +12,6 @@ import {
 
 interface ModuleHooksInterface extends Interface {
   functions: {
-    hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
-
     addHook: TypedFunctionDescription<{
       encode([_signature, _implementation]: [Arrayish, string]): string;
     }>;
@@ -64,8 +62,6 @@ export class ModuleHooks extends Contract {
   interface: ModuleHooksInterface;
 
   functions: {
-    hooks(arg0: Arrayish): Promise<string>;
-
     addHook(
       _signature: Arrayish,
       _implementation: string,
@@ -103,8 +99,6 @@ export class ModuleHooks extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
   };
-
-  hooks(arg0: Arrayish): Promise<string>;
 
   addHook(
     _signature: Arrayish,
@@ -146,8 +140,6 @@ export class ModuleHooks extends Contract {
   filters: {};
 
   estimate: {
-    hooks(arg0: Arrayish): Promise<BigNumber>;
-
     addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;

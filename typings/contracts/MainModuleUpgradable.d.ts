@@ -35,8 +35,6 @@ interface MainModuleUpgradableInterface extends Interface {
       ]): string;
     }>;
 
-    hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
-
     imageHash: TypedFunctionDescription<{ encode([]: []): string }>;
 
     isValidSignature: TypedFunctionDescription<{
@@ -147,8 +145,6 @@ export class MainModuleUpgradable extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    hooks(arg0: Arrayish): Promise<string>;
-
     imageHash(): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
@@ -226,8 +222,6 @@ export class MainModuleUpgradable extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  hooks(arg0: Arrayish): Promise<string>;
-
   imageHash(): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
@@ -304,8 +298,6 @@ export class MainModuleUpgradable extends Contract {
       _nonce: BigNumberish,
       _signature: Arrayish
     ): Promise<BigNumber>;
-
-    hooks(arg0: Arrayish): Promise<BigNumber>;
 
     imageHash(): Promise<BigNumber>;
 
