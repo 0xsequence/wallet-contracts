@@ -10,6 +10,7 @@ const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
 
 const runs = 1000
+const web3 = (global as any).web3
 
 const optimalGasLimit = ethers.constants.Two.pow(255)
 
@@ -26,11 +27,15 @@ contract('MainModule', () => {
   let factory
   let module
 
+  let networkId
+
   before(async () => {
     // Deploy wallet factory
     factory = await FactoryArtifact.new() as Factory
     // Deploy MainModule
     module = await MainModuleArtifact.new(factory.address) as MainModule
+    // Get network ID
+    networkId = await web3.eth.net.getId()
   })
 
   describe.skip('Benchmark', function () {
@@ -67,7 +72,7 @@ contract('MainModule', () => {
         await factory.deploy(module.address, salt)
         const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
 
-        const tx = await signAndExecuteMetaTx(wallet, owner, [transaction]) as any
+        const tx = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId) as any
         results.push(tx.receipt.gasUsed)
       }
 
@@ -109,7 +114,7 @@ contract('MainModule', () => {
           owner: signers.includes(i) ? owner : owner.address
         }))
 
-        const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction]) as any
+        const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId) as any
         results.push(tx.receipt.gasUsed)
       }
 
@@ -148,7 +153,7 @@ contract('MainModule', () => {
           owner: owner
         }))
 
-        const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction]) as any
+        const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId) as any
         results.push(tx.receipt.gasUsed)
       }
 

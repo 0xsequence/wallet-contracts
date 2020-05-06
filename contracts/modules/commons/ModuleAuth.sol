@@ -88,9 +88,11 @@ abstract contract ModuleAuth is IModuleAuth, SignatureValidator, IERC1271Wallet 
    * @return hashed data for this wallet
    */
   function _hashData(bytes memory _data) internal override view returns (bytes32) {
+    uint256 chainId; assembly { chainId := chainid() }
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
+        chainId,
         address(this),
         keccak256(_data)
       )
