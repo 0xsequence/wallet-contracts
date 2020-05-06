@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, encodeImageHash, signAndExecuteMetaTx } from './utils'
+import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf } from './utils'
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -13,6 +13,20 @@ const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
 const ERC165CheckerMockArtifact = artifacts.require('ERC165CheckerMock')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
+
+const web3 = (global as any).web3
+
+const interfaceIds = [
+  'IModuleHooks',
+  'IERC223Receiver',
+  'IERC721Receiver',
+  'IERC1155Receiver',
+  'IERC1271Wallet',
+  'IModuleCalls',
+  'IModuleCreator',
+  'IModuleHooks',
+  'IModuleUpdate'
+]
 
 contract('ERC165', () => {
   let factory
@@ -51,6 +65,15 @@ contract('ERC165', () => {
         })
       }
     })
+    interfaceIds.forEach(element => {
+      it(`Should return implements ${element} interfaceId`, async () => {
+        const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
+        expect(web3.utils.toBN(interfaceId)).to.not.eq.BN(0)
+
+        const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, interfaceId)
+        expect(erc165result).to.be.true
+      })
+    })
   })
   describe('Implement all interfaces for ERC165 on MainModuleUpgradable', () => {
     beforeEach(async () => {
@@ -88,6 +111,15 @@ contract('ERC165', () => {
           expect(erc165result).to.be.true
         })
       }
+    })
+    interfaceIds.concat('IModuleAuthUpgradable').forEach(element => {
+      it(`Should return implements ${element} interfaceId`, async () => {
+        const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
+        expect(web3.utils.toBN(interfaceId)).to.not.eq.BN(0)
+
+        const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, interfaceId)
+        expect(erc165result).to.be.true
+      })
     })
   })
 })
