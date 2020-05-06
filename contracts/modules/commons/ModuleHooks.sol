@@ -9,6 +9,7 @@ import "./ModuleERC165.sol";
 
 import "../../interfaces/receivers/IERC1155Receiver.sol";
 import "../../interfaces/receivers/IERC721Receiver.sol";
+import "../../interfaces/receivers/IERC223Receiver.sol";
 
 
 contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleERC165, ModuleSelfAuth {
@@ -134,6 +135,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
       _interfaceID == type(IModuleHooks).interfaceId ||
       _interfaceID == type(IERC1155Receiver).interfaceId ||
       _interfaceID == type(IERC721Receiver).interfaceId ||
+      _interfaceID == type(IERC223Receiver).interfaceId ||
       _readHook(_interfaceID) != address(0)
     ) {
       return true;
