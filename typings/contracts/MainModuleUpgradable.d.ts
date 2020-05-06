@@ -35,8 +35,6 @@ interface MainModuleUpgradableInterface extends Interface {
       ]): string;
     }>;
 
-    hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
-
     imageHash: TypedFunctionDescription<{ encode([]: []): string }>;
 
     isValidSignature: TypedFunctionDescription<{
@@ -67,6 +65,10 @@ interface MainModuleUpgradableInterface extends Interface {
 
     onERC721Received: TypedFunctionDescription<{
       encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
+    }>;
+
+    readHook: TypedFunctionDescription<{
+      encode([_signature]: [Arrayish]): string;
     }>;
 
     readNonce: TypedFunctionDescription<{
@@ -147,8 +149,6 @@ export class MainModuleUpgradable extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    hooks(arg0: Arrayish): Promise<string>;
-
     imageHash(): Promise<string>;
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
@@ -180,6 +180,8 @@ export class MainModuleUpgradable extends Contract {
       arg3: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    readHook(_signature: Arrayish): Promise<string>;
 
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
@@ -226,8 +228,6 @@ export class MainModuleUpgradable extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  hooks(arg0: Arrayish): Promise<string>;
-
   imageHash(): Promise<string>;
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
@@ -259,6 +259,8 @@ export class MainModuleUpgradable extends Contract {
     arg3: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
+
+  readHook(_signature: Arrayish): Promise<string>;
 
   readNonce(_space: BigNumberish): Promise<BigNumber>;
 
@@ -305,8 +307,6 @@ export class MainModuleUpgradable extends Contract {
       _signature: Arrayish
     ): Promise<BigNumber>;
 
-    hooks(arg0: Arrayish): Promise<BigNumber>;
-
     imageHash(): Promise<BigNumber>;
 
     isValidSignature(
@@ -338,6 +338,8 @@ export class MainModuleUpgradable extends Contract {
       arg2: BigNumberish,
       arg3: Arrayish
     ): Promise<BigNumber>;
+
+    readHook(_signature: Arrayish): Promise<BigNumber>;
 
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 

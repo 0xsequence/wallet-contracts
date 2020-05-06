@@ -286,3 +286,16 @@ export function encodeNonce(space: BigNumberish, nonce: BigNumberish) {
   const shiftedSpace = ethers.utils.bigNumberify(space).mul(ethers.constants.Two.pow(96))
   return ethers.utils.bigNumberify(nonce).add(shiftedSpace)
 }
+
+export function moduleStorageKey(key: string, subkey?: string): string {
+  if (!subkey) {
+    return ethers.utils.id(key)
+  }
+
+  return ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ['bytes32', 'bytes32'],
+      [moduleStorageKey(key), subkey]
+    )
+  )
+}
