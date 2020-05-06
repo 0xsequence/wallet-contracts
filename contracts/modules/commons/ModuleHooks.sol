@@ -49,8 +49,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @return The address of the implementation hook, address(0) if none
   */
   function _readHook(bytes4 _signature) private view returns (address) {
-    bytes32 key = keccak256(abi.encode(_signature, HOOKS_KEY));
-    return address(uint256(ModuleStorage.readBytes32(key)));
+    return address(uint256(ModuleStorage.readBytes32Map(HOOKS_KEY, _signature)));
   }
 
   /**
@@ -59,8 +58,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @param _implementation Hook implementation contract
   */
   function _writeHook(bytes4 _signature, address _implementation) private {
-    bytes32 key = keccak256(abi.encode(_signature, HOOKS_KEY));
-    ModuleStorage.writeBytes32(key, bytes32(uint256(_implementation)));
+    ModuleStorage.writeBytes32Map(HOOKS_KEY, _signature, bytes32(uint256(_implementation)));
   }
 
   /**

@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -190,6 +190,18 @@ contract('MainModule', (accounts: string[]) => {
 
             await expect(tx).to.be.rejectedWith(RevertError("MainModule#_auth: INVALID_NONCE"))
           })
+          it('Should use nonces storage keys', async () => {
+            const subkey = ethers.utils.defaultAbiCoder.encode(['uint256'], [space])
+            const storageKey = moduleStorageKey('org.arcadeum.module.calls.nonce', subkey)
+
+            const nonce = ethers.constants.Zero
+
+            const encodedNonce = encodeNonce(space, nonce)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], encodedNonce)
+
+            const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
+            expect(web3.utils.toBN(storageValue)).to.eq.BN(1)
+          })
         })
       })
       context('using two spaces simultaneously', () => {
@@ -235,7 +247,7 @@ contract('MainModule', (accounts: string[]) => {
       })
     })
   })
-  describe('Upgradeability', () => {
+  describe('Upgradeability', () => {  
     it('Should update implementation', async () => {
       const newImplementation = await ModuleMockArtifact.new() as ModuleMock
 
@@ -278,6 +290,23 @@ contract('MainModule', (accounts: string[]) => {
 
       const tx = signAndExecuteMetaTx(wallet, owner, [transaction])
       await expect(tx).to.be.rejectedWith(RevertError("ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION"))
+    })
+    it('Should use implementation storage key', async () => {
+      const newImplementation = await ModuleMockArtifact.new() as ModuleMock
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
+        target: wallet.address,
+        value: ethers.constants.Zero,
+        data: wallet.contract.methods.updateImplementation(newImplementation.address).encodeABI()
+      }
+
+      await signAndExecuteMetaTx(wallet, owner, [transaction])
+
+      const storageValue = await web3.eth.getStorageAt(wallet.address, wallet.address)
+      expect(ethers.utils.getAddress(storageValue)).to.equal(newImplementation.address)
     })
   })
   describe("External calls", () => {
@@ -849,6 +878,24 @@ contract('MainModule', (accounts: string[]) => {
         const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
         await web3.eth.sendTransaction({ from: accounts[0], to: wallet.address, data: data })
       })
+      it('Should use hooks storage key', async () => {
+        const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
+        const subkey = ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
+        const storageKey = moduleStorageKey('org.arcadeum.module.hooks.hooks', subkey)
+
+        const transaction = {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
+        }
+
+        await signAndExecuteMetaTx(wallet, owner, [transaction])
+        const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
+        expect(ethers.utils.getAddress(storageValue)).to.equal(hookMock.address)
+      })
     })
   })
   describe('Update owners', async () => {
@@ -919,6 +966,11 @@ contract('MainModule', (accounts: string[]) => {
         const tx = wallet.updateImageHash(ethers.utils.randomBytes(32), { from: accounts[0] })
         await expect(tx).to.be.rejectedWith('ModuleSelfAuth#onlySelf: NOT_AUTHORIZED')
       })
+      it('Should use image hash storage key', async () => {
+        const storageKey = moduleStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
+        const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
+        expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(newImageHash)
+      })
       context('After updating the image hash', () => {
         let threshold = 2
         let newOwnerB
@@ -958,6 +1010,11 @@ contract('MainModule', (accounts: string[]) => {
         it('Should reject old owner signatures', async () => {
           const tx = signAndExecuteMetaTx(wallet, newOwnerA, [transaction])
           await expect(tx).to.be.rejectedWith('MainModule#_signatureValidation: INVALID_SIGNATURE')
+        })
+        it('Should use image hash storage key', async () => {
+          const storageKey = moduleStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
+          const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
+          expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(newImageHash)
         })
       })
     })

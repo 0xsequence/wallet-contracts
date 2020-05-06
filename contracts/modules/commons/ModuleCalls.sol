@@ -30,8 +30,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
    * @return The next nonce
    */
   function readNonce(uint256 _space) public override view returns (uint256) {
-    bytes32 key = keccak256(abi.encode(_space, NONCE_KEY));
-    return uint256(ModuleStorage.readBytes32(key));
+    return uint256(ModuleStorage.readBytes32Map(NONCE_KEY, bytes32(_space)));
   }
 
   /**
@@ -40,8 +39,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
    * @param _nonce Nonce to write on the space
    */
   function _writeNonce(uint256 _space, uint256 _nonce) private {
-    bytes32 key = keccak256(abi.encode(_space, NONCE_KEY));
-    ModuleStorage.writeBytes32(key, bytes32(_nonce));
+    ModuleStorage.writeBytes32Map(NONCE_KEY, bytes32(_space), bytes32(_nonce));
   }
 
   /**
