@@ -57,14 +57,6 @@ contract('ERC165', () => {
   })
 
   describe('Implement all interfaces for ERC165 on MainModule', () => {
-    MainModuleArtifact.abi.forEach((element) => {
-      if (element.type === 'function') {
-        it(`Should return implements ${element.name}`, async () => {
-          const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, element.signature)
-          expect(erc165result).to.be.true
-        })
-      }
-    })
     interfaceIds.forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {
         const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
@@ -103,14 +95,6 @@ contract('ERC165', () => {
 
       await signAndExecuteMetaTx(wallet, owner, migrateTransactions)
       wallet = newWallet
-    })
-    MainModuleUpgradableArtifact.abi.forEach((element) => {
-      if (element.type === 'function') {
-        it(`Should return implements ${element.name}`, async () => {
-          const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, element.signature)
-          expect(erc165result).to.be.true
-        })
-      }
     })
     interfaceIds.concat('IModuleAuthUpgradable').forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {

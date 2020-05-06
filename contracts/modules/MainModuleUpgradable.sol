@@ -28,7 +28,7 @@ contract MainModuleUpgradable is
     ModuleUpdate,
     ModuleHooks,
     ModuleCreator
-  ) view returns (bool) {
+  ) pure returns (bool) {
     return super.supportsInterface(_interfaceID);
   }
 }

@@ -28,11 +28,8 @@ contract ModuleUpdate is IModuleUpdate, ModuleERC165, ModuleSelfAuth, Implementa
    * @param _interfaceID The interface identifier, as specified in ERC-165
    * @return `true` if the contract implements `_interfaceID`
    */
-  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
-    if (
-      _interfaceID == this.updateImplementation.selector ||
-      _interfaceID == type(IModuleUpdate).interfaceId
-    ) {
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
+    if (_interfaceID == type(IModuleUpdate).interfaceId) {
       return true;
     }
 

@@ -125,18 +125,12 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @param _interfaceID The interface identifier, as specified in ERC-165
    * @return `true` if the contract implements `_interfaceID`
    */
-  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
     if (
-      _interfaceID == this.addHook.selector ||
-      _interfaceID == this.readHook.selector ||
-      _interfaceID == this.removeHook.selector ||
-      _interfaceID == this.onERC1155Received.selector ||
-      _interfaceID == this.onERC1155BatchReceived.selector ||
       _interfaceID == type(IModuleHooks).interfaceId ||
       _interfaceID == type(IERC1155Receiver).interfaceId ||
       _interfaceID == type(IERC721Receiver).interfaceId ||
-      _interfaceID == type(IERC223Receiver).interfaceId ||
-      _readHook(_interfaceID) != address(0)
+      _interfaceID == type(IERC223Receiver).interfaceId
     ) {
       return true;
     }

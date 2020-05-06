@@ -40,12 +40,12 @@ contract MainModule is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
-    ModuleAuthFixed,
+    ModuleAuth,
     ModuleCalls,
     ModuleUpdate,
     ModuleHooks,
     ModuleCreator
-  ) view returns (bool) {
+  ) pure returns (bool) {
     return super.supportsInterface(_interfaceID);
   }
 }

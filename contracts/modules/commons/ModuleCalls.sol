@@ -139,13 +139,8 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
    * @param _interfaceID The interface identifier, as specified in ERC-165
    * @return `true` if the contract implements `_interfaceID`
    */
-  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
-    if (
-      _interfaceID == this.nonce.selector ||
-      _interfaceID == this.readNonce.selector ||
-      _interfaceID == this.execute.selector ||
-      _interfaceID == type(IModuleCalls).interfaceId
-    ) {
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
+    if (_interfaceID == type(IModuleCalls).interfaceId) {
       return true;
     }
 

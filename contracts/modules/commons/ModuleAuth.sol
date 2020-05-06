@@ -145,10 +145,8 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    * @param _interfaceID The interface identifier, as specified in ERC-165
    * @return `true` if the contract implements `_interfaceID`
    */
-  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
     if (
-      _interfaceID == SELECTOR_ERC1271_BYTES_BYTES ||
-      _interfaceID == SELECTOR_ERC1271_BYTES32_BYTES ||
       _interfaceID == type(IModuleAuth).interfaceId ||
       _interfaceID == type(IERC1271Wallet).interfaceId
     ) {

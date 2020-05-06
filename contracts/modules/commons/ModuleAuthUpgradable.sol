@@ -42,12 +42,8 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    * @param _interfaceID The interface identifier, as specified in ERC-165
    * @return `true` if the contract implements `_interfaceID`
    */
-  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
-    if (
-      _interfaceID == this.updateImageHash.selector ||
-      _interfaceID == this.imageHash.selector ||
-      _interfaceID == type(IModuleAuthUpgradable).interfaceId
-    ) {
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
+    if (_interfaceID == type(IModuleAuthUpgradable).interfaceId) {
       return true;
     }
 

@@ -24,11 +24,8 @@ contract ModuleCreator is IModuleCreator, ModuleERC165, ModuleSelfAuth {
    * @param _interfaceID The interface identifier, as specified in ERC-165
    * @return `true` if the contract implements `_interfaceID`
    */
-  function supportsInterface(bytes4 _interfaceID) public override virtual view returns (bool) {
-    if (
-      _interfaceID == this.createContract.selector ||
-      _interfaceID == type(IModuleCreator).interfaceId
-    ) {
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
+    if (_interfaceID == type(IModuleCreator).interfaceId) {
       return true;
     }
 
