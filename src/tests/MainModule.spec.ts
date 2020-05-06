@@ -304,7 +304,7 @@ contract('MainModule', (accounts: string[]) => {
       await signAndExecuteMetaTx(wallet, owner, [transaction])
 
       const storageValue = await web3.eth.getStorageAt(wallet.address, wallet.address)
-      expect(storageValue).to.equal(newImplementation.address.toLowerCase())
+      expect(ethers.utils.getAddress(storageValue)).to.equal(newImplementation.address)
     })
   })
   describe("External calls", () => {
@@ -876,7 +876,7 @@ contract('MainModule', (accounts: string[]) => {
 
         await signAndExecuteMetaTx(wallet, owner, [transaction])
         const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
-        expect(storageValue).to.not.equal('0x0')
+        expect(ethers.utils.getAddress(storageValue)).to.equal(hookMock.address)
       })
     })
   })
@@ -951,7 +951,7 @@ contract('MainModule', (accounts: string[]) => {
       it('Should use image hash storage key', async () => {
         const storageKey = moduleStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
         const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
-        expect(storageValue).to.equal(newImageHash)
+        expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(newImageHash)
       })
       context('After updating the image hash', () => {
         let threshold = 2
@@ -996,7 +996,7 @@ contract('MainModule', (accounts: string[]) => {
         it('Should use image hash storage key', async () => {
           const storageKey = moduleStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
           const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
-          expect(storageValue).to.equal(newImageHash)
+          expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(newImageHash)
         })
       })
     })
