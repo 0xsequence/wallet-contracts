@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IERC1271Wallet.sol";
@@ -51,7 +51,7 @@ contract SignatureValidator {
   function recoverSigner(
     bytes32 _hash,
     bytes memory _signature
-  ) public pure returns (address signer) {
+  ) internal pure returns (address signer) {
     // Pop last byte off of signature byte array.
     uint8 signatureTypeRaw = uint8(_signature.popLastByte());
 

@@ -16,15 +16,15 @@ interface ModuleAuthUpgradableInterface extends Interface {
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
 
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
-
     updateImageHash: TypedFunctionDescription<{
       encode([_imageHash]: [Arrayish]): string;
     }>;
 
     imageHash: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
+    }>;
   };
 
   events: {};
@@ -49,19 +49,17 @@ export class ModuleAuthUpgradable extends Contract {
   functions: {
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
     updateImageHash(
       _imageHash: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
     imageHash(): Promise<string>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
-
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
 
   updateImageHash(
     _imageHash: Arrayish,
@@ -69,6 +67,8 @@ export class ModuleAuthUpgradable extends Contract {
   ): Promise<ContractTransaction>;
 
   imageHash(): Promise<string>;
+
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
 
   filters: {};
 
@@ -78,10 +78,10 @@ export class ModuleAuthUpgradable extends Contract {
       _signatures: Arrayish
     ): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
     updateImageHash(_imageHash: Arrayish): Promise<BigNumber>;
 
     imageHash(): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

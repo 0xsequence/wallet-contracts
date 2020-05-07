@@ -12,7 +12,9 @@ import {
 
 interface ModuleHooksInterface extends Interface {
   functions: {
-    hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
+    readHook: TypedFunctionDescription<{
+      encode([_signature]: [Arrayish]): string;
+    }>;
 
     addHook: TypedFunctionDescription<{
       encode([_signature, _implementation]: [Arrayish, string]): string;
@@ -45,6 +47,10 @@ interface ModuleHooksInterface extends Interface {
     onERC721Received: TypedFunctionDescription<{
       encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
     }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
+    }>;
   };
 
   events: {};
@@ -64,7 +70,7 @@ export class ModuleHooks extends Contract {
   interface: ModuleHooksInterface;
 
   functions: {
-    hooks(arg0: Arrayish): Promise<string>;
+    readHook(_signature: Arrayish): Promise<string>;
 
     addHook(
       _signature: Arrayish,
@@ -102,9 +108,11 @@ export class ModuleHooks extends Contract {
       arg3: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
-  hooks(arg0: Arrayish): Promise<string>;
+  readHook(_signature: Arrayish): Promise<string>;
 
   addHook(
     _signature: Arrayish,
@@ -143,10 +151,12 @@ export class ModuleHooks extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
+
   filters: {};
 
   estimate: {
-    hooks(arg0: Arrayish): Promise<BigNumber>;
+    readHook(_signature: Arrayish): Promise<BigNumber>;
 
     addHook(_signature: Arrayish, _implementation: string): Promise<BigNumber>;
 
@@ -174,5 +184,7 @@ export class ModuleHooks extends Contract {
       arg2: BigNumberish,
       arg3: Arrayish
     ): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

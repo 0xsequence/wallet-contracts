@@ -39,8 +39,6 @@ interface MainModuleInterface extends Interface {
       ]): string;
     }>;
 
-    hooks: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
-
     isValidSignature: TypedFunctionDescription<{
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
@@ -71,12 +69,12 @@ interface MainModuleInterface extends Interface {
       encode([, , ,]: [string, string, BigNumberish, Arrayish]): string;
     }>;
 
-    readNonce: TypedFunctionDescription<{
-      encode([_space]: [BigNumberish]): string;
+    readHook: TypedFunctionDescription<{
+      encode([_signature]: [Arrayish]): string;
     }>;
 
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+    readNonce: TypedFunctionDescription<{
+      encode([_space]: [BigNumberish]): string;
     }>;
 
     removeHook: TypedFunctionDescription<{
@@ -85,6 +83,10 @@ interface MainModuleInterface extends Interface {
 
     updateImplementation: TypedFunctionDescription<{
       encode([_implementation]: [string]): string;
+    }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
     }>;
   };
 
@@ -146,8 +148,6 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    hooks(arg0: Arrayish): Promise<string>;
-
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
     nonce(): Promise<BigNumber>;
@@ -178,9 +178,9 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    readNonce(_space: BigNumberish): Promise<BigNumber>;
+    readHook(_signature: Arrayish): Promise<string>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    readNonce(_space: BigNumberish): Promise<BigNumber>;
 
     removeHook(
       _signature: Arrayish,
@@ -191,6 +191,8 @@ export class MainModule extends Contract {
       _implementation: string,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   FACTORY(): Promise<string>;
@@ -222,8 +224,6 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  hooks(arg0: Arrayish): Promise<string>;
-
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
   nonce(): Promise<BigNumber>;
@@ -254,9 +254,9 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  readNonce(_space: BigNumberish): Promise<BigNumber>;
+  readHook(_signature: Arrayish): Promise<string>;
 
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  readNonce(_space: BigNumberish): Promise<BigNumber>;
 
   removeHook(
     _signature: Arrayish,
@@ -267,6 +267,8 @@ export class MainModule extends Contract {
     _implementation: string,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
+
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
 
   filters: {
     CreatedContract(_contract: null): EventFilter;
@@ -298,8 +300,6 @@ export class MainModule extends Contract {
       _signature: Arrayish
     ): Promise<BigNumber>;
 
-    hooks(arg0: Arrayish): Promise<BigNumber>;
-
     isValidSignature(
       _hash: Arrayish,
       _signatures: Arrayish
@@ -330,12 +330,14 @@ export class MainModule extends Contract {
       arg3: Arrayish
     ): Promise<BigNumber>;
 
-    readNonce(_space: BigNumberish): Promise<BigNumber>;
+    readHook(_signature: Arrayish): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    readNonce(_space: BigNumberish): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

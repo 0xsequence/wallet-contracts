@@ -1,10 +1,12 @@
-pragma solidity ^0.6.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.6.7;
 
-import "./ModuleBase.sol";
+import "./interfaces/IModuleCreator.sol";
+
+import "./ModuleSelfAuth.sol";
+import "./ModuleERC165.sol";
 
 
-contract ModuleCreator is ModuleBase {
+contract ModuleCreator is IModuleCreator, ModuleERC165, ModuleSelfAuth {
   event CreatedContract(address _contract);
 
   /**
@@ -12,8 +14,21 @@ contract ModuleCreator is ModuleBase {
    * @param _code Creation code of the contract
    * @return addr The address of the created contract
    */
-  function createContract(bytes memory _code) public payable onlySelf returns (address addr) {
+  function createContract(bytes memory _code) public override payable onlySelf returns (address addr) {
     assembly { addr := create(callvalue(), add(_code, 32), mload(_code)) }
     emit CreatedContract(addr);
+  }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
+    if (_interfaceID == type(IModuleCreator).interfaceId) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
   }
 }
