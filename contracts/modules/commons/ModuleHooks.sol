@@ -1,14 +1,18 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
+import "./interfaces/IModuleHooks.sol";
+
 import "./ModuleSelfAuth.sol";
 import "./ModuleStorage.sol";
+import "./ModuleERC165.sol";
 
 import "../../interfaces/receivers/IERC1155Receiver.sol";
 import "../../interfaces/receivers/IERC721Receiver.sol";
+import "../../interfaces/receivers/IERC223Receiver.sol";
 
 
-contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
+contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleERC165, ModuleSelfAuth {
   //                       HOOKS_KEY = keccak256("org.arcadeum.module.hooks.hooks");
   bytes32 private constant HOOKS_KEY = bytes32(0xbe27a319efc8734e89e26ba4bc95f5c788584163b959f03fa04e2d7ab4b9a120);
 
@@ -17,7 +21,7 @@ contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
    * @param _signature Signature function
    * @return The address of the implementation hook, address(0) if none
   */
-  function readHook(bytes4 _signature) external view returns (address) {
+  function readHook(bytes4 _signature) external override view returns (address) {
     return _readHook(_signature);
   }
 
@@ -26,7 +30,7 @@ contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
    * @param _signature Signature function linked to the hook
    * @param _implementation Hook implementation contract
    */
-  function addHook(bytes4 _signature, address _implementation) external onlySelf {
+  function addHook(bytes4 _signature, address _implementation) external override onlySelf {
     require(_readHook(_signature) == address(0), "ModuleHooks#addHook: HOOK_ALREADY_REGISTERED");
     _writeHook(_signature, _implementation);
   }
@@ -35,7 +39,7 @@ contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
    * @notice Removes a registered hook
    * @param _signature Signature function linked to the hook
    */
-  function removeHook(bytes4 _signature) external onlySelf {
+  function removeHook(bytes4 _signature) external override onlySelf {
     require(_readHook(_signature) != address(0), "ModuleHooks#removeHook: HOOK_NOT_REGISTERED");
     _writeHook(_signature, address(0));
   }
@@ -115,4 +119,22 @@ contract ModuleHooks is ModuleSelfAuth, IERC1155Receiver, IERC721Receiver {
    * @notice Allows the wallet to receive ETH
    */
   receive() external payable { }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
+    if (
+      _interfaceID == type(IModuleHooks).interfaceId ||
+      _interfaceID == type(IERC1155Receiver).interfaceId ||
+      _interfaceID == type(IERC721Receiver).interfaceId ||
+      _interfaceID == type(IERC223Receiver).interfaceId
+    ) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
+  }
 }

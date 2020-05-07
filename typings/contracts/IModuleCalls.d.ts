@@ -10,7 +10,7 @@ import {
   TypedFunctionDescription
 } from ".";
 
-interface ModuleCallsInterface extends Interface {
+interface IModuleCallsInterface extends Interface {
   functions: {
     nonce: TypedFunctionDescription<{ encode([]: []): string }>;
 
@@ -32,10 +32,6 @@ interface ModuleCallsInterface extends Interface {
         Arrayish
       ]): string;
     }>;
-
-    supportsInterface: TypedFunctionDescription<{
-      encode([_interfaceID]: [Arrayish]): string;
-    }>;
   };
 
   events: {
@@ -49,18 +45,21 @@ interface ModuleCallsInterface extends Interface {
   };
 }
 
-export class ModuleCalls extends Contract {
-  connect(signerOrProvider: Signer | Provider | string): ModuleCalls;
-  attach(addressOrName: string): ModuleCalls;
-  deployed(): Promise<ModuleCalls>;
+export class IModuleCalls extends Contract {
+  connect(signerOrProvider: Signer | Provider | string): IModuleCalls;
+  attach(addressOrName: string): IModuleCalls;
+  deployed(): Promise<IModuleCalls>;
 
-  on(event: EventFilter | string, listener: Listener): ModuleCalls;
-  once(event: EventFilter | string, listener: Listener): ModuleCalls;
-  addListener(eventName: EventFilter | string, listener: Listener): ModuleCalls;
-  removeAllListeners(eventName: EventFilter | string): ModuleCalls;
-  removeListener(eventName: any, listener: Listener): ModuleCalls;
+  on(event: EventFilter | string, listener: Listener): IModuleCalls;
+  once(event: EventFilter | string, listener: Listener): IModuleCalls;
+  addListener(
+    eventName: EventFilter | string,
+    listener: Listener
+  ): IModuleCalls;
+  removeAllListeners(eventName: EventFilter | string): IModuleCalls;
+  removeListener(eventName: any, listener: Listener): IModuleCalls;
 
-  interface: ModuleCallsInterface;
+  interface: IModuleCallsInterface;
 
   functions: {
     nonce(): Promise<BigNumber>;
@@ -80,8 +79,6 @@ export class ModuleCalls extends Contract {
       _signature: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
-
-    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   nonce(): Promise<BigNumber>;
@@ -101,8 +98,6 @@ export class ModuleCalls extends Contract {
     _signature: Arrayish,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
-
-  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
 
   filters: {
     NonceChange(_space: null, _newNonce: null): EventFilter;
@@ -127,7 +122,5 @@ export class ModuleCalls extends Contract {
       _nonce: BigNumberish,
       _signature: Arrayish
     ): Promise<BigNumber>;
-
-    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

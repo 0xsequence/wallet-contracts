@@ -75,10 +75,6 @@ interface MainModuleUpgradableInterface extends Interface {
       encode([_space]: [BigNumberish]): string;
     }>;
 
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
-    }>;
-
     removeHook: TypedFunctionDescription<{
       encode([_signature]: [Arrayish]): string;
     }>;
@@ -89,6 +85,10 @@ interface MainModuleUpgradableInterface extends Interface {
 
     updateImplementation: TypedFunctionDescription<{
       encode([_implementation]: [string]): string;
+    }>;
+
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
     }>;
   };
 
@@ -185,8 +185,6 @@ export class MainModuleUpgradable extends Contract {
 
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
     removeHook(
       _signature: Arrayish,
       overrides?: TransactionOverrides
@@ -201,6 +199,8 @@ export class MainModuleUpgradable extends Contract {
       _implementation: string,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   addHook(
@@ -264,8 +264,6 @@ export class MainModuleUpgradable extends Contract {
 
   readNonce(_space: BigNumberish): Promise<BigNumber>;
 
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
-
   removeHook(
     _signature: Arrayish,
     overrides?: TransactionOverrides
@@ -280,6 +278,8 @@ export class MainModuleUpgradable extends Contract {
     _implementation: string,
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
+
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
 
   filters: {
     CreatedContract(_contract: null): EventFilter;
@@ -343,12 +343,12 @@ export class MainModuleUpgradable extends Contract {
 
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
-
     removeHook(_signature: Arrayish): Promise<BigNumber>;
 
     updateImageHash(_imageHash: Arrayish): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
+
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

@@ -20,8 +20,8 @@ interface ModuleAuthFixedInterface extends Interface {
       encode([_hash, _signatures]: [Arrayish, Arrayish]): string;
     }>;
 
-    recoverSigner: TypedFunctionDescription<{
-      encode([_hash, _signature]: [Arrayish, Arrayish]): string;
+    supportsInterface: TypedFunctionDescription<{
+      encode([_interfaceID]: [Arrayish]): string;
     }>;
   };
 
@@ -51,7 +51,7 @@ export class ModuleAuthFixed extends Contract {
 
     isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   FACTORY(): Promise<string>;
@@ -60,7 +60,7 @@ export class ModuleAuthFixed extends Contract {
 
   isValidSignature(_hash: Arrayish, _signatures: Arrayish): Promise<string>;
 
-  recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<string>;
+  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
 
   filters: {};
 
@@ -74,6 +74,6 @@ export class ModuleAuthFixed extends Contract {
       _signatures: Arrayish
     ): Promise<BigNumber>;
 
-    recoverSigner(_hash: Arrayish, _signature: Arrayish): Promise<BigNumber>;
+    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }

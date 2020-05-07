@@ -51,7 +51,7 @@ contract SignatureValidator {
   function recoverSigner(
     bytes32 _hash,
     bytes memory _signature
-  ) public pure returns (address signer) {
+  ) internal pure returns (address signer) {
     // Pop last byte off of signature byte array.
     uint8 signatureTypeRaw = uint8(_signature.popLastByte());
 

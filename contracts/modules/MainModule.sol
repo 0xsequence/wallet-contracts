@@ -21,9 +21,9 @@ import "../interfaces/IERC1271Wallet.sol";
  */
 contract MainModule is
   ModuleAuthFixed,
+  ModuleCalls,
   ModuleUpdate,
   ModuleHooks,
-  ModuleCalls,
   ModuleCreator
 {
   constructor(
@@ -31,4 +31,21 @@ contract MainModule is
   ) public ModuleAuthFixed(
     _factory
   ) { }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(
+    bytes4 _interfaceID
+  ) public override(
+    ModuleAuth,
+    ModuleCalls,
+    ModuleUpdate,
+    ModuleHooks,
+    ModuleCreator
+  ) pure returns (bool) {
+    return super.supportsInterface(_interfaceID);
+  }
 }

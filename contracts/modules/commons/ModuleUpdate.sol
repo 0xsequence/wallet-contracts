@@ -1,13 +1,16 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
+import "./interfaces/IModuleUpdate.sol";
+
 import "./Implementation.sol";
 import "./ModuleSelfAuth.sol";
+import "./ModuleERC165.sol";
 
 import "../../utils/LibAddress.sol";
 
 
-contract ModuleUpdate is ModuleSelfAuth, Implementation {
+contract ModuleUpdate is IModuleUpdate, ModuleERC165, ModuleSelfAuth, Implementation {
   using LibAddress for address;
 
   /**
@@ -15,8 +18,21 @@ contract ModuleUpdate is ModuleSelfAuth, Implementation {
    * @param _implementation New main module implementation
    * @dev WARNING Updating the implementation can brick the wallet
    */
-  function updateImplementation(address _implementation) external onlySelf {
+  function updateImplementation(address _implementation) external override onlySelf {
     require(_implementation.isContract(), "ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION");
     _setImplementation(_implementation);
+  }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
+    if (_interfaceID == type(IModuleUpdate).interfaceId) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
   }
 }

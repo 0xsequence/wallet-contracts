@@ -10,6 +10,7 @@ import { HookCallerMock } from 'typings/contracts/HookCallerMock'
 import { HookMock } from 'typings/contracts/HookMock'
 import { DelegateCallMock } from 'typings/contracts/DelegateCallMock'
 import { GasBurnerMock } from 'typings/contracts/GasBurnerMock'
+import { ERC165CheckerMock } from 'typings/contracts/ERC165CheckerMock'
 
 import { BigNumberish } from 'ethers/utils';
 
@@ -24,6 +25,7 @@ const HookMockArtifact = artifacts.require('HookMock')
 const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const GasBurnerMockArtifact = artifacts.require('GasBurnerMock')
+const ERC165CheckerMockArtifact = artifacts.require('ERC165CheckerMock')
 
 const web3 = (global as any).web3
 

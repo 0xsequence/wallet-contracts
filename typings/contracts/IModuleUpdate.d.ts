@@ -10,43 +10,37 @@ import {
   TypedFunctionDescription
 } from ".";
 
-interface ModuleUpdateInterface extends Interface {
+interface IModuleUpdateInterface extends Interface {
   functions: {
     updateImplementation: TypedFunctionDescription<{
       encode([_implementation]: [string]): string;
-    }>;
-
-    supportsInterface: TypedFunctionDescription<{
-      encode([_interfaceID]: [Arrayish]): string;
     }>;
   };
 
   events: {};
 }
 
-export class ModuleUpdate extends Contract {
-  connect(signerOrProvider: Signer | Provider | string): ModuleUpdate;
-  attach(addressOrName: string): ModuleUpdate;
-  deployed(): Promise<ModuleUpdate>;
+export class IModuleUpdate extends Contract {
+  connect(signerOrProvider: Signer | Provider | string): IModuleUpdate;
+  attach(addressOrName: string): IModuleUpdate;
+  deployed(): Promise<IModuleUpdate>;
 
-  on(event: EventFilter | string, listener: Listener): ModuleUpdate;
-  once(event: EventFilter | string, listener: Listener): ModuleUpdate;
+  on(event: EventFilter | string, listener: Listener): IModuleUpdate;
+  once(event: EventFilter | string, listener: Listener): IModuleUpdate;
   addListener(
     eventName: EventFilter | string,
     listener: Listener
-  ): ModuleUpdate;
-  removeAllListeners(eventName: EventFilter | string): ModuleUpdate;
-  removeListener(eventName: any, listener: Listener): ModuleUpdate;
+  ): IModuleUpdate;
+  removeAllListeners(eventName: EventFilter | string): IModuleUpdate;
+  removeListener(eventName: any, listener: Listener): IModuleUpdate;
 
-  interface: ModuleUpdateInterface;
+  interface: IModuleUpdateInterface;
 
   functions: {
     updateImplementation(
       _implementation: string,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
-
-    supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
   updateImplementation(
@@ -54,13 +48,9 @@ export class ModuleUpdate extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
-
   filters: {};
 
   estimate: {
     updateImplementation(_implementation: string): Promise<BigNumber>;
-
-    supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
   };
 }
