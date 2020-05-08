@@ -39,6 +39,8 @@ contract('ERC165', () => {
 
   let erc165checker
 
+  let networkId
+
   before(async () => {
     // Deploy wallet factory
     factory = await FactoryArtifact.new() as Factory
@@ -47,6 +49,8 @@ contract('ERC165', () => {
     moduleUpgradable = await MainModuleUpgradableArtifact.new() as MainModuleUpgradable
     // Deploy ERC165 Checker
     erc165checker = await ERC165CheckerMockArtifact.new() as ERC165CheckerMock
+    // Get network ID
+    networkId = await web3.eth.net.getId()
   })
 
   beforeEach(async () => {
@@ -93,7 +97,7 @@ contract('ERC165', () => {
         }
       ]
 
-      await signAndExecuteMetaTx(wallet, owner, migrateTransactions)
+      await signAndExecuteMetaTx(wallet, owner, migrateTransactions, networkId)
       wallet = newWallet
     })
     interfaceIds.concat('IModuleAuthUpgradable').forEach(element => {

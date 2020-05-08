@@ -129,13 +129,14 @@ export function encodeMetaTransactionsData(
     value: BigNumberish;
     data: Arrayish;
   }[],
+  networkId: BigNumberish,
   nonce: BigNumberish
 ): string {
   const transactions = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [nonce, txs])
 
   return ethers.utils.solidityPack(
-    ['string', 'address', 'bytes'],
-    ['\x19\x01', owner, ethers.utils.keccak256(transactions)]
+    ['string', 'uint256', 'address', 'bytes'],
+    ['\x19\x01', networkId, owner, ethers.utils.keccak256(transactions)]
   )
 }
 
@@ -206,9 +207,10 @@ export async function multiSignMetaTransactions(
     value: BigNumberish;
     data: Arrayish;
   }[],
+  networkId: BigNumberish,
   nonce: BigNumberish
 ) {
-  const data = encodeMetaTransactionsData(wallet.address, txs, nonce)
+  const data = encodeMetaTransactionsData(wallet.address, txs, networkId, nonce)
   return walletMultiSign(accounts, threshold, data)
 }
 
@@ -227,6 +229,7 @@ export async function signAndExecuteMetaTx(
     value: BigNumberish;
     data: Arrayish;
   }[],
+  networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined
 ) {
   return multiSignAndExecuteMetaTx(
@@ -234,6 +237,7 @@ export async function signAndExecuteMetaTx(
     [{ weight: 1, owner: owner }],
     1,
     txs,
+    networkId,
     nonce
   )
 }
@@ -253,10 +257,11 @@ export async function multiSignAndExecuteMetaTx(
     value: BigNumberish;
     data: Arrayish;
   }[],
+  networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined
 ) {
   if (!nonce) nonce = await nextNonce(wallet)
-  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, nonce)
+  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce)
   return wallet.execute(txs, nonce, signature)
 }
 
