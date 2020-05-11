@@ -56,9 +56,12 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
     // Validate and update nonce
     _validateNonce(_nonce);
 
+    // Hash transaction bundle
+    bytes32 txHash = _hashData(abi.encode(_nonce, _txs));
+
     // Verify that signatures are valid
     require(
-      _signatureValidation(_hashData(abi.encode(_nonce, _txs)), _signature),
+      _signatureValidation(txHash, _signature),
       "MainModule#_signatureValidation: INVALID_SIGNATURE"
     );
 
@@ -80,7 +83,11 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
         }(transaction.data);
       }
 
-      if (!success) _revertBytes(transaction, i, result);
+      if (success) {
+        emit TxExecuted(txHash, i, result);
+      } else {
+        _revertBytes(transaction, txHash, i, result);
+      }
     }
   }
 
@@ -110,14 +117,20 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
   /**
    * @notice Logs a failed transaction, reverts if the transaction is not optional
    * @param _tx      Transaction that is reverting
+   * @param _txHash  Hash of the transaction
    * @param _index   Index of transaction in batch
    * @param _reason  Encoded revert message
    */
-  function _revertBytes(Transaction memory _tx, uint256 _index, bytes memory _reason) internal {
+  function _revertBytes(
+    Transaction memory _tx,
+    bytes32 _txHash,
+    uint256 _index,
+    bytes memory _reason
+  ) internal {
     if (_tx.revertOnError) {
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
     } else {
-      emit TxFailed(_index, _reason);
+      emit TxFailed(_txHash, _index, _reason);
     }
   }
 
