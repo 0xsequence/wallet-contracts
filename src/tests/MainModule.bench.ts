@@ -105,6 +105,37 @@ contract('MainModule', () => {
 
         report(`relay 1/1 ${n} transactions`, results)
       })
+      it(`Relay 1/1 ${Math.floor(n /2)} transactions and ${n - Math.floor(n / 2)} failing transactions`, async () => {
+        const results: number[] = []
+
+        const transactions = new Array(Math.floor(n /2)).fill(0).map(() => ({
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: ethers.constants.AddressZero,
+          value: ethers.constants.Zero,
+          data: []
+        })).concat(new Array(n - Math.floor(n / 2)).fill(0).map(() => ({
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: optimalGasLimit,
+          target: factory.address,
+          value: ethers.constants.Zero,
+          data: []
+        })))
+
+        for (let i = 0; i < runs; i++) {
+          const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+          const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
+          await factory.deploy(module.address, salt)
+          const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+
+          const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
+          results.push(tx.receipt.gasUsed)
+        }
+
+        report(`relay 1/1 ${Math.floor(n /2)} transactions and ${n - Math.floor(n / 2)} failing transactions`, results)
+      })
     })
 
     it('Relay 2/5 transaction', async () => {
