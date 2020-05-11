@@ -1724,7 +1724,7 @@ contract('MainModule', (accounts: string[]) => {
       const deployCode = CallReceiverMockArtifact.bytecode
 
       const tx = wallet.createContract(deployCode)
-      expect(tx).to.be.rejectedWith('ModuleBase#onlySelf: NOT_AUTHORIZED')
+      await expect(tx).to.be.rejectedWith(RevertError('ModuleSelfAuth#onlySelf: NOT_AUTHORIZED'))
     })
   })
   describe('Transaction events', () => {
