@@ -79,6 +79,34 @@ contract('MainModule', () => {
       report('relay 1/1 transaction', results)
     })
 
+    const batches = [2, 3, 5, 10, 50, 100]
+    batches.forEach((n) => {
+      it(`Relay 1/1 ${n} transactions`, async () => {
+        const results: number[] = []
+
+        const transactions = new Array(n).fill(0).map(() => ({
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: ethers.constants.AddressZero,
+          value: ethers.constants.Zero,
+          data: []
+        }))
+
+        for (let i = 0; i < runs; i++) {
+          const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
+          const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
+          await factory.deploy(module.address, salt)
+          const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+
+          const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
+          results.push(tx.receipt.gasUsed)
+        }
+
+        report(`relay 1/1 ${n} transactions`, results)
+      })
+    })
+
     it('Relay 2/5 transaction', async () => {
       const results: number[] = []
 
