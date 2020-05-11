@@ -110,4 +110,18 @@ contract('ERC165', () => {
       })
     })
   })
+  describe('Manually defined interfaces', () => {
+    const interfaces = [
+      ['ERC165', '0x01ffc9a7'],
+      ['ERC721', '0x150b7a02'],
+      ['ERC1155', '0x4e2312e0']
+    ]
+
+    interfaces.forEach((i) => {
+      it(`Should implement ${i[0]} interface`, async () => {
+        const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, i[1])
+        expect(erc165result).to.be.true
+      })
+    })
+  })
 })
