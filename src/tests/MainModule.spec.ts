@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -132,12 +132,12 @@ contract('MainModule', (accounts: string[]) => {
           const receipt1 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, 0) as any
           const receipt2 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, 1) as any
 
-          const ev1 = receipt1.logs.pop()
+          const ev1 = receipt1.logs.find((l) => l.event === 'NonceChange')
           expect(ev1.event).to.be.eql('NonceChange')
           expect(ev1.args._space).to.eq.BN(0)
           expect(ev1.args._newNonce).to.eq.BN(1)
 
-          const ev2 = receipt2.logs.pop()
+          const ev2 = receipt2.logs.find((l) => l.event === 'NonceChange')
           expect(ev2.event).to.be.eql('NonceChange')
           expect(ev1.args._space).to.eq.BN(0)
           expect(ev2.args._newNonce).to.eq.BN(2)
@@ -171,12 +171,12 @@ contract('MainModule', (accounts: string[]) => {
             const receipt1 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodedFirstNonce) as any
             const receipt2 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodedSecondNonce) as any
 
-            const ev1 = receipt1.logs.pop()
+            const ev1 = receipt1.logs.find((l) => l.event === 'NonceChange')
             expect(ev1.event).to.be.eql('NonceChange')
             expect(ev1.args._space).to.eq.BN(space.toString())
             expect(ev1.args._newNonce).to.eq.BN(1)
 
-            const ev2 = receipt2.logs.pop()
+            const ev2 = receipt2.logs.find((l) => l.event === 'NonceChange')
             expect(ev2.event).to.be.eql('NonceChange')
             expect(ev2.args._space).to.eq.BN(space.toString())
             expect(ev2.args._newNonce).to.eq.BN(2)
@@ -246,12 +246,12 @@ contract('MainModule', (accounts: string[]) => {
           const receipt1 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodeNonce(1, 2)) as any
           const receipt2 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodeNonce(2, 0)) as any
 
-          const ev1 = receipt1.logs.pop()
+          const ev1 = receipt1.logs.find((l) => l.event === 'NonceChange')
           expect(ev1.event).to.be.eql('NonceChange')
           expect(ev1.args._space).to.eq.BN(1)
           expect(ev1.args._newNonce).to.eq.BN(3)
 
-          const ev2 = receipt2.logs.pop()
+          const ev2 = receipt2.logs.find((l) => l.event === 'NonceChange')
           expect(ev2.event).to.be.eql('NonceChange')
           expect(ev2.args._space).to.eq.BN(2)
           expect(ev2.args._newNonce).to.eq.BN(1)
@@ -480,7 +480,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const tx = await signAndExecuteMetaTx(wallet, owner, [transaction2], networkId) as any
-      const val = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
+      const val = web3.utils.toBN(tx.receipt.rawLogs.slice(-2)[0].data)
       expect(val).to.eq.BN(45)
     })
     context('on delegate call revert', () => {
@@ -622,7 +622,7 @@ contract('MainModule', (accounts: string[]) => {
       }]
 
       const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
-      const event = tx.logs.pop()
+      const event = tx.logs.find((l) => l.event === 'TxFailed')
 
       const reason = web3.eth.abi.decodeParameter('string', event.args._reason.slice(10))
 
@@ -666,7 +666,17 @@ contract('MainModule', (accounts: string[]) => {
         data: data2
       }]
 
+      const txHash = ethers.utils.keccak256(
+        encodeMetaTransactionsData(
+          wallet.address,
+          transactions,
+          networkId,
+          0
+        )
+      )
+
       const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
+
       const event1 = tx.logs[1]
       const event2 = tx.logs[2]
 
@@ -676,8 +686,8 @@ contract('MainModule', (accounts: string[]) => {
       expect(reason1).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
       expect(reason2).to.equal("CallReceiverMock#testCall: REVERT_FLAG")
 
-      expect(event1.args._index).to.eq.BN(0)
-      expect(event2.args._index).to.eq.BN(1)
+      expect(event1.args._tx).to.equal(txHash)
+      expect(event2.args._tx).to.equal(txHash)
 
       expect(await callReceiver2.lastValA()).to.eq.BN(valA)
       expect(await callReceiver2.lastValB()).to.equal(valB)
@@ -1582,7 +1592,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const tx = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId) as any
-      const reported = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
+      const reported = web3.utils.toBN(tx.receipt.rawLogs.slice(-2)[0].data)
       expect(reported).to.be.lt.BN(gas)
     })
     it('Should forward different amounts of gas', async () => {
@@ -1607,8 +1617,8 @@ contract('MainModule', (accounts: string[]) => {
 
       const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
 
-      const reportedB = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
-      const reportedA = web3.utils.toBN(tx.receipt.rawLogs.pop().data)
+      const reportedB = web3.utils.toBN(tx.receipt.rawLogs.slice(-2)[0].data)
+      const reportedA = web3.utils.toBN(tx.receipt.rawLogs.slice(-4)[0].data)
 
       expect(reportedA).to.be.lt.BN(gasA)
       expect(reportedB).to.be.lt.BN(gasB)
@@ -1670,9 +1680,8 @@ contract('MainModule', (accounts: string[]) => {
       }]
 
       const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
-      const log = tx.receipt.logs.pop()
+      const log = tx.receipt.logs.slice(-1)[0]
       expect(log.event).to.be.equal('TxFailed')
-
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
@@ -1691,7 +1700,7 @@ contract('MainModule', (accounts: string[]) => {
       }]
 
       const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
-      const log = tx.receipt.logs.pop()
+      const log = tx.receipt.logs.find((l) => l.event === 'CreatedContract')
 
       expect(log.event).to.equal('CreatedContract')
 
@@ -1716,7 +1725,7 @@ contract('MainModule', (accounts: string[]) => {
       }]
 
       const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
-      const log = tx.receipt.logs.pop()
+      const log = tx.receipt.logs.find((l) => l.event === 'CreatedContract')
 
       expect(await web3.eth.getBalance(log.args._contract)).to.eq.BN(99)
     })
@@ -1724,7 +1733,40 @@ contract('MainModule', (accounts: string[]) => {
       const deployCode = CallReceiverMockArtifact.bytecode
 
       const tx = wallet.createContract(deployCode)
-      expect(tx).to.be.rejectedWith('ModuleBase#onlySelf: NOT_AUTHORIZED')
+      await expect(tx).to.be.rejectedWith(RevertError('ModuleSelfAuth#onlySelf: NOT_AUTHORIZED'))
+    })
+  })
+  describe('Transaction events', () => {
+    const transaction = {
+      delegateCall: false,
+      revertOnError: true,
+      gasLimit: ethers.constants.MaxUint256,
+      target: ethers.constants.AddressZero,
+      value: ethers.constants.Zero,
+      data: []
+    }
+
+    it('Should emit TxExecuted event', async () => {
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId) as any
+      const log = tx.receipt.rawLogs[1]
+      const txHash = ethers.utils.keccak256(encodeMetaTransactionsData(wallet.address, [transaction], networkId, 0))
+
+      expect(log.topics.length).to.equal(0)
+      expect(log.data).to.be.equal(txHash)
+    })
+
+    it('Should emit multiple TxExecuted events', async () => {
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction, transaction], networkId) as any
+      const log1 = tx.receipt.rawLogs[1]
+      const log2 = tx.receipt.rawLogs[2]
+
+      const txHash = ethers.utils.keccak256(encodeMetaTransactionsData(wallet.address, [transaction, transaction], networkId, 0))
+
+      expect(log1.topics.length).to.equal(0)
+      expect(log1.data).to.be.equal(txHash)
+
+      expect(log2.topics.length).to.equal(0)
+      expect(log2.data).to.be.equal(txHash)
     })
   })
 })

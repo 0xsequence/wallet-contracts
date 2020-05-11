@@ -9,6 +9,7 @@
     "clean": "rm -rf build && rm -rf typings/contracts",
     "test": "buidler test",
     "test:truffle": "tsc -b && truffle test --network ganache build/*.spec.js",
+    "benchmark": "BENCHMARK=true yarn test",
     "gen:contract-typings": "rm -f typings/contracts/* && typechain --target ethers --outDir typings/contracts './build/contracts/*.json'",
     "lint": "yarn lint:ts && yarn lint:sol",
     "lint:fix": "yarn lint:ts:fix && yarn lint:sol:fix",
