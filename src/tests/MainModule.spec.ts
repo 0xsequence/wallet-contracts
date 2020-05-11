@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -1725,6 +1725,49 @@ contract('MainModule', (accounts: string[]) => {
 
       const tx = wallet.createContract(deployCode)
       expect(tx).to.be.rejectedWith('ModuleBase#onlySelf: NOT_AUTHORIZED')
+    })
+  })
+  describe('Transaction events', () => {
+    const transaction = {
+      delegateCall: false,
+      revertOnError: true,
+      gasLimit: ethers.constants.MaxUint256,
+      target: ethers.constants.AddressZero,
+      value: ethers.constants.Zero,
+      data: []
+    }
+
+    it('Should emit TxExecuted event', async () => {
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId) as any
+      const log = tx.logs[1]
+
+      const txHash = ethers.utils.keccak256(encodeMetaTransactionsData(wallet.address, [transaction], networkId, 0))
+
+      expect(log.event).to.be.equal('TxExecuted')
+      expect(log.args.__length__).to.equal(3)
+      expect(log.args._tx).to.be.equal(txHash)
+      expect(log.args._result).to.be.null
+      expect(log.args._index).to.eq.BN(0)
+    })
+
+    it('Should emit multiple TxExecuted events', async () => {
+      const tx = await signAndExecuteMetaTx(wallet, owner, [transaction, transaction], networkId) as any
+      const log1 = tx.logs[1]
+      const log2 = tx.logs[2]
+
+      const txHash = ethers.utils.keccak256(encodeMetaTransactionsData(wallet.address, [transaction, transaction], networkId, 0))
+
+      expect(log1.event).to.be.equal('TxExecuted')
+      expect(log1.args.__length__).to.equal(3)
+      expect(log1.args._tx).to.be.equal(txHash)
+      expect(log1.args._result).to.be.null
+      expect(log1.args._index).to.eq.BN(0)
+
+      expect(log2.event).to.be.equal('TxExecuted')
+      expect(log2.args.__length__).to.equal(3)
+      expect(log2.args._tx).to.be.equal(txHash)
+      expect(log2.args._result).to.be.null
+      expect(log2.args._index).to.eq.BN(1)
     })
   })
 })
