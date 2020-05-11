@@ -5,8 +5,8 @@ pragma experimental ABIEncoderV2;
 interface IModuleCalls {
   // Events
   event NonceChange(uint256 _space, uint256 _newNonce);
-  event TxFailed(bytes32 _tx, uint256 _index, bytes _reason);
-  event TxExecuted(bytes32 _tx, uint256 _index, bytes _result);
+  event TxFailed(bytes32 _tx, bytes _reason);
+  event TxExecuted(bytes32 _tx) anonymous;
 
   // Transaction structure
   struct Transaction {
