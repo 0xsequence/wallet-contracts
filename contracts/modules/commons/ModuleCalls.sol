@@ -1,6 +1,7 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
+import "./ModuleSelfAuth.sol";
 import "./ModuleStorage.sol";
 import "./ModuleERC165.sol";
 
@@ -8,7 +9,7 @@ import "./interfaces/IModuleCalls.sol";
 import "./interfaces/IModuleAuth.sol";
 
 
-abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
+abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth {
   //                       NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
   bytes32 private constant NONCE_KEY = bytes32(0x8d0bf1fd623d628c741362c1289948e57b3e2905218c676d3e69abee36d6ae2e);
 
@@ -65,6 +66,34 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
       "MainModule#_signatureValidation: INVALID_SIGNATURE"
     );
 
+    // Execute the transactions
+    _execute(txHash, _txs);
+  }
+
+  /**
+   * @notice Allow wallet to execute an action
+   *   without signing the message
+   * @param _txs  Transactions to execute
+   */
+  function selfExecute(
+    Transaction[] memory _txs
+  ) public override onlySelf {
+    // Hash transaction bundle
+    bytes32 txHash = _hashData(abi.encode('self:', _txs));
+
+    // Execute the transactions
+    _execute(txHash, _txs);
+  }
+
+  /**
+   * @notice Executes a list of transactions
+   * @param _txHash  Hash of the batch of transactions
+   * @param _txs  Transactions to execute
+   */
+  function _execute(
+    bytes32 _txHash,
+    Transaction[] memory _txs
+  ) private {
     // Execute transaction
     for (uint256 i = 0; i < _txs.length; i++) {
       Transaction memory transaction = _txs[i];
@@ -84,9 +113,9 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165 {
       }
 
       if (success) {
-        emit TxExecuted(txHash);
+        emit TxExecuted(_txHash);
       } else {
-        _revertBytes(transaction, txHash, result);
+        _revertBytes(transaction, _txHash, result);
       }
     }
   }

@@ -43,4 +43,13 @@ interface IModuleCalls {
     uint256 _nonce,
     bytes calldata _signature
   ) external;
+
+  /**
+   * @notice Allow wallet to execute an action
+   *   without signing the message
+   * @param _txs  Transactions to execute
+   */
+  function selfExecute(
+    Transaction[] calldata _txs
+  ) external;
 }
