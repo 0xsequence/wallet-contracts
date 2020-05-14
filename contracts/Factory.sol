@@ -7,21 +7,4 @@ contract Factory {
     bytes memory code = abi.encodePacked(Wallet.creationCode, uint256(_mainModule));
     assembly { _contract := create2(callvalue(), add(code, 32), mload(code), _salt) }
   }
-
-  function addressOf(address _mainModule, bytes32 _salt) external view returns (address) {
-    bytes memory code = abi.encodePacked(Wallet.creationCode, uint256(_mainModule));
-
-    return address(
-      uint256(
-        keccak256(
-          abi.encodePacked(
-            bytes1(0xff),
-            address(this),
-            _salt,
-            keccak256(code)
-          )
-        )
-      )
-    );
-  }
 }

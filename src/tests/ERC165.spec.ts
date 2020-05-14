@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf } from './utils'
+import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf, addressOf } from './utils'
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -57,7 +57,7 @@ contract('ERC165', () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
     await factory.deploy(module.address, salt)
-    wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+    wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
   })
 
   describe('Implement all interfaces for ERC165 on MainModule', () => {

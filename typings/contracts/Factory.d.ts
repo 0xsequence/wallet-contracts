@@ -15,10 +15,6 @@ interface FactoryInterface extends Interface {
     deploy: TypedFunctionDescription<{
       encode([_mainModule, _salt]: [string, Arrayish]): string;
     }>;
-
-    addressOf: TypedFunctionDescription<{
-      encode([_mainModule, _salt]: [string, Arrayish]): string;
-    }>;
   };
 
   events: {};
@@ -43,8 +39,6 @@ export class Factory extends Contract {
       _salt: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
-
-    addressOf(_mainModule: string, _salt: Arrayish): Promise<string>;
   };
 
   deploy(
@@ -53,13 +47,9 @@ export class Factory extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  addressOf(_mainModule: string, _salt: Arrayish): Promise<string>;
-
   filters: {};
 
   estimate: {
     deploy(_mainModule: string, _salt: Arrayish): Promise<BigNumber>;
-
-    addressOf(_mainModule: string, _salt: Arrayish): Promise<BigNumber>;
   };
 }
