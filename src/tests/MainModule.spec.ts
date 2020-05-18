@@ -929,7 +929,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const newWallet = (await MainModuleUpgradableArtifact.at(wallet.address)) as MainModuleUpgradable
 
-        const migrateTransactions = [
+        const migrateBundle = [
           {
             delegateCall: false,
             revertOnError: true,
@@ -948,7 +948,18 @@ contract('MainModule', (accounts: string[]) => {
           }
         ]
 
-        await signAndExecuteMetaTx(wallet, owner, migrateTransactions, networkId)
+        const migrateTransaction = [
+          {
+            delegateCall: false,
+            revertOnError: false,
+            gasLimit: ethers.constants.MaxUint256,
+            target: wallet.address,
+            value: ethers.constants.Zero,
+            data: wallet.contract.methods.selfExecute(migrateBundle).encodeABI()
+          }
+        ]
+
+        await signAndExecuteMetaTx(wallet, owner, migrateTransaction, networkId)
         wallet = newWallet
       })
       it('Should implement new upgradable module', async () => {
@@ -1767,6 +1778,223 @@ contract('MainModule', (accounts: string[]) => {
 
       expect(log2.topics.length).to.equal(0)
       expect(log2.data).to.be.equal(txHash)
+    })
+  })
+  describe('Interanl bundles', () => {
+    it('Should execute internal bundle', async () => {
+      const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      const expected1 = await web3.utils.randomHex(552)
+      const expected2 = await web3.utils.randomHex(24)
+
+      const bundle = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: callReceiver1.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(11, expected1).encodeABI()
+        },
+        {
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: ethers.constants.MaxUint256,
+          target: callReceiver2.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(12, expected2).encodeABI()
+        }
+      ]
+
+      const transaction = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.selfExecute(bundle).encodeABI()
+        }
+      ]
+
+      await signAndExecuteMetaTx(wallet, owner, transaction, networkId)
+
+      expect(await callReceiver1.lastValA()).to.eq.BN(11)
+      expect(await callReceiver2.lastValA()).to.eq.BN(12)
+
+      expect(await callReceiver1.lastValB()).to.eq.BN(expected1)
+      expect(await callReceiver2.lastValB()).to.eq.BN(expected2)
+    })
+    it('Should execute multiple internal bundles', async () => {
+      const data = [
+        [
+          { i: 0, a: 142, b: 412 },
+          { i: 1, a: 123, b: 2 }
+        ], [
+          { i: 2, a: 142, b: 2 },
+          { i: 3, a: 642, b: 33 },
+          { i: 4, a: 122, b: 12 },
+          { i: 5, a: 611, b: 53 }
+        ], [
+          { i: 6, a: 2, b: 1 }
+        ],
+        []
+      ]
+
+      const contracts = await Promise.all((data as any).flat().map(() => CallReceiverMockArtifact.new()))
+      const expectedb = await Promise.all((data as any).flat().map((d) => web3.utils.randomHex(d.b)))
+
+      const bundles = data.map((bundle) => {
+        return bundle.map((obj) => ({
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: ethers.constants.MaxUint256,
+          value: ethers.constants.Zero,
+          target: (contracts[obj.i] as CallReceiverMock).address,
+          data: (contracts[obj.i] as CallReceiverMock).contract.methods.testCall(obj.a, expectedb[obj.i]).encodeABI()
+        }))
+      })
+
+      const transactions = bundles.map((bundle) => ({
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
+        target: wallet.address,
+        value: ethers.constants.Zero,
+        data: wallet.contract.methods.selfExecute(bundle).encodeABI()
+      }))
+
+      await signAndExecuteMetaTx(wallet, owner, transactions, networkId)
+
+      const lastValsA = await Promise.all(contracts.map((c: CallReceiverMock) => c.lastValA()))
+      const lastValsB = await Promise.all(contracts.map((c: CallReceiverMock) => c.lastValB()))
+
+      lastValsA.forEach((val, i) => expect(val).to.eq.BN((data as any).flat()[i].a))
+      lastValsB.forEach((val, i) => expect(val).to.equal(expectedb[i]))
+    })
+    it('Should execute nested internal bundles', async () => {
+      const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      const expected1 = await web3.utils.randomHex(552)
+      const expected2 = await web3.utils.randomHex(24)
+
+      const bundle = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: callReceiver1.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(11, expected1).encodeABI()
+        },
+        {
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: ethers.constants.MaxUint256,
+          target: callReceiver2.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(12, expected2).encodeABI()
+        }
+      ]
+
+      const nestedBundle = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.selfExecute(bundle).encodeABI()
+        }
+      ]
+
+      const transaction = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.selfExecute(nestedBundle).encodeABI()
+        }
+      ]
+
+      await signAndExecuteMetaTx(wallet, owner, transaction, networkId)
+
+      expect(await callReceiver1.lastValA()).to.eq.BN(11)
+      expect(await callReceiver2.lastValA()).to.eq.BN(12)
+
+      expect(await callReceiver1.lastValB()).to.eq.BN(expected1)
+      expect(await callReceiver2.lastValB()).to.eq.BN(expected2)
+    })
+    it('Should revert bundle without reverting transaction', async () => {
+      const callReceiver1 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
+      const callReceiver3 = await CallReceiverMockArtifact.new() as CallReceiverMock
+
+      const expected1 = await web3.utils.randomHex(552)
+      const expected2 = await web3.utils.randomHex(24)
+      const expected3 = await web3.utils.randomHex(5123)
+
+      const bundle = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: callReceiver1.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(11, expected1).encodeABI()
+        },
+        {
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: ethers.constants.MaxUint256,
+          target: callReceiver2.address,
+          value: ethers.constants.Zero,
+          data: callReceiver2.contract.methods.testCall(12, expected2).encodeABI()
+        },
+        {
+          // Tris transaction will revert
+          // because Factory has no fallback
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.MaxUint256,
+          target: factory.address,
+          value: ethers.constants.Zero,
+          data: callReceiver1.contract.methods.testCall(12, expected2).encodeABI()
+        }
+      ]
+
+      const transaction = [
+        {
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: ethers.constants.MaxUint256,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.selfExecute(bundle).encodeABI()
+        },
+        {
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: ethers.constants.MaxUint256,
+          target: callReceiver3.address,
+          value: ethers.constants.Zero,
+          data: callReceiver3.contract.methods.testCall(51, expected3).encodeABI()
+        },
+      ]
+
+      await signAndExecuteMetaTx(wallet, owner, transaction, networkId)
+
+      expect(await callReceiver1.lastValA()).to.eq.BN(0)
+      expect(await callReceiver2.lastValA()).to.eq.BN(0)
+      expect(await callReceiver3.lastValA()).to.eq.BN(51)
+
+      expect(await callReceiver1.lastValB()).to.equal(null)
+      expect(await callReceiver2.lastValB()).to.equal(null)
+      expect(await callReceiver3.lastValB()).to.eq.BN(expected3)
     })
   })
 })
