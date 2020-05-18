@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf } from './utils'
+import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf, addressOf } from './utils'
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -57,7 +57,7 @@ contract('ERC165', () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
     await factory.deploy(module.address, salt)
-    wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+    wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
   })
 
   describe('Implement all interfaces for ERC165 on MainModule', () => {
@@ -106,6 +106,20 @@ contract('ERC165', () => {
         expect(web3.utils.toBN(interfaceId)).to.not.eq.BN(0)
 
         const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, interfaceId)
+        expect(erc165result).to.be.true
+      })
+    })
+  })
+  describe('Manually defined interfaces', () => {
+    const interfaces = [
+      ['ERC165', '0x01ffc9a7'],
+      ['ERC721', '0x150b7a02'],
+      ['ERC1155', '0x4e2312e0']
+    ]
+
+    interfaces.forEach((i) => {
+      it(`Should implement ${i[0]} interface`, async () => {
+        const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, i[1])
         expect(erc165result).to.be.true
       })
     })

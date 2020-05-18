@@ -44,7 +44,7 @@ interface ModuleCallsInterface extends Interface {
     }>;
 
     TxFailed: TypedEventDescription<{
-      encodeTopics([_index, _reason]: [null, null]): string[];
+      encodeTopics([_tx, _reason]: [null, null]): string[];
     }>;
   };
 }
@@ -107,7 +107,7 @@ export class ModuleCalls extends Contract {
   filters: {
     NonceChange(_space: null, _newNonce: null): EventFilter;
 
-    TxFailed(_index: null, _reason: null): EventFilter;
+    TxFailed(_tx: null, _reason: null): EventFilter;
   };
 
   estimate: {

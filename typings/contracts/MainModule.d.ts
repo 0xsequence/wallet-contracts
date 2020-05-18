@@ -100,7 +100,7 @@ interface MainModuleInterface extends Interface {
     }>;
 
     TxFailed: TypedEventDescription<{
-      encodeTopics([_index, _reason]: [null, null]): string[];
+      encodeTopics([_tx, _reason]: [null, null]): string[];
     }>;
   };
 }
@@ -275,7 +275,7 @@ export class MainModule extends Contract {
 
     NonceChange(_space: null, _newNonce: null): EventFilter;
 
-    TxFailed(_index: null, _reason: null): EventFilter;
+    TxFailed(_tx: null, _reason: null): EventFilter;
   };
 
   estimate: {

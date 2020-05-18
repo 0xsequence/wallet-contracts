@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx } from './utils';
+import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { Factory } from 'typings/contracts/Factory'
@@ -71,7 +71,7 @@ contract('MainModule', () => {
           const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
           const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
           await factory.deploy(module.address, salt)
-          const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+          const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
 
           const tx = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId) as any
           results.push(tx.receipt.gasUsed)
@@ -98,7 +98,7 @@ contract('MainModule', () => {
             const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
             const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
             await factory.deploy(module.address, salt)
-            const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+            const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
 
             const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
             results.push(tx.receipt.gasUsed)
@@ -133,7 +133,7 @@ contract('MainModule', () => {
             const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
             const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
             await factory.deploy(module.address, salt)
-            const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+            const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
 
             const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
             results.push(tx.receipt.gasUsed)
@@ -169,7 +169,7 @@ contract('MainModule', () => {
           )
 
           await factory.deploy(module.address, salt)
-          const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+          const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
 
           const signers = [0, 3]
 
@@ -210,7 +210,7 @@ contract('MainModule', () => {
           )
 
           await factory.deploy(module.address, salt)
-          const wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+          const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
 
           const accounts = owners.map((owner) => ({
             weight: weight,

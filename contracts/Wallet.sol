@@ -1,4 +1,4 @@
-pragma solidity ^0.6.7;
+pragma solidity ^0.6.8;
 
 /**
     Minimal upgradeable proxy implementation, delegates all calls to the address

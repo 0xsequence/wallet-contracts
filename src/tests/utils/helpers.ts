@@ -319,3 +319,26 @@ export function interfaceIdOf(int: ethers.utils.Interface): string {
   return signatures.reduce((p, c) => xor(p, c))
 }
 
+export const WALLET_CODE ='0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3'
+
+export function addressOf(
+  factory: string,
+  mainModule: string,
+  imageHash: string
+): string {
+  const codeHash = ethers.utils.keccak256(
+    ethers.utils.solidityPack(
+      ['bytes', 'bytes32'],
+      [WALLET_CODE, ethers.utils.hexZeroPad(mainModule, 32)]
+    )
+  )
+
+  const hash = ethers.utils.keccak256(
+    ethers.utils.solidityPack(
+      ['bytes1', 'address', 'bytes32', 'bytes32'],
+      ['0xff', factory, imageHash, codeHash]
+    )
+  )
+
+  return ethers.utils.getAddress(ethers.utils.hexDataSlice(hash, 12))
+}

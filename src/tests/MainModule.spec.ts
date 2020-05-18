@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -52,7 +52,7 @@ contract('MainModule', (accounts: string[]) => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
     await factory.deploy(module.address, salt)
-    wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+    wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
   })
 
   describe('Authentication', () => {
@@ -1062,7 +1062,7 @@ contract('MainModule', (accounts: string[]) => {
         )
 
         await factory.deploy(module.address, salt)
-        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+        wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
       })
       it('Should accept signed message by first owner', async () => {
         const accounts = [{
@@ -1146,7 +1146,7 @@ contract('MainModule', (accounts: string[]) => {
         )
 
         await factory.deploy(module.address, salt)
-        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+        wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
       })
       it('Should accept signed message by both owners', async () => {
         const accounts = [{
@@ -1238,7 +1238,7 @@ contract('MainModule', (accounts: string[]) => {
         )
 
         await factory.deploy(module.address, salt)
-        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+        wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
       })
 
       it('Should accept signed message by first and second owner', async () => {
@@ -1406,7 +1406,7 @@ contract('MainModule', (accounts: string[]) => {
         )
 
         await factory.deploy(module.address, salt)
-        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+        wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
       })
 
       it('Should accept message signed by all owners', async () => {
@@ -1458,7 +1458,7 @@ contract('MainModule', (accounts: string[]) => {
         )
 
         await factory.deploy(module.address, salt)
-        wallet = await MainModuleArtifact.at(await factory.addressOf(module.address, salt)) as MainModule
+        wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
       })
 
       it('Should accept signed message with (3+1)/4 weight', async () => {
