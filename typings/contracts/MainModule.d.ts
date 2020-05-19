@@ -81,6 +81,19 @@ interface MainModuleInterface extends Interface {
       encode([_signature]: [Arrayish]): string;
     }>;
 
+    selfExecute: TypedFunctionDescription<{
+      encode([_txs]: [
+        {
+          delegateCall: boolean;
+          revertOnError: boolean;
+          gasLimit: BigNumberish;
+          target: string;
+          value: BigNumberish;
+          data: Arrayish;
+        }[]
+      ]): string;
+    }>;
+
     updateImplementation: TypedFunctionDescription<{
       encode([_implementation]: [string]): string;
     }>;
@@ -187,6 +200,18 @@ export class MainModule extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    selfExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[],
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
     updateImplementation(
       _implementation: string,
       overrides?: TransactionOverrides
@@ -263,6 +288,18 @@ export class MainModule extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  selfExecute(
+    _txs: {
+      delegateCall: boolean;
+      revertOnError: boolean;
+      gasLimit: BigNumberish;
+      target: string;
+      value: BigNumberish;
+      data: Arrayish;
+    }[],
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
   updateImplementation(
     _implementation: string,
     overrides?: TransactionOverrides
@@ -335,6 +372,17 @@ export class MainModule extends Contract {
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;
+
+    selfExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[]
+    ): Promise<BigNumber>;
 
     updateImplementation(_implementation: string): Promise<BigNumber>;
 

@@ -79,6 +79,19 @@ interface MainModuleUpgradableInterface extends Interface {
       encode([_signature]: [Arrayish]): string;
     }>;
 
+    selfExecute: TypedFunctionDescription<{
+      encode([_txs]: [
+        {
+          delegateCall: boolean;
+          revertOnError: boolean;
+          gasLimit: BigNumberish;
+          target: string;
+          value: BigNumberish;
+          data: Arrayish;
+        }[]
+      ]): string;
+    }>;
+
     updateImageHash: TypedFunctionDescription<{
       encode([_imageHash]: [Arrayish]): string;
     }>;
@@ -190,6 +203,18 @@ export class MainModuleUpgradable extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    selfExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[],
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
     updateImageHash(
       _imageHash: Arrayish,
       overrides?: TransactionOverrides
@@ -269,6 +294,18 @@ export class MainModuleUpgradable extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
+  selfExecute(
+    _txs: {
+      delegateCall: boolean;
+      revertOnError: boolean;
+      gasLimit: BigNumberish;
+      target: string;
+      value: BigNumberish;
+      data: Arrayish;
+    }[],
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
   updateImageHash(
     _imageHash: Arrayish,
     overrides?: TransactionOverrides
@@ -344,6 +381,17 @@ export class MainModuleUpgradable extends Contract {
     readNonce(_space: BigNumberish): Promise<BigNumber>;
 
     removeHook(_signature: Arrayish): Promise<BigNumber>;
+
+    selfExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[]
+    ): Promise<BigNumber>;
 
     updateImageHash(_imageHash: Arrayish): Promise<BigNumber>;
 

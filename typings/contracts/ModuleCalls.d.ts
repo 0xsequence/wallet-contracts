@@ -33,6 +33,19 @@ interface ModuleCallsInterface extends Interface {
       ]): string;
     }>;
 
+    selfExecute: TypedFunctionDescription<{
+      encode([_txs]: [
+        {
+          delegateCall: boolean;
+          revertOnError: boolean;
+          gasLimit: BigNumberish;
+          target: string;
+          value: BigNumberish;
+          data: Arrayish;
+        }[]
+      ]): string;
+    }>;
+
     supportsInterface: TypedFunctionDescription<{
       encode([_interfaceID]: [Arrayish]): string;
     }>;
@@ -81,6 +94,18 @@ export class ModuleCalls extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    selfExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[],
+      overrides?: TransactionOverrides
+    ): Promise<ContractTransaction>;
+
     supportsInterface(_interfaceID: Arrayish): Promise<boolean>;
   };
 
@@ -99,6 +124,18 @@ export class ModuleCalls extends Contract {
     }[],
     _nonce: BigNumberish,
     _signature: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  selfExecute(
+    _txs: {
+      delegateCall: boolean;
+      revertOnError: boolean;
+      gasLimit: BigNumberish;
+      target: string;
+      value: BigNumberish;
+      data: Arrayish;
+    }[],
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
@@ -126,6 +163,17 @@ export class ModuleCalls extends Contract {
       }[],
       _nonce: BigNumberish,
       _signature: Arrayish
+    ): Promise<BigNumber>;
+
+    selfExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: Arrayish;
+      }[]
     ): Promise<BigNumber>;
 
     supportsInterface(_interfaceID: Arrayish): Promise<BigNumber>;
