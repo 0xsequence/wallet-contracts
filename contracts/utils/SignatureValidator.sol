@@ -78,11 +78,11 @@ contract SignatureValidator {
     // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/cryptography/ECDSA.sol
 
     if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
-      revert("SignatureValidator#recoverSigner invalid signature 's' value");
+      revert("SignatureValidator#recoverSigner: invalid signature 's' value");
     }
 
     if (v != 27 && v != 28) {
-      revert("SignatureValidator#recoverSigner invalid signature 'v' value");
+      revert("SignatureValidator#recoverSigner: invalid signature 'v' value");
     }
 
     // Signature using EIP712
