@@ -2,6 +2,8 @@ pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IERC1271Wallet.sol";
+
+import "./ECDSA.sol";
 import "./LibBytes.sol";
 
 /**
@@ -65,15 +67,15 @@ contract SignatureValidator {
 
     // Signature using EIP712
     if (signatureType == SignatureType.EIP712) {
-      signer = ecrecover(_hash, v, r, s);
+      signer = ECDSA.recover(_hash, r, s, v);
 
     // Signed using web3.eth_sign() or Ethers wallet.signMessage()
     } else if (signatureType == SignatureType.EthSign) {
-      signer = ecrecover(
+      signer = ECDSA.recover(
         keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _hash)),
-        v,
         r,
-        s
+        s,
+        v
       );
 
     } else {
