@@ -5,7 +5,6 @@
   "license": "none",
   "scripts": {
     "prepare": "npm run build",
-    "prebuild": "yarn clean",
     "build": "buidler compile",
     "postbuild": "yarn gen:contract-typings && tsc -b",
     "clean": "rm -rf artifacts && rm -rf typings/contracts && rm -rf cache",
