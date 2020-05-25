@@ -263,6 +263,20 @@ contract('MainModule', (accounts: string[]) => {
         })
       })
     })
+    it('Should reject signature with invalid flag', async () => {
+      const signature = '0x00010201'
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.MaxUint256,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }
+
+      const tx = wallet.execute([transaction], 0, signature)
+      await expect(tx).to.be.rejectedWith(RevertError('ModuleAuth#_signatureValidation INVALID_FLAG'))
+    })
   })
   describe('Upgradeability', () => {  
     it('Should update implementation', async () => {

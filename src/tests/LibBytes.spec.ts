@@ -50,31 +50,31 @@ contract('LibBytes', (accounts: string[]) => {
     })
   })
 
-  describe('readBoolUint8', () => {
+  describe('readUint8Uint8', () => {
     it('Should read bool and uint8 at index zero', async () => {
-      const res = await libBytes.readBoolUint8('0x011e4453120a', 0)
-      expect(res[0]).to.eq.BN(true)
+      const res = await libBytes.readUint8Uint8('0x011e4453120a', 0)
+      expect(res[0]).to.eq.BN(1)
       expect(res[1]).to.eq.BN(30)
       expect(res[2]).to.eq.BN(2)
     })
     it('Should read bool and uint8 at given index', async () => {
-      const res = await libBytes.readBoolUint8('0x5a9c2a0019d401d3', 3)
-      expect(res[0]).to.eq.BN(false)
+      const res = await libBytes.readUint8Uint8('0x5a9c2a0019d401d3', 3)
+      expect(res[0]).to.eq.BN(0)
       expect(res[1]).to.eq.BN(25)
       expect(res[2]).to.eq.BN(5)
     })
     it('Should read bool and uint8 at last index', async () => {
-      const res = await libBytes.readBoolUint8('0x020114', 1)
-      expect(res[0]).to.eq.BN(true)
+      const res = await libBytes.readUint8Uint8('0x020414', 1)
+      expect(res[0]).to.eq.BN(4)
       expect(res[1]).to.eq.BN(20)
       expect(res[2]).to.eq.BN(3)
     })
     it('Should fail read bool and uint8 out of bounds', async () => {
-      const tx = libBytes.readBoolUint8('0x5a', 0)
+      const tx = libBytes.readUint8Uint8('0x5a', 0)
       await expect(tx).to.be.rejectedWith('LibBytes#readUint8Uint8: OUT_OF_BOUNDS')
     })
     it('Should fail read bool and uint16 fully out of bounds', async () => {
-      const tx = libBytes.readBoolUint8('0x5a9ca2', 12)
+      const tx = libBytes.readUint8Uint8('0x5a9ca2', 12)
       await expect(tx).to.be.rejectedWith('LibBytes#readUint8Uint8: OUT_OF_BOUNDS')
     })
   })

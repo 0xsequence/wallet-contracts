@@ -13,6 +13,9 @@ import "./ModuleERC165.sol";
 abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, IERC1271Wallet {
   using LibBytes for bytes;
 
+  uint256 private constant FLAG_SIGNATURE = 0;
+  uint256 private constant FLAG_ADDRESS = 1;
+
   bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
 
@@ -25,16 +28,20 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    * @dev The signature must be solidity packed and contain the total number of owners,
    *      the threshold, the weigth and either the address or a signature for each owner.
    *
-   *      Each weight & (address or signature) pair is prefixed by a boolean that signals if such pair
+   *      Each weight & (address or signature) pair is prefixed by a flag that signals if such pair
    *      contains an address or a signature. The aggregated weight of the signatures must surpass the threshold.
+   *
+   *      Flag types:
+   *        0x00 - Signature
+   *        0x01 - Address
    *
    *      E.g:
    *      abi.encodePacked(
    *        uint8 nSigners, uint16 threshold,
-   *        bool true,  uint8 weight_1, address signer_1,
-   *        bool false, uint8 weight_2, bytes signature_2,
+   *        uint8 01,  uint8 weight_1, address signer_1,
+   *        uint8 00, uint8 weight_2, bytes signature_2,
    *        ...
-   *        bool true,  uint8 weight_5, address signer_5
+   *        uint8 01,  uint8 weight_5, address signer_5
    *      )
    */
   function _signatureValidation(
@@ -57,13 +64,13 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     // Iterate until the image is completed
     while (rindex < _signature.length) {
       // Read next item type and addrWeight
-      bool isAddr; uint256 addrWeight; address addr;
-      (isAddr, addrWeight, rindex) = _signature.readBoolUint8(rindex);
+      uint256 flag; uint256 addrWeight; address addr;
+      (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
 
-      if (isAddr) {
+      if (flag == FLAG_ADDRESS) {
         // Read plain address
         (addr, rindex) = _signature.readAddress(rindex);
-      } else {
+      } else if (flag == FLAG_SIGNATURE) {
         // Read single signature and recover signer
         bytes memory signature;
         (signature, rindex) = _signature.readBytes66(rindex);
@@ -71,6 +78,8 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
 
         // Acumulate total weight of the signature
         totalWeight += addrWeight;
+      } else {
+        revert("ModuleAuth#_signatureValidation INVALID_FLAG");
       }
 
       // Write weight and address to image
