@@ -7,3 +7,4 @@ typings/contracts/*Factory.ts
 .vs_code/
 
 node_modules/
+typings/contracts/
