@@ -24,20 +24,8 @@ contract SignatureValidator {
   bytes4 constant internal ERC1271_MAGICVALUE_BYTES32 = 0x1626ba7e;
 
   // Allowed signature types.
-  enum SignatureType {
-    Illegal,         // 0x00, default value
-    EIP712,          // 0x01
-    EthSign,         // 0x02
-    NSignatureTypes  // 0x03, number of signature types. Always leave at end.
-  }
-
-  // Encoding of signatures
-  struct Signature {
-    bytes32 r;
-    bytes32 s;
-    uint8 v;
-    SignatureType sigType;
-  }
+  uint256 private constant SIG_TYPE_EIP712 = 1;
+  uint256 private constant SIG_TYPE_ETH_SIGN = 2;
 
   /***********************************|
   |        Signature Functions        |
@@ -54,10 +42,7 @@ contract SignatureValidator {
     bytes memory _signature
   ) internal pure returns (address signer) {
     // Pop last byte off of signature byte array.
-    uint8 signatureTypeRaw = uint8(_signature.popLastByte());
-
-    // Extract signature type
-    SignatureType signatureType = SignatureType(signatureTypeRaw);
+    uint256 signatureType = uint8(_signature.popLastByte());
 
     // Variables are not scoped in Solidity.
     uint8 v = uint8(_signature[64]);
@@ -86,11 +71,11 @@ contract SignatureValidator {
     }
 
     // Signature using EIP712
-    if (signatureType == SignatureType.EIP712) {
+    if (signatureType == SIG_TYPE_EIP712) {
       signer = ecrecover(_hash, v, r, s);
 
     // Signed using web3.eth_sign() or Ethers wallet.signMessage()
-    } else if (signatureType == SignatureType.EthSign) {
+    } else if (signatureType == SIG_TYPE_ETH_SIGN) {
       signer = ecrecover(
         keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _hash)),
         v,
