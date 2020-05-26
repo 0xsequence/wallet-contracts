@@ -21,7 +21,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @dev The default nonce space is 0x00
    * @return The next nonce
    */
-  function nonce() external override view returns (uint256) {
+  function nonce() external override virtual view returns (uint256) {
     return readNonce(0);
   }
 
@@ -30,7 +30,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @param _space Nonce space, each space keeps an independent nonce count
    * @return The next nonce
    */
-  function readNonce(uint256 _space) public override view returns (uint256) {
+  function readNonce(uint256 _space) public override virtual view returns (uint256) {
     return uint256(ModuleStorage.readBytes32Map(NONCE_KEY, bytes32(_space)));
   }
 
@@ -53,7 +53,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     Transaction[] memory _txs,
     uint256 _nonce,
     bytes memory _signature
-  ) public override {
+  ) public override virtual {
     // Validate and update nonce
     _validateNonce(_nonce);
 
@@ -77,7 +77,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    */
   function selfExecute(
     Transaction[] memory _txs
-  ) public override onlySelf {
+  ) public override virtual onlySelf {
     // Hash transaction bundle
     bytes32 txHash = _hashData(abi.encode('self:', _txs));
 
