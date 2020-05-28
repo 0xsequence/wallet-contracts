@@ -829,6 +829,31 @@ contract('MainModule', (accounts: string[]) => {
         )
         await expect(tx).to.be.rejectedWith("HookCallerMock#callERC1271isValidSignatureHash: INVALID_RETURN")
       })
+      it('Should ignore tail of signature', async () => {
+        const signature = await walletSign(owner, message) + 'ff1248d23192351011'
+        await hookMock.callERC1271isValidSignatureHash(
+          wallet.address,
+          hash,
+          signature
+        )
+      })
+      it('Should read signature end flag at the end of signature', async () => {
+        const signature = await walletSign(owner, message) + 'ff'
+        await hookMock.callERC1271isValidSignatureHash(
+          wallet.address,
+          hash,
+          signature
+        )
+      })
+      it('Should read tail of signature if stop flag is not present', async () => {
+        const signature = await walletSign(owner, message) + '1248d23192351011'
+        const tx = hookMock.callERC1271isValidSignatureHash(
+          wallet.address,
+          hash,
+          signature
+        )
+        await expect(tx).to.be.rejectedWith("ModuleAuth#_signatureValidation INVALID_FLAG")
+      })
     })
     describe('External hooks', () => {
       let hookMock
