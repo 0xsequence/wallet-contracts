@@ -25,7 +25,7 @@
     "ganache:stop": "ps aux | grep ganache-cli | grep -v grep | awk '{print $2}' | xargs kill -9"
   },
   "files": [
-    "build/contracts",
+    "artifacts",
     "typings"
   ],
   "config": {
