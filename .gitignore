@@ -8,3 +8,5 @@ typings/contracts/*Factory.ts
 
 node_modules/
 typings/contracts/
+
+yarn-error.log
