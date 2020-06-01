@@ -17,12 +17,12 @@ import "../interfaces/IERC1271Wallet.sol";
 
 
 /**
- * AnonymousModule implement an Arcadeum wallet without signatures, nonce or replay protection.
+ * GuestModule implement an Arcadeum wallet without signatures, nonce or replay protection.
  * executing transactions using this wallet is not an authenticated process, and can be done by any address.
  *
  * @notice This wallet should be considered for public usage, and should never container funds or be assigned to non-public roles.
  */
-contract AnonymousModule is
+contract GuestModule is
   ModuleAuth,
   ModuleCalls,
   ModuleCreator
@@ -37,10 +37,10 @@ contract AnonymousModule is
     bytes memory
   ) public override {
     // Hash transaction bundle
-    bytes32 txHash = _hashData(abi.encode('anonymous:', _txs));
+    bytes32 txHash = _hashData(abi.encode('guest:', _txs));
 
     // Execute the transactions
-    _executeAnonymous(txHash, _txs);
+    _executeGuest(txHash, _txs);
   }
 
   /**
@@ -54,7 +54,7 @@ contract AnonymousModule is
     bytes32 txHash = _hashData(abi.encode('self:', _txs));
 
     // Execute the transactions
-    _executeAnonymous(txHash, _txs);
+    _executeGuest(txHash, _txs);
   }
 
   /**
@@ -62,7 +62,7 @@ contract AnonymousModule is
    * @param _txHash  Hash of the batch of transactions
    * @param _txs  Transactions to execute
    */
-  function _executeAnonymous(
+  function _executeGuest(
     bytes32 _txHash,
     Transaction[] memory _txs
   ) private {
@@ -73,7 +73,7 @@ contract AnonymousModule is
       bool success;
       bytes memory result;
 
-      require(!transaction.delegateCall, 'AnonymousModule#_executeAnonymous: delegateCall not allowed');
+      require(!transaction.delegateCall, 'GuestModule#_executeGuest: delegateCall not allowed');
 
       // solhint-disable
       (success, result) = transaction.target.call{

@@ -1,29 +1,29 @@
 import * as ethers from 'ethers'
 import { expect, RevertError } from './utils';
 
-import { AnonymousModule } from 'typings/contracts/AnonymousModule'
+import { GuestModule } from 'typings/contracts/GuestModule'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
 import { HookCallerMock } from 'typings/contracts/HookCallerMock'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
 
 ethers.errors.setLogLevel("error")
 
-const AnonymousModuleArtifact = artifacts.require('AnonymousModule')
+const GuestModuleArtifact = artifacts.require('GuestModule')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 
 const web3 = (global as any).web3
 
-contract('AnonymousModule', (accounts: string[]) => {
-  let module: AnonymousModule
+contract('GuestModule', (accounts: string[]) => {
+  let module: GuestModule
   let callReceiver: CallReceiverMock
   let hookMock: HookCallerMock
 
-  describe("AnonymousModule wallet", () => {
+  describe("GuestModule wallet", () => {
     before(async () => {
       // Deploy wallet factory
-      module = await AnonymousModuleArtifact.new()
+      module = await GuestModuleArtifact.new()
       callReceiver = await CallReceiverMockArtifact.new()
       hookMock = await HookCallerMockArtifact.new()
     })
@@ -85,7 +85,7 @@ contract('AnonymousModule', (accounts: string[]) => {
       }]
 
       const tx = module.selfExecute(transactions)
-      await expect(tx).to.be.rejectedWith(RevertError('AnonymousModule#_executeAnonymous: delegateCall not allowed'))
+      await expect(tx).to.be.rejectedWith(RevertError('GuestModule#_executeGuest: delegateCall not allowed'))
     })
     it('Should not accept ETH', async () => {
       const tx = module.send(1, { from: accounts[0] })
