@@ -8,3 +8,12 @@ typings/contracts/*Factory.ts
 
 node_modules/
 typings/contracts/
+
+yarn-error.log
+
+.coverage_artifacts/
+.coverage_cache/
+.coverage_contracts/
+coverage/
+
+coverage.json

@@ -50,7 +50,7 @@ contract('ERC165', () => {
     // Deploy ERC165 Checker
     erc165checker = await ERC165CheckerMockArtifact.new() as ERC165CheckerMock
     // Get network ID
-    networkId = await web3.eth.net.getId()
+    networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
   })
 
   beforeEach(async () => {
