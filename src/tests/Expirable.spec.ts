@@ -35,7 +35,7 @@ contract('Expirable', (accounts: string[]) => {
     // Deploy MainModule
     module = await MainModuleArtifact.new(factory.address)
     // Get network ID
-    networkId = await web3.eth.net.getId()
+    networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
     // Deploy expirable util
     expirableUtil = await ExpirableUtilArtifact.new()
   })
