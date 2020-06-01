@@ -45,7 +45,7 @@ contract('MainModule', (accounts: string[]) => {
     module = await MainModuleArtifact.new(factory.address) as MainModule
     moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
     // Get network ID
-    networkId = await web3.eth.net.getId()
+    networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
   })
 
   beforeEach(async () => {
@@ -901,7 +901,7 @@ contract('MainModule', (accounts: string[]) => {
       it('Should pass calling a non registered hook', async () => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature
         const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
-        await web3.eth.sendTransaction({ from: accounts[0], to: wallet.address, data: data })
+        await web3.eth.sendTransaction({ from: accounts[0], to: wallet.address, data: data, gasPrice: 0 })
       })
       it('Should use hooks storage key', async () => {
         const selector = hookMock.abi.find((i) => i.name === 'onHookMockCall').signature

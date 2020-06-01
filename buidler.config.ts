@@ -1,6 +1,7 @@
 import { usePlugin } from "@nomiclabs/buidler/config";
 
 usePlugin("@nomiclabs/buidler-truffle5");
+usePlugin("solidity-coverage");
 
 module.exports = {
   solc: {
