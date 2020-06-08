@@ -86,7 +86,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
       imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
     }
 
-    return totalWeight >= threshold && _isValidImage(imageHash);
+    return imageHash != bytes32(0) && totalWeight >= threshold && _isValidImage(imageHash);
   }
 
   /**
