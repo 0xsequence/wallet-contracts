@@ -34,7 +34,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    * @return true if the signature image is valid
    */
   function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
-    return _imageHash == ModuleStorage.readBytes32(IMAGE_HASH_KEY);
+    return _imageHash != bytes32(0) && _imageHash == ModuleStorage.readBytes32(IMAGE_HASH_KEY);
   }
 
   /**
