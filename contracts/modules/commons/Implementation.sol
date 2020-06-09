@@ -1,6 +1,4 @@
 pragma solidity ^0.6.8;
-pragma experimental ABIEncoderV2;
-
 
 /**
  * @dev Allows modules to access the implementation slot
