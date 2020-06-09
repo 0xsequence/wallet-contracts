@@ -1007,6 +1007,10 @@ contract('MainModule', (accounts: string[]) => {
         const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
         expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(newImageHash)
       })
+      it('Should fail to execute transactions on moduleUpgradable implementation', async () => {
+        const tx = moduleUpgradable.execute([transaction], 0, "0x0000")
+        await expect(tx).to.be.rejectedWith(RevertError('MainModule#_signatureValidation: INVALID_SIGNATURE'))
+      })
       context('After updating the image hash', () => {
         let threshold = 2
         let newOwnerB
