@@ -63,7 +63,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     // Verify that signatures are valid
     require(
       _signatureValidation(txHash, _signature),
-      "MainModule#_signatureValidation: INVALID_SIGNATURE"
+      "ModuleCalls#execute: INVALID_SIGNATURE"
     );
 
     // Execute the transactions
