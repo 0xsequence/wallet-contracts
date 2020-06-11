@@ -88,13 +88,13 @@ contract SignatureValidator {
       // that we currently support. In this case returning false
       // may lead the caller to incorrectly believe that the
       // signature was invalid.)
-      revert("SignatureValidator#isValidSignature: UNSUPPORTED_SIGNATURE_TYPE");
+      revert("SignatureValidator#recoverSigner: UNSUPPORTED_SIGNATURE_TYPE");
     }
 
     // Prevent signer from being 0x0
     require(
       signer != address(0x0),
-      "SignatureValidator#isValidSignature: INVALID_SIGNER"
+      "SignatureValidator#recoverSigner: INVALID_SIGNER"
     );
 
     return signer;
