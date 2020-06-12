@@ -101,6 +101,8 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
       bool success;
       bytes memory result;
 
+      require(gasleft() >= transaction.gasLimit, "ModuleCalls#_execute: NOT_ENOUGH_GAS");
+
       if (transaction.delegateCall) {
         (success, result) = transaction.target.delegatecall{
           gas: transaction.gasLimit
