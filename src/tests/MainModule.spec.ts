@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, multiSignMetaTransactions } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -1715,6 +1715,30 @@ contract('MainModule', (accounts: string[]) => {
       expect(log.event).to.be.equal('TxFailed')
       expect(await callReceiver.lastValA()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+    it('Should fail if transaction is executed with not enough gas', async () => {
+      const gas = 1000000
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: false,
+        gasLimit: gas,
+        target: gasBurner.address,
+        value: ethers.constants.Zero,
+        data: gasBurner.contract.methods.burnGas(0).encodeABI()
+      }
+
+      const signed = await multiSignMetaTransactions(
+        wallet,
+        [{ weight: 1, owner: owner }],
+        1,
+        [transaction],
+        networkId,
+        0
+      )
+
+      const tx = wallet.execute([transaction], 0, signed, { gas: 250000 })
+      await expect(tx).to.be.rejectedWith(RevertError("ModuleCalls#_execute: NOT_ENOUGH_GAS"))
     })
   })
   describe('Create contracts', () => {
