@@ -105,12 +105,12 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
 
       if (transaction.delegateCall) {
         (success, result) = transaction.target.delegatecall{
-          gas: transaction.gasLimit
+          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
         }(transaction.data);
       } else {
         (success, result) = transaction.target.call{
           value: transaction.value,
-          gas: transaction.gasLimit
+          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
         }(transaction.data);
       }
 
