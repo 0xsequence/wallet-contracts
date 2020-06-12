@@ -12,7 +12,7 @@ const MainModuleArtifact = artifacts.require('MainModule')
 const runs = 256
 const web3 = (global as any).web3
 
-const optimalGasLimit = ethers.constants.Two.pow(255)
+const optimalGasLimit = ethers.constants.Two.pow(22)
 
 function report(test: string, values: number[]) {
   const min = Math.min(...values)

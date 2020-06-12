@@ -19,6 +19,8 @@ function now(): number {
   return Math.floor(Date.now() / 1000)
 }
 
+const optimalGasLimit = ethers.constants.Two.pow(21)
+
 contract('Expirable', (accounts: string[]) => {
   let factory: Factory
   let module: MainModule
@@ -64,14 +66,14 @@ contract('Expirable', (accounts: string[]) => {
       const transactions = [{
         delegateCall: false,
         revertOnError: true,
-        gasLimit: ethers.constants.MaxUint256,
+        gasLimit: optimalGasLimit,
         target: expirableUtil.address,
         value: ethers.constants.Zero,
         data: expirableUtil.contract.methods.requireNonExpired(now() + 240).encodeABI()
       }, {
         delegateCall: false,
         revertOnError: true,
-        gasLimit: ethers.constants.MaxUint256,
+        gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -90,14 +92,14 @@ contract('Expirable', (accounts: string[]) => {
       const transactions = [{
         delegateCall: false,
         revertOnError: true,
-        gasLimit: ethers.constants.MaxUint256,
+        gasLimit: optimalGasLimit,
         target: expirableUtil.address,
         value: ethers.constants.Zero,
         data: expirableUtil.contract.methods.requireNonExpired(now() - 1).encodeABI()
       }, {
         delegateCall: false,
         revertOnError: true,
-        gasLimit: ethers.constants.MaxUint256,
+        gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
