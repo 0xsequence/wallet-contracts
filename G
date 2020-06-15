@@ -1,0 +1,6 @@
+Instrucciones
+Para las pruebas
+yarn install
+yarn build
+yarn ganache
+(Terminal diferente) yarn test
