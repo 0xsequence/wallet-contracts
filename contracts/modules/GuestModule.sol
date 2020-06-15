@@ -79,7 +79,7 @@ contract GuestModule is
       // solhint-disable
       (success, result) = transaction.target.call{
         value: transaction.value,
-        gas: transaction.gasLimit
+        gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
       }(transaction.data);
       // solhint-enable
 
