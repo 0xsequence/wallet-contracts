@@ -75,6 +75,7 @@ contract GuestModule is
       bytes memory result;
 
       require(!transaction.delegateCall, 'GuestModule#_executeGuest: delegateCall not allowed');
+      require(gasleft() >= transaction.gasLimit, "GuestModule#_executeGuest: NOT_ENOUGH_GAS");
 
       // solhint-disable
       (success, result) = transaction.target.call{
