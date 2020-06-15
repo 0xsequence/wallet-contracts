@@ -6,11 +6,6 @@ import "../utils/LibBytes.sol";
 contract LibBytesImpl {
   using LibBytes for bytes;
 
-  function popLastByte(bytes memory _data) public pure returns (bytes memory, bytes1) {
-    bytes1 by = _data.popLastByte();
-    return (_data, by);
-  }
-
   function readFirstUint16(bytes calldata _data) external pure returns (uint16, uint256) {
     return _data.readFirstUint16();
   }

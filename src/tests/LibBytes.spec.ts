@@ -16,23 +16,6 @@ contract('LibBytes', (accounts: string[]) => {
     libBytes = await LibBytesImplArtifact.new() as LibBytesImpl
   })
 
-  describe('popLastByte', () => {
-    it('Should pop last byte', async () => {
-      const res = await libBytes.popLastByte('0x010203')
-      expect(res[0]).to.equal('0x0102')
-      expect(res[1]).to.equal('0x03')
-    })
-    it('Should pop single byte', async () => {
-      const res = await libBytes.popLastByte('0x02')
-      expect(res[0]).to.be.null
-      expect(res[1]).to.equal('0x02')
-    })
-    it('Should fail to pop empty array', async () => {
-      const tx = libBytes.popLastByte('0x')
-      await expect(tx).to.be.rejectedWith('LibBytes#popLastByte: GREATER_THAN_ZERO_LENGTH_REQUIRED')
-    })
-  })
-
   describe('readFirstUint16', () => {
     it('Should read first uint16', async () => {
       const res = await libBytes.readFirstUint16('0x03021e4453120a')
