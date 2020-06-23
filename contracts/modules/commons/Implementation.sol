@@ -9,7 +9,7 @@ contract Implementation {
    * @param _imp New implementation address
    * @dev The wallet implementation is stored on the storage slot
    *   defined by the address of the wallet itself
-   *   WARNING updating this value may brick the wallet
+   *   WARNING updating this value may break the wallet
    */
   function _setImplementation(address _imp) internal {
     assembly {

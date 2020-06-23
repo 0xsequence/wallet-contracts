@@ -25,7 +25,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    *                    like the the keys in the multisig configs
    *
    * @dev The signature must be solidity packed and contain the total number of owners,
-   *      the threshold, the weigth and either the address or a signature for each owner.
+   *      the threshold, the weight and either the address or a signature for each owner.
    *
    *      Each weight & (address or signature) pair is prefixed by a flag that signals if such pair
    *      contains an address or a signature. The aggregated weight of the signatures must surpass the threshold.
@@ -36,7 +36,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    *
    *      E.g:
    *      abi.encodePacked(
-   *        uint8 nSigners, uint16 threshold,
+   *        uint16 threshold,
    *        uint8 01,  uint8 weight_1, address signer_1,
    *        uint8 00, uint8 weight_2, bytes signature_2,
    *        ...

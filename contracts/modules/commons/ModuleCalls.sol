@@ -35,7 +35,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
   }
 
   /**
-   * @notice Changes the next nonce of th given nonce space
+   * @notice Changes the next nonce of the given nonce space
    * @param _space Nonce space, each space keeps an independent nonce count
    * @param _nonce Nonce to write on the space
    */
