@@ -1,7 +1,7 @@
 pragma solidity ^0.6.8;
 
 
-interface  IERC1271Wallet {
+interface IERC1271Wallet {
 
   /**
    * @notice Verifies whether the provided signature is valid with respect to the provided data

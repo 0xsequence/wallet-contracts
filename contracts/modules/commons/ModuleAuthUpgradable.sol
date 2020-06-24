@@ -14,6 +14,9 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
   /**
    * @notice Updates the signers configuration of the wallet
    * @param _imageHash New required image hash of the signature
+   * @dev It is recommended to not have more than 200 signers as opcode repricing
+   *      could make transactions impossible to execute as all the signers must be
+   *      passed for each transaction.
    */
   function updateImageHash(bytes32 _imageHash) external override onlySelf {
     require(_imageHash != bytes32(0), "ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH");
