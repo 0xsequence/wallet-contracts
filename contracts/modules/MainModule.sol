@@ -17,7 +17,10 @@ import "../interfaces/IERC1271Wallet.sol";
 
 
 /**
- * Contains the core functionality arcadeum wallets will inherit.
+ * @notice Contains the core functionality arcadeum wallets will inherit.
+ * @dev If using a new main module, developpers must ensure that all inherited
+ *      contracts by the mainmodule don't conflict and are accounted for to be
+ *      supported by the supportsInterface method.
  */
 contract MainModule is
   ModuleAuthFixed,
