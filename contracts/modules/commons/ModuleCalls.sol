@@ -45,6 +45,9 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
 
   /**
    * @notice Allow wallet owner to execute an action
+   * @dev Relayers must ensure that the gasLimit specified for each transaction
+   *      is acceptable to them. A user could specify large enough that it could
+   *      consume all the gas available.
    * @param _txs        Transactions to process
    * @param _nonce      Signature nonce (may contain an encoded space)
    * @param _signature  Encoded signature
