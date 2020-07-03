@@ -40,7 +40,6 @@ contract SignatureValidator {
     bytes32 _hash,
     bytes memory _signature
   ) internal pure returns (address signer) {
-    // Pop last byte off of signature byte array.
     uint256 signatureType = uint8(_signature[_signature.length - 1]);
 
     // Variables are not scoped in Solidity.
