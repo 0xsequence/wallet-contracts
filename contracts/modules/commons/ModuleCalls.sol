@@ -45,6 +45,9 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
 
   /**
    * @notice Allow wallet owner to execute an action
+   * @dev Relayers must ensure that the gasLimit specified for each transaction
+   *      is acceptable to them. A user could specify large enough that it could
+   *      consume all the gas available.
    * @param _txs        Transactions to process
    * @param _nonce      Signature nonce (may contain an encoded space)
    * @param _signature  Encoded signature
@@ -101,14 +104,16 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
       bool success;
       bytes memory result;
 
+      require(gasleft() >= transaction.gasLimit, "ModuleCalls#_execute: NOT_ENOUGH_GAS");
+
       if (transaction.delegateCall) {
         (success, result) = transaction.target.delegatecall{
-          gas: transaction.gasLimit
+          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
         }(transaction.data);
       } else {
         (success, result) = transaction.target.call{
           value: transaction.value,
-          gas: transaction.gasLimit
+          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
         }(transaction.data);
       }
 
