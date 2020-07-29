@@ -39,7 +39,7 @@ contract('GuestModule', (accounts: string[]) => {
       transactions = [{
         delegateCall: false,
         revertOnError: false,
-        gasLimit: 1000000,
+        gasLimit: ethers.constants.Two.pow(20),
         target: callReceiver.address,
         value: ethers.constants.Zero,
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
@@ -102,14 +102,14 @@ contract('GuestModule', (accounts: string[]) => {
       const migrateBundle = [{
         delegateCall: false,
         revertOnError: true,
-        gasLimit: ethers.constants.MaxUint256,
+        gasLimit: ethers.constants.Two.pow(18),
         target: module.address,
         value: ethers.constants.Zero,
         data: mainModule.contract.methods.updateImplementation(mainModule.address).encodeABI()
       }, {
         delegateCall: false,
         revertOnError: true,
-        gasLimit: ethers.constants.MaxUint256,
+        gasLimit: ethers.constants.Two.pow(18),
         target: module.address,
         value: ethers.constants.Zero,
         data: mainModule.contract.methods.updateImageHash(newImageHash).encodeABI()
@@ -118,7 +118,7 @@ contract('GuestModule', (accounts: string[]) => {
       const migrateTransaction = [{
         delegateCall: false,
         revertOnError: true,
-        gasLimit: ethers.constants.MaxUint256,
+        gasLimit: ethers.constants.Two.pow(18),
         target: module.address,
         value: ethers.constants.Zero,
         data: module.contract.methods.selfExecute(migrateBundle).encodeABI()
