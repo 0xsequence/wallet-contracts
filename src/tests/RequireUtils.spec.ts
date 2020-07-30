@@ -158,7 +158,7 @@ contract('Require utils', (accounts: string[]) => {
       }]
 
       const tx = signAndExecuteMetaTx(wallet, owner, transactions, networkId)
-      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils:requireMinNonce: NONCE_BELOW_REQUIRED'))
+      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireMinNonce: NONCE_BELOW_REQUIRED'))
     })
     it('Should fail if nonce is below required on self-wallet on a different space', async () => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
@@ -187,7 +187,7 @@ contract('Require utils', (accounts: string[]) => {
       }]
 
       const tx = signAndExecuteMetaTx(wallet, owner, transactions, networkId)
-      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils:requireMinNonce: NONCE_BELOW_REQUIRED'))
+      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireMinNonce: NONCE_BELOW_REQUIRED'))
     })
     it('Should fail if nonce is below required on self-wallet', async () => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
@@ -214,7 +214,7 @@ contract('Require utils', (accounts: string[]) => {
         data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
       }]
       const tx = signAndExecuteMetaTx(wallet, owner, transactions, networkId)
-      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils:requireMinNonce: NONCE_BELOW_REQUIRED'))
+      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireMinNonce: NONCE_BELOW_REQUIRED'))
     })
   })
   describe('Expirable transactions', () => {
@@ -223,7 +223,7 @@ contract('Require utils', (accounts: string[]) => {
     })
     it('Should fail if expired', async () => {
       const tx = requireUtils.requireNonExpired(now() - 1)
-      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils:requireNonExpired: EXPIRED'))
+      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireNonExpired: EXPIRED'))
     })
     it('Should pass bundle if non expired', async () => {
       const callReceiver = await CallReceiverMockArtifact.new() as CallReceiverMock
@@ -274,7 +274,7 @@ contract('Require utils', (accounts: string[]) => {
       }]
 
       const tx = signAndExecuteMetaTx(wallet, owner, transactions, networkId)
-      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils:requireNonExpired: EXPIRED'))
+      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireNonExpired: EXPIRED'))
     })
   })
 })

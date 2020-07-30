@@ -8,13 +8,13 @@ contract RequireUtils {
   bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
 
   function requireNonExpired(uint256 _expiration) external view {
-    require(block.timestamp < _expiration, "RequireUtils:requireNonExpired: EXPIRED");
+    require(block.timestamp < _expiration, "RequireUtils#requireNonExpired: EXPIRED");
   }
 
   function requireMinNonce(address _wallet, uint256 _nonce) external view {
     (uint256 space, uint256 nonce) = _decodeNonce(_nonce);
     uint256 currentNonce = IModuleCalls(_wallet).readNonce(space);
-    require(currentNonce >= nonce, "RequireUtils:requireMinNonce: NONCE_BELOW_REQUIRED");
+    require(currentNonce >= nonce, "RequireUtils#requireMinNonce: NONCE_BELOW_REQUIRED");
   }
 
   /**
