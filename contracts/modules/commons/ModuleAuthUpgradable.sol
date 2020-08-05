@@ -11,6 +11,8 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
   //                       IMAGE_HASH_KEY = keccak256("org.arcadeum.module.auth.upgradable.image.hash");
   bytes32 private constant IMAGE_HASH_KEY = bytes32(0xea7157fa25e3aa17d0ae2d5280fa4e24d421c61842aa85e45194e1145aa72bf8);
 
+  event ImageHashUpdated(bytes32 oldImageHash, bytes32 newImageHash);
+
   /**
    * @notice Updates the signers configuration of the wallet
    * @param _imageHash New required image hash of the signature
@@ -20,6 +22,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    */
   function updateImageHash(bytes32 _imageHash) external override onlySelf {
     require(_imageHash != bytes32(0), "ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH");
+    emit ImageHashUpdated(ModuleStorage.readBytes32(IMAGE_HASH_KEY), _imageHash);
     ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
   }
 
