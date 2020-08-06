@@ -12,7 +12,7 @@ import "../../utils/LibAddress.sol";
 contract ModuleUpdate is IModuleUpdate, ModuleERC165, ModuleSelfAuth, Implementation {
   using LibAddress for address;
 
-  event ImplementationUpdated(address oldImplementation, address newImplementation);
+  event ImplementationUpdated(address newImplementation);
 
   /**
    * @notice Updates the implementation of the base wallet
@@ -21,8 +21,8 @@ contract ModuleUpdate is IModuleUpdate, ModuleERC165, ModuleSelfAuth, Implementa
    */
   function updateImplementation(address _implementation) external override onlySelf {
     require(_implementation.isContract(), "ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION");
-    emit ImplementationUpdated(_getImplementation(), _implementation);
     _setImplementation(_implementation);
+    emit ImplementationUpdated(_implementation);
   }
 
   /**
