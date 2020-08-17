@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, multiSignMetaTransactions } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, multiSignMetaTransactions, compareAddr } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
@@ -24,6 +24,7 @@ const HookMockArtifact = artifacts.require('HookMock')
 const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const GasBurnerMockArtifact = artifacts.require('GasBurnerMock')
+const RequireUtilsArtifact = artifacts.require('RequireUtils')
 
 const web3 = (global as any).web3
 
@@ -37,6 +38,7 @@ contract('MainModule', (accounts: string[]) => {
   let wallet
 
   let moduleUpgradable
+  let requireUtils
 
   let networkId
 
@@ -48,6 +50,8 @@ contract('MainModule', (accounts: string[]) => {
     moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
+    // Deploy RequireUtils
+    requireUtils = await RequireUtilsArtifact.new()
   })
 
   beforeEach(async () => {
@@ -1012,6 +1016,81 @@ contract('MainModule', (accounts: string[]) => {
       it('Should fail to execute transactions on moduleUpgradable implementation', async () => {
         const tx = moduleUpgradable.execute([transaction], 0, "0x0000")
         await expect(tx).to.be.rejectedWith(RevertError('ModuleCalls#execute: INVALID_SIGNATURE'))
+      })
+      it('Should update wallet and require configuration', async () => {
+        const threshold = 2
+        const newOwnerB = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const newOwnerC = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+        const members = [
+          { weight: 1, signer: newOwnerB.address },
+          { weight: 1, signer: newOwnerC.address }
+        ]
+
+        const newImageHash = encodeImageHash(threshold, [
+          { weight: 1, address: newOwnerB.address },
+          { weight: 1, address: newOwnerC.address }
+        ])
+
+        const migrateTransactions = [{
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+        }, {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.Zero,
+          target: requireUtils.address,
+          value: ethers.constants.Zero,
+          data: requireUtils.contract.methods.requireConfig(
+            wallet.address,
+            threshold,
+            members.sort((a, b) => compareAddr(a.signer, b.signer))
+          ).encodeABI()
+        }]
+
+        await signAndExecuteMetaTx(wallet, newOwnerA, migrateTransactions, networkId)
+      })
+      it('Should fail to update wallet and require wrong configuration', async () => {
+        const threshold = 2
+        const newOwnerB = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const newOwnerC = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+        const members = [
+          { weight: 1, signer: newOwnerB.address },
+          { weight: 1, signer: newOwnerC.address }
+        ]
+
+        const newImageHash = encodeImageHash(threshold, [
+          { weight: 1, address: newOwnerB.address },
+          { weight: 2, address: newOwnerC.address }
+        ])
+
+        const migrateTransactions = [{
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: wallet.address,
+          value: ethers.constants.Zero,
+          data: wallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+        }, {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.Zero,
+          target: requireUtils.address,
+          value: ethers.constants.Zero,
+          data: requireUtils.contract.methods.requireConfig(
+            wallet.address,
+            threshold,
+            members.sort((a, b) => compareAddr(a.signer, b.signer))
+          ).encodeABI()
+        }]
+
+        const tx = signAndExecuteMetaTx(wallet, newOwnerA, migrateTransactions, networkId)
+        await expect(tx).to.be.rejectedWith(RevertError("RequireUtils#requireConfig: UNEXPECTED_IMAGE_HASH"))
       })
       context('After updating the image hash', () => {
         let threshold = 2
