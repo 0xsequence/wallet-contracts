@@ -42,8 +42,8 @@ contract RequireUtils {
     }
 
     // Check against wallet imageHash
-    (bool succed, bytes memory data) = _wallet.call(abi.encodePacked(IModuleAuthUpgradable(_wallet).imageHash.selector));
-    if (succed && data.length == 32) {
+    (bool succeed, bytes memory data) = _wallet.call(abi.encodePacked(IModuleAuthUpgradable(_wallet).imageHash.selector));
+    if (succeed && data.length == 32) {
       // Check contract defined
       bytes32 currentImageHash = abi.decode(data, (bytes32));
       require(currentImageHash == imageHash, "RequireUtils#requireConfig: UNEXPECTED_IMAGE_HASH");
