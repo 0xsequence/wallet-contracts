@@ -40,7 +40,7 @@ contract('Require utils', (accounts: string[]) => {
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
     // Deploy expirable util
-    requireUtils = await RequireUtilsArtifact.new()
+    requireUtils = await RequireUtilsArtifact.new(factory.address, module.address)
   })
 
   beforeEach(async () => {
@@ -219,7 +219,7 @@ contract('Require utils', (accounts: string[]) => {
   })
   describe('Expirable transactions', () => {
     it('Should pass if non expired', async () => {
-      await requireUtils.requireNonExpired(now() + 480)
+      await requireUtils.requireNonExpired(now() + 1480)
     })
     it('Should fail if expired', async () => {
       const tx = requireUtils.requireNonExpired(now() - 1)
@@ -237,7 +237,7 @@ contract('Require utils', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: requireUtils.address,
         value: ethers.constants.Zero,
-        data: requireUtils.contract.methods.requireNonExpired(now() + 480).encodeABI()
+        data: requireUtils.contract.methods.requireNonExpired(now() + 1480).encodeABI()
       }, {
         delegateCall: false,
         revertOnError: true,

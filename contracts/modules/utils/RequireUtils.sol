@@ -3,11 +3,15 @@ pragma experimental ABIEncoderV2;
 
 import "../commons/interfaces/IModuleCalls.sol";
 import "../commons/interfaces/IModuleAuthUpgradable.sol";
+import "../../Wallet.sol";
 
 
 contract RequireUtils {
   uint256 private constant NONCE_BITS = 96;
   bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
+
+  bytes32 private immutable INIT_CODE_HASH;
+  address private immutable FACTORY;
 
   struct Member {
     uint256 weight;
@@ -21,6 +25,11 @@ contract RequireUtils {
     bytes _signers
   );
 
+  constructor(address _factory, address _mainModule) public {
+    FACTORY = _factory;
+    INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(_mainModule)));
+  }
+
   function requireConfig(
     address _wallet,
     uint256 _threshold,
@@ -33,7 +42,26 @@ contract RequireUtils {
     }
 
     // Check against wallet imageHash
-    require(IModuleAuthUpgradable(_wallet).imageHash() == imageHash, "RequireUtils#requireConfig: UNEXPECTED_IMAGE_HASH");
+    (bool succeed, bytes memory data) = _wallet.call(abi.encodePacked(IModuleAuthUpgradable(_wallet).imageHash.selector));
+    if (succeed && data.length == 32) {
+      // Check contract defined
+      bytes32 currentImageHash = abi.decode(data, (bytes32));
+      require(currentImageHash == imageHash, "RequireUtils#requireConfig: UNEXPECTED_IMAGE_HASH");
+    } else {
+      // Check counter-factual
+      require(address(
+        uint256(
+          keccak256(
+            abi.encodePacked(
+              byte(0xff),
+              FACTORY,
+              imageHash,
+              INIT_CODE_HASH
+            )
+          )
+        )
+      ) == _wallet, "RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
+    }
 
     // Emit event for easy config retrieval
     emit RequiredConfig(_wallet, imageHash, _threshold, abi.encode(_members));

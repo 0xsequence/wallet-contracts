@@ -51,7 +51,7 @@ contract('MainModule', (accounts: string[]) => {
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
     // Deploy RequireUtils
-    requireUtils = await RequireUtilsArtifact.new()
+    requireUtils = await RequireUtilsArtifact.new(factory.address, module.address)
   })
 
   beforeEach(async () => {
@@ -927,6 +927,91 @@ contract('MainModule', (accounts: string[]) => {
         const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
         expect(ethers.utils.getAddress(storageValue)).to.equal(hookMock.address)
       })
+    })
+  })
+  describe('Require configuration', () => {
+    let wallet2addr: string
+    let salt2: string
+    let owner2: ethers.Wallet
+    let threshold = 1
+    beforeEach(async () => {
+      owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
+      salt2 = encodeImageHash(threshold, [{ weight: 1, address: owner2.address }])
+      wallet2addr = addressOf(factory.address, module.address, salt2)
+    })
+    it('Should require configuration of a non-deployed wallet', async () => {
+      await signAndExecuteMetaTx(wallet, owner, [{
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.Zero,
+        target: requireUtils.address,
+        value: ethers.constants.Zero,
+        data: requireUtils.contract.methods.requireConfig(
+          wallet2addr,
+          threshold,
+          [{
+            signer: owner2.address,
+            weight: 1
+          }]
+        ).encodeABI()
+      }], networkId)
+    })
+    it('Should require configuration of a non-updated wallet', async () => {
+      await factory.deploy(module.address, salt2)
+      const wallet2 = await MainModuleArtifact.at(wallet2addr) as MainModule
+      await signAndExecuteMetaTx(wallet2, owner2, [{
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.Zero,
+        target: requireUtils.address,
+        value: ethers.constants.Zero,
+        data: requireUtils.contract.methods.requireConfig(
+          wallet2.address,
+          threshold,
+          [{
+            signer: owner2.address,
+            weight: 1
+          }]
+        ).encodeABI()
+      }], networkId)
+    })
+    it('Should fail to require configuraiton of a non-deployed wallet', async () => {
+      const tx = signAndExecuteMetaTx(wallet, owner, [{
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.Zero,
+        target: requireUtils.address,
+        value: ethers.constants.Zero,
+        data: requireUtils.contract.methods.requireConfig(
+          wallet2addr,
+          threshold,
+          [{
+            signer: owner2.address,
+            weight: 2
+          }]
+        ).encodeABI()
+      }], networkId)
+      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+    })
+    it('Should fail to require configuration of a non-updated wallet', async () => {
+      await factory.deploy(module.address, salt2)
+      const wallet2 = await MainModuleArtifact.at(wallet2addr) as MainModule
+      const tx = signAndExecuteMetaTx(wallet2, owner2, [{
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.Zero,
+        target: requireUtils.address,
+        value: ethers.constants.Zero,
+        data: requireUtils.contract.methods.requireConfig(
+          wallet2.address,
+          threshold,
+          [{
+            signer: owner2.address,
+            weight: 2
+          }]
+        ).encodeABI()
+      }], networkId)
+      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
     })
   })
   describe('Update owners', async () => {
