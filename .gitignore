@@ -2,6 +2,7 @@ build
 artifacts
 cache
 typings/contracts/*Factory.ts
+src/config/*.env
 
 .vscode/
 .vs_code/

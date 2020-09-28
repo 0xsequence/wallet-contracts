@@ -1,0 +1,18 @@
+[
+  {
+    "contractName": "WalletFactory",
+    "address": "0x1023BdD54C3396cf4FE7AD640d91c62A53B779cd"
+  },
+  {
+    "contractName": "MainModule",
+    "address": "0x5b0A6C3E47D0508796db006437452F5125d26D17"
+  },
+  {
+    "contractName": "MainModuleUpgradable",
+    "address": "0x1Cc40A9a0c5a21f8e1e3315D2BdF26fb883395d8"
+  },
+  {
+    "contractName": "GuestModule",
+    "address": "0x5490559e1BD7178b4D4aAFBC6F35CA6409Df92c5"
+  }
+]
