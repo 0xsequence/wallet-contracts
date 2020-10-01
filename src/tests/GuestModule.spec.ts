@@ -1,10 +1,10 @@
 import * as ethers from 'ethers'
 import { expect, RevertError } from './utils';
 
-import { GuestModule } from 'typings/contracts/GuestModule'
-import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
-import { HookCallerMock } from 'typings/contracts/HookCallerMock'
-import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
+import { GuestModule } from 'typings/contracts/ethers-v4/GuestModule'
+import { CallReceiverMock } from 'typings/contracts/ethers-v4/CallReceiverMock'
+import { HookCallerMock } from 'typings/contracts/ethers-v4/HookCallerMock'
+import { MainModuleUpgradable } from 'typings/contracts/ethers-v4/MainModuleUpgradable'
 
 ethers.errors.setLogLevel("error")
 

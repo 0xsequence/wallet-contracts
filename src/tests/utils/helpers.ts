@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
 import { Arrayish, BigNumberish } from 'ethers/utils'
-import { MainModule } from 'typings/contracts/MainModule'
+import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 // createTestWallet creates a new wallet

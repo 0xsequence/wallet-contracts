@@ -4,11 +4,11 @@ import ora from 'ora'
 
 const web3 = (global as any).web3
 
-import { MainModuleFactory } from '../../typings/contracts/MainModuleFactory'
-import { RequireUtilsFactory } from '../../typings/contracts/RequireUtilsFactory'
-import { MainModuleUpgradableFactory } from '../../typings/contracts/MainModuleUpgradableFactory'
-import { GuestModuleFactory } from '../../typings/contracts/GuestModuleFactory'
-import { FactoryFactory } from '../../typings/contracts/FactoryFactory'
+import { MainModuleFactory } from '../../typings/contracts/ethers-v4/MainModuleFactory'
+import { RequireUtilsFactory } from '../../typings/contracts/ethers-v4/RequireUtilsFactory'
+import { MainModuleUpgradableFactory } from '../../typings/contracts/ethers-v4/MainModuleUpgradableFactory'
+import { GuestModuleFactory } from '../../typings/contracts/ethers-v4/GuestModuleFactory'
+import { FactoryFactory } from '../../typings/contracts/ethers-v4/FactoryFactory'
 import { UniversalDeployer } from '@arcadeum/deployer'
 import { Web3Provider } from 'ethers/providers'
 import { BigNumber } from 'ethers/utils'

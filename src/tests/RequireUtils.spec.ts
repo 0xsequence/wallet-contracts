@@ -1,10 +1,10 @@
 import * as ethers from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce } from './utils';
 
-import { MainModule } from 'typings/contracts/MainModule'
-import { Factory } from 'typings/contracts/Factory'
-import { RequireUtils } from 'typings/contracts/RequireUtils'
-import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
+import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
+import { Factory } from 'typings/contracts/ethers-v4/Factory'
+import { RequireUtils } from 'typings/contracts/ethers-v4/RequireUtils'
+import { CallReceiverMock } from 'typings/contracts/ethers-v4/CallReceiverMock'
 import { EtherSymbol } from 'ethers/constants';
 
 ethers.errors.setLogLevel("error")
