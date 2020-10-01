@@ -5,6 +5,7 @@ import ora from 'ora'
 const web3 = (global as any).web3
 
 import { MainModuleFactory } from '../../typings/contracts/MainModuleFactory'
+import { RequireUtilsFactory } from '../../typings/contracts/RequireUtilsFactory'
 import { MainModuleUpgradableFactory } from '../../typings/contracts/MainModuleUpgradableFactory'
 import { GuestModuleFactory } from '../../typings/contracts/GuestModuleFactory'
 import { FactoryFactory } from '../../typings/contracts/FactoryFactory'
@@ -34,9 +35,10 @@ const main = async () => {
   prompt.info(`Local Deployer Balance: ${await signer.getBalance()}`)
 
   const walletFactory = await universalDeployer.deploy('WalletFactory', FactoryFactory, txParams)
-  await universalDeployer.deploy('MainModule', MainModuleFactory, txParams, 0, walletFactory.address)
+  const mainModule = await universalDeployer.deploy('MainModule', MainModuleFactory, txParams, 0, walletFactory.address)
   await universalDeployer.deploy('MainModuleUpgradable', MainModuleUpgradableFactory, txParams)
   await universalDeployer.deploy('GuestModule', GuestModuleFactory, txParams)
+  await universalDeployer.deploy('RequireUtils', RequireUtilsFactory, txParams, 0, walletFactory.address, mainModule.address)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
   await universalDeployer.registerDeployment()

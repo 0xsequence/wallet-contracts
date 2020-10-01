@@ -48,7 +48,7 @@
     }
   },
   "devDependencies": {
-    "@arcadeum/deployer": "^0.1.4",
+    "@arcadeum/deployer": "^0.1.12",
     "@nomiclabs/buidler": "^1.2.0",
     "@nomiclabs/buidler-truffle5": "^1.2.0",
     "@nomiclabs/buidler-web3": "^1.2.0",
