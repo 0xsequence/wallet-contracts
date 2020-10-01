@@ -18,7 +18,7 @@ module.exports = {
     },
   },
   paths:{
-    tests: "src"
+    tests: "src/tests"
   },
   networks: {
     rinkeby: networkConfig('rinkeby'),
