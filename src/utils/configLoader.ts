@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv'
 import * as path from 'path'
 import { HttpNetworkConfig } from '@nomiclabs/buidler/types'
+import { ethers } from 'ethers'
 
 type EthereumNetworksTypes =
   | 'rinkeby'
@@ -20,7 +21,8 @@ export const getEnvConfig = (env: string) => {
   const envLoad = dotenv.config({ path: envFile })
 
   if (envLoad.error) {
-    throw new Error(envLoad.error.message)
+    console.warn("No config found, using default")
+    return { 'ETH_MNEMONIC': ethers.Wallet.createRandom().mnemonic }
   }
 
   return envLoad.parsed || {}
@@ -29,12 +31,7 @@ export const getEnvConfig = (env: string) => {
 export const networkConfig = (
   network: EthereumNetworksTypes
 ): HttpNetworkConfig => {
-  const config = getEnvConfig('PROD')
-
-  if (!config) {
-    throw new Error(`unable to load config: PROD`)
-  }
-  
+  const config = getEnvConfig('PROD')  
   const networkConfig: HttpNetworkConfig = {
     url: (function(network) {
       switch(network) {
