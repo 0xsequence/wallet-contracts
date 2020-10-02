@@ -1,8 +1,8 @@
 import * as ethers from 'ethers'
 import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils';
 
-import { MainModule } from 'typings/contracts/MainModule'
-import { Factory } from 'typings/contracts/Factory'
+import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
+import { Factory } from 'typings/contracts/ethers-v4/Factory'
 
 ethers.errors.setLogLevel("error")
 

@@ -1,15 +1,15 @@
 import * as ethers from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, multiSignMetaTransactions, compareAddr } from './utils';
 
-import { MainModule } from 'typings/contracts/MainModule'
-import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
-import { Factory } from 'typings/contracts/Factory'
-import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
-import { ModuleMock } from 'typings/contracts/ModuleMock'
-import { HookCallerMock } from 'typings/contracts/HookCallerMock'
-import { HookMock } from 'typings/contracts/HookMock'
-import { DelegateCallMock } from 'typings/contracts/DelegateCallMock'
-import { GasBurnerMock } from 'typings/contracts/GasBurnerMock'
+import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
+import { MainModuleUpgradable } from 'typings/contracts/ethers-v4/MainModuleUpgradable'
+import { Factory } from 'typings/contracts/ethers-v4/Factory'
+import { CallReceiverMock } from 'typings/contracts/ethers-v4/CallReceiverMock'
+import { ModuleMock } from 'typings/contracts/ethers-v4/ModuleMock'
+import { HookCallerMock } from 'typings/contracts/ethers-v4/HookCallerMock'
+import { HookMock } from 'typings/contracts/ethers-v4/HookMock'
+import { DelegateCallMock } from 'typings/contracts/ethers-v4/DelegateCallMock'
+import { GasBurnerMock } from 'typings/contracts/ethers-v4/GasBurnerMock'
 
 import { BigNumberish } from 'ethers/utils';
 

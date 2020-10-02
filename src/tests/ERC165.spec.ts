@@ -1,17 +1,17 @@
 import * as ethers from 'ethers'
 import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf, addressOf } from './utils'
 
-import { MainModule } from 'typings/contracts/MainModule'
-import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
-import { Factory } from 'typings/contracts/Factory'
-import { ERC165CheckerMock } from 'typings/contracts/ERC165CheckerMock'
+import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
+import { MainModuleUpgradable } from 'typings/contracts/ethers-v4/MainModuleUpgradable'
+import { Factory } from 'typings/contracts/ethers-v4/Factory'
+import { Erc165CheckerMock } from 'typings/contracts/ethers-v4/Erc165CheckerMock'
 
 
 ethers.errors.setLogLevel("error")
 
 const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
-const ERC165CheckerMockArtifact = artifacts.require('ERC165CheckerMock')
+const Erc165CheckerMockArtifact = artifacts.require('ERC165CheckerMock')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 
 const web3 = (global as any).web3
@@ -48,7 +48,7 @@ contract('ERC165', () => {
     module = await MainModuleArtifact.new(factory.address) as MainModule
     moduleUpgradable = await MainModuleUpgradableArtifact.new() as MainModuleUpgradable
     // Deploy ERC165 Checker
-    erc165checker = await ERC165CheckerMockArtifact.new() as ERC165CheckerMock
+    erc165checker = await Erc165CheckerMockArtifact.new() as Erc165CheckerMock
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
   })

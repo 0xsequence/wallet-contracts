@@ -1,8 +1,8 @@
 import * as ethers from 'ethers'
 import { expect, addressOf } from './utils';
 
-import { ModuleMock } from 'typings/contracts/ModuleMock'
-import { Factory } from 'typings/contracts/Factory'
+import { ModuleMock } from 'typings/contracts/ethers-v4/ModuleMock'
+import { Factory } from 'typings/contracts/ethers-v4/Factory'
 
 ethers.errors.setLogLevel("error")
 
