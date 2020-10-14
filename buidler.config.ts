@@ -2,7 +2,6 @@ import { usePlugin } from "@nomiclabs/buidler/config";
 import { networkConfig } from './src/utils/configLoader'
 
 usePlugin("@nomiclabs/buidler-truffle5");
-usePlugin("solidity-coverage");
 
 const ganacheNetwork = {
   url: 'http://127.0.0.1:8545',
@@ -24,6 +23,7 @@ module.exports = {
     rinkeby: networkConfig('rinkeby'),
     kovan: networkConfig('kovan'),
     goerli: networkConfig('goerli'),
+    matic: networkConfig('matic'),
     mumbai: networkConfig('mumbai'),
     ganache: ganacheNetwork
   }

@@ -50,7 +50,7 @@
     }
   },
   "devDependencies": {
-    "@arcadeum/deployer": "^0.1.12",
+    "@arcadeum/deployer": "^0.1.14",
     "@nomiclabs/buidler": "^1.2.0",
     "@nomiclabs/buidler-truffle5": "^1.2.0",
     "@nomiclabs/buidler-web3": "^1.2.0",
@@ -76,7 +76,6 @@
     "rimraf": "^3.0.2",
     "solc": "0.6.8",
     "solhint": "^2.3.1",
-    "solidity-coverage": "^0.7.5",
     "truffle": "^5.1.3",
     "truffle-contract": "^4.0.22",
     "truffle-deploy-registry": "^0.5.1",

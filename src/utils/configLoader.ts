@@ -13,10 +13,6 @@ type EthereumNetworksTypes =
   | 'matic'
 
 export const getEnvConfig = (env: string) => {
-  if (env.includes('GANACHE')) {
-    return {}
-  }
-
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
   const envLoad = dotenv.config({ path: envFile })
 
