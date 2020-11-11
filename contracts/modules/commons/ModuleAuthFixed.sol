@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.7.4;
 
 import "./ModuleAuth.sol";
 import "../../Wallet.sol";
@@ -14,7 +14,7 @@ abstract contract ModuleAuthFixed is ModuleAuth {
   bytes32 public immutable INIT_CODE_HASH;
   address public immutable FACTORY;
 
-  constructor(address _factory) public {
+  constructor(address _factory) {
     // Build init code hash of the deployed wallets using that module
     bytes32 initCodeHash = keccak256(abi.encodePacked(Wallet.creationCode, uint256(address(this))));
 

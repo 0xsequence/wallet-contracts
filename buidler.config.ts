@@ -10,7 +10,7 @@ const ganacheNetwork = {
 
 module.exports = {
   solc: {
-    version: "0.6.8",
+    version: "0.7.4",
     optimizer: {
       enabled: true,
       runs: 1000000

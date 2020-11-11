@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.7.4;
 
 /**
  * @dev Allows modules to access the implementation slot

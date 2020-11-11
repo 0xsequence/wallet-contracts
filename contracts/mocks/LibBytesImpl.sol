@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity 0.7.4;
 
 import "../utils/LibBytes.sol";
 
