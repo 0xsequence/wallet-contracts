@@ -12,7 +12,7 @@
     "test": "buidler test",
     "test:truffle": "tsc -b && truffle test --network ganache build/*.spec.js",
     "precoverage": "yarn build",
-    "coverage": "NET_ID=1 buidler coverage --network coverage",
+    "coverage": "COVERAGE=true NET_ID=1 buidler coverage --network coverage",
     "benchmark": "BENCHMARK=true yarn test",
     "gen:contract-typings": "rimraf typings/contracts/* && yarn gen:contract-typings:ethers4 && yarn gen:contract-typings:ethers5",
     "gen:contract-typings:ethers4": "typechain --target ethers-v4 --outDir typings/contracts/ethers-v4 './artifacts/*.json'",

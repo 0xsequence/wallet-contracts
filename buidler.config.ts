@@ -30,5 +30,8 @@ module.exports = {
     coverage: {
       url: 'http://localhost:8555'
     }
+  },
+  mocha: {
+    timeout: process.env.COVERAGE ? 15 * 60 * 1000 : 30 * 1000
   }
 };
