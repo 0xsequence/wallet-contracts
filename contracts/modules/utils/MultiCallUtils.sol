@@ -17,8 +17,8 @@ contract MultiCallUtils {
     for (uint256 i = 0; i < _txs.length; i++) {
       IModuleCalls.Transaction memory transaction = _txs[i];
 
-      require(!transaction.delegateCall, 'MultiCallUtils#_executeGuest: delegateCall not allowed');
-      require(gasleft() >= transaction.gasLimit, "MultiCallUtils#_executeGuest: NOT_ENOUGH_GAS");
+      require(!transaction.delegateCall, 'MultiCallUtils#multiCall: delegateCall not allowed');
+      require(gasleft() >= transaction.gasLimit, "MultiCallUtils#multiCall: NOT_ENOUGH_GAS");
 
       // solhint-disable
       (_successes[i], _results[i]) = transaction.target.call{
@@ -27,7 +27,7 @@ contract MultiCallUtils {
       }(transaction.data);
       // solhint-enable
 
-      require(!_successes[i] || !_txs[i].revertOnError, 'MultiCallUtils#_executeGuest: CALL_REVERTED');
+      require(_successes[i] || !_txs[i].revertOnError, 'MultiCallUtils#multiCall: CALL_REVERTED');
     }
   }
 
@@ -79,7 +79,7 @@ contract MultiCallUtils {
     assembly { size := extcodesize(_addr) }
   }
 
-  function callCode(address _addr) external view returns (bytes[] memory code) {
+  function callCode(address _addr) external view returns (bytes memory code) {
     assembly {
       let size := extcodesize(_addr)
       code := mload(0x40)

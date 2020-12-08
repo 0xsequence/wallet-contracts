@@ -8,7 +8,7 @@
     "build": "buidler compile",
     "postbuild": "yarn gen:contract-typings && tsc -b",
     "clean": "rimraf artifacts && rimraf typings/contracts && rimraf cache",
-    "pretest": "yarn build",
+    "pretest": "echo 'yarn build'",
     "test": "buidler test",
     "test:truffle": "tsc -b && truffle test --network ganache build/*.spec.js",
     "precoverage": "yarn build",
