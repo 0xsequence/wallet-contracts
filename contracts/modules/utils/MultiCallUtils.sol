@@ -7,7 +7,7 @@ import "../commons/interfaces/IModuleCalls.sol";
 contract MultiCallUtils {
   function multiCall(
     IModuleCalls.Transaction[] memory _txs
-  ) public returns (
+  ) public payable returns (
     bool[] memory _successes,
     bytes[] memory _results
   ) {
