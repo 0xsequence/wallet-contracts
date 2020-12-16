@@ -92,4 +92,8 @@ contract MultiCallUtils {
   function callCodeHash(address _addr) external view returns (bytes32 codeHash) {
     assembly { codeHash := extcodehash(_addr) }
   }
+
+  function callChainId() external pure returns (uint256 id) {
+    assembly { id := chainid() }
+  }
 }

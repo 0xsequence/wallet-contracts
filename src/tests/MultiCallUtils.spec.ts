@@ -9,6 +9,8 @@ ethers.errors.setLogLevel("error")
 const MultiCallUtilsArtifact = artifacts.require('MultiCallUtils')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 
+const web3 = (global as any).web3
+
 contract('Multi call utils', (accounts: string[]) => {
   let multiCall: MultiCallUtils
   let callReceiver: CallReceiverMock
@@ -213,8 +215,12 @@ contract('Multi call utils', (accounts: string[]) => {
       const methods = multiCall.contract.methods
       const emptyAccount = ethers.Wallet.createRandom().address
 
+      await multiCall.multiCall.call([])
+
+      const lastBlock = await web3.eth.getBlock('latest')
+
       const txs = [
-        methods.callBlockhash(0),
+        methods.callBlockhash(lastBlock.number - 1),
         methods.callCoinbase(),
         methods.callDifficulty(),
         methods.callGasLimit(),
@@ -230,7 +236,8 @@ contract('Multi call utils', (accounts: string[]) => {
         methods.callCode(accounts[0]),
         methods.callCode(callReceiver.address),
         methods.callCodeHash(accounts[0]),
-        methods.callCodeHash(callReceiver.address)
+        methods.callCodeHash(callReceiver.address),
+        methods.callChainId()
       ].map((method) => ({
         delegateCall: false,
         revertOnError: false,
@@ -250,27 +257,34 @@ contract('Multi call utils', (accounts: string[]) => {
       // All calls must success
       expect(res[0].reduce((a: boolean, c: boolean) => a && c)).to.be.true
 
-      expect(res[1][0]).to.equal(emptyBytes32)
-      expect(res[1][1]).to.not.equal(emptyBytes32)
-      expect(res[1][2]).to.not.equal(emptyBytes32)
+      expect(res[1][0]).to.not.equal(emptyBytes32, "return block hash")
+
+      if (!process.env.COVERAGE) {
+        expect(res[1][1]).to.not.equal(emptyBytes32, "return coinbase")
+        expect(res[1][2]).to.not.equal(emptyBytes32, "return difficulty")
+      }
+
       expect(res[1][3]).to.not.equal(emptyBytes32)
-      expect(res[1][4]).to.not.equal(emptyBytes32)
-      expect(res[1][5]).to.not.equal(emptyBytes32)
-      expect(res[1][6]).to.not.equal(emptyBytes32)
-      expect(res[1][7]).to.not.equal(emptyBytes32)
-      expect(res[1][8]).to.not.equal(emptyBytes32)
-      expect(res[1][9]).to.not.equal(emptyBytes32)
-      expect(res[1][10]).to.equal(emptyBytes32)
-      expect(res[1][11]).to.equal(emptyBytes32)
-      expect(res[1][12]).to.not.equal(emptyBytes32)
+      expect(res[1][4]).to.not.equal(emptyBytes32, "return block number")
+      expect(res[1][5]).to.not.equal(emptyBytes32, "return timestamp")
+      expect(res[1][6]).to.not.equal(emptyBytes32, "return gas left")
+      expect(res[1][7]).to.not.equal(emptyBytes32, "return gas price")
+      expect(res[1][8]).to.not.equal(emptyBytes32, "return origin")
+      expect(res[1][9]).to.not.equal(emptyBytes32, "return balance of 0x")
+      expect(res[1][10]).to.equal(emptyBytes32, "return balance of empty account")
+      expect(res[1][11]).to.equal(emptyBytes32, "return code size of empty account")
+      expect(res[1][12]).to.not.equal(emptyBytes32, "return code size of contract")
 
       expect(ethers.utils.defaultAbiCoder.decode(['bytes'], res[1][13])[0]).to.equal("0x")
 
       const codeSize = ethers.utils.defaultAbiCoder.decode(['uint256'], res[1][12])[0]
-      expect(ethers.utils.defaultAbiCoder.decode(['bytes'], res[1][14])[0].length).to.equal(2 + codeSize * 2)
+      expect(ethers.utils.defaultAbiCoder.decode(['bytes'], res[1][14])[0].length).to.equal(2 + codeSize * 2, "return code of correct size")
 
       expect(res[1][15]).to.not.equal(emptyBytes32)
       expect(res[1][16]).to.not.equal(emptyBytes32)
+
+      const chainId = process.env.NET_ID ? parseInt(process.env.NET_ID) : await web3.eth.net.getId()
+      expect(ethers.utils.defaultAbiCoder.decode(['uint256'], res[1][17])[0].toNumber()).to.equal(chainId, "return chain id")
     })
   })
 })
