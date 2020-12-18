@@ -5,7 +5,7 @@ import ora from 'ora'
 const web3 = (global as any).web3
 
 import { MainModuleFactory } from '../../typings/contracts/ethers-v4/MainModuleFactory'
-import { RequireUtilsFactory } from '../../typings/contracts/ethers-v4/RequireUtilsFactory'
+import { SequenceUtilsFactory } from '../../typings/contracts/ethers-v4/SequenceUtilsFactory'
 import { MainModuleUpgradableFactory } from '../../typings/contracts/ethers-v4/MainModuleUpgradableFactory'
 import { GuestModuleFactory } from '../../typings/contracts/ethers-v4/GuestModuleFactory'
 import { FactoryFactory } from '../../typings/contracts/ethers-v4/FactoryFactory'
@@ -38,7 +38,7 @@ const main = async () => {
   const mainModule = await universalDeployer.deploy('MainModule', MainModuleFactory, txParams, 0, walletFactory.address)
   await universalDeployer.deploy('MainModuleUpgradable', MainModuleUpgradableFactory, txParams)
   await universalDeployer.deploy('GuestModule', GuestModuleFactory, txParams)
-  await universalDeployer.deploy('RequireUtils', RequireUtilsFactory, txParams, 0, walletFactory.address, mainModule.address)
+  await universalDeployer.deploy('SequenceUtils', SequenceUtilsFactory, txParams, 0, walletFactory.address, mainModule.address)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
   await universalDeployer.registerDeployment()
