@@ -1,6 +1,6 @@
 {
   "name": "wallet-contracts",
-  "version": "2.0.0",
+  "version": "1.1.0",
   "private": false,
   "license": "none",
   "scripts": {
@@ -75,7 +75,6 @@
     "ora": "^5.1.0",
     "rimraf": "^3.0.2",
     "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb",
-    "solc": "0.7.4",
     "solhint": "^3.3.2",
     "solidity-coverage": "^0.7.13",
     "truffle": "^5.1.3",

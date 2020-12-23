@@ -1,4 +1,4 @@
-pragma solidity 0.7.4;
+pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./MultiCallUtils.sol";
