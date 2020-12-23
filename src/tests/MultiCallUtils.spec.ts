@@ -75,7 +75,7 @@ contract('Multi call utils', (accounts: string[]) => {
     })
     it('Should execute calls to multiple contracts', async () => {
       const callReceiver2 = await CallReceiverMockArtifact.new() as CallReceiverMock
-      const bytes = ethers.utils.randomBytes(21)
+      const bytes = ethers.utils.hexlify(ethers.utils.randomBytes(21))
 
       await callReceiver.testCall(55522, bytes)
       await callReceiver2.testCall(66623, [])
@@ -108,7 +108,7 @@ contract('Multi call utils', (accounts: string[]) => {
       expect(res[0][0]).to.be.true
       expect(res[1][0]).to.be.equal(ethers.utils.defaultAbiCoder.encode(['uint256'], [55522]))
       expect(res[0][1]).to.be.true
-      expect(ethers.utils.defaultAbiCoder.decode(['bytes'], res[1][1])[0]).to.be.equal(ethers.utils.hexlify(bytes))
+      expect(ethers.utils.defaultAbiCoder.decode(['bytes'], res[1][1])[0]).to.be.equal(bytes)
       expect(res[0][2]).to.be.true
       expect(res[1][2]).to.be.equal(ethers.utils.defaultAbiCoder.encode(['uint256'], [66623]))
     })

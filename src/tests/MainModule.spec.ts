@@ -929,7 +929,7 @@ contract('MainModule', (accounts: string[]) => {
         await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
         const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
         
-        expect(ethers.utils.getAddress(storageValue)).to.equal(hookMock.address)
+        expect(ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], storageValue)[0])).to.equal(hookMock.address)
       })
     })
   })
@@ -1094,7 +1094,7 @@ contract('MainModule', (accounts: string[]) => {
         await expect(tx).to.be.rejectedWith('ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH')
       })
       it('Should fail to change image hash from non-self address', async () => {
-        const tx = wallet.updateImageHash(ethers.utils.randomBytes(32), { from: accounts[0] })
+        const tx = wallet.updateImageHash(ethers.utils.hexlify(ethers.utils.randomBytes(32)), { from: accounts[0] })
         await expect(tx).to.be.rejectedWith('ModuleSelfAuth#onlySelf: NOT_AUTHORIZED')
       })
       it('Should use image hash storage key', async () => {
