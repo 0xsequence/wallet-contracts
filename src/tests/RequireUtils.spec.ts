@@ -1,20 +1,21 @@
 import * as ethers from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce } from './utils';
 
-import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
-import { Factory } from 'typings/contracts/ethers-v4/Factory'
-import { RequireUtils } from 'typings/contracts/ethers-v4/RequireUtils'
-import { CallReceiverMock } from 'typings/contracts/ethers-v4/CallReceiverMock'
-import { EtherSymbol } from 'ethers/constants';
+import { 
+  MainModule,
+  Factory,
+  RequireUtils,
+  CallReceiverMock
+} from 'typings/contracts/ethers-v5'
 
-ethers.errors.setLogLevel("error")
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
 const RequireUtilsArtifact = artifacts.require('RequireUtils')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 function now(): number {
   return Math.floor(Date.now() / 1000)

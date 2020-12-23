@@ -3,6 +3,7 @@ import { networkConfig } from './src/utils/configLoader'
 
 import '@nomiclabs/hardhat-truffle5'
 import '@nomiclabs/hardhat-ethers'
+import '@nomiclabs/hardhat-web3'
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
 

@@ -1,19 +1,21 @@
 import * as ethers from 'ethers'
 import { expect, RevertError } from './utils';
 
-import { GuestModule } from 'typings/contracts/ethers-v4/GuestModule'
-import { CallReceiverMock } from 'typings/contracts/ethers-v4/CallReceiverMock'
-import { HookCallerMock } from 'typings/contracts/ethers-v4/HookCallerMock'
-import { MainModuleUpgradable } from 'typings/contracts/ethers-v4/MainModuleUpgradable'
+import {
+  GuestModule,
+  CallReceiverMock,
+  HookCallerMock,
+  MainModuleUpgradable
+} from 'typings/contracts/ethers-v5'
 
-ethers.errors.setLogLevel("error")
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 const GuestModuleArtifact = artifacts.require('GuestModule')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 contract('GuestModule', (accounts: string[]) => {
   let module: GuestModule

@@ -1,13 +1,13 @@
 import * as ethers from 'ethers'
-import { expect } from './utils';
+import { expect } from './utils'
 
-import { LibBytesImpl } from 'typings/contracts/ethers-v4/LibBytesImpl'
+import { LibBytesImpl } from 'typings/contracts/ethers-v5'
 
-ethers.errors.setLogLevel('error')
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 const LibBytesImplArtifact = artifacts.require('LibBytesImpl');
 
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 contract('LibBytes', (accounts: string[]) => {
   let libBytes

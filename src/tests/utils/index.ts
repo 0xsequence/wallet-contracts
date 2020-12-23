@@ -8,7 +8,7 @@ import * as web3 from 'web3'
 export * from './contract'
 export * from './helpers'
 
-const BigNumber = ethers.utils.BigNumber
+const BigNumber = ethers.BigNumber
 export { BigNumber }
 
 export const { assert, expect } = chai
@@ -17,6 +17,6 @@ export const { assert, expect } = chai
   .use(require('chai-bignumber')(BigNumber)) // Used by ethers.js & waffle
   .use(require('bn-chai')(web3.utils.BN))    // Used by Web3 & truffle
 
-export function b(raw: ethers.utils.BigNumberish): ethers.utils.BigNumber {
-  return ethers.utils.bigNumberify(raw)
+export function b(raw: ethers.BigNumberish): ethers.BigNumber {
+  return ethers.BigNumber.from(raw)
 }

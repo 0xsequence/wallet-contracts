@@ -1,15 +1,14 @@
 import * as ethers from 'ethers'
 import { expect, b, RevertError } from './utils'
 
-import { MultiCallUtils } from 'typings/contracts/ethers-v4/MultiCallUtils'
-import { CallReceiverMock } from 'typings/contracts/ethers-v4/CallReceiverMock'
+import { MultiCallUtils, CallReceiverMock } from 'typings/contracts/ethers-v5'
 
-ethers.errors.setLogLevel("error")
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 const MultiCallUtilsArtifact = artifacts.require('MultiCallUtils')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 contract('Multi call utils', (accounts: string[]) => {
   let multiCall: MultiCallUtils

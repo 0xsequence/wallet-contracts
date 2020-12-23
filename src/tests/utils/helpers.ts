@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
-import { Arrayish, BigNumberish } from 'ethers/utils'
-import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
+import { BytesLike, BigNumberish } from 'ethers'
+import { MainModule } from 'typings/contracts/ethers-v5/MainModule'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 // createTestWallet creates a new wallet
@@ -34,10 +34,10 @@ export class Web3DebugProvider extends ethers.providers.JsonRpcProvider {
   public reqCounter = 0
   public reqLog: JSONRPCRequest[] = []
 
-  readonly _web3Provider: ethers.providers.AsyncSendable
+  readonly _web3Provider: ethers.providers.ExternalProvider
   private _sendAsync: (request: any, callback: (error: any, response: any) => void) => void
 
-  constructor(web3Provider: ethers.providers.AsyncSendable, network?: ethers.utils.Networkish) {
+  constructor(web3Provider: ethers.providers.ExternalProvider, network?: ethers.providers.Networkish) {
       // HTTP has a host; IPC has a path.
       super(web3Provider.host || web3Provider.path || '', network)
 
@@ -50,7 +50,7 @@ export class Web3DebugProvider extends ethers.providers.JsonRpcProvider {
       }
 
       if (!web3Provider || !this._sendAsync) {
-        ethers.errors.throwError(
+        ethers.logger.throwError(
           'invalid web3Provider',
           ethers.errors.INVALID_ARGUMENT,
           { arg: 'web3Provider', value: web3Provider }
@@ -127,7 +127,7 @@ export function encodeMetaTransactionsData(
     gasLimit: BigNumberish;
     target: string;
     value: BigNumberish;
-    data: Arrayish;
+    data: BytesLike;
   }[],
   networkId: BigNumberish,
   nonce: BigNumberish
@@ -151,8 +151,8 @@ export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Walle
   const addrA = a instanceof ethers.Wallet ? a.address : a
   const addrB = b instanceof ethers.Wallet ? b.address : b
 
-  const bigA = ethers.utils.bigNumberify(addrA)
-  const bigB = ethers.utils.bigNumberify(addrB)
+  const bigA = ethers.BigNumber.from(addrA)
+  const bigB = ethers.BigNumber.from(addrB)
 
   if (bigA.lt(bigB)) {
     return -1
@@ -205,7 +205,7 @@ export async function multiSignMetaTransactions(
     gasLimit: BigNumberish;
     target: string;
     value: BigNumberish;
-    data: Arrayish;
+    data: BytesLike;
   }[],
   networkId: BigNumberish,
   nonce: BigNumberish
@@ -227,7 +227,7 @@ export async function signAndExecuteMetaTx(
     gasLimit: BigNumberish;
     target: string;
     value: BigNumberish;
-    data: Arrayish;
+    data: BytesLike;
   }[],
   networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined
@@ -255,7 +255,7 @@ export async function multiSignAndExecuteMetaTx(
     gasLimit: BigNumberish;
     target: string;
     value: BigNumberish;
-    data: Arrayish;
+    data: BytesLike;
   }[],
   networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined
@@ -288,8 +288,8 @@ export function encodeImageHash(
 }
 
 export function encodeNonce(space: BigNumberish, nonce: BigNumberish) {
-  const shiftedSpace = ethers.utils.bigNumberify(space).mul(ethers.constants.Two.pow(96))
-  return ethers.utils.bigNumberify(nonce).add(shiftedSpace)
+  const shiftedSpace = ethers.BigNumber.from(space).mul(ethers.constants.Two.pow(96))
+  return ethers.BigNumber.from(nonce).add(shiftedSpace)
 }
 
 export function moduleStorageKey(key: string, subkey?: string): string {
@@ -314,7 +314,7 @@ function xor(a, b) {
 export function interfaceIdOf(int: ethers.utils.Interface): string {
   const signatures = Object.keys(int.functions)
     .filter((k) => k.indexOf('(') !== -1)
-    .map((k) => int.functions[k].sighash)
+    .map((k) => int.getSighash(int.functions[k]))
 
   return signatures.reduce((p, c) => xor(p, c))
 }

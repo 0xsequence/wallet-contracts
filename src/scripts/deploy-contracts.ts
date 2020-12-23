@@ -1,17 +1,18 @@
-import { network } from 'hardhat'
+import { network, web3 } from 'hardhat'
 import * as _ from 'lodash'
 import ora from 'ora'
 
-const web3 = (global as any).web3
+import {
+  MainModule__factory,
+  SequenceUtils__factory,
+  MainModuleUpgradable__factory,
+  GuestModule__factory,
+  Factory__factory
+} from 'typings/contracts/ethers-v5'
 
-import { MainModuleFactory } from '../../typings/contracts/ethers-v4/MainModuleFactory'
-import { SequenceUtilsFactory } from '../../typings/contracts/ethers-v4/SequenceUtilsFactory'
-import { MainModuleUpgradableFactory } from '../../typings/contracts/ethers-v4/MainModuleUpgradableFactory'
-import { GuestModuleFactory } from '../../typings/contracts/ethers-v4/GuestModuleFactory'
-import { FactoryFactory } from '../../typings/contracts/ethers-v4/FactoryFactory'
 import { UniversalDeployer } from '@arcadeum/deployer'
-import { Web3Provider } from 'ethers/providers'
-import { BigNumber } from 'ethers/utils'
+import { providers } from 'ethers'
+import { BigNumber } from 'ethers'
 
 const prompt = ora()
 
@@ -24,21 +25,21 @@ const prompt = ora()
  *   4. Deploy Guest Module via UD
  */
 
-const provider = new Web3Provider(web3.currentProvider)
+const provider = new providers.Web3Provider(web3.currentProvider)
 const signer = provider.getSigner()
 const universalDeployer = new UniversalDeployer(network.name, signer)
-const txParams = {gasLimit: 8000000, gasPrice: new BigNumber(10).pow(9).mul(10)}
+const txParams = {gasLimit: 8000000, gasPrice: BigNumber.from(10).pow(9).mul(10)}
 
 const main = async () => {
   prompt.info(`Network Name:           ${network.name}`)
   prompt.info(`Local Deployer Address: ${await signer.getAddress()}`)
   prompt.info(`Local Deployer Balance: ${await signer.getBalance()}`)
 
-  const walletFactory = await universalDeployer.deploy('WalletFactory', FactoryFactory, txParams)
-  const mainModule = await universalDeployer.deploy('MainModule', MainModuleFactory, txParams, 0, walletFactory.address)
-  await universalDeployer.deploy('MainModuleUpgradable', MainModuleUpgradableFactory, txParams)
-  await universalDeployer.deploy('GuestModule', GuestModuleFactory, txParams)
-  await universalDeployer.deploy('SequenceUtils', SequenceUtilsFactory, txParams, 0, walletFactory.address, mainModule.address)
+  const walletFactory = await universalDeployer.deploy('WalletFactory', Factory__factory, txParams)
+  const mainModule = await universalDeployer.deploy('MainModule', MainModule__factory, txParams, 0, walletFactory.address)
+  await universalDeployer.deploy('MainModuleUpgradable', MainModuleUpgradable__factory, txParams)
+  await universalDeployer.deploy('GuestModule', GuestModule__factory, txParams)
+  await universalDeployer.deploy('SequenceUtils', SequenceUtils__factory, txParams, 0, walletFactory.address, mainModule.address)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
   await universalDeployer.registerDeployment()

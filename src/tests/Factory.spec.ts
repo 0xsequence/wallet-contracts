@@ -1,15 +1,17 @@
 import * as ethers from 'ethers'
 import { expect, addressOf } from './utils';
 
-import { ModuleMock } from 'typings/contracts/ethers-v4/ModuleMock'
-import { Factory } from 'typings/contracts/ethers-v4/Factory'
+import {
+  ModuleMock,
+  Factory
+} from 'typings/contracts/ethers-v5'
 
-ethers.errors.setLogLevel("error")
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 const FactoryArtifact = artifacts.require('Factory');
 const ModuleMockArtifact = artifacts.require('ModuleMock');
 
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 contract('Factory', (accounts: string[]) => {
   let module

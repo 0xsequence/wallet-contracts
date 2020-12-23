@@ -1,19 +1,21 @@
 import * as ethers from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, multiSignMetaTransactions, compareAddr } from './utils';
 
-import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
-import { MainModuleUpgradable } from 'typings/contracts/ethers-v4/MainModuleUpgradable'
-import { Factory } from 'typings/contracts/ethers-v4/Factory'
-import { CallReceiverMock } from 'typings/contracts/ethers-v4/CallReceiverMock'
-import { ModuleMock } from 'typings/contracts/ethers-v4/ModuleMock'
-import { HookCallerMock } from 'typings/contracts/ethers-v4/HookCallerMock'
-import { HookMock } from 'typings/contracts/ethers-v4/HookMock'
-import { DelegateCallMock } from 'typings/contracts/ethers-v4/DelegateCallMock'
-import { GasBurnerMock } from 'typings/contracts/ethers-v4/GasBurnerMock'
+import {
+  MainModule,
+  MainModuleUpgradable,
+  Factory,
+  CallReceiverMock,
+  ModuleMock,
+  HookCallerMock,
+  HookMock,
+  DelegateCallMock,
+  GasBurnerMock
+} from 'typings/contracts/ethers-v5'
 
-import { BigNumberish } from 'ethers/utils';
+import { BigNumberish } from 'ethers'
 
-ethers.errors.setLogLevel("error")
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
@@ -26,7 +28,7 @@ const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const GasBurnerMockArtifact = artifacts.require('GasBurnerMock')
 const RequireUtilsArtifact = artifacts.require('RequireUtils')
 
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 const optimalGasLimit = ethers.constants.Two.pow(21)
 
@@ -106,10 +108,10 @@ contract('MainModule', (accounts: string[]) => {
     })
     describe('Nonce', () => {
       const spaces = [
-        ethers.utils.bigNumberify(0),
-        ethers.utils.bigNumberify(1),
-        ethers.utils.bigNumberify(7342),
-        ethers.utils.bigNumberify(ethers.utils.randomBytes(20)),
+        ethers.BigNumber.from(0),
+        ethers.BigNumber.from(1),
+        ethers.BigNumber.from(7342),
+        ethers.BigNumber.from(ethers.utils.randomBytes(20)),
         ethers.constants.Two.pow(160).sub(ethers.constants.One)
       ]
 
@@ -343,7 +345,8 @@ contract('MainModule', (accounts: string[]) => {
       await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
 
       const storageValue = await web3.eth.getStorageAt(wallet.address, wallet.address)
-      expect(ethers.utils.getAddress(storageValue)).to.equal(newImplementation.address)
+
+      expect(ethers.utils.getAddress(ethers.utils.hexStripZeros(storageValue))).to.equal(newImplementation.address)
     })
   })
   describe("External calls", () => {
@@ -925,6 +928,7 @@ contract('MainModule', (accounts: string[]) => {
 
         await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
         const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
+        
         expect(ethers.utils.getAddress(storageValue)).to.equal(hookMock.address)
       })
     })
@@ -2154,7 +2158,7 @@ contract('MainModule', (accounts: string[]) => {
         {
           delegateCall: false,
           revertOnError: true,
-          gasLimit: ethers.utils.bigNumberify(100000),
+          gasLimit: ethers.BigNumber.from(100000),
           target: callReceiver1.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(11, expected1).encodeABI()
@@ -2162,7 +2166,7 @@ contract('MainModule', (accounts: string[]) => {
         {
           delegateCall: false,
           revertOnError: false,
-          gasLimit: ethers.utils.bigNumberify(100000),
+          gasLimit: ethers.BigNumber.from(100000),
           target: callReceiver2.address,
           value: ethers.constants.Zero,
           data: callReceiver2.contract.methods.testCall(12, expected2).encodeABI()
@@ -2172,7 +2176,7 @@ contract('MainModule', (accounts: string[]) => {
           // because Factory has no fallback
           delegateCall: false,
           revertOnError: true,
-          gasLimit: ethers.utils.bigNumberify(100000),
+          gasLimit: ethers.BigNumber.from(100000),
           target: factory.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(12, expected2).encodeABI()
