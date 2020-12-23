@@ -1,21 +1,28 @@
-import { usePlugin } from "@nomiclabs/buidler/config";
+import { HardhatUserConfig } from 'hardhat/config'
 import { networkConfig } from './src/utils/configLoader'
 
-usePlugin("@nomiclabs/buidler-truffle5");
-usePlugin("solidity-coverage");
+import '@nomiclabs/hardhat-truffle5'
+import '@nomiclabs/hardhat-ethers'
+import 'hardhat-gas-reporter'
+import 'solidity-coverage'
 
 const ganacheNetwork = {
   url: 'http://127.0.0.1:8545',
   blockGasLimit: 6000000000
 }
 
-module.exports = {
-  solc: {
-    version: "0.7.4",
-    optimizer: {
-      enabled: true,
-      runs: 1000000
-    },
+const config: HardhatUserConfig = {
+  solidity: {
+    version: '0.7.4',
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000000,
+        details: {
+          yul: true
+        }
+      }
+    }
   },
   paths:{
     tests: "src/tests"
@@ -33,5 +40,13 @@ module.exports = {
   },
   mocha: {
     timeout: process.env.COVERAGE ? 15 * 60 * 1000 : 30 * 1000
+  },
+  gasReporter: {
+    enabled: !!process.env.REPORT_GAS === true,
+    currency: 'USD',
+    gasPrice: 21,
+    showTimeSpent: true
   }
-};
+}
+
+export default config

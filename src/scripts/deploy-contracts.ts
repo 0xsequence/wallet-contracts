@@ -1,4 +1,4 @@
-import { network } from '@nomiclabs/buidler'
+import { network } from 'hardhat'
 import * as _ from 'lodash'
 import ora from 'ora'
 
