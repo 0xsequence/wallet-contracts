@@ -14,9 +14,8 @@
     "precoverage": "yarn build",
     "coverage": "COVERAGE=true NET_ID=1 hardhat coverage --network coverage",
     "benchmark": "BENCHMARK=true yarn test",
-    "gen:contract-typings": "rimraf typings/contracts/* && yarn gen:contract-typings:ethers4 && yarn gen:contract-typings:ethers5",
-    "gen:contract-typings:ethers4": "typechain --target ethers-v4 --outDir typings/contracts/ethers-v4 './artifacts/!(build-info)/**/*[^dbg].json'",
-    "gen:contract-typings:ethers5": "typechain --target ethers-v5 --outDir typings/contracts/ethers-v5 './artifacts/!(build-info)/**/*[^dbg].json'",
+    "gen:contract-typings": "rimraf typings/contracts/* && yarn gen:contract-typings:ethers5",
+    "gen:contract-typings:ethers5": "typechain --target ethers-v5 --outDir typings/contracts './artifacts/!(build-info)/**/*[^dbg].json'",
     "lint": "yarn lint:ts && yarn lint:sol",
     "lint:fix": "yarn lint:ts:fix && yarn lint:sol:fix",
     "lint:sol": "solhint contracts/**/*.sol",
@@ -32,7 +31,9 @@
   },
   "files": [
     "artifacts",
-    "typings"
+    "typings",
+    "networks",
+    "src"
   ],
   "config": {
     "mnemonic": "test test test test test test test test test test test junk",
@@ -54,7 +55,6 @@
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@typechain/ethers-v4": "^4.0.0",
     "@typechain/ethers-v5": "^5.0.0",
     "@types/chai-as-promised": "^7.1.0",
     "@types/chai-string": "^1.4.1",

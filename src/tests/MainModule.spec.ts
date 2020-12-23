@@ -11,7 +11,7 @@ import {
   HookMock,
   DelegateCallMock,
   GasBurnerMock
-} from 'typings/contracts/ethers-v5'
+} from 'typings/contracts'
 
 import { BigNumberish } from 'ethers'
 

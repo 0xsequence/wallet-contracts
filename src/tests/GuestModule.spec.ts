@@ -6,7 +6,7 @@ import {
   CallReceiverMock,
   HookCallerMock,
   MainModuleUpgradable
-} from 'typings/contracts/ethers-v5'
+} from 'typings/contracts'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 

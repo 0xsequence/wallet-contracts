@@ -707,11 +707,6 @@
     strip-indent "^2.0.0"
     super-split "^1.1.0"
 
-"@typechain/ethers-v4@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@typechain/ethers-v4/-/ethers-v4-4.0.0.tgz#9bc5700249b18fa698a41a495bdf6fed34df89d3"
-  integrity sha512-9lWTOMtnQJvR4eJ8tM14oeJXE5UGqRD0gqLiT4DNck5/OQwxTUs+W2v/Lah4bJzql0BxmxlEBueuLS4IGc3xGg==
-
 "@typechain/ethers-v5@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-5.0.0.tgz#6c91766b76c19886cf2c4833ded09611e117f92c"

@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
 import { expect } from './utils'
 
-import { LibBytesImpl } from 'typings/contracts/ethers-v5'
+import { LibBytesImpl } from 'typings/contracts'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 

@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
 import { expect, b, RevertError } from './utils'
 
-import { MultiCallUtils, CallReceiverMock } from 'typings/contracts/ethers-v5'
+import { MultiCallUtils, CallReceiverMock } from 'typings/contracts'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
