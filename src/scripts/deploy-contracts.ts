@@ -8,7 +8,7 @@ import {
   MainModuleUpgradable__factory,
   GuestModule__factory,
   Factory__factory
-} from 'typings/contracts/ethers-v5'
+} from '../../typings/contracts/ethers-v5'
 
 import { UniversalDeployer } from '@arcadeum/deployer'
 import { providers } from 'ethers'
