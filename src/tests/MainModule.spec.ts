@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, multiSignMetaTransactions, compareAddr } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, multiSignMetaTransactions, compareAddr } from './utils'
 
 import {
   MainModule,
@@ -403,7 +403,7 @@ contract('MainModule', (accounts: string[]) => {
           target: callReceiver1.address,
           value: ethers.constants.Zero,
           data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
-        },{
+        }, {
           delegateCall: false,
           revertOnError: true,
           gasLimit: optimalGasLimit,
@@ -2199,7 +2199,7 @@ contract('MainModule', (accounts: string[]) => {
           target: callReceiver3.address,
           value: ethers.constants.Zero,
           data: callReceiver3.contract.methods.testCall(51, expected3).encodeABI()
-        },
+        }
       ]
 
       const tx = await signAndExecuteMetaTx(wallet, owner, transaction, networkId)

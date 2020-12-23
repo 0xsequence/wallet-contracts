@@ -30,7 +30,7 @@ export const networkConfig = (
   const config = getEnvConfig('PROD')  
   const networkConfig: HttpNetworkConfig = {
     url: (function(network) {
-      switch(network) {
+      switch (network) {
         case 'mumbai':
           return 'https://rpc-mumbai.matic.today/'
 

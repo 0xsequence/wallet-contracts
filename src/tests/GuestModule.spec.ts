@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, RevertError } from './utils';
+import { expect, RevertError } from './utils'
 
 import {
   GuestModule,

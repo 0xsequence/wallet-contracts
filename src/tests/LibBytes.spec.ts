@@ -5,7 +5,7 @@ import { LibBytesImpl } from 'typings/contracts/ethers-v5'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const LibBytesImplArtifact = artifacts.require('LibBytesImpl');
+const LibBytesImplArtifact = artifacts.require('LibBytesImpl')
 
 import { web3 } from 'hardhat'
 
@@ -141,7 +141,7 @@ contract('LibBytes', (accounts: string[]) => {
   })
 
   describe('readBytes32', () => {
-    let bytes32;
+    let bytes32
     beforeEach(async () => {
       bytes32 = web3.utils.randomHex(32)
     })

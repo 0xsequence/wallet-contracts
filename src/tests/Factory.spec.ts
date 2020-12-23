@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, addressOf } from './utils';
+import { expect, addressOf } from './utils'
 
 import {
   ModuleMock,
@@ -8,8 +8,8 @@ import {
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const FactoryArtifact = artifacts.require('Factory');
-const ModuleMockArtifact = artifacts.require('ModuleMock');
+const FactoryArtifact = artifacts.require('Factory')
+const ModuleMockArtifact = artifacts.require('ModuleMock')
 
 import { web3 } from 'hardhat'
 

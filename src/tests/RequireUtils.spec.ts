@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce } from './utils'
 
 import { 
   MainModule,

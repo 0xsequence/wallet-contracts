@@ -319,7 +319,7 @@ export function interfaceIdOf(int: ethers.utils.Interface): string {
   return signatures.reduce((p, c) => xor(p, c))
 }
 
-export const WALLET_CODE ='0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3'
+export const WALLET_CODE = '0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3'
 
 export function addressOf(
   factory: string,

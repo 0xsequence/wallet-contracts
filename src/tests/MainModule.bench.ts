@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils';
+import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils'
 
 import { MainModule, Factory } from 'typings/contracts/ethers-v5'
 
