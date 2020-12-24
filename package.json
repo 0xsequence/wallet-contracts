@@ -28,9 +28,10 @@
     "deploy": "hardhat run src/scripts/deploy-contracts.ts --network"
   },
   "files": [
+    "LICENSE",
     "artifacts",
+    "contracts",
     "networks",
-    "src",
     "typings"
   ],
   "config": {
