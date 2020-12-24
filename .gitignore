@@ -1,6 +1,6 @@
 build
 cache
-src/config/*.env
+config/*.env
 
 .vscode/
 .vs_code/

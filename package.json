@@ -23,8 +23,8 @@
     "start:ganache": "ganache-cli --chainId ${npm_package_config_ganacheChainID} --networkId ${npm_package_config_ganacheChainID} --port ${npm_package_config_ganachePort} --gasLimit ${npm_package_config_ganacheGasLimit} --gasPrice ${npm_package_config_ganacheGasPrice} --defaultBalanceEther ${npm_package_config_etherBalance} --deterministic --mnemonic \"${npm_package_config_mnemonic}\" ${npm_package_config_extra}",
     "start:ganache:verbose": "yarn run start:ganache --verbose",
     "stop:ganache": "ps aux | grep ganache-cli | grep -v grep | awk '{print $2}' | xargs kill -9",
-    "deploy:ganache": "hardhat run --network ganache src/scripts/deploy-contracts.ts",
-    "deploy": "hardhat run src/scripts/deploy-contracts.ts --network"
+    "deploy:ganache": "hardhat run --network ganache utils/deploy-contracts.ts",
+    "deploy": "hardhat run utils/deploy-contracts.ts --network"
   },
   "husky": {
     "hooks": {

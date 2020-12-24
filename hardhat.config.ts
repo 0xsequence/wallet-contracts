@@ -1,5 +1,5 @@
 import { HardhatUserConfig } from 'hardhat/config'
-import { networkConfig } from './src/utils/configLoader'
+import { networkConfig } from './utils/configLoader'
 
 import '@nomiclabs/hardhat-truffle5'
 import '@nomiclabs/hardhat-ethers'
@@ -26,7 +26,7 @@ const config: HardhatUserConfig = {
     }
   },
   paths: {
-    tests: "src/tests"
+    tests: 'tests'
   },
   networks: {
     rinkeby: networkConfig('rinkeby'),
