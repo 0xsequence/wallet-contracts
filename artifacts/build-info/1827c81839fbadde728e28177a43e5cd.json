@@ -1,0 +1,220 @@
+{
+  "id": "1827c81839fbadde728e28177a43e5cd",
+  "_format": "hh-sol-build-info-1",
+  "solcVersion": "0.7.6",
+  "solcLongVersion": "0.7.6+commit.7338295f",
+  "input": {
+    "language": "Solidity",
+    "sources": {
+      "contracts/mocks/ModuleMock.sol": {
+        "content": "pragma solidity 0.7.6;\n\n\ncontract ModuleMock {\n  event Pong();\n\n  function ping() external {\n    emit Pong();\n  }\n}\n"
+      }
+    },
+    "settings": {
+      "optimizer": {
+        "enabled": true,
+        "runs": 1000000,
+        "details": {
+          "yul": true
+        }
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers"
+          ],
+          "": [
+            "ast"
+          ]
+        }
+      }
+    }
+  },
+  "output": {
+    "contracts": {
+      "contracts/mocks/ModuleMock.sol": {
+        "ModuleMock": {
+          "abi": [
+            {
+              "anonymous": false,
+              "inputs": [],
+              "name": "Pong",
+              "type": "event"
+            },
+            {
+              "inputs": [],
+              "name": "ping",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            }
+          ],
+          "evm": {
+            "bytecode": {
+              "generatedSources": [],
+              "linkReferences": {},
+              "object": "6080604052348015600f57600080fd5b5060968061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80635c36b18614602d575b600080fd5b60336035565b005b6040517f4d015fcc2a20c24d7be893b3a525eac864b5a53a5f88ef7201a600465c73314e90600090a156fea264697066735822122092b9f6d678a05c6f27f62b4f7f0ebdf32f1b722afcb15213240890d4e42495e164736f6c63430007060033",
+              "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH1 0xF JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x96 DUP1 PUSH2 0x1E PUSH1 0x0 CODECOPY PUSH1 0x0 RETURN INVALID PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH1 0xF JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x4 CALLDATASIZE LT PUSH1 0x28 JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0x5C36B186 EQ PUSH1 0x2D JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH1 0x33 PUSH1 0x35 JUMP JUMPDEST STOP JUMPDEST PUSH1 0x40 MLOAD PUSH32 0x4D015FCC2A20C24D7BE893B3A525EAC864B5A53A5F88EF7201A600465C73314E SWAP1 PUSH1 0x0 SWAP1 LOG1 JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 SWAP3 0xB9 0xF6 0xD6 PUSH25 0xA05C6F27F62B4F7F0EBDF32F1B722AFCB15213240890D4E424 SWAP6 0xE1 PUSH5 0x736F6C6343 STOP SMOD MOD STOP CALLER ",
+              "sourceMap": "25:90:0:-:0;;;;;;;;;;;;;;;;;;;"
+            },
+            "deployedBytecode": {
+              "generatedSources": [],
+              "immutableReferences": {},
+              "linkReferences": {},
+              "object": "6080604052348015600f57600080fd5b506004361060285760003560e01c80635c36b18614602d575b600080fd5b60336035565b005b6040517f4d015fcc2a20c24d7be893b3a525eac864b5a53a5f88ef7201a600465c73314e90600090a156fea264697066735822122092b9f6d678a05c6f27f62b4f7f0ebdf32f1b722afcb15213240890d4e42495e164736f6c63430007060033",
+              "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH1 0xF JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x4 CALLDATASIZE LT PUSH1 0x28 JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0x5C36B186 EQ PUSH1 0x2D JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH1 0x33 PUSH1 0x35 JUMP JUMPDEST STOP JUMPDEST PUSH1 0x40 MLOAD PUSH32 0x4D015FCC2A20C24D7BE893B3A525EAC864B5A53A5F88EF7201A600465C73314E SWAP1 PUSH1 0x0 SWAP1 LOG1 JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 SWAP3 0xB9 0xF6 0xD6 PUSH25 0xA05C6F27F62B4F7F0EBDF32F1B722AFCB15213240890D4E424 SWAP6 0xE1 PUSH5 0x736F6C6343 STOP SMOD MOD STOP CALLER ",
+              "sourceMap": "25:90:0:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;66:47;;;:::i;:::-;;;102:6;;;;;;;66:47::o"
+            },
+            "methodIdentifiers": {
+              "ping()": "5c36b186"
+            }
+          }
+        }
+      }
+    },
+    "errors": [
+      {
+        "component": "general",
+        "errorCode": "1878",
+        "formattedMessage": "contracts/mocks/ModuleMock.sol: Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing \"SPDX-License-Identifier: <SPDX-License>\" to each source file. Use \"SPDX-License-Identifier: UNLICENSED\" for non-open-source code. Please see https://spdx.org for more information.\n",
+        "message": "SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing \"SPDX-License-Identifier: <SPDX-License>\" to each source file. Use \"SPDX-License-Identifier: UNLICENSED\" for non-open-source code. Please see https://spdx.org for more information.",
+        "severity": "warning",
+        "sourceLocation": {
+          "end": -1,
+          "file": "contracts/mocks/ModuleMock.sol",
+          "start": -1
+        },
+        "type": "Warning"
+      }
+    ],
+    "sources": {
+      "contracts/mocks/ModuleMock.sol": {
+        "ast": {
+          "absolutePath": "contracts/mocks/ModuleMock.sol",
+          "exportedSymbols": {
+            "ModuleMock": [
+              11
+            ]
+          },
+          "id": 12,
+          "nodeType": "SourceUnit",
+          "nodes": [
+            {
+              "id": 1,
+              "literals": [
+                "solidity",
+                "0.7",
+                ".6"
+              ],
+              "nodeType": "PragmaDirective",
+              "src": "0:22:0"
+            },
+            {
+              "abstract": false,
+              "baseContracts": [],
+              "contractDependencies": [],
+              "contractKind": "contract",
+              "fullyImplemented": true,
+              "id": 11,
+              "linearizedBaseContracts": [
+                11
+              ],
+              "name": "ModuleMock",
+              "nodeType": "ContractDefinition",
+              "nodes": [
+                {
+                  "anonymous": false,
+                  "id": 3,
+                  "name": "Pong",
+                  "nodeType": "EventDefinition",
+                  "parameters": {
+                    "id": 2,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "59:2:0"
+                  },
+                  "src": "49:13:0"
+                },
+                {
+                  "body": {
+                    "id": 9,
+                    "nodeType": "Block",
+                    "src": "91:22:0",
+                    "statements": [
+                      {
+                        "eventCall": {
+                          "arguments": [],
+                          "expression": {
+                            "argumentTypes": [],
+                            "id": 6,
+                            "name": "Pong",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 3,
+                            "src": "102:4:0",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_function_event_nonpayable$__$returns$__$",
+                              "typeString": "function ()"
+                            }
+                          },
+                          "id": 7,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "kind": "functionCall",
+                          "lValueRequested": false,
+                          "names": [],
+                          "nodeType": "FunctionCall",
+                          "src": "102:6:0",
+                          "tryCall": false,
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_tuple$__$",
+                            "typeString": "tuple()"
+                          }
+                        },
+                        "id": 8,
+                        "nodeType": "EmitStatement",
+                        "src": "97:11:0"
+                      }
+                    ]
+                  },
+                  "functionSelector": "5c36b186",
+                  "id": 10,
+                  "implemented": true,
+                  "kind": "function",
+                  "modifiers": [],
+                  "name": "ping",
+                  "nodeType": "FunctionDefinition",
+                  "parameters": {
+                    "id": 4,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "79:2:0"
+                  },
+                  "returnParameters": {
+                    "id": 5,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "91:0:0"
+                  },
+                  "scope": 11,
+                  "src": "66:47:0",
+                  "stateMutability": "nonpayable",
+                  "virtual": false,
+                  "visibility": "external"
+                }
+              ],
+              "scope": 12,
+              "src": "25:90:0"
+            }
+          ],
+          "src": "0:116:0"
+        },
+        "id": 0
+      }
+    }
+  }
+}

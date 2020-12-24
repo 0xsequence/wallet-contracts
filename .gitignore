@@ -1,21 +1,16 @@
 build
-artifacts
 cache
-typings/contracts/*Factory.ts
 src/config/*.env
 
 .vscode/
 .vs_code/
 
 node_modules/
-typings/contracts/
-
 yarn-error.log
 
 .coverage_artifacts/
 .coverage_cache/
 .coverage_contracts/
 coverage/
-
 coverage.json
 .devcontainer

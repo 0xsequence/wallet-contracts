@@ -1,0 +1,30 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IModuleCreator",
+  "sourceName": "contracts/modules/commons/interfaces/IModuleCreator.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_code",
+          "type": "bytes"
+        }
+      ],
+      "name": "createContract",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

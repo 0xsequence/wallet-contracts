@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv'
 import * as path from 'path'
-import { HttpNetworkConfig } from '@nomiclabs/buidler/types'
+import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
 type EthereumNetworksTypes =
@@ -18,7 +18,7 @@ export const getEnvConfig = (env: string) => {
 
   if (envLoad.error) {
     console.warn("No config found, using default")
-    return { 'ETH_MNEMONIC': ethers.Wallet.createRandom().mnemonic }
+    return { 'ETH_MNEMONIC': ethers.Wallet.createRandom().mnemonic.phrase }
   }
 
   return envLoad.parsed || {}
@@ -30,7 +30,7 @@ export const networkConfig = (
   const config = getEnvConfig('PROD')  
   const networkConfig: HttpNetworkConfig = {
     url: (function(network) {
-      switch(network) {
+      switch (network) {
         case 'mumbai':
           return 'https://rpc-mumbai.matic.today/'
 
@@ -42,8 +42,16 @@ export const networkConfig = (
       }
     })(network),
     accounts: {
-      mnemonic: config['ETH_MNEMONIC']
-    }
+      mnemonic: config['ETH_MNEMONIC'],
+      initialIndex: 0,
+      count: 10,
+      path: `m/44'/60'/0'/0`
+    },
+    gas: "auto",
+    gasPrice: "auto",
+    gasMultiplier: 1,
+    timeout: 20000,
+    httpHeaders: {}
   }
 
   return networkConfig

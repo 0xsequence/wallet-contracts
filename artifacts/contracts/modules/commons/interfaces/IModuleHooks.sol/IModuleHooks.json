@@ -1,0 +1,61 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IModuleHooks",
+  "sourceName": "contracts/modules/commons/interfaces/IModuleHooks.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "_signature",
+          "type": "bytes4"
+        },
+        {
+          "internalType": "address",
+          "name": "_implementation",
+          "type": "address"
+        }
+      ],
+      "name": "addHook",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "_signature",
+          "type": "bytes4"
+        }
+      ],
+      "name": "readHook",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "_signature",
+          "type": "bytes4"
+        }
+      ],
+      "name": "removeHook",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

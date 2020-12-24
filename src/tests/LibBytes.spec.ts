@@ -1,13 +1,13 @@
 import * as ethers from 'ethers'
-import { expect } from './utils';
+import { expect } from './utils'
 
-import { LibBytesImpl } from 'typings/contracts/ethers-v4/LibBytesImpl'
+import { LibBytesImpl } from 'typings/contracts'
 
-ethers.errors.setLogLevel('error')
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const LibBytesImplArtifact = artifacts.require('LibBytesImpl');
+const LibBytesImplArtifact = artifacts.require('LibBytesImpl')
 
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 contract('LibBytes', (accounts: string[]) => {
   let libBytes
@@ -141,7 +141,7 @@ contract('LibBytes', (accounts: string[]) => {
   })
 
   describe('readBytes32', () => {
-    let bytes32;
+    let bytes32
     beforeEach(async () => {
       bytes32 = web3.utils.randomHex(32)
     })

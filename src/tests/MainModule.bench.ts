@@ -1,23 +1,22 @@
 import * as ethers from 'ethers'
-import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils';
+import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils'
 
-import { MainModule } from 'typings/contracts/ethers-v4/MainModule'
-import { Factory } from 'typings/contracts/ethers-v4/Factory'
+import { MainModule, Factory } from 'typings/contracts'
 
-ethers.errors.setLogLevel("error")
+ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
 
 const runs = 256
-const web3 = (global as any).web3
+import { web3 } from 'hardhat'
 
 const optimalGasLimit = ethers.constants.Two.pow(22)
 
 function report(test: string, values: number[]) {
   const min = Math.min(...values)
   const max = Math.max(...values)
-  const avg = values.map((n) => ethers.utils.bigNumberify(n))
+  const avg = values.map((n) => ethers.BigNumber.from(n))
     .reduce((p, n) => p.add(n)).div(values.length).toNumber()
 
   console.info(` -> ${test} runs: ${values.length} cost min: ${min} max: ${max} avg: ${avg}`)
