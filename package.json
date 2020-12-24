@@ -4,16 +4,15 @@
   "private": false,
   "license": "Apache-2.0",
   "scripts": {
-    "build": "hardhat compile",
-    "postbuild": "yarn gen:contract-typings",
+    "build": "yarn clean && yarn compile && yarn gen:typings",
     "clean": "rimraf artifacts && rimraf typings/contracts && rimraf cache",
-    "pretest": "yarn build",
-    "test": "hardhat test",
+    "compile": "hardhat --max-memory 4096 compile",
+    "gen:typings": "rimraf typings/contracts && typechain --target ethers-v5 --outDir typings/contracts './artifacts/!(build-info)/**/*[^dbg].json'",
+    "test": "yarn build && hardhat test",
     "quicktest": "hardhat test",
     "precoverage": "yarn build",
     "coverage": "COVERAGE=true NET_ID=1 hardhat coverage --network coverage",
     "benchmark": "BENCHMARK=true yarn test",
-    "gen:contract-typings": "rimraf typings/contracts/* && typechain --target ethers-v5 --outDir typings/contracts './artifacts/!(build-info)/**/*[^dbg].json'",
     "lint": "yarn lint:ts && yarn lint:sol",
     "lint:fix": "yarn lint:ts:fix && yarn lint:sol:fix",
     "lint:sol": "solhint contracts/**/*.sol",
@@ -21,27 +20,11 @@
     "lint:ts:fix": "tslint -c tslint.json -p . --fix",
     "console:ganache": "truffle console --network ganache",
     "console:rinkeby": "truffle console --network rinkeby",
-    "ganache": "ganache-cli --networkId ${npm_package_config_ganacheNetworkID} --port ${npm_package_config_ganachePort} --gasLimit ${npm_package_config_ganacheGasLimit} --gasPrice ${npm_package_config_ganacheGasPrice} --defaultBalanceEther ${npm_package_config_etherBalance} --deterministic --mnemonic \"${npm_package_config_mnemonic}\" ${npm_package_config_extra}",
-    "ganache:verbose": "ganache-cli --networkId ${npm_package_config_ganacheNetworkID} --verbose --port ${npm_package_config_ganachePort} --gasLimit ${npm_package_config_ganacheGasLimit} --gasPrice ${npm_package_config_ganacheGasPrice} --defaultBalanceEther ${npm_package_config_etherBalance} --deterministic --mnemonic \"${npm_package_config_mnemonic}\" ${npm_package_config_extra}",
-    "ganache:stop": "ps aux | grep ganache-cli | grep -v grep | awk '{print $2}' | xargs kill -9",
+    "start:ganache": "ganache-cli --chainId ${npm_package_config_ganacheChainID} --networkId ${npm_package_config_ganacheChainID} --port ${npm_package_config_ganachePort} --gasLimit ${npm_package_config_ganacheGasLimit} --gasPrice ${npm_package_config_ganacheGasPrice} --defaultBalanceEther ${npm_package_config_etherBalance} --deterministic --mnemonic \"${npm_package_config_mnemonic}\" ${npm_package_config_extra}",
+    "start:ganache:verbose": "yarn run start:ganache --verbose",
+    "stop:ganache": "ps aux | grep ganache-cli | grep -v grep | awk '{print $2}' | xargs kill -9",
     "deploy:ganache": "hardhat run --network ganache src/scripts/deploy-contracts.ts",
     "deploy": "hardhat run src/scripts/deploy-contracts.ts --network"
-  },
-  "files": [
-    "LICENSE",
-    "artifacts",
-    "contracts",
-    "networks",
-    "typings"
-  ],
-  "config": {
-    "mnemonic": "test test test test test test test test test test test junk",
-    "ganacheNetworkID": 127001,
-    "ganachePort": 8545,
-    "ganacheGasLimit": "0xfffffffffff",
-    "ganacheGasPrice": "2",
-    "etherBalance": "100000",
-    "extra": ""
   },
   "husky": {
     "hooks": {
@@ -88,7 +71,23 @@
     "yesno": "^0.3.1",
     "zos-lib": "^2.4.0"
   },
+  "files": [
+    "LICENSE",
+    "artifacts",
+    "contracts",
+    "networks",
+    "typings"
+  ],
   "resolutions": {
     "sha3": "^2.0.0"
+  },
+  "config": {
+    "mnemonic": "test test test test test test test test test test test junk",
+    "ganacheChainID": 127001,
+    "ganachePort": 8545,
+    "ganacheGasLimit": "0xfffffffffff",
+    "ganacheGasPrice": "2",
+    "etherBalance": "100000",
+    "extra": ""
   }
 }
