@@ -1,10 +1,9 @@
 {
-  "name": "wallet-contracts",
+  "name": "@0xsequence/wallet-contracts",
   "version": "1.1.0",
   "private": false,
   "license": "none",
   "scripts": {
-    "prepare": "npm run build",
     "build": "hardhat compile",
     "postbuild": "yarn gen:contract-typings",
     "clean": "rimraf artifacts && rimraf typings/contracts && rimraf cache",
@@ -14,8 +13,7 @@
     "precoverage": "yarn build",
     "coverage": "COVERAGE=true NET_ID=1 hardhat coverage --network coverage",
     "benchmark": "BENCHMARK=true yarn test",
-    "gen:contract-typings": "rimraf typings/contracts/* && yarn gen:contract-typings:ethers5",
-    "gen:contract-typings:ethers5": "typechain --target ethers-v5 --outDir typings/contracts './artifacts/!(build-info)/**/*[^dbg].json'",
+    "gen:contract-typings": "rimraf typings/contracts/* && typechain --target ethers-v5 --outDir typings/contracts './artifacts/!(build-info)/**/*[^dbg].json'",
     "lint": "yarn lint:ts && yarn lint:sol",
     "lint:fix": "yarn lint:ts:fix && yarn lint:sol:fix",
     "lint:sol": "solhint contracts/**/*.sol",
@@ -31,9 +29,9 @@
   },
   "files": [
     "artifacts",
-    "typings",
     "networks",
-    "src"
+    "src",
+    "typings"
   ],
   "config": {
     "mnemonic": "test test test test test test test test test test test junk",

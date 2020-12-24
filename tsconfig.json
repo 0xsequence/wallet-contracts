@@ -29,13 +29,12 @@
     "lib": ["es2017", "dom"],
 
     "typeRoots": [
-      "../node_modules/@types",
       "./node_modules/@types"
     ]
   },
 
   "include": [
-    "typings","src"
+    "src", "typings"
   ],
 
   "files": ["./hardhat.config.ts"],
