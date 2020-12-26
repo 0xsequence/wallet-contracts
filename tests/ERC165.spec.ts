@@ -1,13 +1,7 @@
 import * as ethers from 'ethers'
 import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf, addressOf } from './utils'
 
-import {
-  MainModule,
-  MainModuleUpgradable,
-  Factory,
-  ERC165CheckerMock
-} from 'typings/contracts'
-
+import { MainModule, MainModuleUpgradable, Factory, ERC165CheckerMock } from 'typings/contracts'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
@@ -45,12 +39,12 @@ contract('ERC165', () => {
 
   before(async () => {
     // Deploy wallet factory
-    factory = await FactoryArtifact.new() as Factory
+    factory = (await FactoryArtifact.new()) as Factory
     // Deploy MainModule
-    module = await MainModuleArtifact.new(factory.address) as MainModule
-    moduleUpgradable = await MainModuleUpgradableArtifact.new() as MainModuleUpgradable
+    module = (await MainModuleArtifact.new(factory.address)) as MainModule
+    moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
     // Deploy ERC165 Checker
-    erc165checker = await Erc165CheckerMockArtifact.new() as ERC165CheckerMock
+    erc165checker = (await Erc165CheckerMockArtifact.new()) as ERC165CheckerMock
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
   })
@@ -59,7 +53,7 @@ contract('ERC165', () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
     await factory.deploy(module.address, salt)
-    wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
+    wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
   })
 
   describe('Implement all interfaces for ERC165 on MainModule', () => {
@@ -119,7 +113,7 @@ contract('ERC165', () => {
       ['ERC1155', '0x4e2312e0']
     ]
 
-    interfaces.forEach((i) => {
+    interfaces.forEach(i => {
       it(`Should implement ${i[0]} interface`, async () => {
         const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, i[1])
         expect(erc165result).to.be.true

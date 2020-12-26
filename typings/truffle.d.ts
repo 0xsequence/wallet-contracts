@@ -6,10 +6,7 @@ declare module 'truffle' {
   }
 
   global {
-    function contract(
-      name: string,
-      callback: (accounts: Array<string>) => void
-    ): void;
+    function contract(name: string, callback: (accounts: Array<string>) => void): void
     const artifacts: ArtifactsGlobal
   }
 }

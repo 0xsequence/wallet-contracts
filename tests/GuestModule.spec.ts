@@ -1,12 +1,7 @@
 import * as ethers from 'ethers'
 import { expect, RevertError } from './utils'
 
-import {
-  GuestModule,
-  CallReceiverMock,
-  HookCallerMock,
-  MainModuleUpgradable
-} from 'typings/contracts'
+import { GuestModule, CallReceiverMock, HookCallerMock, MainModuleUpgradable } from 'typings/contracts'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
@@ -22,7 +17,7 @@ contract('GuestModule', (accounts: string[]) => {
   let callReceiver: CallReceiverMock
   let hookMock: HookCallerMock
 
-  describe("GuestModule wallet", () => {
+  describe('GuestModule wallet', () => {
     before(async () => {
       // Deploy wallet factory
       module = await GuestModuleArtifact.new()
@@ -38,14 +33,16 @@ contract('GuestModule', (accounts: string[]) => {
       valA = web3.utils.toBN(web3.utils.randomHex(3)).toNumber()
       valB = web3.utils.randomHex(120)
 
-      transactions = [{
-        delegateCall: false,
-        revertOnError: false,
-        gasLimit: ethers.constants.Two.pow(20),
-        target: callReceiver.address,
-        value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
-      }]
+      transactions = [
+        {
+          delegateCall: false,
+          revertOnError: false,
+          gasLimit: ethers.constants.Two.pow(20),
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        }
+      ]
     })
 
     it('Should accept transactions without signature', async () => {
@@ -77,20 +74,22 @@ contract('GuestModule', (accounts: string[]) => {
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should revert on delegateCall transactions', async () => {
-      const transactions = [{
-        delegateCall: true,
-        revertOnError: false,
-        gasLimit: 1000000,
-        target: callReceiver.address,
-        value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
-      }]
+      const transactions = [
+        {
+          delegateCall: true,
+          revertOnError: false,
+          gasLimit: 1000000,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        }
+      ]
 
       const tx = module.selfExecute(transactions)
       await expect(tx).to.be.rejectedWith(RevertError('GuestModule#_executeGuest: delegateCall not allowed'))
     })
     it('Should not accept ETH', async () => {
-      const tx = module.send(1, { from: accounts[0] })
+      const tx = module.send(1, { from: accounts[0] })
       await expect(tx).to.be.rejected
     })
     it('Should not implement hooks', async () => {
@@ -98,34 +97,39 @@ contract('GuestModule', (accounts: string[]) => {
       await expect(tx).to.be.rejected
     })
     it('Should not be upgradeable', async () => {
-      const mainModule = await MainModuleUpgradableArtifact.new() as MainModuleUpgradable
+      const mainModule = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
       const newImageHash = web3.utils.randomHex(32)
 
-      const migrateBundle = [{
-        delegateCall: false,
-        revertOnError: true,
-        gasLimit: ethers.constants.Two.pow(18),
-        target: module.address,
-        value: ethers.constants.Zero,
-        data: mainModule.contract.methods.updateImplementation(mainModule.address).encodeABI()
-      }, {
-        delegateCall: false,
-        revertOnError: true,
-        gasLimit: ethers.constants.Two.pow(18),
-        target: module.address,
-        value: ethers.constants.Zero,
-        data: mainModule.contract.methods.updateImageHash(newImageHash).encodeABI()
-      }]
+      const migrateBundle = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.Two.pow(18),
+          target: module.address,
+          value: ethers.constants.Zero,
+          data: mainModule.contract.methods.updateImplementation(mainModule.address).encodeABI()
+        },
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.Two.pow(18),
+          target: module.address,
+          value: ethers.constants.Zero,
+          data: mainModule.contract.methods.updateImageHash(newImageHash).encodeABI()
+        }
+      ]
 
-      const migrateTransaction = [{
-        delegateCall: false,
-        revertOnError: true,
-        gasLimit: ethers.constants.Two.pow(18),
-        target: module.address,
-        value: ethers.constants.Zero,
-        data: module.contract.methods.selfExecute(migrateBundle).encodeABI()
-      }]
-    
+      const migrateTransaction = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: ethers.constants.Two.pow(18),
+          target: module.address,
+          value: ethers.constants.Zero,
+          data: module.contract.methods.selfExecute(migrateBundle).encodeABI()
+        }
+      ]
+
       const tx = module.selfExecute(migrateTransaction)
       await expect(tx).to.be.rejected
     })

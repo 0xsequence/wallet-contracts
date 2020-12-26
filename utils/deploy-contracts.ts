@@ -18,7 +18,7 @@ const prompt = ora()
 
 /**
  * @notice Deploy core wallet contracts via universal deployer
- * 
+ *
  *   1. Deploy Wallet Factory via UD
  *   2. Deploy Main Module via UD
  *   3. Deploy Upgradable Main Module via UD
@@ -28,7 +28,12 @@ const prompt = ora()
 const provider = new providers.Web3Provider(web3.currentProvider)
 const signer = provider.getSigner()
 const universalDeployer = new UniversalDeployer(network.name, signer)
-const txParams = {gasLimit: 8000000, gasPrice: BigNumber.from(10).pow(9).mul(10)}
+const txParams = {
+  gasLimit: 8000000,
+  gasPrice: BigNumber.from(10)
+    .pow(9)
+    .mul(10)
+}
 
 const main = async () => {
   prompt.info(`Network Name:           ${network.name}`)

@@ -1,9 +1,10 @@
+/* eslint-disable */
 /// <reference types="chai" />
 
 declare module 'chai-bn' {
   function chaiBN(bignumber: any): (chai: any, utils: any) => void
 
-  namespace chaiBN { }
+  namespace chaiBN {}
 
   export = chaiBN
 }

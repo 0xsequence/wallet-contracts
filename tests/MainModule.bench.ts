@@ -16,8 +16,11 @@ const optimalGasLimit = ethers.constants.Two.pow(22)
 function report(test: string, values: number[]) {
   const min = Math.min(...values)
   const max = Math.max(...values)
-  const avg = values.map((n) => ethers.BigNumber.from(n))
-    .reduce((p, n) => p.add(n)).div(values.length).toNumber()
+  const avg = values
+    .map(n => ethers.BigNumber.from(n))
+    .reduce((p, n) => p.add(n))
+    .div(values.length)
+    .toNumber()
 
   console.info(` -> ${test} runs: ${values.length} cost min: ${min} max: ${max} avg: ${avg}`)
 }
@@ -30,16 +33,16 @@ contract('MainModule', () => {
 
   before(async () => {
     // Deploy wallet factory
-    factory = await FactoryArtifact.new() as Factory
+    factory = (await FactoryArtifact.new()) as Factory
     // Deploy MainModule
-    module = await MainModuleArtifact.new(factory.address) as MainModule
+    module = (await MainModuleArtifact.new(factory.address)) as MainModule
     // Get network ID
     networkId = await web3.eth.net.getId()
   })
 
   if (process.env.BENCHMARK) {
-    describe.only('Benchmark', function () {
-      (this as any).timeout(0)
+    describe.only('Benchmark', function() {
+      ;(this as any).timeout(0)
 
       it('Deploy a wallet', async () => {
         const results: number[] = []
@@ -70,9 +73,9 @@ contract('MainModule', () => {
           const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
           const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
           await factory.deploy(module.address, salt)
-          const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
+          const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
 
-          const tx = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId) as any
+          const tx = (await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)) as any
           results.push(tx.receipt.gasUsed)
         }
 
@@ -80,7 +83,7 @@ contract('MainModule', () => {
       })
 
       const batches = [2, 3, 5, 10, 50, 100]
-      batches.forEach((n) => {
+      batches.forEach(n => {
         it(`Relay 1/1 ${n} transactions`, async () => {
           const results: number[] = []
 
@@ -97,44 +100,49 @@ contract('MainModule', () => {
             const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
             const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
             await factory.deploy(module.address, salt)
-            const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
+            const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
 
-            const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
+            const tx = (await signAndExecuteMetaTx(wallet, owner, transactions, networkId)) as any
             results.push(tx.receipt.gasUsed)
           }
 
           report(`relay 1/1 ${n} transactions`, results)
         })
       })
-      batches.forEach((n) => {
-        const ntxs = Math.floor(n /2)
+      batches.forEach(n => {
+        const ntxs = Math.floor(n / 2)
         const nfailing = n - ntxs
         it(`Relay 1/1 ${ntxs} transactions and ${nfailing} failing transactions`, async () => {
           const results: number[] = []
 
-          const transactions = new Array(ntxs).fill(0).map(() => ({
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: optimalGasLimit,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: []
-          })).concat(new Array(nfailing).fill(0).map(() => ({
-            delegateCall: false,
-            revertOnError: false,
-            gasLimit: optimalGasLimit,
-            target: factory.address,
-            value: ethers.constants.Zero,
-            data: []
-          })))
+          const transactions = new Array(ntxs)
+            .fill(0)
+            .map(() => ({
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: optimalGasLimit,
+              target: ethers.constants.AddressZero,
+              value: ethers.constants.Zero,
+              data: []
+            }))
+            .concat(
+              new Array(nfailing).fill(0).map(() => ({
+                delegateCall: false,
+                revertOnError: false,
+                gasLimit: optimalGasLimit,
+                target: factory.address,
+                value: ethers.constants.Zero,
+                data: []
+              }))
+            )
 
           for (let i = 0; i < runs; i++) {
             const owner = new ethers.Wallet(ethers.utils.randomBytes(32))
             const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
             await factory.deploy(module.address, salt)
-            const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
+            const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
 
-            const tx = await signAndExecuteMetaTx(wallet, owner, transactions, networkId) as any
+            const tx = (await signAndExecuteMetaTx(wallet, owner, transactions, networkId)) as any
             results.push(tx.receipt.gasUsed)
           }
 
@@ -156,7 +164,9 @@ contract('MainModule', () => {
         }
 
         for (let i = 0; i < runs; i++) {
-          const owners = Array(5).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+          const owners = Array(5)
+            .fill(0)
+            .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
           const weights = [3, 3, 1, 1, 1]
 
           const salt = encodeImageHash(
@@ -168,7 +178,7 @@ contract('MainModule', () => {
           )
 
           await factory.deploy(module.address, salt)
-          const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
+          const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
 
           const signers = [0, 3]
 
@@ -177,7 +187,7 @@ contract('MainModule', () => {
             owner: signers.includes(i) ? owner : owner.address
           }))
 
-          const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId) as any
+          const tx = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)) as any
           results.push(tx.receipt.gasUsed)
         }
 
@@ -198,25 +208,27 @@ contract('MainModule', () => {
         }
 
         for (let i = 0; i < runs; i++) {
-          const owners = Array(255).fill(0).map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+          const owners = Array(255)
+            .fill(0)
+            .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
 
           const salt = encodeImageHash(
             threshold,
-            owners.map((owner) => ({
+            owners.map(owner => ({
               weight: weight,
               address: owner.address
             }))
           )
 
           await factory.deploy(module.address, salt)
-          const wallet = await MainModuleArtifact.at(addressOf(factory.address, module.address, salt)) as MainModule
+          const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
 
-          const accounts = owners.map((owner) => ({
+          const accounts = owners.map(owner => ({
             weight: weight,
             owner: owner
           }))
 
-          const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId) as any
+          const tx = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)) as any
           results.push(tx.receipt.gasUsed)
         }
 

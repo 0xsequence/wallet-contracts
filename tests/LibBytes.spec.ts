@@ -13,7 +13,7 @@ contract('LibBytes', (accounts: string[]) => {
   let libBytes
 
   before(async () => {
-    libBytes = await LibBytesImplArtifact.new() as LibBytesImpl
+    libBytes = (await LibBytesImplArtifact.new()) as LibBytesImpl
   })
 
   describe('readFirstUint16', () => {
@@ -75,7 +75,8 @@ contract('LibBytes', (accounts: string[]) => {
       expect(res[1]).to.eq.BN(20)
     })
     it('Should read address at given index', async () => {
-      const data = web3.utils.randomHex(13)
+      const data = web3.utils
+        .randomHex(13)
         .concat(addr.slice(2))
         .concat(web3.utils.randomHex(6).slice(2))
 
@@ -96,7 +97,7 @@ contract('LibBytes', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith('LibBytes#readAddress: OUT_OF_BOUNDS')
     })
     it('Should fail read address totally out of bounds', async () => {
-      const tx = libBytes.readAddress("0x010203", 345)
+      const tx = libBytes.readAddress('0x010203', 345)
       await expect(tx).to.be.rejectedWith('LibBytes#readAddress: OUT_OF_BOUNDS')
     })
   })
@@ -114,7 +115,8 @@ contract('LibBytes', (accounts: string[]) => {
       expect(res[1]).to.eq.BN(66)
     })
     it('Should read bytes66 at given index', async () => {
-      const data = web3.utils.randomHex(18)
+      const data = web3.utils
+        .randomHex(18)
         .concat(bytes66.slice(2))
         .concat(web3.utils.randomHex(62).slice(2))
 
@@ -135,7 +137,7 @@ contract('LibBytes', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith('LibBytes#readBytes66: OUT_OF_BOUNDS')
     })
     it('Should fail read bytes66 totally out of bounds', async () => {
-      const tx = libBytes.readBytes66("0x010203", 345)
+      const tx = libBytes.readBytes66('0x010203', 345)
       await expect(tx).to.be.rejectedWith('LibBytes#readBytes66: OUT_OF_BOUNDS')
     })
   })
@@ -152,7 +154,8 @@ contract('LibBytes', (accounts: string[]) => {
       expect(res).to.equal(bytes32)
     })
     it('Should read bytes32 at given index', async () => {
-      const data = web3.utils.randomHex(12)
+      const data = web3.utils
+        .randomHex(12)
         .concat(bytes32.slice(2))
         .concat(web3.utils.randomHex(44).slice(2))
 
@@ -171,7 +174,7 @@ contract('LibBytes', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith('LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED')
     })
     it('Should fail read bytes32 totally out of bounds', async () => {
-      const tx = libBytes.readBytes32("0x010203", 3145)
+      const tx = libBytes.readBytes32('0x010203', 3145)
       await expect(tx).to.be.rejectedWith('LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED')
     })
   })
