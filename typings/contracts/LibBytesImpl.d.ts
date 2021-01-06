@@ -22,15 +22,21 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 interface LibBytesImplInterface extends ethers.utils.Interface {
   functions: {
     "readAddress(bytes,uint256)": FunctionFragment;
+    "readBytes(bytes,uint256,uint256)": FunctionFragment;
     "readBytes32(bytes,uint256)": FunctionFragment;
     "readBytes66(bytes,uint256)": FunctionFragment;
     "readFirstUint16(bytes)": FunctionFragment;
+    "readUint16(bytes,uint256)": FunctionFragment;
     "readUint8Uint8(bytes,uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "readAddress",
     values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "readBytes",
+    values: [BytesLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "readBytes32",
@@ -45,6 +51,10 @@ interface LibBytesImplInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "readUint16",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "readUint8Uint8",
     values: [BytesLike, BigNumberish]
   ): string;
@@ -53,6 +63,7 @@ interface LibBytesImplInterface extends ethers.utils.Interface {
     functionFragment: "readAddress",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "readBytes", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "readBytes32",
     data: BytesLike
@@ -65,6 +76,7 @@ interface LibBytesImplInterface extends ethers.utils.Interface {
     functionFragment: "readFirstUint16",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "readUint16", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "readUint8Uint8",
     data: BytesLike
@@ -96,6 +108,20 @@ export class LibBytesImpl extends Contract {
     "readAddress(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
+
+    readBytes(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
+
+    "readBytes(bytes,uint256,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string, BigNumber]>;
 
@@ -133,6 +159,18 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<[number, BigNumber]>;
 
+    readUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, BigNumber]>;
+
+    "readUint16(bytes,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, BigNumber]>;
+
     readUint8Uint8(
       _data: BytesLike,
       _index: BigNumberish,
@@ -155,6 +193,20 @@ export class LibBytesImpl extends Contract {
   "readAddress(bytes,uint256)"(
     _data: BytesLike,
     _index: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[string, BigNumber]>;
+
+  readBytes(
+    _data: BytesLike,
+    _index: BigNumberish,
+    _size: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[string, BigNumber]>;
+
+  "readBytes(bytes,uint256,uint256)"(
+    _data: BytesLike,
+    _index: BigNumberish,
+    _size: BigNumberish,
     overrides?: CallOverrides
   ): Promise<[string, BigNumber]>;
 
@@ -192,6 +244,18 @@ export class LibBytesImpl extends Contract {
     overrides?: CallOverrides
   ): Promise<[number, BigNumber]>;
 
+  readUint16(
+    _data: BytesLike,
+    _index: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[number, BigNumber]>;
+
+  "readUint16(bytes,uint256)"(
+    _data: BytesLike,
+    _index: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[number, BigNumber]>;
+
   readUint8Uint8(
     _data: BytesLike,
     _index: BigNumberish,
@@ -214,6 +278,20 @@ export class LibBytesImpl extends Contract {
     "readAddress(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
+
+    readBytes(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
+
+    "readBytes(bytes,uint256,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string, BigNumber]>;
 
@@ -248,6 +326,18 @@ export class LibBytesImpl extends Contract {
 
     "readFirstUint16(bytes)"(
       _data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[number, BigNumber]>;
+
+    readUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, BigNumber]>;
+
+    "readUint16(bytes,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[number, BigNumber]>;
 
@@ -279,6 +369,20 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    readBytes(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "readBytes(bytes,uint256,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     readBytes32(
       _data: BytesLike,
       _index: BigNumberish,
@@ -310,6 +414,18 @@ export class LibBytesImpl extends Contract {
 
     "readFirstUint16(bytes)"(
       _data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    readUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "readUint16(bytes,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -339,6 +455,20 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    readBytes(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "readBytes(bytes,uint256,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
+      _size: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     readBytes32(
       _data: BytesLike,
       _index: BigNumberish,
@@ -370,6 +500,18 @@ export class LibBytesImpl extends Contract {
 
     "readFirstUint16(bytes)"(
       _data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    readUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "readUint16(bytes,uint256)"(
+      _data: BytesLike,
+      _index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

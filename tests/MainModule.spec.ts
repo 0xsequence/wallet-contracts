@@ -287,7 +287,7 @@ contract('MainModule', (accounts: string[]) => {
       })
     })
     it('Should reject signature with invalid flag', async () => {
-      const signature = '0x00010201'
+      const signature = '0x00010301'
       const transaction = {
         delegateCall: false,
         revertOnError: true,
@@ -1890,619 +1890,631 @@ contract('MainModule', (accounts: string[]) => {
       data: []
     }
 
-    context('With 1/2 wallet', () => {
-      let owner1
-      let owner2
-      let ownerweight = 1
-      let threshold = 1
+    const modes = [{
+      name: "Forced dynamic signature encoding",
+      force: true,
+    }, {
+      name: "Default signature encoding",
+      force: false,
+    }]
 
-      beforeEach(async () => {
-        owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
-        owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const salt = encodeImageHash(threshold, [
-          {
-            weight: ownerweight,
-            address: owner1.address
-          },
-          {
-            weight: ownerweight,
-            address: owner2.address
-          }
-        ])
-
-        await factory.deploy(module.address, salt)
-        wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
-      })
-      it('Should accept signed message by first owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message by second owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message by both owners', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should reject message without signatures', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed by non-owner', async () => {
-        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: impostor
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-    })
-    context('With 2/2 wallet', () => {
-      let owner1
-      let owner2
-      let ownerweight = 1
-      let threshold = 2
-
-      beforeEach(async () => {
-        owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
-        owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const salt = encodeImageHash(threshold, [
-          {
-            weight: ownerweight,
-            address: owner1.address
-          },
-          {
-            weight: ownerweight,
-            address: owner2.address
-          }
-        ])
-
-        await factory.deploy(module.address, salt)
-        wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
-      })
-      it('Should accept signed message by both owners', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should reject message without signatures', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed only by first owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed only by second owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed by non-owner', async () => {
-        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: impostor
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-    })
-    context('With 2/3 wallet', () => {
-      let owner1
-      let owner2
-      let owner3
-
-      let ownerweight = 1
-      let threshold = 2
-
-      beforeEach(async () => {
-        owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
-        owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
-        owner3 = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const salt = encodeImageHash(threshold, [
-          {
-            weight: ownerweight,
-            address: owner1.address
-          },
-          {
-            weight: ownerweight,
-            address: owner2.address
-          },
-          {
-            weight: ownerweight,
-            address: owner3.address
-          }
-        ])
-
-        await factory.deploy(module.address, salt)
-        wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
-      })
-
-      it('Should accept signed message by first and second owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          },
-          {
-            weight: ownerweight,
-            owner: owner3.address
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message by first and last owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner3
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message by second and last owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          },
-          {
-            weight: ownerweight,
-            owner: owner3
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message by all owners', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          },
-          {
-            weight: ownerweight,
-            owner: owner3
-          }
-        ]
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should reject message signed only by first owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner3.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed only by second owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          },
-          {
-            weight: ownerweight,
-            owner: owner3.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed only by last owner', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner3
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message not signed', async () => {
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: owner1.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner2.address
-          },
-          {
-            weight: ownerweight,
-            owner: owner3.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed by non-owner', async () => {
-        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: impostor
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          },
-          {
-            weight: ownerweight,
-            owner: owner3.address
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message if the image lacks an owner', async () => {
-        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const accounts = [
-          {
-            weight: ownerweight,
-            owner: impostor
-          },
-          {
-            weight: ownerweight,
-            owner: owner2
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-    })
-
-    if (!process.env.COVERAGE) {
-      context('With 255/255 wallet', () => {
-        let owners: ethers.Wallet[]
-        let weight = 1
-        let threshold = 255
-
-        beforeEach(async () => {
-          owners = Array(255)
-            .fill(0)
-            .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
-
-          const salt = encodeImageHash(
-            threshold,
-            owners.map(owner => ({
-              weight: weight,
-              address: owner.address
+    modes.map((mode) => {
+      context(mode.name, () => {
+        context('With 1/2 wallet', () => {
+          let owner1
+          let owner2
+          let ownerweight = 1
+          let threshold = 1
+    
+          beforeEach(async () => {
+            owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
+            owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const salt = encodeImageHash(threshold, [
+              {
+                weight: ownerweight,
+                address: owner1.address
+              },
+              {
+                weight: ownerweight,
+                address: owner2.address
+              }
+            ])
+    
+            await factory.deploy(module.address, salt)
+            wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+          })
+          it('Should accept signed message by first owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message by second owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message by both owners', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should reject message without signatures', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed by non-owner', async () => {
+            const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: impostor
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+        })
+        context('With 2/2 wallet', () => {
+          let owner1
+          let owner2
+          let ownerweight = 1
+          let threshold = 2
+    
+          beforeEach(async () => {
+            owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
+            owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const salt = encodeImageHash(threshold, [
+              {
+                weight: ownerweight,
+                address: owner1.address
+              },
+              {
+                weight: ownerweight,
+                address: owner2.address
+              }
+            ])
+    
+            await factory.deploy(module.address, salt)
+            wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+          })
+          it('Should accept signed message by both owners', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should reject message without signatures', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed only by first owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed only by second owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed by non-owner', async () => {
+            const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: impostor
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+        })
+        context('With 2/3 wallet', () => {
+          let owner1
+          let owner2
+          let owner3
+    
+          let ownerweight = 1
+          let threshold = 2
+    
+          beforeEach(async () => {
+            owner1 = new ethers.Wallet(ethers.utils.randomBytes(32))
+            owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
+            owner3 = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const salt = encodeImageHash(threshold, [
+              {
+                weight: ownerweight,
+                address: owner1.address
+              },
+              {
+                weight: ownerweight,
+                address: owner2.address
+              },
+              {
+                weight: ownerweight,
+                address: owner3.address
+              }
+            ])
+    
+            await factory.deploy(module.address, salt)
+            wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+          })
+    
+          it('Should accept signed message by first and second owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              },
+              {
+                weight: ownerweight,
+                owner: owner3.address
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message by first and last owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner3
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message by second and last owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              },
+              {
+                weight: ownerweight,
+                owner: owner3
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message by all owners', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              },
+              {
+                weight: ownerweight,
+                owner: owner3
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should reject message signed only by first owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner3.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed only by second owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              },
+              {
+                weight: ownerweight,
+                owner: owner3.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed only by last owner', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner3
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message not signed', async () => {
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner3.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed by non-owner', async () => {
+            const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: impostor
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              },
+              {
+                weight: ownerweight,
+                owner: owner3.address
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message if the image lacks an owner', async () => {
+            const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: impostor
+              },
+              {
+                weight: ownerweight,
+                owner: owner2
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+        })
+    
+        if (!process.env.COVERAGE) {
+          context('With 255/255 wallet', () => {
+            let owners: ethers.Wallet[]
+            let weight = 1
+            let threshold = 255
+    
+            beforeEach(async () => {
+              owners = Array(255)
+                .fill(0)
+                .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+    
+              const salt = encodeImageHash(
+                threshold,
+                owners.map(owner => ({
+                  weight: weight,
+                  address: owner.address
+                }))
+              )
+    
+              await factory.deploy(module.address, salt)
+              wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+            })
+    
+            it('Should accept message signed by all owners', async () => {
+              const accounts = owners.map(owner => ({
+                weight: weight,
+                owner: owner
+              }))
+    
+              await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            })
+            it('Should reject message signed by non-owner', async () => {
+              const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+              const accounts = [
+                ...owners.slice(1).map(owner => ({
+                  weight: weight,
+                  owner: owner
+                })),
+                {
+                  weight: weight,
+                  owner: impostor
+                }
+              ]
+    
+              const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+              await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            })
+            it('Should reject message missing a signature', async () => {
+              const accounts = owners.slice(1).map(owner => ({
+                weight: weight,
+                owner: owner
+              }))
+    
+              const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+              await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            })
+          })
+        }
+    
+        context('With weighted owners', () => {
+          let owners: ethers.Wallet[]
+          let weights: BigNumberish[]
+          let threshold = 4
+    
+          beforeEach(async () => {
+            owners = Array(5)
+              .fill(0)
+              .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+            weights = [3, 3, 1, 1, 1]
+    
+            const salt = encodeImageHash(
+              threshold,
+              owners.map((owner, i) => ({
+                weight: weights[i],
+                address: owner.address
+              }))
+            )
+    
+            await factory.deploy(module.address, salt)
+            wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+          })
+    
+          it('Should accept signed message with (3+1)/4 weight', async () => {
+            const signers = [0, 3]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
             }))
-          )
-
-          await factory.deploy(module.address, salt)
-          wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message with (3+3)/4 weight', async () => {
+            const signers = [0, 1]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
+            }))
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message with (3+3+1+1)/4 weight', async () => {
+            const signers = [0, 1, 2, 3]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
+            }))
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should accept signed message with (3+3+1+1+1)/4 weight', async () => {
+            const signers = [0, 1, 2, 3, 4]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
+            }))
+    
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should reject signed message with (1)/4 weight', async () => {
+            const signers = [3]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
+            }))
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject signed message with (1+1)/4 weight', async () => {
+            const signers = [2, 3]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
+            }))
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject signed message with (1+1+1)/4 weight', async () => {
+            const signers = [2, 3, 4]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
+            }))
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject signed message with (3)/4 weight', async () => {
+            const signers = [0]
+    
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: signers.includes(i) ? owner : owner.address
+            }))
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject signed message with (0)/4 weight', async () => {
+            const accounts = owners.map((owner, i) => ({
+              weight: weights[i],
+              owner: owner.address
+            }))
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message signed by non-owner', async () => {
+            const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+    
+            const signers = [0, 1]
+    
+            const accounts = [
+              ...owners.map((owner, i) => ({
+                weight: weights[i],
+                owner: signers.includes(i) ? owner : owner.address
+              })),
+              {
+                weight: 4,
+                owner: impostor
+              }
+            ]
+    
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
         })
-
-        it('Should accept message signed by all owners', async () => {
-          const accounts = owners.map(owner => ({
-            weight: weight,
-            owner: owner
-          }))
-
-          await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        })
-        it('Should reject message signed by non-owner', async () => {
-          const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
-          const accounts = [
-            ...owners.slice(1).map(owner => ({
-              weight: weight,
-              owner: owner
-            })),
-            {
-              weight: weight,
-              owner: impostor
-            }
-          ]
-
-          const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-          await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-        })
-        it('Should reject message missing a signature', async () => {
-          const accounts = owners.slice(1).map(owner => ({
-            weight: weight,
-            owner: owner
-          }))
-
-          const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-          await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-        })
-      })
-    }
-
-    context('With weighted owners', () => {
-      let owners: ethers.Wallet[]
-      let weights: BigNumberish[]
-      let threshold = 4
-
-      beforeEach(async () => {
-        owners = Array(5)
-          .fill(0)
-          .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
-        weights = [3, 3, 1, 1, 1]
-
-        const salt = encodeImageHash(
-          threshold,
-          owners.map((owner, i) => ({
-            weight: weights[i],
-            address: owner.address
-          }))
-        )
-
-        await factory.deploy(module.address, salt)
-        wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
-      })
-
-      it('Should accept signed message with (3+1)/4 weight', async () => {
-        const signers = [0, 3]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message with (3+3)/4 weight', async () => {
-        const signers = [0, 1]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message with (3+3+1+1)/4 weight', async () => {
-        const signers = [0, 1, 2, 3]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should accept signed message with (3+3+1+1+1)/4 weight', async () => {
-        const signers = [0, 1, 2, 3, 4]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-      })
-      it('Should reject signed message with (1)/4 weight', async () => {
-        const signers = [3]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject signed message with (1+1)/4 weight', async () => {
-        const signers = [2, 3]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject signed message with (1+1+1)/4 weight', async () => {
-        const signers = [2, 3, 4]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject signed message with (3)/4 weight', async () => {
-        const signers = [0]
-
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: signers.includes(i) ? owner : owner.address
-        }))
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject signed message with (0)/4 weight', async () => {
-        const accounts = owners.map((owner, i) => ({
-          weight: weights[i],
-          owner: owner.address
-        }))
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-      })
-      it('Should reject message signed by non-owner', async () => {
-        const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        const signers = [0, 1]
-
-        const accounts = [
-          ...owners.map((owner, i) => ({
-            weight: weights[i],
-            owner: signers.includes(i) ? owner : owner.address
-          })),
-          {
-            weight: 4,
-            owner: impostor
-          }
-        ]
-
-        const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
       })
     })
   })

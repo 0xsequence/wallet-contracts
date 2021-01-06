@@ -128,4 +128,65 @@ library LibBytes {
     }
     return result;
   }
+
+  /**
+   * @dev Reads an uint16 value from a position in a byte array.
+   * @param data Byte array to be read.
+   * @param index Index in byte array of uint16 value.
+   * @return a uint16 value of data at given index.
+   * @return newIndex Updated index after reading the value.
+   */
+  function readUint16(
+    bytes memory data,
+    uint256 index
+  ) internal pure returns (uint16 a, uint256 newIndex) {
+    assembly {
+      let word := mload(add(index, add(32, data)))
+      a := and(shr(240, word), 0xffff)
+      newIndex := add(index, 2)
+    }
+    require(newIndex <= data.length, "LibBytes#readUint16: OUT_OF_BOUNDS");
+  }
+
+  /**
+   * @dev Reads bytes from a position in a byte array.
+   * @param data Byte array to be read.
+   * @param index Index in byte array of bytes value.
+   * @param size Number of bytes to read.
+   * @return a bytes bytes array value of data at given index.
+   * @return newIndex Updated index after reading the value.
+   */
+  function readBytes(
+    bytes memory data,
+    uint256 index,
+    uint256 size
+  ) internal view returns (bytes memory a, uint256 newIndex) {
+    a = new bytes(size);
+    bytes32 mask;
+    uint256 diff;
+
+    assembly {
+      let offset := add(32, add(data, index))
+
+      let i := 0 let n := 32
+      // Copy each word, except last one
+      for { } lt(n, size) { i := n n := add(n, 32) } {
+        mstore(add(a, n), mload(add(offset, i)))
+      }
+
+      // Load word after new array
+      let suffix := add(a, add(32, size))
+      let suffixWord := mload(suffix)
+
+      // Copy last word, overwrites after array 
+      mstore(add(a, n), mload(add(offset, i)))
+
+      // Restore after array
+      mstore(suffix, suffixWord)
+
+      newIndex := add(index, size)
+    }
+
+    require(newIndex <= data.length, "LibBytes#readBytes: OUT_OF_BOUNDS");
+  }
 }
