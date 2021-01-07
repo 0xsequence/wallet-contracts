@@ -160,7 +160,7 @@ library LibBytes {
     bytes memory data,
     uint256 index,
     uint256 size
-  ) internal view returns (bytes memory a, uint256 newIndex) {
+  ) internal pure returns (bytes memory a, uint256 newIndex) {
     a = new bytes(size);
     bytes32 mask;
     uint256 diff;

@@ -103,8 +103,8 @@ export class Web3DebugProvider extends ethers.providers.JsonRpcProvider {
 }
 
 // Take a message, hash it and sign it with ETH_SIGN SignatureType
-export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Array) {
-  let hash = ethers.utils.keccak256(message)
+export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Array, hashed = false) {
+  let hash = hashed ? message : ethers.utils.keccak256(message)
   let hashArray = ethers.utils.arrayify(hash)
   let ethsigNoType = await wallet.signMessage(hashArray)
   return ethsigNoType + '02'
@@ -118,6 +118,17 @@ export const MetaTransactionsType = `tuple(
   uint256 value,
   bytes data
 )[]`
+
+export function encodeMessageData(
+  owner: string,
+  message: string,
+  networkId: BigNumberish
+): string {
+  return ethers.utils.solidityPack(
+    ['string', 'uint256', 'address', 'bytes'],
+    ['\x19\x01', networkId, owner, ethers.utils.keccak256(message)]
+  )
+}
 
 export function encodeMetaTransactionsData(
   owner: string,
@@ -133,11 +144,7 @@ export function encodeMetaTransactionsData(
   nonce: BigNumberish
 ): string {
   const transactions = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [nonce, txs])
-
-  return ethers.utils.solidityPack(
-    ['string', 'uint256', 'address', 'bytes'],
-    ['\x19\x01', networkId, owner, ethers.utils.keccak256(transactions)]
-  )
+  return encodeMessageData(owner, transactions, networkId)
 }
 
 export async function walletSign(
@@ -167,21 +174,24 @@ export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Walle
 export async function walletMultiSign(
   accounts: {
     weight: BigNumberish,
-    owner: string | ethers.Wallet
+    owner: string | ethers.Wallet,
+    signature?: string
   }[],
   threshold: BigNumberish,
   message: string,
-  forceDynamicSize: boolean = false
+  forceDynamicSize: boolean = false,
+  hashed = false
 ) {
   const sorted = accounts.sort((a, b) => compareAddr(a.owner, b.owner))
   const accountBytes = await Promise.all(
     sorted.map(async (a) => {
-      if (a.owner instanceof ethers.Wallet) {
-        const signature = ethers.utils.arrayify(await ethSign(a.owner, message))
+      if (a.owner instanceof ethers.Wallet || a.signature !== undefined) {
+        const signature = ethers.utils.arrayify(a.owner instanceof ethers.Wallet ? await ethSign(a.owner, message, hashed) : a.signature as string)
         if (forceDynamicSize || signature.length !== 66) {
+          const address = a.owner instanceof ethers.Wallet ? a.owner.address : a.owner
           return ethers.utils.solidityPack(
-            ['uint8', 'uint8', 'uint16', 'bytes'],
-            [2, a.weight, signature.length, signature]
+            ['uint8', 'uint8', 'address', 'uint16', 'bytes'],
+            [2, a.weight, address, signature.length, signature]
           )
         } else {
           return ethers.utils.solidityPack(

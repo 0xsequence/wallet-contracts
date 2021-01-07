@@ -26,6 +26,7 @@ contract SignatureValidator {
   // Allowed signature types.
   uint256 private constant SIG_TYPE_EIP712 = 1;
   uint256 private constant SIG_TYPE_ETH_SIGN = 2;
+  uint256 private constant SIG_TYPE_WALLET_BYTES = 3;
 
   /***********************************|
   |        Signature Functions        |
@@ -98,5 +99,42 @@ contract SignatureValidator {
     );
 
     return signer;
+  }
+
+ /**
+   * @notice Returns true if the provided signature is valid for the given signer.
+   * @dev Supports SignatureType.EIP712, SignatureType.EthSign, and ERC1271 signatures
+   * @param _hash      Hash that was signed
+   * @param _signer    Address of the signer candidate
+   * @param _signature Signature byte array
+   */
+  function isValidSignature(
+    bytes32 _hash,
+    address _signer,
+    bytes memory _signature
+  ) internal view returns (bool valid) {
+    uint256 signatureType = uint8(_signature[_signature.length - 1]);
+
+    if (signatureType == SIG_TYPE_EIP712 || signatureType == SIG_TYPE_ETH_SIGN) {
+      // Recover signer and compare with provided
+      valid = recoverSigner(_hash, _signature) == _signer;
+
+    } else if (signatureType == SIG_TYPE_WALLET_BYTES) {
+      // Call ERC1271 contract
+      bytes memory data = abi.encodePacked(_hash);
+
+      // Remove signature type before calling ERC1271, restore after call
+      uint256 prevSize; assembly { prevSize := mload(_signature) mstore(_signature, sub(prevSize, 1)) }
+      valid = ERC1271_MAGICVALUE == IERC1271Wallet(_signer).isValidSignature(data, _signature);
+      assembly { mstore(_signature, prevSize) }
+
+    } else {
+      // Anything other signature types are illegal (We do not return false because
+      // the signature may actually be valid, just not in a format
+      // that we currently support. In this case returning false
+      // may lead the caller to incorrectly believe that the
+      // signature was invalid.)
+      revert("SignatureValidator#isValidSignature: UNSUPPORTED_SIGNATURE_TYPE");
+    }
   }
 }

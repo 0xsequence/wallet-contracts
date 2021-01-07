@@ -80,6 +80,9 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
         // Acumulate total weight of the signature
         totalWeight += addrWeight;
       } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
+        // Read signer
+        (addr, rindex) = _signature.readAddress(rindex);
+
         // Read signature size
         uint256 size;
         (size, rindex) = _signature.readUint16(rindex);
@@ -87,7 +90,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
         // Read dynamic size signature
         bytes memory signature;
         (signature, rindex) = _signature.readBytes(rindex, size);
-        addr = recoverSigner(_hash, signature);
+        require(isValidSignature(_hash, addr, signature), "ModuleAuth#_signatureValidation: INVALID_SIGNATURE");
 
         // Acumulate total weight of the signature
         totalWeight += addrWeight;

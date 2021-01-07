@@ -13,7 +13,10 @@ import {
   encodeMetaTransactionsData,
   addressOf,
   multiSignMetaTransactions,
-  compareAddr
+  compareAddr,
+  nextNonce,
+  encodeMessageData,
+  MetaTransactionsType
 } from './utils'
 
 import {
@@ -77,7 +80,606 @@ contract('MainModule', (accounts: string[]) => {
     await factory.deploy(module.address, salt)
     wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
   })
+  describe('Nested signatures', () => {
+    it('Should accept simple nested signer', async () => {
+      // WalletA
+      const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
+      await factory.deploy(module.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
 
+      // Top level wallet
+      const salt = encodeImageHash(1, [{ weight: 1, address: wallet_a.address }])
+      await factory.deploy(module.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const topLevelDigest = ethers.utils.keccak256(
+        encodeMetaTransactionsData(
+          wallet.address,
+          [transaction],
+          networkId,
+          await nextNonce(wallet)
+        )
+      )
+
+      const walletADigest = encodeMessageData(
+        wallet_a.address,
+        topLevelDigest,
+        networkId
+      )
+
+      const signedWalletA = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        walletADigest
+      ) + '03'
+
+      const topLevelSigned = await walletMultiSign(
+        [{ weight: 1, owner: wallet_a.address, signature: signedWalletA}],
+        1,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      await wallet.execute([transaction], await nextNonce(wallet), topLevelSigned)
+
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+    it('Should accept two nested signers', async () => {
+      // WalletA
+      const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
+      await factory.deploy(module.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+
+      // WalletB
+      const owner_b = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_b = encodeImageHash(1, [{ weight: 1, address: owner_b.address }])
+      await factory.deploy(module.address, salt_b)
+      const wallet_b = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_b))) as MainModule
+
+      // Top level wallet
+      const salt = encodeImageHash(2, [{ weight: 1, address: wallet_a.address }, { weight: 1, address: wallet_b.address }])
+      await factory.deploy(module.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const topLevelDigest = ethers.utils.keccak256(
+        encodeMetaTransactionsData(
+          wallet.address,
+          [transaction],
+          networkId,
+          await nextNonce(wallet)
+        )
+      )
+
+      // Sign using wallet A
+      const signedWalletA = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        encodeMessageData(
+          wallet_a.address,
+          topLevelDigest,
+          networkId
+        )  
+      ) + '03'
+
+      // Sign using wallet B
+      const signedWalletB = await walletMultiSign(
+        [{ weight: 1, owner: owner_b }],
+        1,
+        encodeMessageData(
+          wallet_b.address,
+          topLevelDigest,
+          networkId
+        )
+      ) + '03'
+
+      const topLevelSigned = await walletMultiSign(
+        [
+          { weight: 1, owner: wallet_a.address, signature: signedWalletA},
+          { weight: 1, owner: wallet_b.address, signature: signedWalletB}
+        ],
+        2,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      await wallet.execute([transaction], await nextNonce(wallet), topLevelSigned)
+
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+    it('Should accept mixed nested and eoa signers', async () => {
+      // Wallet A
+      const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
+      await factory.deploy(module.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+
+      // Owner B
+      const owner_b = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+      // Top level wallet
+      const salt = encodeImageHash(2, [{ weight: 1, address: wallet_a.address }, { weight: 1, address: owner_b.address }])
+      await factory.deploy(module.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const topLevelDigest = ethers.utils.keccak256(
+        encodeMetaTransactionsData(
+          wallet.address,
+          [transaction],
+          networkId,
+          await nextNonce(wallet)
+        )
+      )
+
+      // Sign using wallet A
+      const signedWalletA = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        encodeMessageData(
+          wallet_a.address,
+          topLevelDigest,
+          networkId
+        )  
+      ) + '03'
+
+      const topLevelSigned = await walletMultiSign(
+        [
+          { weight: 1, owner: wallet_a.address, signature: signedWalletA},
+          { weight: 1, owner: owner_b}
+        ],
+        2,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      await wallet.execute([transaction], await nextNonce(wallet), topLevelSigned)
+
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+    const cases = [{
+      name: "64 nested sequence wallets",
+      childs: 1,
+      depth: 64
+    }, {
+      name: "binary tree of sequence wallets",
+      childs: 2,
+      depth: 5
+    }, {
+      name: "ternary tree of sequence wallets",
+      childs: 3,
+      depth: 4
+    }, {
+      name: "hexary tree of sequence wallets",
+      childs: 16,
+      depth: 2
+    }, {
+      name: "random tree of sequence wallets (depth 1)",
+      depth: 1
+    }, {
+      name: "random tree of sequence wallets (depth 2)",
+      depth: 2
+    }, {
+      name: "random tree of sequence wallets (depth 3)",
+      depth: 3
+    }, {
+      name: "random tree of sequence wallets (depth 4)",
+      depth: 4
+    }]
+    cases.map((c) => {
+      it(`Should handle ${c.name}`, async () => {
+        type Node = {
+          owner: MainModule | ethers.Wallet,
+          childs?: Node[]
+        }
+  
+        const gen = async (depth: number, numChilds: number | undefined, max: number): Promise<Node> => {
+          let nchilds = numChilds ? numChilds : Math.floor((Math.random() * 5) + 1)
+          nchilds = depth === 0 && nchilds === 0 ? 1 : nchilds
+          if (depth === max || nchilds === 0) {
+            return {
+              owner: new ethers.Wallet(ethers.utils.randomBytes(32))
+            }
+          }
+  
+          const childs = await Promise.all([...new Array(nchilds)].map(() => gen(depth + 1, numChilds, max)))
+          const salt = encodeImageHash(childs.length, childs.map((c) => ({ weight: 1, address: c.owner.address })))
+  
+          await factory.deploy(module.address, salt)
+          const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+  
+          return {
+            owner: wallet,
+            childs: childs
+          }
+        }
+  
+  
+        const sign = async (node: Node, digest: string): Promise<string> => {
+          if (node.childs) {
+            const subDigest = ethers.utils.keccak256(
+              encodeMessageData(
+                node.owner.address,
+                digest,
+                networkId
+              )
+            )
+  
+            const signatures = await Promise.all(node.childs.map(async (c) => await sign(c, subDigest) + (c.childs ? '03' : '')))
+            return await walletMultiSign(
+              node.childs.map((c, i) => ({ weight: 1, owner: c.owner.address, signature: signatures[i] })),
+              node.childs.length,
+              digest,
+              false,
+              true
+            )
+          }
+  
+          const eoas = await ethSign(node.owner as ethers.Wallet, digest, true)
+          return eoas
+        }
+  
+        const tree = await gen(0, c.childs, c.depth)
+  
+        const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+  
+        const valA = 5423
+        const valB = web3.utils.randomHex(120)
+  
+        const transaction = {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        }
+  
+        const topLevelDigest = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [await nextNonce(tree.owner as MainModule), [transaction]])
+  
+        const signature = await sign(tree, topLevelDigest)
+        await (tree.owner as MainModule).execute([transaction], await nextNonce(wallet), signature)
+
+        expect(await callReceiver.lastValA()).to.eq.BN(valA)
+        expect(await callReceiver.lastValB()).to.equal(valB)
+      })
+    })
+    it('Should reject invalid nested signature', async () => {
+      // WalletA
+      const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
+      await factory.deploy(module.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+
+      // WalletB
+      const owner_b = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_b = encodeImageHash(1, [{ weight: 1, address: owner_b.address }])
+      await factory.deploy(module.address, salt_b)
+      const wallet_b = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_b))) as MainModule
+
+      // Top level wallet
+      const salt = encodeImageHash(2, [{ weight: 1, address: wallet_a.address }, { weight: 1, address: wallet_b.address }])
+      await factory.deploy(module.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const topLevelDigest = ethers.utils.keccak256(
+        encodeMetaTransactionsData(
+          wallet.address,
+          [transaction],
+          networkId,
+          await nextNonce(wallet)
+        )
+      )
+
+      // Sign using wallet A
+      const signedWalletA = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        encodeMessageData(
+          wallet_a.address,
+          topLevelDigest,
+          networkId
+        )  
+      ) + '03'
+
+      // Sign using wallet A again (invalid)
+      const signedWalletB = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        encodeMessageData(
+          wallet_b.address,
+          topLevelDigest,
+          networkId
+        )
+      ) + '03'
+
+      const topLevelSigned = await walletMultiSign(
+        [
+          { weight: 1, owner: wallet_a.address, signature: signedWalletA},
+          { weight: 1, owner: wallet_b.address, signature: signedWalletB}
+        ],
+        2,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      const tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSigned)
+      await expect(tx).to.be.rejectedWith(RevertError('ModuleAuth#_signatureValidation: INVALID_SIGNATURE'))
+    })
+    it('Should enforce threshold on nested sigantures', async () => {
+      // WalletA
+      const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
+      await factory.deploy(module.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+
+      // WalletB
+      const owner_b = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_b = encodeImageHash(1, [{ weight: 1, address: owner_b.address }])
+      await factory.deploy(module.address, salt_b)
+      const wallet_b = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_b))) as MainModule
+
+      // Top level wallet
+      const salt = encodeImageHash(3, [{ weight: 1, address: wallet_a.address }, { weight: 1, address: wallet_b.address }])
+      await factory.deploy(module.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const topLevelDigest = ethers.utils.keccak256(
+        encodeMetaTransactionsData(
+          wallet.address,
+          [transaction],
+          networkId,
+          await nextNonce(wallet)
+        )
+      )
+
+      // Sign using wallet A
+      const signedWalletA = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        encodeMessageData(
+          wallet_a.address,
+          topLevelDigest,
+          networkId
+        )  
+      ) + '03'
+
+      // Sign using wallet B
+      const signedWalletB = await walletMultiSign(
+        [{ weight: 1, owner: owner_b }],
+        1,
+        encodeMessageData(
+          wallet_b.address,
+          topLevelDigest,
+          networkId
+        )
+      ) + '03'
+
+      const topLevelSigned = await walletMultiSign(
+        [
+          { weight: 1, owner: wallet_a.address, signature: signedWalletA},
+          { weight: 1, owner: wallet_b.address, signature: signedWalletB}
+        ],
+        2,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      const tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSigned)
+      await expect(tx).to.be.rejectedWith(RevertError('ModuleCalls#execute: INVALID_SIGNATURE'))
+    })
+    it('Should read weight of nested wallets', async () => {
+      // WalletA
+      const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
+      await factory.deploy(module.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+
+      // WalletB
+      const owner_b = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_b = encodeImageHash(1, [{ weight: 1, address: owner_b.address }])
+      await factory.deploy(module.address, salt_b)
+      const wallet_b = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_b))) as MainModule
+
+      // WalletC
+      const owner_c = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_c = encodeImageHash(1, [{ weight: 1, address: owner_c.address }])
+      await factory.deploy(module.address, salt_c)
+      const wallet_c = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_c))) as MainModule
+
+      // Top level wallet
+      const salt = encodeImageHash(2, [{ weight: 1, address: wallet_a.address }, { weight: 1, address: wallet_b.address }, { weight: 2, address: wallet_c.address }])
+      await factory.deploy(module.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: callReceiver.address,
+        value: ethers.constants.Zero,
+        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+      }
+
+      const topLevelDigest = ethers.utils.keccak256(
+        encodeMetaTransactionsData(
+          wallet.address,
+          [transaction],
+          networkId,
+          await nextNonce(wallet)
+        )
+      )
+
+      // Sign using wallet A
+      const signedWalletA = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        encodeMessageData(
+          wallet_a.address,
+          topLevelDigest,
+          networkId
+        )  
+      ) + '03'
+
+      // Sign using wallet B
+      const signedWalletB = await walletMultiSign(
+        [{ weight: 1, owner: owner_b }],
+        1,
+        encodeMessageData(
+          wallet_b.address,
+          topLevelDigest,
+          networkId
+        )
+      ) + '03'
+
+      // Sign using wallet C
+      const signedWalletC = await walletMultiSign(
+        [{ weight: 1, owner: owner_c }],
+        1,
+        encodeMessageData(
+          wallet_c.address,
+          topLevelDigest,
+          networkId
+        )
+      ) + '03'
+
+      const topLevelSignedOnlyA = await walletMultiSign(
+        [{
+          weight: 1, owner: wallet_a.address, signature: signedWalletA
+        }, {
+          weight: 1, owner: wallet_b.address
+        }, {
+          weight: 2, owner: wallet_c.address
+        }],
+        2,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      let tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSignedOnlyA)
+      await expect(tx).to.be.rejectedWith(RevertError('ModuleCalls#execute: INVALID_SIGNATURE'))
+
+      const topLevelSignedOnlyB = await walletMultiSign(
+        [{
+          weight: 1, owner: wallet_a.address
+        }, {
+          weight: 1, owner: wallet_b.address, signature: signedWalletB
+        }, {
+          weight: 2, owner: wallet_c.address
+        }],
+        2,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSignedOnlyB)
+      await expect(tx).to.be.rejectedWith(RevertError('ModuleCalls#execute: INVALID_SIGNATURE'))
+
+      const topLevelSignedOnlyC = await walletMultiSign(
+        [{
+          weight: 1, owner: wallet_a.address
+        }, {
+          weight: 1, owner: wallet_b.address
+        }, {
+          weight: 2, owner: wallet_c.address, signature: signedWalletC
+        }],
+        2,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      await wallet.execute([transaction], await nextNonce(wallet), topLevelSignedOnlyC)
+
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+  })
   describe('Authentication', () => {
     it('Should accept initial owner signature', async () => {
       const transaction = {
@@ -949,9 +1551,15 @@ contract('MainModule', (accounts: string[]) => {
         await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
         const storageValue = await web3.eth.getStorageAt(wallet.address, storageKey)
 
-        expect(ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], storageValue)[0])).to.equal(
-          hookMock.address
-        )
+        const addr = (() => {
+          try {
+            return ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], storageValue)[0])
+          } catch {
+            return ethers.utils.getAddress(storageValue)
+          }
+        })()
+
+        expect(addr).to.equal(hookMock.address)
       })
     })
   })
@@ -2320,64 +2928,62 @@ contract('MainModule', (accounts: string[]) => {
           })
         })
     
-        if (!process.env.COVERAGE) {
-          context('With 255/255 wallet', () => {
-            let owners: ethers.Wallet[]
-            let weight = 1
-            let threshold = 255
-    
-            beforeEach(async () => {
-              owners = Array(255)
-                .fill(0)
-                .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
-    
-              const salt = encodeImageHash(
-                threshold,
-                owners.map(owner => ({
-                  weight: weight,
-                  address: owner.address
-                }))
-              )
-    
-              await factory.deploy(module.address, salt)
-              wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
-            })
-    
-            it('Should accept message signed by all owners', async () => {
-              const accounts = owners.map(owner => ({
+        context('With 255/255 wallet', () => {
+          let owners: ethers.Wallet[]
+          let weight = 1
+          let threshold = 255
+  
+          beforeEach(async () => {
+            owners = Array(255)
+              .fill(0)
+              .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+  
+            const salt = encodeImageHash(
+              threshold,
+              owners.map(owner => ({
                 weight: weight,
-                owner: owner
+                address: owner.address
               }))
-    
-              await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            })
-            it('Should reject message signed by non-owner', async () => {
-              const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
-              const accounts = [
-                ...owners.slice(1).map(owner => ({
-                  weight: weight,
-                  owner: owner
-                })),
-                {
-                  weight: weight,
-                  owner: impostor
-                }
-              ]
-    
-              const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-              await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-            })
-            it('Should reject message missing a signature', async () => {
-              const accounts = owners.slice(1).map(owner => ({
-                weight: weight,
-                owner: owner
-              }))
-    
-              const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-              await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
-            })
+            )
+  
+            await factory.deploy(module.address, salt)
+            wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
           })
-        }
+  
+          it('Should accept message signed by all owners', async () => {
+            const accounts = owners.map(owner => ({
+              weight: weight,
+              owner: owner
+            }))
+  
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+          })
+          it('Should reject message signed by non-owner', async () => {
+            const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
+            const accounts = [
+              ...owners.slice(1).map(owner => ({
+                weight: weight,
+                owner: owner
+              })),
+              {
+                weight: weight,
+                owner: impostor
+              }
+            ]
+  
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+          it('Should reject message missing a signature', async () => {
+            const accounts = owners.slice(1).map(owner => ({
+              weight: weight,
+              owner: owner
+            }))
+  
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+        })
     
         context('With weighted owners', () => {
           let owners: ethers.Wallet[]
@@ -2513,6 +3119,30 @@ contract('MainModule', (accounts: string[]) => {
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
             await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          })
+        })
+
+        context('Reject invalid signatures', () => {
+          it("Should reject invalid signature type", async () => {
+            const signature = await multiSignMetaTransactions(wallet, [{ weight: 1, owner: owner }], 1, [transaction], networkId, 0, mode.force)
+            const invalidSignature = signature.slice(0, -2) + 'ff'
+            const tx = wallet.execute([transaction], 0, invalidSignature)
+            const revertError = mode.force ? "SignatureValidator#isValidSignature: UNSUPPORTED_SIGNATURE_TYPE" : "SignatureValidator#recoverSigner: UNSUPPORTED_SIGNATURE_TYPE"
+            await expect(tx).to.be.rejectedWith(RevertError(revertError))
+          })
+          it("Should reject invalid s value", async () => {
+            const sig = await multiSignMetaTransactions(wallet, [{ weight: 1, owner: owner }], 1, [transaction], networkId, 0, mode.force)
+            const prefix = mode.force ? 118 : 74
+            const invalidSignature = sig.slice(0, prefix) + "7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a1" + sig.slice(prefix + 64)
+            const tx = wallet.execute([transaction], 0, invalidSignature)
+            await expect(tx).to.be.rejectedWith(RevertError("SignatureValidator#recoverSigner: invalid signature 's' value"))
+          })
+          it("Should reject invalid v value", async () => {
+            const sig = await multiSignMetaTransactions(wallet, [{ weight: 1, owner: owner }], 1, [transaction], networkId, 0, mode.force)
+            const prefix = mode.force ? 182 : 138
+            const invalidSignature = sig.slice(0, prefix) + "1a" + sig.slice(prefix + 2)
+            const tx = wallet.execute([transaction], 0, invalidSignature)
+            await expect(tx).to.be.rejectedWith(RevertError("SignatureValidator#recoverSigner: invalid signature 'v' value"))
           })
         })
       })
@@ -2960,3 +3590,9 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
 })
+
+
+// 0x000102010b1f05b9dd385e2683500bdfec03b53b0d9acb8f004700010001d4c175bfe46abb1138ad97ec9560aae4b745f0b2957986b3367dbaa3486e40497096518c964bad007597f625e2e978d1d6f5096ed2783cb8ceeb828088e81a811b020303
+// 0x000102010b1f05b9dd385e2683500bdfec03b53b0d9acb8f004700010001d4c175bfe46abb1138ad97ec9560aae4b745f0b2957986b3367dbaa3486e40497096518c964bad007597f625e2e978d1d6f5096ed2783cb8ceeb828088e81a811b0203
+//                                                       00010001d4c175bfe46abb1138ad97ec9560aae4b745f0b2957986b3367dbaa3486e40497096518c964bad007597f625e2e978d1d6f5096ed2783cb8ceeb828088e81a811b02
+//                                                               d4c175bfe46abb1138ad97ec9560aae4b745f0b2957986b3367dbaa3486e40497096518c964bad007597f625e2e978d1d6f5096ed2783cb8ceeb828088e81a811b02
