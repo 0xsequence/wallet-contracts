@@ -62,7 +62,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     _validateNonce(_nonce);
 
     // Hash transaction bundle
-    bytes32 txHash = _hashData(abi.encode(_nonce, _txs));
+    bytes32 txHash = _subDigest(keccak256(abi.encode(_nonce, _txs)));
 
     // Verify that signatures are valid
     require(
@@ -83,7 +83,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     Transaction[] memory _txs
   ) public override virtual onlySelf {
     // Hash transaction bundle
-    bytes32 txHash = _hashData(abi.encode('self:', _txs));
+    bytes32 txHash = _subDigest(keccak256(abi.encode('self:', _txs)));
 
     // Execute the transactions
     _execute(txHash, _txs);

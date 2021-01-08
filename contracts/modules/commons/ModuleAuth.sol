@@ -98,17 +98,17 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
 
   /**
    * @notice Will hash _data to be signed (similar to EIP-712)
-   * @param _data Data to be hashed
+   * @param _digest Pre-final digest
    * @return hashed data for this wallet
    */
-  function _hashData(bytes memory _data) internal override view returns (bytes32) {
+  function _subDigest(bytes32 _digest) internal override view returns (bytes32) {
     uint256 chainId; assembly { chainId := chainid() }
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
         chainId,
         address(this),
-        keccak256(_data)
+        _digest
       )
     );
   }
@@ -127,7 +127,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     bytes calldata _signatures
   ) external override view returns (bytes4) {
     // Validate signatures
-    if (_signatureValidation(_hashData(_data), _signatures)) {
+    if (_signatureValidation(_subDigest(keccak256(_data)), _signatures)) {
       return SELECTOR_ERC1271_BYTES_BYTES;
     }
   }
@@ -146,7 +146,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     bytes calldata _signatures
   ) external override view returns (bytes4) {
     // Validate signatures
-    if (_signatureValidation(_hash, _signatures)) {
+    if (_signatureValidation(_subDigest(_hash), _signatures)) {
       return SELECTOR_ERC1271_BYTES32_BYTES;
     }
   }

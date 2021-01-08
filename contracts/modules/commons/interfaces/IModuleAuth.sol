@@ -5,11 +5,11 @@ pragma solidity 0.7.6;
 abstract contract IModuleAuth {
   /**
    * @notice Hashed _data to be signed
-   * @param _data Data to be hashed
+   * @param _digest Pre-final digest
    * @return hashed data for this wallet
    */
-  function _hashData(
-    bytes memory _data
+  function _subDigest(
+    bytes32 _digest
   ) internal virtual view returns (bytes32);
 
   /**
