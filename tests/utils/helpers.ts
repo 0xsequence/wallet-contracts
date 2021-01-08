@@ -124,9 +124,17 @@ export function encodeMessageData(
   message: string,
   networkId: BigNumberish
 ): string {
+  return encodeMessageSubDigest(owner, ethers.utils.keccak256(message), networkId)
+}
+
+export function encodeMessageSubDigest(
+  owner: string,
+  digest: string,
+  networkId: BigNumberish
+): string {
   return ethers.utils.solidityPack(
-    ['string', 'uint256', 'address', 'bytes'],
-    ['\x19\x01', networkId, owner, ethers.utils.keccak256(message)]
+    ['string', 'uint256', 'address', 'bytes32'],
+    ['\x19\x01', networkId, owner, digest]
   )
 }
 

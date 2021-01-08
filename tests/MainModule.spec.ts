@@ -16,7 +16,8 @@ import {
   compareAddr,
   nextNonce,
   encodeMessageData,
-  MetaTransactionsType
+  MetaTransactionsType,
+  encodeMessageSubDigest
 } from './utils'
 
 import {
@@ -116,16 +117,20 @@ contract('MainModule', (accounts: string[]) => {
         )
       )
 
-      const walletADigest = encodeMessageData(
-        wallet_a.address,
-        topLevelDigest,
-        networkId
+      const walletADigest = ethers.utils.keccak256(
+        encodeMessageSubDigest(
+          wallet_a.address,
+          topLevelDigest,
+          networkId
+        )
       )
 
       const signedWalletA = await walletMultiSign(
         [{ weight: 1, owner: owner_a }],
         1,
-        walletADigest
+        walletADigest,
+        false,
+        true
       ) + '03'
 
       const topLevelSigned = await walletMultiSign(
@@ -186,7 +191,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletA = await walletMultiSign(
         [{ weight: 1, owner: owner_a }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_a.address,
           topLevelDigest,
           networkId
@@ -197,7 +202,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletB = await walletMultiSign(
         [{ weight: 1, owner: owner_b }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_b.address,
           topLevelDigest,
           networkId
@@ -262,7 +267,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletA = await walletMultiSign(
         [{ weight: 1, owner: owner_a }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_a.address,
           topLevelDigest,
           networkId
@@ -286,9 +291,17 @@ contract('MainModule', (accounts: string[]) => {
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     const cases = [{
+      name: "2 nested sequence wallets",
+      childs: 1,
+      depth: 2
+    }, {
       name: "64 nested sequence wallets",
       childs: 1,
       depth: 64
+    }, {
+      name: "97 nested sequence wallets",
+      childs: 1,
+      depth: 97
     }, {
       name: "binary tree of sequence wallets",
       childs: 2,
@@ -346,7 +359,7 @@ contract('MainModule', (accounts: string[]) => {
         const sign = async (node: Node, digest: string): Promise<string> => {
           if (node.childs) {
             const subDigest = ethers.utils.keccak256(
-              encodeMessageData(
+              encodeMessageSubDigest(
                 node.owner.address,
                 digest,
                 networkId
@@ -385,7 +398,7 @@ contract('MainModule', (accounts: string[]) => {
   
         const topLevelDigest = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [await nextNonce(tree.owner as MainModule), [transaction]])
   
-        const signature = await sign(tree, topLevelDigest)
+        const signature = await sign(tree, ethers.utils.keccak256(topLevelDigest))
         await (tree.owner as MainModule).execute([transaction], await nextNonce(wallet), signature)
 
         expect(await callReceiver.lastValA()).to.eq.BN(valA)
@@ -437,7 +450,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletA = await walletMultiSign(
         [{ weight: 1, owner: owner_a }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_a.address,
           topLevelDigest,
           networkId
@@ -448,7 +461,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletB = await walletMultiSign(
         [{ weight: 1, owner: owner_a }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_b.address,
           topLevelDigest,
           networkId
@@ -514,7 +527,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletA = await walletMultiSign(
         [{ weight: 1, owner: owner_a }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_a.address,
           topLevelDigest,
           networkId
@@ -525,7 +538,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletB = await walletMultiSign(
         [{ weight: 1, owner: owner_b }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_b.address,
           topLevelDigest,
           networkId
@@ -597,7 +610,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletA = await walletMultiSign(
         [{ weight: 1, owner: owner_a }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_a.address,
           topLevelDigest,
           networkId
@@ -608,7 +621,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletB = await walletMultiSign(
         [{ weight: 1, owner: owner_b }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_b.address,
           topLevelDigest,
           networkId
@@ -619,7 +632,7 @@ contract('MainModule', (accounts: string[]) => {
       const signedWalletC = await walletMultiSign(
         [{ weight: 1, owner: owner_c }],
         1,
-        encodeMessageData(
+        encodeMessageSubDigest(
           wallet_c.address,
           topLevelDigest,
           networkId

@@ -120,12 +120,9 @@ contract SignatureValidator {
       valid = recoverSigner(_hash, _signature) == _signer;
 
     } else if (signatureType == SIG_TYPE_WALLET_BYTES) {
-      // Call ERC1271 contract
-      bytes memory data = abi.encodePacked(_hash);
-
       // Remove signature type before calling ERC1271, restore after call
       uint256 prevSize; assembly { prevSize := mload(_signature) mstore(_signature, sub(prevSize, 1)) }
-      valid = ERC1271_MAGICVALUE == IERC1271Wallet(_signer).isValidSignature(data, _signature);
+      valid = ERC1271_MAGICVALUE_BYTES32 == IERC1271Wallet(_signer).isValidSignature(_hash, _signature);
       assembly { mstore(_signature, prevSize) }
 
     } else {
