@@ -82,6 +82,56 @@ contract('MainModule', (accounts: string[]) => {
     wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
   })
   describe('Nested signatures', () => {
+    it('Should accept simple nested signed ERC1271 message', async () => {
+      const hookMock = (await HookCallerMockArtifact.new()) as HookCallerMock
+
+      // WalletA
+      const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
+      const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
+      await factory.deploy(module.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+
+      // Top level wallet
+      const salt = encodeImageHash(1, [{ weight: 1, address: wallet_a.address }])
+      await factory.deploy(module.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+
+      const message = ethers.utils.hexlify(ethers.utils.randomBytes(95))
+
+      const topLevelDigest = ethers.utils.keccak256(
+        encodeMessageData(
+          wallet.address,
+          message,
+          networkId
+        )
+      )
+
+      const walletADigest = ethers.utils.keccak256(
+        encodeMessageSubDigest(
+          wallet_a.address,
+          topLevelDigest,
+          networkId
+        )
+      )
+
+      const signedWalletA = await walletMultiSign(
+        [{ weight: 1, owner: owner_a }],
+        1,
+        walletADigest,
+        false,
+        true
+      ) + '03'
+
+      const topLevelSigned = await walletMultiSign(
+        [{ weight: 1, owner: wallet_a.address, signature: signedWalletA}],
+        1,
+        topLevelDigest,
+        false,
+        true
+      )
+
+      await hookMock.callERC1271isValidSignatureData(wallet.address, message, topLevelSigned)
+    })
     it('Should accept simple nested signer', async () => {
       // WalletA
       const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
