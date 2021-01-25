@@ -26,6 +26,9 @@ contract RequireUtils {
     bytes _signers
   );
 
+  mapping(bytes32 => uint256) public imageHashBlockHeight;
+  mapping(address => bytes32) public initialImageHash;
+
   constructor(address _factory, address _mainModule) public {
     FACTORY = _factory;
     INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(_mainModule)));
@@ -66,6 +69,51 @@ contract RequireUtils {
 
     // Emit event for easy config retrieval
     emit RequiredConfig(_wallet, imageHash, _threshold, abi.encode(_members));
+  }
+
+  function requireAndIndexConfig(
+    address _wallet,
+    uint256 _threshold,
+    Member[] calldata _members
+  ) external {
+    // Compute expected imageHash
+    bytes32 imageHash = bytes32(uint256(_threshold));
+    for (uint256 i = 0; i < _members.length; i++) {
+      imageHash = keccak256(abi.encode(imageHash, _members[i].weight, _members[i].signer));
+    }
+
+    // Check against wallet imageHash
+    (bool succeed, bytes memory data) = _wallet.call(abi.encodePacked(IModuleAuthUpgradable(_wallet).imageHash.selector));
+    if (succeed && data.length == 32) {
+      // Check contract defined
+      bytes32 currentImageHash = abi.decode(data, (bytes32));
+      require(currentImageHash == imageHash, "RequireUtils#requireAndIndexConfig: UNEXPECTED_IMAGE_HASH");
+    } else {
+      // Check counter-factual
+      require(address(
+        uint256(
+          keccak256(
+            abi.encodePacked(
+              byte(0xff),
+              FACTORY,
+              imageHash,
+              INIT_CODE_HASH
+            )
+          )
+        )
+      ) == _wallet, "RequireUtils#requireAndIndexConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
+
+      // Store counter factual imageHash
+      initialImageHash[_wallet] = imageHash;
+    }
+
+    // Emit event for easy config retrieval
+    emit RequiredConfig(_wallet, imageHash, _threshold, abi.encode(_members));
+
+    // Store block height for first log
+    if (imageHashBlockHeight[imageHash] == 0) {
+      imageHashBlockHeight[imageHash] = block.number;
+    }
   }
 
   function requireNonExpired(uint256 _expiration) external view {

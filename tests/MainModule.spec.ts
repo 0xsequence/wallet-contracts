@@ -949,116 +949,313 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
   describe('Require configuration', () => {
-    let wallet2addr: string
-    let salt2: string
-    let owner2: ethers.Wallet
-    let threshold = 1
-    beforeEach(async () => {
-      owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
-      salt2 = encodeImageHash(threshold, [{ weight: 1, address: owner2.address }])
-      wallet2addr = addressOf(factory.address, module.address, salt2)
+    context('requireConfig', () => {
+      let wallet2addr: string
+      let salt2: string
+      let owner2: ethers.Wallet
+      let threshold = 1
+      beforeEach(async () => {
+        owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
+        salt2 = encodeImageHash(threshold, [{ weight: 1, address: owner2.address }])
+        wallet2addr = addressOf(factory.address, module.address, salt2)
+      })
+      it('Should require configuration of a non-deployed wallet', async () => {
+        await signAndExecuteMetaTx(
+          wallet,
+          owner,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireConfig(wallet2addr, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 1
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+      })
+      it('Should require configuration of a non-updated wallet', async () => {
+        await factory.deploy(module.address, salt2)
+        const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
+        await signAndExecuteMetaTx(
+          wallet2,
+          owner2,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireConfig(wallet2.address, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 1
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+      })
+      it('Should fail to require configuraiton of a non-deployed wallet', async () => {
+        const tx = signAndExecuteMetaTx(
+          wallet,
+          owner,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireConfig(wallet2addr, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 2
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+      })
+      it('Should fail to require configuration of a non-updated wallet', async () => {
+        await factory.deploy(module.address, salt2)
+        const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
+        const tx = signAndExecuteMetaTx(
+          wallet2,
+          owner2,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireConfig(wallet2.address, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 2
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+      })
     })
-    it('Should require configuration of a non-deployed wallet', async () => {
-      await signAndExecuteMetaTx(
-        wallet,
-        owner,
-        [
+    context('requireAndIndexConfig', () => {
+      let wallet2addr: string
+      let salt2: string
+      let owner2: ethers.Wallet
+      let threshold = 1
+      beforeEach(async () => {
+        owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
+        salt2 = encodeImageHash(threshold, [{ weight: 1, address: owner2.address }])
+        wallet2addr = addressOf(factory.address, module.address, salt2)
+      })
+      it('Should require configuration of a non-deployed wallet', async () => {
+        const tx = await signAndExecuteMetaTx(
+          wallet,
+          owner,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireAndIndexConfig(wallet2addr, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 1
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+
+        const imageHash = await requireUtils.initialImageHash(wallet2addr)
+        expect(imageHash).to.equal(salt2)
+
+        const blockHeight = await requireUtils.imageHashBlockHeight(imageHash)
+        expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
+      })
+      it('Should require configuration of a non-updated wallet', async () => {
+        await factory.deploy(module.address, salt2)
+        const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
+        const tx = await signAndExecuteMetaTx(
+          wallet2,
+          owner2,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireAndIndexConfig(wallet2.address, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 1
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+
+        const imageHash = await requireUtils.initialImageHash(wallet2addr)
+        expect(imageHash).to.equal(salt2)
+
+        const blockHeight = await requireUtils.imageHashBlockHeight(imageHash)
+        expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
+      })
+      it('Should require configuration of an updated wallet', async () => {
+        await factory.deploy(module.address, salt2)
+        const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
+
+        const newOwnerA = ethers.Wallet.createRandom()
+        const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
+
+        const newWallet = (await MainModuleUpgradableArtifact.at(wallet2.address)) as MainModuleUpgradable
+
+        const migrateBundle = [
           {
             delegateCall: false,
             revertOnError: true,
-            gasLimit: ethers.constants.Zero,
-            target: requireUtils.address,
+            gasLimit: ethers.constants.Two.pow(18),
+            target: newWallet.address,
             value: ethers.constants.Zero,
-            data: requireUtils.contract.methods
-              .requireConfig(wallet2addr, threshold, [
-                {
-                  signer: owner2.address,
-                  weight: 1
-                }
-              ])
-              .encodeABI()
-          }
-        ],
-        networkId
-      )
-    })
-    it('Should require configuration of a non-updated wallet', async () => {
-      await factory.deploy(module.address, salt2)
-      const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
-      await signAndExecuteMetaTx(
-        wallet2,
-        owner2,
-        [
+            data: newWallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
+          },
           {
             delegateCall: false,
             revertOnError: true,
-            gasLimit: ethers.constants.Zero,
-            target: requireUtils.address,
+            gasLimit: ethers.constants.Two.pow(18),
+            target: newWallet.address,
             value: ethers.constants.Zero,
-            data: requireUtils.contract.methods
-              .requireConfig(wallet2.address, threshold, [
-                {
-                  signer: owner2.address,
-                  weight: 1
-                }
-              ])
-              .encodeABI()
+            data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
           }
-        ],
-        networkId
-      )
-    })
-    it('Should fail to require configuraiton of a non-deployed wallet', async () => {
-      const tx = signAndExecuteMetaTx(
-        wallet,
-        owner,
-        [
+        ]
+
+        const migrateTransaction = [
           {
             delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.Zero,
-            target: requireUtils.address,
+            revertOnError: false,
+            gasLimit: optimalGasLimit,
+            target: newWallet.address,
             value: ethers.constants.Zero,
-            data: requireUtils.contract.methods
-              .requireConfig(wallet2addr, threshold, [
-                {
-                  signer: owner2.address,
-                  weight: 2
-                }
-              ])
-              .encodeABI()
+            data: newWallet.contract.methods.selfExecute(migrateBundle).encodeABI()
           }
-        ],
-        networkId
-      )
-      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
-    })
-    it('Should fail to require configuration of a non-updated wallet', async () => {
-      await factory.deploy(module.address, salt2)
-      const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
-      const tx = signAndExecuteMetaTx(
-        wallet2,
-        owner2,
-        [
-          {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: ethers.constants.Zero,
-            target: requireUtils.address,
-            value: ethers.constants.Zero,
-            data: requireUtils.contract.methods
-              .requireConfig(wallet2.address, threshold, [
-                {
-                  signer: owner2.address,
-                  weight: 2
-                }
-              ])
-              .encodeABI()
-          }
-        ],
-        networkId
-      )
-      await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+        ]
+
+        await signAndExecuteMetaTx(wallet2, owner2, migrateTransaction, networkId)
+
+        const tx = await signAndExecuteMetaTx(
+          wallet2,
+          newOwnerA,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireAndIndexConfig(wallet2.address, threshold, [
+                  {
+                    signer: newOwnerA.address,
+                    weight: 1
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+
+        const imageHash = await requireUtils.initialImageHash(wallet2addr)
+        expect(imageHash).to.not.equal(newImageHash)
+
+        const blockHeight = await requireUtils.imageHashBlockHeight(newImageHash)
+        expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
+      })
+      it('Should fail to require configuration of a non-deployed wallet', async () => {
+        const tx = signAndExecuteMetaTx(
+          wallet,
+          owner,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireAndIndexConfig(wallet2addr, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 2
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireAndIndexConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+      })
+      it('Should fail to require configuration of a non-updated wallet', async () => {
+        await factory.deploy(module.address, salt2)
+        const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
+        const tx = signAndExecuteMetaTx(
+          wallet2,
+          owner2,
+          [
+            {
+              delegateCall: false,
+              revertOnError: true,
+              gasLimit: ethers.constants.Zero,
+              target: requireUtils.address,
+              value: ethers.constants.Zero,
+              data: requireUtils.contract.methods
+                .requireAndIndexConfig(wallet2.address, threshold, [
+                  {
+                    signer: owner2.address,
+                    weight: 2
+                  }
+                ])
+                .encodeABI()
+            }
+          ],
+          networkId
+        )
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireAndIndexConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+      })
     })
   })
   describe('Update owners', async () => {

@@ -22,11 +22,26 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 
 interface RequireUtilsInterface extends ethers.utils.Interface {
   functions: {
+    "imageHashBlockHeight(bytes32)": FunctionFragment;
+    "initialImageHash(address)": FunctionFragment;
+    "requireAndIndexConfig(address,uint256,tuple[])": FunctionFragment;
     "requireConfig(address,uint256,tuple[])": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "imageHashBlockHeight",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initialImageHash",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "requireAndIndexConfig",
+    values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
+  ): string;
   encodeFunctionData(
     functionFragment: "requireConfig",
     values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
@@ -40,6 +55,18 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "imageHashBlockHeight",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "initialImageHash",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "requireAndIndexConfig",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "requireConfig",
     data: BytesLike
@@ -74,6 +101,40 @@ export class RequireUtils extends Contract {
   interface: RequireUtilsInterface;
 
   functions: {
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    initialImageHash(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
     requireConfig(
       _wallet: string,
       _threshold: BigNumberish,
@@ -110,6 +171,37 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[void]>;
   };
+
+  imageHashBlockHeight(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "imageHashBlockHeight(bytes32)"(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+  "initialImageHash(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  requireAndIndexConfig(
+    _wallet: string,
+    _threshold: BigNumberish,
+    _members: { weight: BigNumberish; signer: string }[],
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "requireAndIndexConfig(address,uint256,tuple[])"(
+    _wallet: string,
+    _threshold: BigNumberish,
+    _members: { weight: BigNumberish; signer: string }[],
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
 
   requireConfig(
     _wallet: string,
@@ -148,6 +240,37 @@ export class RequireUtils extends Contract {
   ): Promise<void>;
 
   callStatic: {
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     requireConfig(
       _wallet: string,
       _threshold: BigNumberish,
@@ -195,6 +318,40 @@ export class RequireUtils extends Contract {
   };
 
   estimateGas: {
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initialImageHash(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
     requireConfig(
       _wallet: string,
       _threshold: BigNumberish,
@@ -233,6 +390,40 @@ export class RequireUtils extends Contract {
   };
 
   populateTransaction: {
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initialImageHash(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
     requireConfig(
       _wallet: string,
       _threshold: BigNumberish,

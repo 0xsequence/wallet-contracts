@@ -37,7 +37,10 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     "callGasPrice()": FunctionFragment;
     "callOrigin()": FunctionFragment;
     "callTimestamp()": FunctionFragment;
+    "imageHashBlockHeight(bytes32)": FunctionFragment;
+    "initialImageHash(address)": FunctionFragment;
     "multiCall(tuple[])": FunctionFragment;
+    "requireAndIndexConfig(address,uint256,tuple[])": FunctionFragment;
     "requireConfig(address,uint256,tuple[])": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
@@ -97,6 +100,14 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "imageHashBlockHeight",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initialImageHash",
+    values: [string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "multiCall",
     values: [
       {
@@ -108,6 +119,10 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
         data: BytesLike;
       }[]
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "requireAndIndexConfig",
+    values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
   ): string;
   encodeFunctionData(
     functionFragment: "requireConfig",
@@ -172,7 +187,19 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     functionFragment: "callTimestamp",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "imageHashBlockHeight",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "initialImageHash",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "multiCall", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "requireAndIndexConfig",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "requireConfig",
     data: BytesLike
@@ -297,6 +324,26 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    initialImageHash(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -319,6 +366,20 @@ export class SequenceUtils extends Contract {
         data: BytesLike;
       }[],
       overrides?: PayableOverrides
+    ): Promise<ContractTransaction>;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
     ): Promise<ContractTransaction>;
 
     requireConfig(
@@ -429,6 +490,23 @@ export class SequenceUtils extends Contract {
 
   "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+  imageHashBlockHeight(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "imageHashBlockHeight(bytes32)"(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+  "initialImageHash(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   multiCall(
     _txs: {
       delegateCall: boolean;
@@ -451,6 +529,20 @@ export class SequenceUtils extends Contract {
       data: BytesLike;
     }[],
     overrides?: PayableOverrides
+  ): Promise<ContractTransaction>;
+
+  requireAndIndexConfig(
+    _wallet: string,
+    _threshold: BigNumberish,
+    _members: { weight: BigNumberish; signer: string }[],
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "requireAndIndexConfig(address,uint256,tuple[])"(
+    _wallet: string,
+    _threshold: BigNumberish,
+    _members: { weight: BigNumberish; signer: string }[],
+    overrides?: Overrides
   ): Promise<ContractTransaction>;
 
   requireConfig(
@@ -561,6 +653,23 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -588,6 +697,20 @@ export class SequenceUtils extends Contract {
     ): Promise<
       [boolean[], string[]] & { _successes: boolean[]; _results: string[] }
     >;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     requireConfig(
       _wallet: string,
@@ -710,6 +833,26 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initialImageHash(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -732,6 +875,20 @@ export class SequenceUtils extends Contract {
         data: BytesLike;
       }[],
       overrides?: PayableOverrides
+    ): Promise<BigNumber>;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
     ): Promise<BigNumber>;
 
     requireConfig(
@@ -862,6 +1019,26 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    imageHashBlockHeight(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "imageHashBlockHeight(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initialImageHash(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "initialImageHash(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -884,6 +1061,20 @@ export class SequenceUtils extends Contract {
         data: BytesLike;
       }[],
       overrides?: PayableOverrides
+    ): Promise<PopulatedTransaction>;
+
+    requireAndIndexConfig(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "requireAndIndexConfig(address,uint256,tuple[])"(
+      _wallet: string,
+      _threshold: BigNumberish,
+      _members: { weight: BigNumberish; signer: string }[],
+      overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
     requireConfig(
