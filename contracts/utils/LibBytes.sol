@@ -162,8 +162,6 @@ library LibBytes {
     uint256 size
   ) internal pure returns (bytes memory a, uint256 newIndex) {
     a = new bytes(size);
-    bytes32 mask;
-    uint256 diff;
 
     assembly {
       let offset := add(32, add(data, index))
