@@ -26,7 +26,7 @@ contract SignatureValidator {
   // Allowed signature types.
   uint256 private constant SIG_TYPE_EIP712 = 1;
   uint256 private constant SIG_TYPE_ETH_SIGN = 2;
-  uint256 private constant SIG_TYPE_WALLET_BYTES = 3;
+  uint256 private constant SIG_TYPE_WALLET_BYTES32 = 3;
 
   /***********************************|
   |        Signature Functions        |
@@ -119,7 +119,7 @@ contract SignatureValidator {
       // Recover signer and compare with provided
       valid = recoverSigner(_hash, _signature) == _signer;
 
-    } else if (signatureType == SIG_TYPE_WALLET_BYTES) {
+    } else if (signatureType == SIG_TYPE_WALLET_BYTES32) {
       // Remove signature type before calling ERC1271, restore after call
       uint256 prevSize; assembly { prevSize := mload(_signature) mstore(_signature, sub(prevSize, 1)) }
       valid = ERC1271_MAGICVALUE_BYTES32 == IERC1271Wallet(_signer).isValidSignature(_hash, _signature);
