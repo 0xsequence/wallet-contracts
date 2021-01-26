@@ -1096,10 +1096,7 @@ contract('MainModule', (accounts: string[]) => {
           networkId
         )
 
-        const imageHash = await requireUtils.initialImageHash(wallet2addr)
-        expect(imageHash).to.equal(salt2)
-
-        const blockHeight = await requireUtils.imageHashBlockHeight(imageHash)
+        const blockHeight = await requireUtils.lastWalletUpdate(wallet2addr)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
       })
       it('Should require configuration of a non-updated wallet', async () => {
@@ -1128,10 +1125,7 @@ contract('MainModule', (accounts: string[]) => {
           networkId
         )
 
-        const imageHash = await requireUtils.initialImageHash(wallet2addr)
-        expect(imageHash).to.equal(salt2)
-
-        const blockHeight = await requireUtils.imageHashBlockHeight(imageHash)
+        const blockHeight = await requireUtils.lastWalletUpdate(wallet2.address)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
       })
       it('Should require configuration of an updated wallet', async () => {
@@ -1198,10 +1192,7 @@ contract('MainModule', (accounts: string[]) => {
           networkId
         )
 
-        const imageHash = await requireUtils.initialImageHash(wallet2addr)
-        expect(imageHash).to.not.equal(newImageHash)
-
-        const blockHeight = await requireUtils.imageHashBlockHeight(newImageHash)
+        const blockHeight = await requireUtils.lastWalletUpdate(wallet2addr)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
       })
       it('Should fail to require configuration of a non-deployed wallet', async () => {

@@ -22,8 +22,7 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 
 interface RequireUtilsInterface extends ethers.utils.Interface {
   functions: {
-    "imageHashBlockHeight(bytes32)": FunctionFragment;
-    "initialImageHash(address)": FunctionFragment;
+    "lastWalletUpdate(address)": FunctionFragment;
     "requireAndIndexConfig(address,uint256,tuple[])": FunctionFragment;
     "requireConfig(address,uint256,tuple[])": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
@@ -31,11 +30,7 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
   };
 
   encodeFunctionData(
-    functionFragment: "imageHashBlockHeight",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "initialImageHash",
+    functionFragment: "lastWalletUpdate",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -56,11 +51,7 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "imageHashBlockHeight",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "initialImageHash",
+    functionFragment: "lastWalletUpdate",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -101,25 +92,15 @@ export class RequireUtils extends Contract {
   interface: RequireUtilsInterface;
 
   functions: {
-    imageHashBlockHeight(
-      arg0: BytesLike,
+    lastWalletUpdate(
+      arg0: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
+    "lastWalletUpdate(address)"(
+      arg0: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
-
-    initialImageHash(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "initialImageHash(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
 
     requireAndIndexConfig(
       _wallet: string,
@@ -172,22 +153,12 @@ export class RequireUtils extends Contract {
     ): Promise<[void]>;
   };
 
-  imageHashBlockHeight(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  lastWalletUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "imageHashBlockHeight(bytes32)"(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-  "initialImageHash(address)"(
+  "lastWalletUpdate(address)"(
     arg0: string,
     overrides?: CallOverrides
-  ): Promise<string>;
+  ): Promise<BigNumber>;
 
   requireAndIndexConfig(
     _wallet: string,
@@ -240,22 +211,15 @@ export class RequireUtils extends Contract {
   ): Promise<void>;
 
   callStatic: {
-    imageHashBlockHeight(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-    "initialImageHash(address)"(
+    lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
-    ): Promise<string>;
+    ): Promise<BigNumber>;
+
+    "lastWalletUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     requireAndIndexConfig(
       _wallet: string,
@@ -318,22 +282,12 @@ export class RequireUtils extends Contract {
   };
 
   estimateGas: {
-    imageHashBlockHeight(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    initialImageHash(
+    lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "initialImageHash(address)"(
+    "lastWalletUpdate(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -390,22 +344,12 @@ export class RequireUtils extends Contract {
   };
 
   populateTransaction: {
-    imageHashBlockHeight(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    initialImageHash(
+    lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "initialImageHash(address)"(
+    "lastWalletUpdate(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

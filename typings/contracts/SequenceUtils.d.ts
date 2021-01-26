@@ -37,8 +37,7 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     "callGasPrice()": FunctionFragment;
     "callOrigin()": FunctionFragment;
     "callTimestamp()": FunctionFragment;
-    "imageHashBlockHeight(bytes32)": FunctionFragment;
-    "initialImageHash(address)": FunctionFragment;
+    "lastWalletUpdate(address)": FunctionFragment;
     "multiCall(tuple[])": FunctionFragment;
     "requireAndIndexConfig(address,uint256,tuple[])": FunctionFragment;
     "requireConfig(address,uint256,tuple[])": FunctionFragment;
@@ -100,11 +99,7 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "imageHashBlockHeight",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "initialImageHash",
+    functionFragment: "lastWalletUpdate",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -188,11 +183,7 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "imageHashBlockHeight",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "initialImageHash",
+    functionFragment: "lastWalletUpdate",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "multiCall", data: BytesLike): Result;
@@ -324,25 +315,15 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    imageHashBlockHeight(
-      arg0: BytesLike,
+    lastWalletUpdate(
+      arg0: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
+    "lastWalletUpdate(address)"(
+      arg0: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
-
-    initialImageHash(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "initialImageHash(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
 
     multiCall(
       _txs: {
@@ -490,22 +471,12 @@ export class SequenceUtils extends Contract {
 
   "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-  imageHashBlockHeight(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  lastWalletUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "imageHashBlockHeight(bytes32)"(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-  "initialImageHash(address)"(
+  "lastWalletUpdate(address)"(
     arg0: string,
     overrides?: CallOverrides
-  ): Promise<string>;
+  ): Promise<BigNumber>;
 
   multiCall(
     _txs: {
@@ -653,22 +624,15 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    imageHashBlockHeight(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    initialImageHash(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-    "initialImageHash(address)"(
+    lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
-    ): Promise<string>;
+    ): Promise<BigNumber>;
+
+    "lastWalletUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     multiCall(
       _txs: {
@@ -833,22 +797,12 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    imageHashBlockHeight(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    initialImageHash(
+    lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "initialImageHash(address)"(
+    "lastWalletUpdate(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1019,22 +973,12 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    imageHashBlockHeight(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "imageHashBlockHeight(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    initialImageHash(
+    lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "initialImageHash(address)"(
+    "lastWalletUpdate(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

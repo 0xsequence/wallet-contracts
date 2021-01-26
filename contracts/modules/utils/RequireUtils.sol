@@ -26,8 +26,7 @@ contract RequireUtils {
     bytes _signers
   );
 
-  mapping(bytes32 => uint256) public imageHashBlockHeight;
-  mapping(address => bytes32) public initialImageHash;
+  mapping(address => uint256) public lastWalletUpdate;
 
   constructor(address _factory, address _mainModule) public {
     FACTORY = _factory;
@@ -102,18 +101,13 @@ contract RequireUtils {
           )
         )
       ) == _wallet, "RequireUtils#requireAndIndexConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
-
-      // Store counter factual imageHash
-      initialImageHash[_wallet] = imageHash;
     }
 
     // Emit event for easy config retrieval
     emit RequiredConfig(_wallet, imageHash, _threshold, abi.encode(_members));
 
-    // Store block height for first log
-    if (imageHashBlockHeight[imageHash] == 0) {
-      imageHashBlockHeight[imageHash] = block.number;
-    }
+    // Store block height for the last wallet update
+    lastWalletUpdate[_wallet] = block.number;
   }
 
   function requireNonExpired(uint256 _expiration) external view {
