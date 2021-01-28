@@ -948,8 +948,8 @@ contract('MainModule', (accounts: string[]) => {
       })
     })
   })
-  describe('Require configuration', () => {
-    context('requireConfig', () => {
+  describe('Publish configuration', () => {
+    context('publishConfig', () => {
       let wallet2addr: string
       let salt2: string
       let owner2: ethers.Wallet
@@ -959,7 +959,7 @@ contract('MainModule', (accounts: string[]) => {
         salt2 = encodeImageHash(threshold, [{ weight: 1, address: owner2.address }])
         wallet2addr = addressOf(factory.address, module.address, salt2)
       })
-      it('Should require configuration of a non-deployed wallet', async () => {
+      it('Should publish configuration of a non-deployed wallet', async () => {
         await signAndExecuteMetaTx(
           wallet,
           owner,
@@ -971,19 +971,19 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireConfig(wallet2addr, threshold, [
+                .publishConfig(wallet2addr, threshold, [
                   {
                     signer: owner2.address,
                     weight: 1
                   }
-                ])
+                ], false)
                 .encodeABI()
             }
           ],
           networkId
         )
       })
-      it('Should require configuration of a non-updated wallet', async () => {
+      it('Should publish configuration of deployed wallet', async () => {
         await factory.deploy(module.address, salt2)
         const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         await signAndExecuteMetaTx(
@@ -997,19 +997,19 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireConfig(wallet2.address, threshold, [
+                .publishConfig(wallet2.address, threshold, [
                   {
                     signer: owner2.address,
                     weight: 1
                   }
-                ])
+                ], false)
                 .encodeABI()
             }
           ],
           networkId
         )
       })
-      it('Should fail to require configuraiton of a non-deployed wallet', async () => {
+      it('Should fail to publish wrong configuraiton of a non-deployed wallet', async () => {
         const tx = signAndExecuteMetaTx(
           wallet,
           owner,
@@ -1021,20 +1021,20 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireConfig(wallet2addr, threshold, [
+                .publishConfig(wallet2addr, threshold, [
                   {
                     signer: owner2.address,
                     weight: 2
                   }
-                ])
+                ], false)
                 .encodeABI()
             }
           ],
           networkId
         )
-        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#publishConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
       })
-      it('Should fail to require configuration of a non-updated wallet', async () => {
+      it('Should fail to publish wrong configuration of a non-updated wallet', async () => {
         await factory.deploy(module.address, salt2)
         const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const tx = signAndExecuteMetaTx(
@@ -1048,21 +1048,21 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireConfig(wallet2.address, threshold, [
+                .publishConfig(wallet2.address, threshold, [
                   {
                     signer: owner2.address,
                     weight: 2
                   }
-                ])
+                ], false)
                 .encodeABI()
             }
           ],
           networkId
         )
-        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#publishConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
       })
     })
-    context('requireAndIndexConfig', () => {
+    context('publishConfig indexed', () => {
       let wallet2addr: string
       let salt2: string
       let owner2: ethers.Wallet
@@ -1072,7 +1072,7 @@ contract('MainModule', (accounts: string[]) => {
         salt2 = encodeImageHash(threshold, [{ weight: 1, address: owner2.address }])
         wallet2addr = addressOf(factory.address, module.address, salt2)
       })
-      it('Should require configuration of a non-deployed wallet', async () => {
+      it('Should publish configuration of a non-deployed wallet', async () => {
         const tx = await signAndExecuteMetaTx(
           wallet,
           owner,
@@ -1084,12 +1084,12 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireAndIndexConfig(wallet2addr, threshold, [
+                .publishConfig(wallet2addr, threshold, [
                   {
                     signer: owner2.address,
                     weight: 1
                   }
-                ])
+                ], true)
                 .encodeABI()
             }
           ],
@@ -1099,7 +1099,7 @@ contract('MainModule', (accounts: string[]) => {
         const blockHeight = await requireUtils.lastWalletUpdate(wallet2addr)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
       })
-      it('Should require configuration of a non-updated wallet', async () => {
+      it('Should publish configuration of a deployed wallet', async () => {
         await factory.deploy(module.address, salt2)
         const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const tx = await signAndExecuteMetaTx(
@@ -1113,12 +1113,12 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireAndIndexConfig(wallet2.address, threshold, [
+                .publishConfig(wallet2.address, threshold, [
                   {
                     signer: owner2.address,
                     weight: 1
                   }
-                ])
+                ], true)
                 .encodeABI()
             }
           ],
@@ -1128,7 +1128,7 @@ contract('MainModule', (accounts: string[]) => {
         const blockHeight = await requireUtils.lastWalletUpdate(wallet2.address)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
       })
-      it('Should require configuration of an updated wallet', async () => {
+      it('Should publish configuration of an updated wallet', async () => {
         await factory.deploy(module.address, salt2)
         const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
 
@@ -1180,12 +1180,12 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireAndIndexConfig(wallet2.address, threshold, [
+                .publishConfig(wallet2.address, threshold, [
                   {
                     signer: newOwnerA.address,
                     weight: 1
                   }
-                ])
+                ], true)
                 .encodeABI()
             }
           ],
@@ -1195,7 +1195,7 @@ contract('MainModule', (accounts: string[]) => {
         const blockHeight = await requireUtils.lastWalletUpdate(wallet2addr)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight.toNumber())
       })
-      it('Should fail to require configuration of a non-deployed wallet', async () => {
+      it('Should fail to publish wrong configuration of a non-deployed wallet', async () => {
         const tx = signAndExecuteMetaTx(
           wallet,
           owner,
@@ -1207,20 +1207,20 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireAndIndexConfig(wallet2addr, threshold, [
+                .publishConfig(wallet2addr, threshold, [
                   {
                     signer: owner2.address,
                     weight: 2
                   }
-                ])
+                ], true)
                 .encodeABI()
             }
           ],
           networkId
         )
-        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireAndIndexConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#publishConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
       })
-      it('Should fail to require configuration of a non-updated wallet', async () => {
+      it('Should fail to publish wrong configuration of a deployed wallet', async () => {
         await factory.deploy(module.address, salt2)
         const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const tx = signAndExecuteMetaTx(
@@ -1234,18 +1234,512 @@ contract('MainModule', (accounts: string[]) => {
               target: requireUtils.address,
               value: ethers.constants.Zero,
               data: requireUtils.contract.methods
-                .requireAndIndexConfig(wallet2.address, threshold, [
+                .publishConfig(wallet2.address, threshold, [
                   {
                     signer: owner2.address,
                     weight: 2
                   }
-                ])
+                ], true)
                 .encodeABI()
             }
           ],
           networkId
         )
-        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireAndIndexConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#publishConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH'))
+      })
+    })
+    context('publishSigners', () => {
+      let wallet2addr: string
+      let salt2: string
+      let owner2a: ethers.Wallet
+      let owner2b: ethers.Wallet
+      let owner2c: ethers.Wallet
+      let threshold = 2
+
+      let message: string
+      let digest: string
+      let signature: string
+      let config: { weight: number, address: string, signer?: ethers.Wallet }[]
+
+      beforeEach(async () => {
+        owner2a = new ethers.Wallet(ethers.utils.randomBytes(32))
+        owner2b = new ethers.Wallet(ethers.utils.randomBytes(32))
+        owner2c = new ethers.Wallet(ethers.utils.randomBytes(32))
+
+        config = [{ weight: 1, address: owner2a.address, signer: owner2a }, { weight: 1, address: owner2b.address, signer: owner2b }, { weight: 1, address: owner2c.address }]
+        salt2 = encodeImageHash(threshold, config)
+        wallet2addr = addressOf(factory.address, module.address, salt2)
+
+        message = ethers.utils.hexlify(ethers.utils.randomBytes(96))
+        digest = ethers.utils.keccak256(message)
+        signature = await walletMultiSign([{ weight: 1, owner: owner2a }, { weight: 1, owner: owner2b }, { weight: 1, owner: owner2c.address }], threshold, message)
+      })
+
+      const options = [{
+        name: 'indexed',
+        indexed: true
+      }, {
+        name: 'not indexed',
+        indexed: false
+      }]
+
+      options.map((o) => {
+        context(o.name, () => {
+          it('Should publish signers of a non-deployed wallet', async () => {
+            const tx = await signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      3,
+                      signature,
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            const logs = (tx as any).receipt.rawLogs as any[]
+            
+            const owner2aLog = logs.find((l) =>
+              (
+                l.topics.length === 3 &&
+                l.topics[0] === '0x600ba597427f042bcd559a0d06fa1732cc104d6dd43cbe8845b5a0e804b2b39f' &&
+                l.topics[2] === ethers.utils.defaultAbiCoder.encode(['address'], [owner2a.address])
+              )
+            )
+    
+            expect(owner2aLog).to.not.be.undefined
+            expect(owner2aLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+    
+            const owner2bLog = logs.find((l) =>
+              (
+                l.topics.length === 3 &&
+                l.topics[0] === '0x600ba597427f042bcd559a0d06fa1732cc104d6dd43cbe8845b5a0e804b2b39f' &&
+                l.topics[2] === ethers.utils.defaultAbiCoder.encode(['address'], [owner2b.address])
+              )
+            )
+    
+            expect(owner2bLog).to.not.be.undefined
+            expect(owner2bLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+    
+            const owner2cLog = logs.find((l) =>
+              (
+                l.topics.length === 3 &&
+                l.topics[0] === '0x600ba597427f042bcd559a0d06fa1732cc104d6dd43cbe8845b5a0e804b2b39f' &&
+                l.topics[2] === ethers.utils.defaultAbiCoder.encode(['address'], [owner2c.address])
+              )
+            )
+    
+            expect(owner2cLog).to.be.undefined
+    
+            const MembersType = `tuple(
+              uint256 weight,
+              address signer
+            )[]`
+    
+            const walletLog = logs[logs.length - 2]
+            expect(walletLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+            expect(walletLog.topics[2]).to.equal(salt2)
+            expect(walletLog.data).to.equal(ethers.utils.defaultAbiCoder.encode(
+                ['uint256', 'bytes'],
+                [threshold, ethers.utils.defaultAbiCoder.encode(
+                  [MembersType],
+                  [config.sort((a, b) => compareAddr(a.address, b.address)).map((s) => ({ weight: s.weight, signer: s.address }))]
+                )]
+              )
+            )
+
+            expect((await requireUtils.lastSignerUpdate(owner2a.address)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+            expect((await requireUtils.lastSignerUpdate(owner2b.address)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+            expect((await requireUtils.lastSignerUpdate(owner2c.address)).toNumber()).to.equal(0)
+
+            expect((await requireUtils.lastWalletUpdate(wallet2addr)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+          })
+    
+          it('Should publish signers of a deployed wallet', async () => {
+            await factory.deploy(module.address, salt2)
+            const tx = await signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      3,
+                      signature,
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            const logs = (tx as any).receipt.rawLogs as any[]
+            
+            const owner2aLog = logs.find((l) =>
+              (
+                l.topics.length === 3 &&
+                l.topics[0] === '0x600ba597427f042bcd559a0d06fa1732cc104d6dd43cbe8845b5a0e804b2b39f' &&
+                l.topics[2] === ethers.utils.defaultAbiCoder.encode(['address'], [owner2a.address])
+              )
+            )
+    
+            expect(owner2aLog).to.not.be.undefined
+            expect(owner2aLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+    
+            const owner2bLog = logs.find((l) =>
+              (
+                l.topics.length === 3 &&
+                l.topics[0] === '0x600ba597427f042bcd559a0d06fa1732cc104d6dd43cbe8845b5a0e804b2b39f' &&
+                l.topics[2] === ethers.utils.defaultAbiCoder.encode(['address'], [owner2b.address])
+              )
+            )
+    
+            expect(owner2bLog).to.not.be.undefined
+            expect(owner2bLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+    
+            const owner2cLog = logs.find((l) =>
+              (
+                l.topics.length === 3 &&
+                l.topics[0] === '0x600ba597427f042bcd559a0d06fa1732cc104d6dd43cbe8845b5a0e804b2b39f' &&
+                l.topics[2] === ethers.utils.defaultAbiCoder.encode(['address'], [owner2c.address])
+              )
+            )
+    
+            expect(owner2cLog).to.be.undefined
+    
+            const MembersType = `tuple(
+              uint256 weight,
+              address signer
+            )[]`
+    
+            const walletLog = logs[logs.length - 2]
+            expect(walletLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+            expect(walletLog.topics[2]).to.equal(salt2)
+            expect(walletLog.data).to.equal(ethers.utils.defaultAbiCoder.encode(
+                ['uint256', 'bytes'],
+                [threshold, ethers.utils.defaultAbiCoder.encode(
+                  [MembersType],
+                  [config.sort((a, b) => compareAddr(a.address, b.address)).map((s) => ({ weight: s.weight, signer: s.address }))]
+                )]
+              )
+            )
+
+            expect((await requireUtils.lastSignerUpdate(owner2a.address)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+            expect((await requireUtils.lastSignerUpdate(owner2b.address)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+            expect((await requireUtils.lastSignerUpdate(owner2c.address)).toNumber()).to.equal(0)
+
+            expect((await requireUtils.lastWalletUpdate(wallet2addr)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+          })
+    
+          it('Should publish signers of an updated wallet', async () => {
+            await factory.deploy(module.address, salt2)
+            const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
+    
+            const newOwnerA = ethers.Wallet.createRandom()
+            const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
+    
+            const newWallet = (await MainModuleUpgradableArtifact.at(wallet2.address)) as MainModuleUpgradable
+    
+            const migrateBundle = [
+              {
+                delegateCall: false,
+                revertOnError: true,
+                gasLimit: ethers.constants.Two.pow(18),
+                target: newWallet.address,
+                value: ethers.constants.Zero,
+                data: newWallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
+              },
+              {
+                delegateCall: false,
+                revertOnError: true,
+                gasLimit: ethers.constants.Two.pow(18),
+                target: newWallet.address,
+                value: ethers.constants.Zero,
+                data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+              }
+            ]
+    
+            const migrateTransaction = [
+              {
+                delegateCall: false,
+                revertOnError: false,
+                gasLimit: optimalGasLimit,
+                target: newWallet.address,
+                value: ethers.constants.Zero,
+                data: newWallet.contract.methods.selfExecute(migrateBundle).encodeABI()
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet2, config.map((c) => ({ weight: c.weight, owner: c.signer ? c.signer : c.address })), 2, migrateTransaction, networkId)
+    
+            signature = await walletMultiSign([{ weight: 1, owner: newOwnerA }], 1, message)
+    
+            const tx = await signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      1,
+                      signature,
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            const logs = (tx as any).receipt.rawLogs as any[]
+            
+            const newOwnerLog = logs.find((l) =>
+              (
+                l.topics.length === 3 &&
+                l.topics[0] === '0x600ba597427f042bcd559a0d06fa1732cc104d6dd43cbe8845b5a0e804b2b39f' &&
+                l.topics[2] === ethers.utils.defaultAbiCoder.encode(['address'], [newOwnerA.address])
+              )
+            )
+    
+            expect(newOwnerLog).to.not.be.undefined
+            expect(newOwnerLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+    
+            const MembersType = `tuple(
+              uint256 weight,
+              address signer
+            )[]`
+    
+            const walletLog = logs[logs.length - 2]
+            expect(walletLog.topics[1]).to.equal(ethers.utils.defaultAbiCoder.encode(['address'], [wallet2addr]))
+            expect(walletLog.topics[2]).to.equal(newImageHash)
+            expect(walletLog.data).to.equal(ethers.utils.defaultAbiCoder.encode(
+                ['uint256', 'bytes'],
+                [1, ethers.utils.defaultAbiCoder.encode(
+                  [MembersType],
+                  [[{ weight: 1, signer: newOwnerA.address }]]
+                )]
+              )
+            )
+
+            expect((await requireUtils.lastSignerUpdate(newOwnerA.address)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+            expect((await requireUtils.lastSignerUpdate(owner2a.address)).toNumber()).to.equal(0)
+            expect((await requireUtils.lastSignerUpdate(owner2b.address)).toNumber()).to.equal(0)
+            expect((await requireUtils.lastSignerUpdate(owner2c.address)).toNumber()).to.equal(0)
+            expect((await requireUtils.lastWalletUpdate(wallet2addr)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+          })
+    
+          it('Should fail to publish signers with invalid part', async () => {
+            const tx = signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      1,
+                      "0x0001ff01ab5801a7d398351b8be11c439e05c5b3259aec9b",
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            await expect(tx).to.be.rejectedWith(RevertError("RequireUtils#publishSigners: INVALID_SIGNATURE_FLAG"))
+          })
+          it('Should fail to publish signers with invalid signers count', async () => {
+            const tx = signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      4,
+                      signature,
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            await expect(tx).to.be.rejectedWith(RevertError("RequireUtils#publishSigners: INVALID_MEMBERS_COUNT"))
+          })
+          it('Should fail to publish signers of non-deployed wallet with invalid signature', async () => {
+            const invalidSignature = await walletMultiSign([{ weight: 1, owner: ethers.Wallet.createRandom() }, { weight: 1, owner: owner2c.address }], threshold, message)
+    
+            const tx = signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      2,
+                      invalidSignature,
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            await expect(tx).to.be.rejectedWith(RevertError("RequireUtils#publishSigners: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH"))
+          })
+          it('Should fail to publish signers of deployed wallet with invalid signature', async () => {
+            await factory.deploy(module.address, salt2)
+
+            const invalidSignature = await walletMultiSign([{ weight: 1, owner: ethers.Wallet.createRandom() }, { weight: 1, owner: owner2c.address }], threshold, message)
+    
+            const tx = signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      2,
+                      invalidSignature,
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            await expect(tx).to.be.rejectedWith(RevertError("RequireUtils#publishSigners: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH"))
+          })
+          it('Should fail to publish signers of updated wallet with invalid signature', async () => {
+            await factory.deploy(module.address, salt2)
+
+            const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
+
+            const newOwnerA = ethers.Wallet.createRandom()
+            const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
+    
+            const newWallet = (await MainModuleUpgradableArtifact.at(wallet2.address)) as MainModuleUpgradable
+    
+            const migrateBundle = [
+              {
+                delegateCall: false,
+                revertOnError: true,
+                gasLimit: ethers.constants.Two.pow(18),
+                target: newWallet.address,
+                value: ethers.constants.Zero,
+                data: newWallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
+              },
+              {
+                delegateCall: false,
+                revertOnError: true,
+                gasLimit: ethers.constants.Two.pow(18),
+                target: newWallet.address,
+                value: ethers.constants.Zero,
+                data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+              }
+            ]
+    
+            const migrateTransaction = [
+              {
+                delegateCall: false,
+                revertOnError: false,
+                gasLimit: optimalGasLimit,
+                target: newWallet.address,
+                value: ethers.constants.Zero,
+                data: newWallet.contract.methods.selfExecute(migrateBundle).encodeABI()
+              }
+            ]
+    
+            await multiSignAndExecuteMetaTx(wallet2, config.map((c) => ({ weight: c.weight, owner: c.signer ? c.signer : c.address })), 2, migrateTransaction, networkId)
+            signature = await walletMultiSign([{ weight: 1, owner: ethers.Wallet.createRandom() }], 1, message)
+    
+            const tx = signAndExecuteMetaTx(
+              wallet,
+              owner,
+              [
+                {
+                  delegateCall: false,
+                  revertOnError: true,
+                  gasLimit: ethers.constants.Zero,
+                  target: requireUtils.address,
+                  value: ethers.constants.Zero,
+                  data: requireUtils.contract.methods
+                    .publishSigners(
+                      wallet2addr,
+                      digest,
+                      1,
+                      signature,
+                      o.indexed
+                    )
+                    .encodeABI()
+                }
+              ],
+              networkId
+            )
+    
+            await expect(tx).to.be.rejectedWith(RevertError("RequireUtils#publishSigners: UNEXPECTED_IMAGE_HASH"))
+          })
+        })
       })
     })
   })
@@ -1337,7 +1831,7 @@ contract('MainModule', (accounts: string[]) => {
         const tx = moduleUpgradable.execute([transaction], 0, '0x0000')
         await expect(tx).to.be.rejectedWith(RevertError('ModuleCalls#execute: INVALID_SIGNATURE'))
       })
-      it('Should update wallet and require configuration', async () => {
+      it('Should update wallet and publish configuration', async () => {
         const threshold = 2
         const newOwnerB = new ethers.Wallet(ethers.utils.randomBytes(32))
         const newOwnerC = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -1368,10 +1862,11 @@ contract('MainModule', (accounts: string[]) => {
             target: requireUtils.address,
             value: ethers.constants.Zero,
             data: requireUtils.contract.methods
-              .requireConfig(
+              .publishConfig(
                 wallet.address,
                 threshold,
-                members.sort((a, b) => compareAddr(a.signer, b.signer))
+                members.sort((a, b) => compareAddr(a.signer, b.signer)),
+                false
               )
               .encodeABI()
           }
@@ -1379,7 +1874,7 @@ contract('MainModule', (accounts: string[]) => {
 
         await signAndExecuteMetaTx(wallet, newOwnerA, migrateTransactions, networkId)
       })
-      it('Should fail to update wallet and require wrong configuration', async () => {
+      it('Should fail to update wallet and publish wrong configuration', async () => {
         const threshold = 2
         const newOwnerB = new ethers.Wallet(ethers.utils.randomBytes(32))
         const newOwnerC = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -1410,17 +1905,18 @@ contract('MainModule', (accounts: string[]) => {
             target: requireUtils.address,
             value: ethers.constants.Zero,
             data: requireUtils.contract.methods
-              .requireConfig(
+              .publishConfig(
                 wallet.address,
                 threshold,
-                members.sort((a, b) => compareAddr(a.signer, b.signer))
+                members.sort((a, b) => compareAddr(a.signer, b.signer)),
+                false
               )
               .encodeABI()
           }
         ]
 
         const tx = signAndExecuteMetaTx(wallet, newOwnerA, migrateTransactions, networkId)
-        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireConfig: UNEXPECTED_IMAGE_HASH'))
+        await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#publishConfig: UNEXPECTED_IMAGE_HASH'))
       })
       context('After updating the image hash', () => {
         let threshold = 2

@@ -22,24 +22,34 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 
 interface RequireUtilsInterface extends ethers.utils.Interface {
   functions: {
+    "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
-    "requireAndIndexConfig(address,uint256,tuple[])": FunctionFragment;
-    "requireConfig(address,uint256,tuple[])": FunctionFragment;
+    "publishConfig(address,uint256,tuple[],bool)": FunctionFragment;
+    "publishSigners(address,bytes32,uint256,bytes,bool)": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
+    functionFragment: "lastSignerUpdate",
+    values: [string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "lastWalletUpdate",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "requireAndIndexConfig",
-    values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
+    functionFragment: "publishConfig",
+    values: [
+      string,
+      BigNumberish,
+      { weight: BigNumberish; signer: string }[],
+      boolean
+    ]
   ): string;
   encodeFunctionData(
-    functionFragment: "requireConfig",
-    values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
+    functionFragment: "publishSigners",
+    values: [string, BytesLike, BigNumberish, BytesLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "requireMinNonce",
@@ -51,15 +61,19 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(
+    functionFragment: "lastSignerUpdate",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "lastWalletUpdate",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "requireAndIndexConfig",
+    functionFragment: "publishConfig",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "requireConfig",
+    functionFragment: "publishSigners",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -73,9 +87,11 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
 
   events: {
     "RequiredConfig(address,bytes32,uint256,bytes)": EventFragment;
+    "RequiredSigner(address,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "RequiredConfig"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RequiredSigner"): EventFragment;
 }
 
 export class RequireUtils extends Contract {
@@ -92,6 +108,16 @@ export class RequireUtils extends Contract {
   interface: RequireUtilsInterface;
 
   functions: {
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -102,31 +128,37 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
@@ -153,6 +185,13 @@ export class RequireUtils extends Contract {
     ): Promise<[void]>;
   };
 
+  lastSignerUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+  "lastSignerUpdate(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   lastWalletUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   "lastWalletUpdate(address)"(
@@ -160,31 +199,37 @@ export class RequireUtils extends Contract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  requireAndIndexConfig(
+  publishConfig(
     _wallet: string,
     _threshold: BigNumberish,
     _members: { weight: BigNumberish; signer: string }[],
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "requireAndIndexConfig(address,uint256,tuple[])"(
+  "publishConfig(address,uint256,tuple[],bool)"(
     _wallet: string,
     _threshold: BigNumberish,
     _members: { weight: BigNumberish; signer: string }[],
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  requireConfig(
+  publishSigners(
     _wallet: string,
-    _threshold: BigNumberish,
-    _members: { weight: BigNumberish; signer: string }[],
+    _hash: BytesLike,
+    _sizeMembers: BigNumberish,
+    _signature: BytesLike,
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "requireConfig(address,uint256,tuple[])"(
+  "publishSigners(address,bytes32,uint256,bytes,bool)"(
     _wallet: string,
-    _threshold: BigNumberish,
-    _members: { weight: BigNumberish; signer: string }[],
+    _hash: BytesLike,
+    _sizeMembers: BigNumberish,
+    _signature: BytesLike,
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
@@ -211,6 +256,16 @@ export class RequireUtils extends Contract {
   ): Promise<void>;
 
   callStatic: {
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -221,31 +276,37 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -279,9 +340,21 @@ export class RequireUtils extends Contract {
       _threshold: null,
       _signers: null
     ): EventFilter;
+
+    RequiredSigner(_wallet: string | null, _signer: string | null): EventFilter;
   };
 
   estimateGas: {
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -292,31 +365,37 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
@@ -344,6 +423,16 @@ export class RequireUtils extends Contract {
   };
 
   populateTransaction: {
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -354,31 +443,37 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 

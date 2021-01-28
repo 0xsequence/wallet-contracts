@@ -4,12 +4,19 @@ pragma experimental ABIEncoderV2;
 
 import "../commons/interfaces/IModuleCalls.sol";
 import "../commons/interfaces/IModuleAuthUpgradable.sol";
+import "../../interfaces/IERC1271Wallet.sol";
+import "../../utils/SignatureValidator.sol";
+import "../../utils/LibBytes.sol";
 import "../../Wallet.sol";
 
+contract RequireUtils is SignatureValidator {
+  using LibBytes for bytes;
 
-contract RequireUtils {
   uint256 private constant NONCE_BITS = 96;
   bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
+
+  uint256 private constant FLAG_SIGNATURE = 0;
+  uint256 private constant FLAG_ADDRESS = 1;
 
   bytes32 private immutable INIT_CODE_HASH;
   address private immutable FACTORY;
@@ -26,6 +33,12 @@ contract RequireUtils {
     bytes _signers
   );
 
+  event RequiredSigner(
+    address indexed _wallet,
+    address indexed _signer
+  );
+
+  mapping(address => uint256) public lastSignerUpdate;
   mapping(address => uint256) public lastWalletUpdate;
 
   constructor(address _factory, address _mainModule) public {
@@ -33,10 +46,11 @@ contract RequireUtils {
     INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(_mainModule)));
   }
 
-  function requireConfig(
+  function publishConfig(
     address _wallet,
     uint256 _threshold,
-    Member[] calldata _members
+    Member[] calldata _members,
+    bool _index
   ) external {
     // Compute expected imageHash
     bytes32 imageHash = bytes32(uint256(_threshold));
@@ -49,7 +63,7 @@ contract RequireUtils {
     if (succeed && data.length == 32) {
       // Check contract defined
       bytes32 currentImageHash = abi.decode(data, (bytes32));
-      require(currentImageHash == imageHash, "RequireUtils#requireConfig: UNEXPECTED_IMAGE_HASH");
+      require(currentImageHash == imageHash, "RequireUtils#publishConfig: UNEXPECTED_IMAGE_HASH");
     } else {
       // Check counter-factual
       require(address(
@@ -63,30 +77,77 @@ contract RequireUtils {
             )
           )
         )
-      ) == _wallet, "RequireUtils#requireConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
+      ) == _wallet, "RequireUtils#publishConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
     }
 
     // Emit event for easy config retrieval
     emit RequiredConfig(_wallet, imageHash, _threshold, abi.encode(_members));
+
+    if (_index) {
+      // Register last event for given wallet
+      lastWalletUpdate[_wallet] = block.number;
+    }
   }
 
-  function requireAndIndexConfig(
+  function publishSigners(
     address _wallet,
-    uint256 _threshold,
-    Member[] calldata _members
+    bytes32 _hash,
+    uint256 _sizeMembers,
+    bytes memory _signature,
+    bool _index
   ) external {
-    // Compute expected imageHash
-    bytes32 imageHash = bytes32(uint256(_threshold));
-    for (uint256 i = 0; i < _members.length; i++) {
-      imageHash = keccak256(abi.encode(imageHash, _members[i].weight, _members[i].signer));
+    // Decode and index signature
+    (
+      uint16 threshold,  // required threshold signature
+      uint256 rindex     // read index
+    ) = _signature.readFirstUint16();
+
+    bytes32 imageHash = bytes32(uint256(threshold));
+
+    Member[] memory members = new Member[](_sizeMembers);
+    uint256 membersIndex = 0;
+
+    while (rindex < _signature.length) {
+      // Read next item type and addrWeight
+      uint256 flag; uint256 addrWeight; address addr;
+      (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
+
+      if (flag == FLAG_ADDRESS) {
+        // Read plain address
+        (addr, rindex) = _signature.readAddress(rindex);
+      } else if (flag == FLAG_SIGNATURE) {
+        // Read single signature and recover signer
+        bytes memory signature;
+        (signature, rindex) = _signature.readBytes66(rindex);
+        addr = recoverSigner(_hash, signature);
+
+        // Required signer event
+        emit RequiredSigner(_wallet, addr);
+
+        if (_index) {
+          // Register last event for given signer
+          lastSignerUpdate[addr] = block.number;
+        }
+      } else {
+        revert("RequireUtils#publishSigners: INVALID_SIGNATURE_FLAG");
+      }
+
+      // Store member on array
+      members[membersIndex] = Member(addrWeight, addr);
+      membersIndex++;
+
+      // Write weight and address to image
+      imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
     }
+
+    require(membersIndex == _sizeMembers, "RequireUtils#publishSigners: INVALID_MEMBERS_COUNT");
 
     // Check against wallet imageHash
     (bool succeed, bytes memory data) = _wallet.call(abi.encodePacked(IModuleAuthUpgradable(_wallet).imageHash.selector));
     if (succeed && data.length == 32) {
       // Check contract defined
       bytes32 currentImageHash = abi.decode(data, (bytes32));
-      require(currentImageHash == imageHash, "RequireUtils#requireAndIndexConfig: UNEXPECTED_IMAGE_HASH");
+      require(currentImageHash == imageHash, "RequireUtils#publishSigners: UNEXPECTED_IMAGE_HASH");
     } else {
       // Check counter-factual
       require(address(
@@ -100,14 +161,16 @@ contract RequireUtils {
             )
           )
         )
-      ) == _wallet, "RequireUtils#requireAndIndexConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
+      ) == _wallet, "RequireUtils#publishSigners: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
     }
 
     // Emit event for easy config retrieval
-    emit RequiredConfig(_wallet, imageHash, _threshold, abi.encode(_members));
+    emit RequiredConfig(_wallet, imageHash, threshold, abi.encode(members));
 
-    // Store block height for the last wallet update
-    lastWalletUpdate[_wallet] = block.number;
+    if (_index) {
+      // Register last event for given wallet
+      lastWalletUpdate[_wallet] = block.number;
+    }
   }
 
   function requireNonExpired(uint256 _expiration) external view {

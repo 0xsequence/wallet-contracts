@@ -37,10 +37,11 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     "callGasPrice()": FunctionFragment;
     "callOrigin()": FunctionFragment;
     "callTimestamp()": FunctionFragment;
+    "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
     "multiCall(tuple[])": FunctionFragment;
-    "requireAndIndexConfig(address,uint256,tuple[])": FunctionFragment;
-    "requireConfig(address,uint256,tuple[])": FunctionFragment;
+    "publishConfig(address,uint256,tuple[],bool)": FunctionFragment;
+    "publishSigners(address,bytes32,uint256,bytes,bool)": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
   };
@@ -99,6 +100,10 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "lastSignerUpdate",
+    values: [string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "lastWalletUpdate",
     values: [string]
   ): string;
@@ -116,12 +121,17 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "requireAndIndexConfig",
-    values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
+    functionFragment: "publishConfig",
+    values: [
+      string,
+      BigNumberish,
+      { weight: BigNumberish; signer: string }[],
+      boolean
+    ]
   ): string;
   encodeFunctionData(
-    functionFragment: "requireConfig",
-    values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
+    functionFragment: "publishSigners",
+    values: [string, BytesLike, BigNumberish, BytesLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "requireMinNonce",
@@ -183,16 +193,20 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "lastSignerUpdate",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "lastWalletUpdate",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "multiCall", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "requireAndIndexConfig",
+    functionFragment: "publishConfig",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "requireConfig",
+    functionFragment: "publishSigners",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -206,9 +220,11 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
 
   events: {
     "RequiredConfig(address,bytes32,uint256,bytes)": EventFragment;
+    "RequiredSigner(address,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "RequiredConfig"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RequiredSigner"): EventFragment;
 }
 
 export class SequenceUtils extends Contract {
@@ -315,6 +331,16 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -349,31 +375,37 @@ export class SequenceUtils extends Contract {
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
@@ -471,6 +503,13 @@ export class SequenceUtils extends Contract {
 
   "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+  lastSignerUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+  "lastSignerUpdate(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   lastWalletUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   "lastWalletUpdate(address)"(
@@ -502,31 +541,37 @@ export class SequenceUtils extends Contract {
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
-  requireAndIndexConfig(
+  publishConfig(
     _wallet: string,
     _threshold: BigNumberish,
     _members: { weight: BigNumberish; signer: string }[],
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "requireAndIndexConfig(address,uint256,tuple[])"(
+  "publishConfig(address,uint256,tuple[],bool)"(
     _wallet: string,
     _threshold: BigNumberish,
     _members: { weight: BigNumberish; signer: string }[],
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  requireConfig(
+  publishSigners(
     _wallet: string,
-    _threshold: BigNumberish,
-    _members: { weight: BigNumberish; signer: string }[],
+    _hash: BytesLike,
+    _sizeMembers: BigNumberish,
+    _signature: BytesLike,
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "requireConfig(address,uint256,tuple[])"(
+  "publishSigners(address,bytes32,uint256,bytes,bool)"(
     _wallet: string,
-    _threshold: BigNumberish,
-    _members: { weight: BigNumberish; signer: string }[],
+    _hash: BytesLike,
+    _sizeMembers: BigNumberish,
+    _signature: BytesLike,
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
@@ -624,6 +669,16 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -662,31 +717,37 @@ export class SequenceUtils extends Contract {
       [boolean[], string[]] & { _successes: boolean[]; _results: string[] }
     >;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -720,6 +781,8 @@ export class SequenceUtils extends Contract {
       _threshold: null,
       _signers: null
     ): EventFilter;
+
+    RequiredSigner(_wallet: string | null, _signer: string | null): EventFilter;
   };
 
   estimateGas: {
@@ -797,6 +860,16 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -831,31 +904,37 @@ export class SequenceUtils extends Contract {
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
@@ -973,6 +1052,16 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -1007,31 +1096,37 @@ export class SequenceUtils extends Contract {
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
 
-    requireAndIndexConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "requireAndIndexConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    requireConfig(
+    publishSigners(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
