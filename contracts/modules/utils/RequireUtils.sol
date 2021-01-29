@@ -89,7 +89,7 @@ contract RequireUtils is SignatureValidator {
     }
   }
 
-  function publishSigners(
+  function publishInitialSigners(
     address _wallet,
     bytes32 _hash,
     uint256 _sizeMembers,
@@ -129,7 +129,7 @@ contract RequireUtils is SignatureValidator {
           lastSignerUpdate[addr] = block.number;
         }
       } else {
-        revert("RequireUtils#publishSigners: INVALID_SIGNATURE_FLAG");
+        revert("RequireUtils#publishInitialSigners: INVALID_SIGNATURE_FLAG");
       }
 
       // Store member on array
@@ -140,29 +140,21 @@ contract RequireUtils is SignatureValidator {
       imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
     }
 
-    require(membersIndex == _sizeMembers, "RequireUtils#publishSigners: INVALID_MEMBERS_COUNT");
+    require(membersIndex == _sizeMembers, "RequireUtils#publishInitialSigners: INVALID_MEMBERS_COUNT");
 
-    // Check against wallet imageHash
-    (bool succeed, bytes memory data) = _wallet.call(abi.encodePacked(IModuleAuthUpgradable(_wallet).imageHash.selector));
-    if (succeed && data.length == 32) {
-      // Check contract defined
-      bytes32 currentImageHash = abi.decode(data, (bytes32));
-      require(currentImageHash == imageHash, "RequireUtils#publishSigners: UNEXPECTED_IMAGE_HASH");
-    } else {
-      // Check counter-factual
-      require(address(
-        uint256(
-          keccak256(
-            abi.encodePacked(
-              byte(0xff),
-              FACTORY,
-              imageHash,
-              INIT_CODE_HASH
-            )
+    // Check against counter-factual imageHash
+    require(address(
+      uint256(
+        keccak256(
+          abi.encodePacked(
+            byte(0xff),
+            FACTORY,
+            imageHash,
+            INIT_CODE_HASH
           )
         )
-      ) == _wallet, "RequireUtils#publishSigners: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
-    }
+      )
+    ) == _wallet, "RequireUtils#publishInitialSigners: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
 
     // Emit event for easy config retrieval
     emit RequiredConfig(_wallet, imageHash, threshold, abi.encode(members));

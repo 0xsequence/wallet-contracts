@@ -25,7 +25,7 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
     "publishConfig(address,uint256,tuple[],bool)": FunctionFragment;
-    "publishSigners(address,bytes32,uint256,bytes,bool)": FunctionFragment;
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
   };
@@ -48,7 +48,7 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "publishSigners",
+    functionFragment: "publishInitialSigners",
     values: [string, BytesLike, BigNumberish, BytesLike, boolean]
   ): string;
   encodeFunctionData(
@@ -73,7 +73,7 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "publishSigners",
+    functionFragment: "publishInitialSigners",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -144,7 +144,7 @@ export class RequireUtils extends Contract {
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    publishSigners(
+    publishInitialSigners(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -153,7 +153,7 @@ export class RequireUtils extends Contract {
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "publishSigners(address,bytes32,uint256,bytes,bool)"(
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -215,7 +215,7 @@ export class RequireUtils extends Contract {
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  publishSigners(
+  publishInitialSigners(
     _wallet: string,
     _hash: BytesLike,
     _sizeMembers: BigNumberish,
@@ -224,7 +224,7 @@ export class RequireUtils extends Contract {
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "publishSigners(address,bytes32,uint256,bytes,bool)"(
+  "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
     _wallet: string,
     _hash: BytesLike,
     _sizeMembers: BigNumberish,
@@ -292,7 +292,7 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    publishSigners(
+    publishInitialSigners(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -301,7 +301,7 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "publishSigners(address,bytes32,uint256,bytes,bool)"(
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -381,7 +381,7 @@ export class RequireUtils extends Contract {
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    publishSigners(
+    publishInitialSigners(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -390,7 +390,7 @@ export class RequireUtils extends Contract {
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "publishSigners(address,bytes32,uint256,bytes,bool)"(
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -459,7 +459,7 @@ export class RequireUtils extends Contract {
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    publishSigners(
+    publishInitialSigners(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -468,7 +468,7 @@ export class RequireUtils extends Contract {
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "publishSigners(address,bytes32,uint256,bytes,bool)"(
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
