@@ -46,7 +46,15 @@ contract RequireUtils is SignatureValidator {
     INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(_mainModule)));
   }
 
-
+  /**
+   * @notice Publishes the current configuration of a Sequence wallets using logs
+   * @dev Used for fast lookup of a wallet configuration based on its image-hash, compatible with updated and counter-factual wallets.
+   *
+   * @param _wallet      Sequence wallet
+   * @param _threshold   Thershold of the current configuration
+   * @param _members     Members of the current configuration
+   * @param _index       True if an index in contract-storage is desired 
+   */
   function publishConfig(
     address _wallet,
     uint256 _threshold,
@@ -90,6 +98,19 @@ contract RequireUtils is SignatureValidator {
     }
   }
 
+  /**
+   * @notice Publishes the configuration and set of signers for a counter-factual Sequence wallets using logs
+   * @dev Used for fast lookup of a wallet based on its signer members, only signing members are included in the logs
+   *   as a mechanism to avoid poisoning of the directory of wallets.
+   *
+   *   Only the initial counter-factual configuration can be published, to publish updated configurations see `publishConfig`.
+   *
+   * @param _wallet      Sequence wallet
+   * @param _hash        Any hash signed by the wallet
+   * @param _sizeMembers Number of members on the counter-factual configuration
+   * @param _signature   Signature for the given hash
+   * @param _index       True if an index in contract-storage is desired 
+   */
   function publishInitialSigners(
     address _wallet,
     bytes32 _hash,
@@ -180,10 +201,23 @@ contract RequireUtils is SignatureValidator {
     }
   }
 
+  /**
+   * @notice Validates that a given expiration hasn't expired
+   * @dev Used as an optional transaction on a Sequence batch, to create expirable transactions.
+   *
+   * @param _expiration  Expiration to check
+   */
   function requireNonExpired(uint256 _expiration) external view {
     require(block.timestamp < _expiration, "RequireUtils#requireNonExpired: EXPIRED");
   }
 
+  /**
+   * @notice Validates that a given wallet has reached a given nonce
+   * @dev Used as an optional transaction on a Sequence batch, to define transaction execution order
+   *
+   * @param _wallet Sequence wallet
+   * @param _nonce  Required nonce
+   */
   function requireMinNonce(address _wallet, uint256 _nonce) external view {
     (uint256 space, uint256 nonce) = _decodeNonce(_nonce);
     uint256 currentNonce = IModuleCalls(_wallet).readNonce(space);
