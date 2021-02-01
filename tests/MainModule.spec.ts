@@ -1258,6 +1258,7 @@ contract('MainModule', (accounts: string[]) => {
 
       let message: string
       let digest: string
+      let preSubDigest: string
       let signature: string
       let config: { weight: number, address: string, signer?: ethers.Wallet }[]
 
@@ -1272,7 +1273,12 @@ contract('MainModule', (accounts: string[]) => {
 
         message = ethers.utils.hexlify(ethers.utils.randomBytes(96))
         digest = ethers.utils.keccak256(message)
-        signature = await walletMultiSign([{ weight: 1, owner: owner2a }, { weight: 1, owner: owner2b }, { weight: 1, owner: owner2c.address }], threshold, message)
+        preSubDigest = ethers.utils.solidityPack(
+          ['string', 'uint256', 'address', 'bytes'],
+          ['\x19\x01', networkId, wallet2addr, digest]
+        )
+
+        signature = await walletMultiSign([{ weight: 1, owner: owner2a }, { weight: 1, owner: owner2b }, { weight: 1, owner: owner2c.address }], threshold, preSubDigest)
       })
 
       const options = [{

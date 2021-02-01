@@ -46,6 +46,7 @@ contract RequireUtils is SignatureValidator {
     INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(_mainModule)));
   }
 
+
   function publishConfig(
     address _wallet,
     uint256 _threshold,
@@ -102,6 +103,20 @@ contract RequireUtils is SignatureValidator {
       uint256 rindex     // read index
     ) = _signature.readFirstUint16();
 
+    // Generate sub-digest
+    bytes32 subDigest; {
+      uint256 chainId; assembly { chainId := chainid() }
+      subDigest = keccak256(
+        abi.encodePacked(
+          "\x19\x01",
+          chainId,
+          _wallet,
+          _hash
+        )
+      );
+    }
+
+    // Recover signature
     bytes32 imageHash = bytes32(uint256(threshold));
 
     Member[] memory members = new Member[](_sizeMembers);
@@ -119,7 +134,7 @@ contract RequireUtils is SignatureValidator {
         // Read single signature and recover signer
         bytes memory signature;
         (signature, rindex) = _signature.readBytes66(rindex);
-        addr = recoverSigner(_hash, signature);
+        addr = recoverSigner(subDigest, signature);
 
         // Required signer event
         emit RequiredSigner(_wallet, addr);
