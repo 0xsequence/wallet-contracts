@@ -37,8 +37,11 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     "callGasPrice()": FunctionFragment;
     "callOrigin()": FunctionFragment;
     "callTimestamp()": FunctionFragment;
+    "lastSignerUpdate(address)": FunctionFragment;
+    "lastWalletUpdate(address)": FunctionFragment;
     "multiCall(tuple[])": FunctionFragment;
-    "requireConfig(address,uint256,tuple[])": FunctionFragment;
+    "publishConfig(address,uint256,tuple[],bool)": FunctionFragment;
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
   };
@@ -97,6 +100,14 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "lastSignerUpdate",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "lastWalletUpdate",
+    values: [string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "multiCall",
     values: [
       {
@@ -110,8 +121,17 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "requireConfig",
-    values: [string, BigNumberish, { weight: BigNumberish; signer: string }[]]
+    functionFragment: "publishConfig",
+    values: [
+      string,
+      BigNumberish,
+      { weight: BigNumberish; signer: string }[],
+      boolean
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "publishInitialSigners",
+    values: [string, BytesLike, BigNumberish, BytesLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "requireMinNonce",
@@ -172,9 +192,21 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     functionFragment: "callTimestamp",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "lastSignerUpdate",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "lastWalletUpdate",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "multiCall", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "requireConfig",
+    functionFragment: "publishConfig",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "publishInitialSigners",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -188,9 +220,11 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
 
   events: {
     "RequiredConfig(address,bytes32,uint256,bytes)": EventFragment;
+    "RequiredSigner(address,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "RequiredConfig"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RequiredSigner"): EventFragment;
 }
 
 export class SequenceUtils extends Contract {
@@ -297,6 +331,26 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    lastWalletUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "lastWalletUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -321,17 +375,37 @@ export class SequenceUtils extends Contract {
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
 
-    requireConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    publishInitialSigners(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
@@ -429,6 +503,20 @@ export class SequenceUtils extends Contract {
 
   "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+  lastSignerUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+  "lastSignerUpdate(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  lastWalletUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+  "lastWalletUpdate(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   multiCall(
     _txs: {
       delegateCall: boolean;
@@ -453,17 +541,37 @@ export class SequenceUtils extends Contract {
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
-  requireConfig(
+  publishConfig(
     _wallet: string,
     _threshold: BigNumberish,
     _members: { weight: BigNumberish; signer: string }[],
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "requireConfig(address,uint256,tuple[])"(
+  "publishConfig(address,uint256,tuple[],bool)"(
     _wallet: string,
     _threshold: BigNumberish,
     _members: { weight: BigNumberish; signer: string }[],
+    _index: boolean,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  publishInitialSigners(
+    _wallet: string,
+    _hash: BytesLike,
+    _sizeMembers: BigNumberish,
+    _signature: BytesLike,
+    _index: boolean,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
+    _wallet: string,
+    _hash: BytesLike,
+    _sizeMembers: BigNumberish,
+    _signature: BytesLike,
+    _index: boolean,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
@@ -561,6 +669,26 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    lastWalletUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastWalletUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -589,17 +717,37 @@ export class SequenceUtils extends Contract {
       [boolean[], string[]] & { _successes: boolean[]; _results: string[] }
     >;
 
-    requireConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    publishInitialSigners(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -633,6 +781,8 @@ export class SequenceUtils extends Contract {
       _threshold: null,
       _signers: null
     ): EventFilter;
+
+    RequiredSigner(_wallet: string | null, _signer: string | null): EventFilter;
   };
 
   estimateGas: {
@@ -710,6 +860,26 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    lastWalletUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastWalletUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -734,17 +904,37 @@ export class SequenceUtils extends Contract {
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
-    requireConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    publishInitialSigners(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
@@ -862,6 +1052,26 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    lastSignerUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "lastSignerUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    lastWalletUpdate(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "lastWalletUpdate(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     multiCall(
       _txs: {
         delegateCall: boolean;
@@ -886,17 +1096,37 @@ export class SequenceUtils extends Contract {
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
 
-    requireConfig(
+    publishConfig(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "requireConfig(address,uint256,tuple[])"(
+    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
+      _index: boolean,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    publishInitialSigners(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
+      _wallet: string,
+      _hash: BytesLike,
+      _sizeMembers: BigNumberish,
+      _signature: BytesLike,
+      _index: boolean,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
