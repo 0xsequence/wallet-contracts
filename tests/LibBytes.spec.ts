@@ -178,4 +178,91 @@ contract('LibBytes', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith('LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED')
     })
   })
+
+  describe('readUint16', () => {
+    it('Should read uint16 at index zero', async () => {
+      const res = await libBytes.readUint16('0x5202', 0)
+      expect(res[0]).to.eq.BN(20994)
+      expect(res[1]).to.eq.BN(2)
+    })
+    it('Should read uint16 at given index', async () => {
+      const res = await libBytes.readUint16('0x5a9c2a1019d401d3', 3)
+      expect(res[0]).to.eq.BN(4121)
+      expect(res[1]).to.eq.BN(5)
+    })
+    it('Should read uint16 at last index', async () => {
+      const res = await libBytes.readUint16('0x020414', 1)
+      expect(res[0]).to.eq.BN(1044)
+      expect(res[1]).to.eq.BN(3)
+    })
+    it('Should fail read uint16 out of bounds', async () => {
+      const tx = libBytes.readUint16('0x5a', 0)
+      await expect(tx).to.be.rejectedWith('LibBytes#readUint16: OUT_OF_BOUNDS')
+    })
+    it('Should fail read uint16 fully out of bounds', async () => {
+      const tx = libBytes.readUint16('0x5a9ca2', 12)
+      await expect(tx).to.be.rejectedWith('LibBytes#readUint16: OUT_OF_BOUNDS')
+    })
+  })
+
+  describe('readBytes', () => {
+    let size
+    let bytes
+
+    const modes = [{
+      name: "Big bytes",
+      size: () => ethers.BigNumber.from(web3.utils.randomHex(2)).toNumber()
+    }, {
+      name: "Max bytes",
+      size: () => 65535
+    }, {
+      name: "Small bytes",
+      size: () => ethers.BigNumber.from(web3.utils.randomHex(1)).toNumber()
+    }].concat([...new Array(130)].map((_, i) => ({
+      name: `${i} bytes`,
+      size: () => i
+    })))
+
+    modes.forEach((mode) => {
+      context(mode.name, () => {
+        beforeEach(async () => {
+          size = mode.size()
+          bytes = web3.utils.randomHex(size)
+        })
+        it('Should read bytes at index zero', async () => {
+          const data = bytes.concat(web3.utils.randomHex(16).slice(2))
+
+          const res = await libBytes.readBytes(data, 0, size)
+          expect(res[0]).to.equal(size === 0 ? null : bytes)
+          expect(res[1]).to.eq.BN(size)
+        })
+        it('Should read bytes at given index', async () => {
+          const data = web3.utils
+            .randomHex(12)
+            .concat(bytes.slice(2))
+            .concat(web3.utils.randomHex(44).slice(2))
+
+          const res = await libBytes.readBytes(data, 12, size)
+          expect(res[0]).to.equal(size === 0 ? null : bytes)
+          expect(res[1]).to.eq.BN(size + 12)
+        })
+        it('Should read bytes at last index', async () => {
+          const data = web3.utils.randomHex(11).concat(bytes.slice(2))
+
+          const res = await libBytes.readBytes(data, 11, size)
+          expect(res[0]).to.equal(size === 0 ? null : bytes)
+          expect(res[1]).to.eq.BN(size + 11)
+        })
+        it('Should fail read bytes out of bounds', async () => {
+          const data = web3.utils.randomHex(11).concat(bytes.slice(2))
+          const tx = libBytes.readBytes(data, 12, size)
+          await expect(tx).to.be.rejectedWith('LibBytes#readBytes: OUT_OF_BOUNDS')
+        })
+        it('Should fail read bytes totally out of bounds', async () => {
+          const tx = libBytes.readBytes('0x010203', 3145, size)
+          await expect(tx).to.be.rejectedWith('LibBytes#readBytes: OUT_OF_BOUNDS')
+        })
+      })
+    })
+  })
 })

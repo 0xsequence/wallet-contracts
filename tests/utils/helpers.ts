@@ -103,8 +103,8 @@ export class Web3DebugProvider extends ethers.providers.JsonRpcProvider {
 }
 
 // Take a message, hash it and sign it with ETH_SIGN SignatureType
-export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Array) {
-  let hash = ethers.utils.keccak256(message)
+export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Array, hashed = false) {
+  let hash = hashed ? message : ethers.utils.keccak256(message)
   let hashArray = ethers.utils.arrayify(hash)
   let ethsigNoType = await wallet.signMessage(hashArray)
   return ethsigNoType + '02'
@@ -118,6 +118,25 @@ export const MetaTransactionsType = `tuple(
   uint256 value,
   bytes data
 )[]`
+
+export function encodeMessageData(
+  owner: string,
+  message: string,
+  networkId: BigNumberish
+): string {
+  return encodeMessageSubDigest(owner, ethers.utils.keccak256(message), networkId)
+}
+
+export function encodeMessageSubDigest(
+  owner: string,
+  digest: string,
+  networkId: BigNumberish
+): string {
+  return ethers.utils.solidityPack(
+    ['string', 'uint256', 'address', 'bytes32'],
+    ['\x19\x01', networkId, owner, digest]
+  )
+}
 
 export function encodeMetaTransactionsData(
   owner: string,
@@ -133,18 +152,15 @@ export function encodeMetaTransactionsData(
   nonce: BigNumberish
 ): string {
   const transactions = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [nonce, txs])
-
-  return ethers.utils.solidityPack(
-    ['string', 'uint256', 'address', 'bytes'],
-    ['\x19\x01', networkId, owner, ethers.utils.keccak256(transactions)]
-  )
+  return encodeMessageData(owner, transactions, networkId)
 }
 
 export async function walletSign(
   owner: ethers.Wallet,
-  message: string
+  message: string,
+  forceDynamicSize: boolean = false
 ) {
-  return walletMultiSign([{ weight: 1, owner: owner }], 1, message)
+  return walletMultiSign([{ weight: 1, owner: owner }], 1, message, forceDynamicSize)
 }
 
 export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Wallet) {
@@ -166,24 +182,38 @@ export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Walle
 export async function walletMultiSign(
   accounts: {
     weight: BigNumberish,
-    owner: string | ethers.Wallet
+    owner: string | ethers.Wallet,
+    signature?: string
   }[],
   threshold: BigNumberish,
-  message: string
+  message: string,
+  forceDynamicSize: boolean = false,
+  hashed = false
 ) {
   const sorted = accounts.sort((a, b) => compareAddr(a.owner, b.owner))
   const accountBytes = await Promise.all(
-    sorted.map(async (a) => 
-      a.owner instanceof ethers.Wallet ?
-        ethers.utils.solidityPack(
-          ['bool', 'uint8', 'bytes'],
-          [false, a.weight, await ethSign(a.owner, message)]
-        ) : 
-        ethers.utils.solidityPack(
-          ['bool', 'uint8', 'address'],
-          [true, a.weight, a.owner]
+    sorted.map(async (a) => {
+      if (a.owner instanceof ethers.Wallet || a.signature !== undefined) {
+        const signature = ethers.utils.arrayify(a.owner instanceof ethers.Wallet ? await ethSign(a.owner, message, hashed) : a.signature as string)
+        if (forceDynamicSize || signature.length !== 66) {
+          const address = a.owner instanceof ethers.Wallet ? a.owner.address : a.owner
+          return ethers.utils.solidityPack(
+            ['uint8', 'uint8', 'address', 'uint16', 'bytes'],
+            [2, a.weight, address, signature.length, signature]
+          )
+        } else {
+          return ethers.utils.solidityPack(
+            ['uint8', 'uint8', 'bytes'],
+            [0, a.weight, signature]
+          )
+        }
+      } else {
+        return ethers.utils.solidityPack(
+          ['uint8', 'uint8', 'address'],
+          [1, a.weight, a.owner]
         )
-    )
+      }
+    })
   )
 
   return ethers.utils.solidityPack(
@@ -208,10 +238,11 @@ export async function multiSignMetaTransactions(
     data: BytesLike;
   }[],
   networkId: BigNumberish,
-  nonce: BigNumberish
+  nonce: BigNumberish,
+  forceDynamicSize: boolean = false
 ) {
   const data = encodeMetaTransactionsData(wallet.address, txs, networkId, nonce)
-  return walletMultiSign(accounts, threshold, data)
+  return walletMultiSign(accounts, threshold, data, forceDynamicSize)
 }
 
 export async function nextNonce(wallet: MainModule) {
@@ -230,7 +261,8 @@ export async function signAndExecuteMetaTx(
     data: BytesLike;
   }[],
   networkId: BigNumberish,
-  nonce: BigNumberish | undefined = undefined
+  nonce: BigNumberish | undefined = undefined,
+  forceDynamicSize: boolean = false
 ) {
   return multiSignAndExecuteMetaTx(
     wallet,
@@ -238,7 +270,8 @@ export async function signAndExecuteMetaTx(
     1,
     txs,
     networkId,
-    nonce
+    nonce,
+    forceDynamicSize
   )
 }
 
@@ -258,10 +291,11 @@ export async function multiSignAndExecuteMetaTx(
     data: BytesLike;
   }[],
   networkId: BigNumberish,
-  nonce: BigNumberish | undefined = undefined
+  nonce: BigNumberish | undefined = undefined,
+  forceDynamicSize: boolean = false
 ) {
   if (!nonce) nonce = await nextNonce(wallet)
-  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce)
+  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize)
   return wallet.execute(txs, nonce, signature)
 }
 

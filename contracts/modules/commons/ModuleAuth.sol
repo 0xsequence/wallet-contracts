@@ -15,6 +15,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
 
   uint256 private constant FLAG_SIGNATURE = 0;
   uint256 private constant FLAG_ADDRESS = 1;
+  uint256 private constant FLAG_DYNAMIC_SIGNATURE = 2;
 
   bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
@@ -75,6 +76,21 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
         bytes memory signature;
         (signature, rindex) = _signature.readBytes66(rindex);
         addr = recoverSigner(_hash, signature);
+
+        // Acumulate total weight of the signature
+        totalWeight += addrWeight;
+      } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
+        // Read signer
+        (addr, rindex) = _signature.readAddress(rindex);
+
+        // Read signature size
+        uint256 size;
+        (size, rindex) = _signature.readUint16(rindex);
+
+        // Read dynamic size signature
+        bytes memory signature;
+        (signature, rindex) = _signature.readBytes(rindex, size);
+        require(isValidSignature(_hash, addr, signature), "ModuleAuth#_signatureValidation: INVALID_SIGNATURE");
 
         // Acumulate total weight of the signature
         totalWeight += addrWeight;
