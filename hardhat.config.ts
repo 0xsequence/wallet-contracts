@@ -4,6 +4,7 @@ import { networkConfig } from './utils/configLoader'
 import '@nomiclabs/hardhat-truffle5'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-web3'
+import '@nomiclabs/hardhat-etherscan'
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
 
@@ -29,6 +30,7 @@ const config: HardhatUserConfig = {
     tests: 'tests'
   },
   networks: {
+    ropsten: networkConfig('ropsten'),
     rinkeby: networkConfig('rinkeby'),
     kovan: networkConfig('kovan'),
     goerli: networkConfig('goerli'),
@@ -38,6 +40,11 @@ const config: HardhatUserConfig = {
     coverage: {
       url: 'http://localhost:8555'
     }
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    apiKey: networkConfig('mainnet').etherscan
   },
   mocha: {
     timeout: process.env.COVERAGE ? 15 * 60 * 1000 : 30 * 1000

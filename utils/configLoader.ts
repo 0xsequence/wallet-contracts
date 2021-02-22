@@ -17,9 +17,9 @@ export const getEnvConfig = (env: string) => {
   return envLoad.parsed || {}
 }
 
-export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig => {
+export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig & { etherscan?: string } => {
   const config = getEnvConfig('PROD')
-  const networkConfig: HttpNetworkConfig = {
+  return {
     url: (function(network) {
       switch (network) {
         case 'mumbai':
@@ -42,8 +42,7 @@ export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig
     gasPrice: 'auto',
     gasMultiplier: 1,
     timeout: 20000,
-    httpHeaders: {}
+    httpHeaders: {},
+    etherscan: config['ETHERSCAN']
   }
-
-  return networkConfig
 }

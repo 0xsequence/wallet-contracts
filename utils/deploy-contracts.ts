@@ -1,4 +1,4 @@
-import { network, web3 } from 'hardhat'
+import { network, web3, run, config } from 'hardhat'
 import * as _ from 'lodash'
 import ora from 'ora'
 
@@ -11,8 +11,7 @@ import {
 } from '../typings/contracts'
 
 import { UniversalDeployer } from '@arcadeum/deployer'
-import { providers } from 'ethers'
-import { BigNumber } from 'ethers'
+import { ContractFactory, BigNumber, providers } from 'ethers'
 
 const prompt = ora()
 
@@ -29,10 +28,19 @@ const provider = new providers.Web3Provider(web3.currentProvider)
 const signer = provider.getSigner()
 const universalDeployer = new UniversalDeployer(network.name, signer)
 const txParams = {
-  gasLimit: 8000000,
+  gasLimit: 6000000,
   gasPrice: BigNumber.from(10)
     .pow(9)
-    .mul(10)
+    .mul(16)
+}
+
+const attempVerify = async <T extends ContractFactory>(_: new () => T, address: string, ...args: Parameters<T["deploy"]>) => {
+  try {
+    await run("verify:verify", {
+      address: address,
+      constructorArguments: args,
+    })
+  } catch {}
 }
 
 const main = async () => {
@@ -42,13 +50,25 @@ const main = async () => {
 
   const walletFactory = await universalDeployer.deploy('WalletFactory', Factory__factory, txParams)
   const mainModule = await universalDeployer.deploy('MainModule', MainModule__factory, txParams, 0, walletFactory.address)
-  await universalDeployer.deploy('MainModuleUpgradable', MainModuleUpgradable__factory, txParams)
-  await universalDeployer.deploy('GuestModule', GuestModule__factory, txParams)
-  await universalDeployer.deploy('SequenceUtils', SequenceUtils__factory, txParams, 0, walletFactory.address, mainModule.address)
+  const mainModuleUpgradeable = await universalDeployer.deploy('MainModuleUpgradable', MainModuleUpgradable__factory, txParams)
+  const guestModule = await universalDeployer.deploy('GuestModule', GuestModule__factory, txParams)
+  const sequenceUtils = await universalDeployer.deploy('SequenceUtils', SequenceUtils__factory, txParams, 0, walletFactory.address, mainModule.address)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
   await universalDeployer.registerDeployment()
   prompt.succeed()
+
+  if (config.etherscan) {
+    prompt.start(`verifying contracts on etherscan`)
+
+    await attempVerify(Factory__factory, walletFactory.address)
+    await attempVerify(MainModule__factory, mainModule.address, walletFactory.address)
+    await attempVerify(MainModuleUpgradable__factory, mainModuleUpgradeable.address)
+    await attempVerify(GuestModule__factory, guestModule.address)
+    await attempVerify(SequenceUtils__factory, sequenceUtils.address, walletFactory.address, mainModule.address)
+
+    prompt.succeed()
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere
