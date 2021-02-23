@@ -30,6 +30,7 @@ const config: HardhatUserConfig = {
     tests: 'tests'
   },
   networks: {
+    mainnet: networkConfig('mainnet'),
     ropsten: networkConfig('ropsten'),
     rinkeby: networkConfig('rinkeby'),
     kovan: networkConfig('kovan'),
