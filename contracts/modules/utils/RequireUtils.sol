@@ -17,6 +17,7 @@ contract RequireUtils is SignatureValidator {
 
   uint256 private constant FLAG_SIGNATURE = 0;
   uint256 private constant FLAG_ADDRESS = 1;
+  uint256 private constant FLAG_DYNAMIC_SIGNATURE = 2;
 
   bytes32 private immutable INIT_CODE_HASH;
   address private immutable FACTORY;
@@ -157,13 +158,25 @@ contract RequireUtils is SignatureValidator {
         (signature, rindex) = _signature.readBytes66(rindex);
         addr = recoverSigner(subDigest, signature);
 
-        // Required signer event
-        emit RequiredSigner(_wallet, addr);
+        // Publish signer
+        _publishSigner(_wallet, addr, _index);
+      } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
+        // Read signer
+        (addr, rindex) = _signature.readAddress(rindex);
 
-        if (_index) {
-          // Register last event for given signer
-          lastSignerUpdate[addr] = block.number;
+        {
+          // Read signature size
+          uint256 size;
+          (size, rindex) = _signature.readUint16(rindex);
+
+          // Read dynamic size signature
+          bytes memory signature;
+          (signature, rindex) = _signature.readBytes(rindex, size);
+          require(isValidSignature(subDigest, addr, signature), "ModuleAuth#_signatureValidation: INVALID_SIGNATURE");
         }
+
+        // Publish signer
+        _publishSigner(_wallet, addr, _index);
       } else {
         revert("RequireUtils#publishInitialSigners: INVALID_SIGNATURE_FLAG");
       }
@@ -235,5 +248,21 @@ contract RequireUtils is SignatureValidator {
   function _decodeNonce(uint256 _rawNonce) private pure returns (uint256 _space, uint256 _nonce) {
     _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
     _space = _rawNonce >> NONCE_BITS;
+  }
+
+  /**
+   * @notice Publishes a signer that was validated to sign for a particular wallet
+   * @param _wallet Address of the wallet
+   * @param _signer Address of the signer
+   * @param _index True if an index on contract storage is desired
+   */
+  function _publishSigner(address _wallet, address _signer, bool _index) private {
+    // Required signer event
+    emit RequiredSigner(_wallet, _signer);
+
+    if (_index) {
+      // Register last event for given signer
+      lastSignerUpdate[_signer] = block.number;
+    }
   }
 }
