@@ -107,7 +107,7 @@ export async function ethSign(wallet: ethers.Wallet, message: string | Uint8Arra
   let hash = hashed ? message : ethers.utils.keccak256(message)
   let hashArray = ethers.utils.arrayify(hash)
   let ethsigNoType = await wallet.signMessage(hashArray)
-  return ethsigNoType + '02'
+  return ethsigNoType.endsWith('03') || ethsigNoType.endsWith('02') ? ethsigNoType : ethsigNoType + '02'
 }
 
 export const MetaTransactionsType = `tuple(
@@ -164,8 +164,8 @@ export async function walletSign(
 }
 
 export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Wallet) {
-  const addrA = a instanceof ethers.Wallet ? a.address : a
-  const addrB = b instanceof ethers.Wallet ? b.address : b
+  const addrA = typeof a === 'string' ? a : a.address
+  const addrB = typeof b === 'string' ? b : b.address
 
   const bigA = ethers.BigNumber.from(addrA)
   const bigB = ethers.BigNumber.from(addrB)
@@ -193,10 +193,15 @@ export async function walletMultiSign(
   const sorted = accounts.sort((a, b) => compareAddr(a.owner, b.owner))
   const accountBytes = await Promise.all(
     sorted.map(async (a) => {
-      if (a.owner instanceof ethers.Wallet || a.signature !== undefined) {
-        const signature = ethers.utils.arrayify(a.owner instanceof ethers.Wallet ? await ethSign(a.owner, message, hashed) : a.signature as string)
+      if (typeof a.owner === 'string' && !a.signature) {
+        return ethers.utils.solidityPack(
+          ['uint8', 'uint8', 'address'],
+          [1, a.weight, a.owner]
+        )
+      } else {
+        const signature = ethers.utils.arrayify(a.signature ? a.signature as string : await ethSign(a.owner as ethers.Wallet, message, hashed))
         if (forceDynamicSize || signature.length !== 66) {
-          const address = a.owner instanceof ethers.Wallet ? a.owner.address : a.owner
+          const address = typeof a.owner === 'string' ? a.owner : a.owner.address
           return ethers.utils.solidityPack(
             ['uint8', 'uint8', 'address', 'uint16', 'bytes'],
             [2, a.weight, address, signature.length, signature]
@@ -207,11 +212,6 @@ export async function walletMultiSign(
             [0, a.weight, signature]
           )
         }
-      } else {
-        return ethers.utils.solidityPack(
-          ['uint8', 'uint8', 'address'],
-          [1, a.weight, a.owner]
-        )
       }
     })
   )

@@ -1938,37 +1938,95 @@ contract('MainModule', (accounts: string[]) => {
       let digest: string
       let preSubDigest: string
       let signature: string
+      let badSignature: string
       let config: { weight: number, address: string, signer?: ethers.Wallet }[]
 
-      beforeEach(async () => {
-        owner2a = new ethers.Wallet(ethers.utils.randomBytes(32))
-        owner2b = new ethers.Wallet(ethers.utils.randomBytes(32))
-        owner2c = new ethers.Wallet(ethers.utils.randomBytes(32))
-
-        config = [{ weight: 1, address: owner2a.address, signer: owner2a }, { weight: 1, address: owner2b.address, signer: owner2b }, { weight: 1, address: owner2c.address }]
-        salt2 = encodeImageHash(threshold, config)
-        wallet2addr = addressOf(factory.address, module.address, salt2)
-
-        message = ethers.utils.hexlify(ethers.utils.randomBytes(96))
-        digest = ethers.utils.keccak256(message)
-        preSubDigest = ethers.utils.solidityPack(
-          ['string', 'uint256', 'address', 'bytes'],
-          ['\x19\x01', networkId, wallet2addr, digest]
-        )
-
-        signature = await walletMultiSign([{ weight: 1, owner: owner2a }, { weight: 1, owner: owner2b }, { weight: 1, owner: owner2c.address }], threshold, preSubDigest)
-      })
+      enum SignatureType {
+        EOA, EOADynamic, ERC1271
+      }
 
       const options = [{
-        name: 'indexed',
+        name: 'EOA signature indexed',
+        signatureType: SignatureType.EOA,
         indexed: true
       }, {
-        name: 'not indexed',
+        name: 'EOA signature not indexed',
+        signatureType: SignatureType.EOA,
+        indexed: false
+      }, {
+        name: 'dynamic EOA signature indexed',
+        signatureType: SignatureType.EOADynamic,
+        indexed: true
+      }, {
+        name: 'dynamic EOA signature not indexed',
+        signatureType: SignatureType.EOADynamic,
+        indexed: false
+      }, {
+        name: 'ERC1271 signature indexed',
+        signatureType: SignatureType.ERC1271,
+        indexed: true
+      }, {
+        name: 'ERC1271 signature not indexed',
+        signatureType: SignatureType.ERC1271,
         indexed: false
       }]
 
       options.map((o) => {
         context(o.name, () => {
+          beforeEach(async () => {
+            owner2a = new ethers.Wallet(ethers.utils.randomBytes(32))
+            owner2b = new ethers.Wallet(ethers.utils.randomBytes(32))
+            owner2c = new ethers.Wallet(ethers.utils.randomBytes(32))
+  
+            config = [{ weight: 1, address: owner2a.address, signer: owner2a }, { weight: 1, address: owner2b.address, signer: owner2b }, { weight: 1, address: owner2c.address }]
+            salt2 = encodeImageHash(threshold, config)
+            wallet2addr = addressOf(factory.address, module.address, salt2)
+  
+            message = ethers.utils.hexlify(ethers.utils.randomBytes(96))
+            digest = ethers.utils.keccak256(message)
+            preSubDigest = ethers.utils.solidityPack(
+              ['string', 'uint256', 'address', 'bytes'],
+              ['\x19\x01', networkId, wallet2addr, digest]
+            )
+  
+            switch (o.signatureType) {
+              case SignatureType.EOA:
+                signature = await walletMultiSign([{ weight: 1, owner: owner2a }, { weight: 1, owner: owner2b }, { weight: 1, owner: owner2c.address }], threshold, preSubDigest)
+                break
+              case SignatureType.EOADynamic:
+                signature = await walletMultiSign([{ weight: 1, owner: owner2a }, { weight: 1, owner: owner2b }, { weight: 1, owner: owner2c.address }], threshold, preSubDigest, true)
+                break
+              case SignatureType.ERC1271:
+                // Deploy nested sequence wallet
+                const ownern2a = new ethers.Wallet(ethers.utils.randomBytes(32))
+                const ownern2b = new ethers.Wallet(ethers.utils.randomBytes(32))
+                const nconfig = [{ weight: 2, address: ownern2a.address, signer: ownern2a }, { weight: 1, address: ownern2b.address }]
+                const nsalt = encodeImageHash(2, nconfig)
+                await factory.deploy(module.address, nsalt)
+                const nwalletaddr = addressOf(factory.address, module.address, nsalt)
+                owner2b = { address: nwalletaddr, signMessage: async (msg) => {
+                  const nsubdigest = ethers.utils.solidityPack(
+                    ['string', 'uint256', 'address', 'bytes'],
+                    ['\x19\x01', networkId, nwalletaddr, msg]
+                  )
+
+                  return `${await walletMultiSign([{ weight: 2, owner: ownern2a }, { weight: 1, owner: ownern2b.address }], threshold, nsubdigest)}03`
+                } } as any
+
+                // Re-create wallet
+                config = [{ weight: 1, address: owner2a.address, signer: owner2a }, { weight: 1, address: owner2b.address, signer: owner2b }, { weight: 1, address: owner2c.address }]
+                salt2 = encodeImageHash(threshold, config)
+                wallet2addr = addressOf(factory.address, module.address, salt2)
+                preSubDigest = ethers.utils.solidityPack(
+                  ['string', 'uint256', 'address', 'bytes'],
+                  ['\x19\x01', networkId, wallet2addr, digest]
+                )
+
+                signature = await walletMultiSign([{ weight: 1, owner: owner2a }, { weight: 1, owner: owner2b }, { weight: 1, owner: owner2c.address }], threshold, preSubDigest)
+                break
+            }
+          })
+
           it('Should publish signers of a non-deployed wallet', async () => {
             const tx = await signAndExecuteMetaTx(
               wallet,
@@ -2051,7 +2109,6 @@ contract('MainModule', (accounts: string[]) => {
 
             expect((await requireUtils.lastWalletUpdate(wallet2addr)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
           })
-    
           it('Should publish signers of a deployed wallet', async () => {
             await factory.deploy(module.address, salt2)
             const tx = await signAndExecuteMetaTx(
@@ -2135,7 +2192,6 @@ contract('MainModule', (accounts: string[]) => {
 
             expect((await requireUtils.lastWalletUpdate(wallet2addr)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
           })
-    
           it('Should fail to publish signers with invalid part', async () => {
             const tx = signAndExecuteMetaTx(
               wallet,
