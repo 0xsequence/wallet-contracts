@@ -50,6 +50,7 @@ library LibBytes {
       b := and(shr(240, word), 0xff)
       newIndex := add(index, 2)
     }
+    assert(newIndex > index);
     require(newIndex <= data.length, "LibBytes#readUint8Uint8: OUT_OF_BOUNDS");
   }
 
@@ -72,6 +73,7 @@ library LibBytes {
       a := and(shr(96, word), 0xffffffffffffffffffffffffffffffffffffffff)
       newIndex := add(index, 20)
     }
+    assert(newIndex > index);
     require(newIndex <= data.length, "LibBytes#readAddress: OUT_OF_BOUNDS");
   }
 
@@ -97,6 +99,7 @@ library LibBytes {
       mstore(add(a, 66), mload(add(offset, 34)))
       newIndex := add(index, 66)
     }
+    assert(newIndex > index);
     require(newIndex <= data.length, "LibBytes#readBytes66: OUT_OF_BOUNDS");
   }
 
@@ -145,6 +148,7 @@ library LibBytes {
       a := and(shr(240, word), 0xffff)
       newIndex := add(index, 2)
     }
+    assert(newIndex > index);
     require(newIndex <= data.length, "LibBytes#readUint16: OUT_OF_BOUNDS");
   }
 
@@ -185,6 +189,7 @@ library LibBytes {
       newIndex := add(index, size)
     }
 
+    assert(newIndex >= index);
     require(newIndex <= data.length, "LibBytes#readBytes: OUT_OF_BOUNDS");
   }
 }
