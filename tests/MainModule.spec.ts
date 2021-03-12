@@ -2725,6 +2725,26 @@ contract('MainModule', (accounts: string[]) => {
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
             await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
           })
+          it('Should reject signature of invalid length', async () => {
+            const data = encodeMetaTransactionsData(wallet.address, [transaction], networkId, await nextNonce(wallet))
+            const eoasignature = ethers.utils.arrayify(await ethSign(owner2, data, false))
+
+            const accounts = [
+              {
+                weight: ownerweight,
+                owner: owner1.address
+              },
+              {
+                weight: ownerweight,
+                owner: owner2.address,
+                signature: [ ...eoasignature.slice(0, -1), 75, 2]
+              }
+            ]
+
+            const signature = await multiSignMetaTransactions(wallet, accounts, threshold, [transaction], networkId, await nextNonce(wallet), mode.force)
+            const tx = wallet.execute([transaction], await nextNonce(wallet), signature)
+            await expect(tx).to.be.rejectedWith(RevertError("SignatureValidator#recoverSigner: invalid signature length"))
+          })
         })
         context('With 2/2 wallet', () => {
           let owner1

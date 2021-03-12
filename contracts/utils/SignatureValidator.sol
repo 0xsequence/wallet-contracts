@@ -42,6 +42,7 @@ contract SignatureValidator {
     bytes32 _hash,
     bytes memory _signature
   ) internal pure returns (address signer) {
+    require(_signature.length == 66, "SignatureValidator#recoverSigner: invalid signature length");
     uint256 signatureType = uint8(_signature[_signature.length - 1]);
 
     // Variables are not scoped in Solidity.
