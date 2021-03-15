@@ -41,6 +41,7 @@ contract RequireUtils is SignatureValidator {
 
   mapping(address => uint256) public lastSignerUpdate;
   mapping(address => uint256) public lastWalletUpdate;
+  mapping(bytes32 => uint256) public lastImageHashUpdate;
 
   constructor(address _factory, address _mainModule) public {
     FACTORY = _factory;
@@ -96,6 +97,9 @@ contract RequireUtils is SignatureValidator {
     if (_index) {
       // Register last event for given wallet
       lastWalletUpdate[_wallet] = block.number;
+
+      // Register last event for image-hash
+      lastImageHashUpdate[imageHash] = block.number;
     }
   }
 
@@ -211,6 +215,9 @@ contract RequireUtils is SignatureValidator {
     if (_index) {
       // Register last event for given wallet
       lastWalletUpdate[_wallet] = block.number;
+
+      // Register last event for image-hash
+      lastImageHashUpdate[imageHash] = block.number;
     }
   }
 
