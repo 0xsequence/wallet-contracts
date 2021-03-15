@@ -22,6 +22,7 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 
 interface RequireUtilsInterface extends ethers.utils.Interface {
   functions: {
+    "lastImageHashUpdate(bytes32)": FunctionFragment;
     "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
     "publishConfig(address,uint256,tuple[],bool)": FunctionFragment;
@@ -30,6 +31,10 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     "requireNonExpired(uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "lastImageHashUpdate",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "lastSignerUpdate",
     values: [string]
@@ -60,6 +65,10 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "lastImageHashUpdate",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "lastSignerUpdate",
     data: BytesLike
@@ -108,6 +117,16 @@ export class RequireUtils extends Contract {
   interface: RequireUtilsInterface;
 
   functions: {
+    lastImageHashUpdate(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "lastImageHashUpdate(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     lastSignerUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -185,6 +204,16 @@ export class RequireUtils extends Contract {
     ): Promise<[void]>;
   };
 
+  lastImageHashUpdate(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "lastImageHashUpdate(bytes32)"(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   lastSignerUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   "lastSignerUpdate(address)"(
@@ -256,6 +285,16 @@ export class RequireUtils extends Contract {
   ): Promise<void>;
 
   callStatic: {
+    lastImageHashUpdate(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastImageHashUpdate(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastSignerUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -345,6 +384,16 @@ export class RequireUtils extends Contract {
   };
 
   estimateGas: {
+    lastImageHashUpdate(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "lastImageHashUpdate(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastSignerUpdate(
       arg0: string,
       overrides?: CallOverrides
@@ -423,6 +472,16 @@ export class RequireUtils extends Contract {
   };
 
   populateTransaction: {
+    lastImageHashUpdate(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "lastImageHashUpdate(bytes32)"(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     lastSignerUpdate(
       arg0: string,
       overrides?: CallOverrides
