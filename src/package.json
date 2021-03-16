@@ -1,0 +1,21 @@
+{
+  "name": "@0xsequence/wallet-contracts",
+  "version": "1.5.0",
+  "description": "Sequence Smart Wallet contracts",
+  "repository": "https://github.com/0xsequence/wallet-contracts",
+  "homepage": "https://sequence.build",
+  "license": "Apache-2.0",
+  "scripts": {
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "keywords": [
+    "Ethereum",
+    "Sequence",
+    "Wallet",
+    "Smart Wallet",
+    "Meta Transactions"
+  ]
+}

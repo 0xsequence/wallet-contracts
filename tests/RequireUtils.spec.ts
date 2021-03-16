@@ -34,7 +34,7 @@ contract('Require utils', (accounts: string[]) => {
     // Deploy MainModule
     module = await MainModuleArtifact.new(factory.address)
     // Get network ID
-    networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
+    networkId = process.env.NET_ID ? parseInt(process.env.NET_ID) : await web3.eth.net.getId()
     // Deploy expirable util
     requireUtils = await RequireUtilsArtifact.new(factory.address, module.address)
   })

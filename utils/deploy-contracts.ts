@@ -8,9 +8,9 @@ import {
   MainModuleUpgradable__factory,
   GuestModule__factory,
   Factory__factory
-} from '../typings/contracts'
+} from 'typings/contracts'
 
-import { UniversalDeployer } from '@arcadeum/deployer'
+import { UniversalDeployer } from '@0xsequence/deployer'
 import { ContractFactory, BigNumber, providers } from 'ethers'
 
 const prompt = ora()
@@ -24,9 +24,9 @@ const prompt = ora()
  *   4. Deploy Guest Module via UD
  */
 
-const provider = new providers.Web3Provider(web3.currentProvider)
+const provider = new providers.Web3Provider(network.provider.send)
 const signer = provider.getSigner()
-const universalDeployer = new UniversalDeployer(network.name, signer)
+const universalDeployer = new UniversalDeployer(network.name, signer.provider)
 const txParams = {
   gasLimit: 6000000,
   gasPrice: BigNumber.from(10)
