@@ -30,11 +30,15 @@
 
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+
+    "paths": {
+      "typings/*": ["src/typings/*"],
+    }
   },
 
   "include": [
-    "tests", "typings", "utils"
+    "src/typings", "tests", "utils"
   ],
 
   "files": ["./hardhat.config.ts"],
