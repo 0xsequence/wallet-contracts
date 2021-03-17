@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
 import { BytesLike, BigNumberish } from 'ethers'
-import { MainModule } from 'typings/contracts/MainModule'
+import { MainModule } from 'src/gen/typechain'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 // createTestWallet creates a new wallet

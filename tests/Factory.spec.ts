@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
 import { expect, addressOf } from './utils'
 
-import { ModuleMock, Factory } from 'typings/contracts'
+import { ModuleMock, Factory } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 

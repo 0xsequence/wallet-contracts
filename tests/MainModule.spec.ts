@@ -30,7 +30,7 @@ import {
   HookMock,
   DelegateCallMock,
   GasBurnerMock
-} from 'typings/contracts'
+} from 'src/gen/typechain'
 
 import { BigNumberish } from 'ethers'
 

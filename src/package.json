@@ -1,11 +1,16 @@
 {
   "name": "@0xsequence/wallet-contracts",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Sequence Smart Wallet contracts",
   "repository": "https://github.com/0xsequence/wallet-contracts",
   "homepage": "https://sequence.build",
   "license": "Apache-2.0",
+  "main": "gen/adapter/index.js",
+  "types": "gen/typechain/index.ts",
   "scripts": {
+  },
+  "optionalDependencies": {
+    "ethers": "^5.0.32"
   },
   "dependencies": {
   },

@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
 import { expect, RevertError } from './utils'
 
-import { GuestModule, CallReceiverMock, HookCallerMock, MainModuleUpgradable } from 'typings/contracts'
+import { GuestModule, CallReceiverMock, HookCallerMock, MainModuleUpgradable } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 

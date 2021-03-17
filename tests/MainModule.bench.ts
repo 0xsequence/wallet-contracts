@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
 import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils'
 
-import { MainModule, Factory } from 'typings/contracts'
+import { MainModule, Factory } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 

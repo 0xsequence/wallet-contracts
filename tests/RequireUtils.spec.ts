@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce } from './utils'
 
-import { MainModule, Factory, RequireUtils, CallReceiverMock } from 'typings/contracts'
+import { MainModule, Factory, RequireUtils, CallReceiverMock } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
