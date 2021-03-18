@@ -1,4 +1,4 @@
-import { network, web3, run, config } from 'hardhat'
+import { network, run, config, tenderly } from 'hardhat'
 import * as _ from 'lodash'
 import ora from 'ora'
 
@@ -8,10 +8,11 @@ import {
   MainModuleUpgradable__factory,
   GuestModule__factory,
   Factory__factory
-} from 'typings/contracts'
+} from '../src/gen/typechain'
 
 import { UniversalDeployer } from '@0xsequence/deployer'
 import { ContractFactory, BigNumber, providers } from 'ethers'
+import fs from 'fs'
 
 const prompt = ora()
 
@@ -34,13 +35,27 @@ const txParams = {
     .mul(16)
 }
 
-const attempVerify = async <T extends ContractFactory>(_: new () => T, address: string, ...args: Parameters<T["deploy"]>) => {
+const attempVerify = async <T extends ContractFactory>(name: string, _: new () => T, address: string, ...args: Parameters<T["deploy"]>) => {
   try {
     await run("verify:verify", {
       address: address,
       constructorArguments: args,
     })
   } catch {}
+
+  try {
+    await tenderly.verify({
+      name: name,
+      address: address,
+    })
+  } catch {}
+}
+
+const buildNetworkJson = (...contracts: { name: string, address: string }[]) => {
+  return contracts.map((c) => ({
+    contractName: c.name,
+    address: c.address
+  }))
 }
 
 const main = async () => {
@@ -55,20 +70,24 @@ const main = async () => {
   const sequenceUtils = await universalDeployer.deploy('SequenceUtils', SequenceUtils__factory, txParams, 0, walletFactory.address, mainModule.address)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
-  await universalDeployer.registerDeployment()
+  fs.writeFileSync(`./src/networks/${network.name}.json`, JSON.stringify(buildNetworkJson(
+    { name: "WalletFactory", address: walletFactory.address },
+    { name: "MainModule", address: mainModule.address },
+    { name: "MainModuleUpgradable", address: mainModuleUpgradeable.address },
+    { name: "GuestModule", address: guestModule.address },
+    { name: "SequenceUtils", address: sequenceUtils.address },
+  ), null, 2))
   prompt.succeed()
 
-  if (config.etherscan) {
-    prompt.start(`verifying contracts on etherscan`)
+  prompt.start(`verifying contracts`)
 
-    await attempVerify(Factory__factory, walletFactory.address)
-    await attempVerify(MainModule__factory, mainModule.address, walletFactory.address)
-    await attempVerify(MainModuleUpgradable__factory, mainModuleUpgradeable.address)
-    await attempVerify(GuestModule__factory, guestModule.address)
-    await attempVerify(SequenceUtils__factory, sequenceUtils.address, walletFactory.address, mainModule.address)
+  await attempVerify("Factory", Factory__factory, walletFactory.address)
+  await attempVerify("MainModule", MainModule__factory, mainModule.address, walletFactory.address)
+  await attempVerify("MainModuleUpgradable", MainModuleUpgradable__factory, mainModuleUpgradeable.address)
+  await attempVerify("GuestModule", GuestModule__factory, guestModule.address)
+  await attempVerify("SequenceUtils", SequenceUtils__factory, sequenceUtils.address, walletFactory.address, mainModule.address)
 
-    prompt.succeed()
-  }
+  prompt.succeed()
 }
 
 // We recommend this pattern to be able to use async/await everywhere
