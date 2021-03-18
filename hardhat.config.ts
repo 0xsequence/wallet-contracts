@@ -5,6 +5,8 @@ import '@nomiclabs/hardhat-truffle5'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-web3'
 import '@nomiclabs/hardhat-etherscan'
+import "@tenderly/hardhat-tenderly"
+
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
 
@@ -56,6 +58,10 @@ const config: HardhatUserConfig = {
     currency: 'USD',
     gasPrice: 21,
     showTimeSpent: true
+  },
+  tenderly: {
+    project: "horizon/sequence-dev-1",
+    username: "Agusx1211-horizon",
   }
 }
 
