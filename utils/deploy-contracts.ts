@@ -12,6 +12,7 @@ import {
 
 import { UniversalDeployer } from '@0xsequence/deployer'
 import { ContractFactory, BigNumber, providers } from 'ethers'
+import fs from 'fs'
 
 const prompt = ora()
 
@@ -50,6 +51,13 @@ const attempVerify = async <T extends ContractFactory>(name: string, _: new () =
   } catch {}
 }
 
+const buildNetworkJson = (...contracts: { name: string, address: string }[]) => {
+  return contracts.map((c) => ({
+    contractName: c.name,
+    address: c.address
+  }))
+}
+
 const main = async () => {
   prompt.info(`Network Name:           ${network.name}`)
   prompt.info(`Local Deployer Address: ${await signer.getAddress()}`)
@@ -62,7 +70,13 @@ const main = async () => {
   const sequenceUtils = await universalDeployer.deploy('SequenceUtils', SequenceUtils__factory, txParams, 0, walletFactory.address, mainModule.address)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
-  await universalDeployer.registerDeployment()
+  fs.writeFileSync(`./src/networks/${network.name}.json`, JSON.stringify(buildNetworkJson(
+    { name: "WalletFactory", address: walletFactory.address },
+    { name: "MainModule", address: mainModule.address },
+    { name: "MainModuleUpgradable", address: mainModuleUpgradeable.address },
+    { name: "GuestModule", address: guestModule.address },
+    { name: "SequenceUtils", address: sequenceUtils.address },
+  ), null, 2))
   prompt.succeed()
 
   prompt.start(`verifying contracts`)
