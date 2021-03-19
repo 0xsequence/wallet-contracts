@@ -3,7 +3,7 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic'
+type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum-testnet'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -27,6 +27,9 @@ export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig
 
         case 'matic':
           return 'https://rpc-mainnet.matic.network'
+
+        case 'arbitrum-testnet':
+          return 'https://kovan3.arbitrum.io/rpc'
 
         default:
           return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
