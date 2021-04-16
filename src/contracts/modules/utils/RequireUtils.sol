@@ -41,6 +41,7 @@ contract RequireUtils is SignatureValidator {
 
   mapping(address => uint256) public lastSignerUpdate;
   mapping(address => uint256) public lastWalletUpdate;
+  mapping(address => bytes32) public knownImageHashes;
   mapping(bytes32 => uint256) public lastImageHashUpdate;
 
   constructor(address _factory, address _mainModule) public {
@@ -100,6 +101,22 @@ contract RequireUtils is SignatureValidator {
 
       // Register last event for image-hash
       lastImageHashUpdate[imageHash] = block.number;
+
+      // Register known image-hash for counter-factual wallet
+      address counterFactualAddress = address(
+        uint256(
+          keccak256(
+            abi.encodePacked(
+              byte(0xff),
+              FACTORY,
+              imageHash,
+              INIT_CODE_HASH
+            )
+          )
+        )
+      );
+
+      knownImageHashes[counterFactualAddress] = imageHash;
     }
   }
 
