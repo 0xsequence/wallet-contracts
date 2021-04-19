@@ -29,7 +29,7 @@ export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig
           return 'https://rpc-mainnet.matic.network'
 
         case 'arbitrum-testnet':
-          return 'https://kovan3.arbitrum.io/rpc'
+          return 'https://kovan4.arbitrum.io/rpc'
 
         default:
           return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
