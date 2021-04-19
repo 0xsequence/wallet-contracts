@@ -36,6 +36,7 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     "callGasPrice()": FunctionFragment;
     "callOrigin()": FunctionFragment;
     "callTimestamp()": FunctionFragment;
+    "knownImageHashes(address)": FunctionFragment;
     "lastImageHashUpdate(bytes32)": FunctionFragment;
     "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
@@ -98,6 +99,10 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "callTimestamp",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "knownImageHashes",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "lastImageHashUpdate",
@@ -194,6 +199,10 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "callOrigin", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "callTimestamp",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "knownImageHashes",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -368,6 +377,16 @@ export class SequenceUtils extends Contract {
     callTimestamp(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    knownImageHashes(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
     lastImageHashUpdate(
       arg0: BytesLike,
@@ -551,6 +570,13 @@ export class SequenceUtils extends Contract {
 
   "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+  knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+  "knownImageHashes(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   lastImageHashUpdate(
     arg0: BytesLike,
     overrides?: CallOverrides
@@ -726,6 +752,13 @@ export class SequenceUtils extends Contract {
     callTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<string>;
 
     lastImageHashUpdate(
       arg0: BytesLike,
@@ -939,6 +972,16 @@ export class SequenceUtils extends Contract {
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    knownImageHashes(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastImageHashUpdate(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -1140,6 +1183,16 @@ export class SequenceUtils extends Contract {
     callTimestamp(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "callTimestamp()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    knownImageHashes(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     lastImageHashUpdate(
       arg0: BytesLike,

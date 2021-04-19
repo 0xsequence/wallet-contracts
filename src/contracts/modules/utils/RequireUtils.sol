@@ -41,6 +41,7 @@ contract RequireUtils is SignatureValidator {
 
   mapping(address => uint256) public lastSignerUpdate;
   mapping(address => uint256) public lastWalletUpdate;
+  mapping(address => bytes32) public knownImageHashes;
   mapping(bytes32 => uint256) public lastImageHashUpdate;
 
   constructor(address _factory, address _mainModule) public {
@@ -89,6 +90,9 @@ contract RequireUtils is SignatureValidator {
           )
         )
       ) == _wallet, "RequireUtils#publishConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
+
+      // Register known image-hash for counter-factual wallet
+      if (_index) knownImageHashes[_wallet] = imageHash;
     }
 
     // Emit event for easy config retrieval
@@ -218,6 +222,9 @@ contract RequireUtils is SignatureValidator {
 
       // Register last event for image-hash
       lastImageHashUpdate[imageHash] = block.number;
+
+      // Register known image-hash for counter-factual wallet
+      knownImageHashes[_wallet] = imageHash;
     }
   }
 

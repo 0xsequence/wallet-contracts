@@ -1665,6 +1665,8 @@ contract('MainModule', (accounts: string[]) => {
         const blockHeight2 = await requireUtils.lastImageHashUpdate(salt2)
         expect(blockHeight1.toNumber()).to.equal(0)
         expect(blockHeight2.toNumber()).to.equal(0)
+
+        expect(await requireUtils.knownImageHashes(wallet2addr)).to.equal(ethers.constants.HashZero)
       })
       it('Should publish configuration of deployed wallet', async () => {
         await factory.deploy(module.address, salt2)
@@ -1696,6 +1698,8 @@ contract('MainModule', (accounts: string[]) => {
         const blockHeight2 = await requireUtils.lastImageHashUpdate(salt2)
         expect(blockHeight1.toNumber()).to.equal(0)
         expect(blockHeight2.toNumber()).to.equal(0)
+
+        expect(await requireUtils.knownImageHashes(wallet2addr)).to.equal(ethers.constants.HashZero)
       })
       it('Should fail to publish wrong configuraiton of a non-deployed wallet', async () => {
         const tx = signAndExecuteMetaTx(
@@ -1788,6 +1792,8 @@ contract('MainModule', (accounts: string[]) => {
         const blockHeight2 = await requireUtils.lastImageHashUpdate(salt2)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight1.toNumber())
         expect(blockHeight1.toNumber()).to.equal(blockHeight2.toNumber())
+
+        expect(await requireUtils.knownImageHashes(wallet2addr)).to.equal(salt2)
       })
       it('Should publish configuration of a deployed wallet', async () => {
         await factory.deploy(module.address, salt2)
@@ -1819,6 +1825,8 @@ contract('MainModule', (accounts: string[]) => {
         const blockHeight2 = await requireUtils.lastImageHashUpdate(salt2)
         expect((tx as any).receipt.blockNumber).to.equal(blockHeight1.toNumber())
         expect(blockHeight1.toNumber()).to.equal(blockHeight2.toNumber())
+
+        expect(await requireUtils.knownImageHashes(wallet2addr)).to.equal(salt2)
       })
       it('Should publish configuration of an updated wallet', async () => {
         await factory.deploy(module.address, salt2)
@@ -1890,6 +1898,9 @@ contract('MainModule', (accounts: string[]) => {
         expect(blockHeight1.toNumber()).to.equal(blockHeight2.toNumber())
 
         expect((await requireUtils.lastImageHashUpdate(salt2)).toNumber()).to.equal(0)
+
+        expect(await requireUtils.knownImageHashes(wallet2addr)).to.equal(ethers.constants.HashZero)
+        expect(await requireUtils.knownImageHashes(addressOf(factory.address, module.address, newImageHash))).to.equal(ethers.constants.HashZero)
       })
       it('Should fail to publish wrong configuration of a non-deployed wallet', async () => {
         const tx = signAndExecuteMetaTx(
@@ -2127,6 +2138,7 @@ contract('MainModule', (accounts: string[]) => {
 
             expect((await requireUtils.lastWalletUpdate(wallet2addr)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
             expect((await requireUtils.lastImageHashUpdate(salt2)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+            expect(await requireUtils.knownImageHashes(wallet2addr)).to.equal(o.indexed ? salt2 : ethers.constants.HashZero)
           })
           it('Should publish signers of a deployed wallet', async () => {
             await factory.deploy(module.address, salt2)
@@ -2211,6 +2223,7 @@ contract('MainModule', (accounts: string[]) => {
 
             expect((await requireUtils.lastWalletUpdate(wallet2addr)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
             expect((await requireUtils.lastImageHashUpdate(salt2)).toNumber()).to.equal(o.indexed ? (tx as any).receipt.blockNumber : 0)
+            expect(await requireUtils.knownImageHashes(wallet2addr)).to.equal(o.indexed ? salt2 : ethers.constants.HashZero)
           })
           it('Should fail to publish signers with invalid part', async () => {
             const tx = signAndExecuteMetaTx(

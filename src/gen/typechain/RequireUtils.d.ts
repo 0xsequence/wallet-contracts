@@ -21,6 +21,7 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface RequireUtilsInterface extends ethers.utils.Interface {
   functions: {
+    "knownImageHashes(address)": FunctionFragment;
     "lastImageHashUpdate(bytes32)": FunctionFragment;
     "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
@@ -30,6 +31,10 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     "requireNonExpired(uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "knownImageHashes",
+    values: [string]
+  ): string;
   encodeFunctionData(
     functionFragment: "lastImageHashUpdate",
     values: [BytesLike]
@@ -64,6 +69,10 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "knownImageHashes",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "lastImageHashUpdate",
     data: BytesLike
@@ -146,6 +155,16 @@ export class RequireUtils extends Contract {
   interface: RequireUtilsInterface;
 
   functions: {
+    knownImageHashes(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
     lastImageHashUpdate(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -233,6 +252,13 @@ export class RequireUtils extends Contract {
     ): Promise<[void]>;
   };
 
+  knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+  "knownImageHashes(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   lastImageHashUpdate(
     arg0: BytesLike,
     overrides?: CallOverrides
@@ -314,6 +340,13 @@ export class RequireUtils extends Contract {
   ): Promise<void>;
 
   callStatic: {
+    knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
     lastImageHashUpdate(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -424,6 +457,16 @@ export class RequireUtils extends Contract {
   };
 
   estimateGas: {
+    knownImageHashes(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     lastImageHashUpdate(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -512,6 +555,16 @@ export class RequireUtils extends Contract {
   };
 
   populateTransaction: {
+    knownImageHashes(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "knownImageHashes(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     lastImageHashUpdate(
       arg0: BytesLike,
       overrides?: CallOverrides
