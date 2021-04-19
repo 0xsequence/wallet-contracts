@@ -90,6 +90,9 @@ contract RequireUtils is SignatureValidator {
           )
         )
       ) == _wallet, "RequireUtils#publishConfig: UNEXPECTED_COUNTERFACTUAL_IMAGE_HASH");
+
+      // Register known image-hash for counter-factual wallet
+      if (_index) knownImageHashes[_wallet] = imageHash;
     }
 
     // Emit event for easy config retrieval
@@ -101,22 +104,6 @@ contract RequireUtils is SignatureValidator {
 
       // Register last event for image-hash
       lastImageHashUpdate[imageHash] = block.number;
-
-      // Register known image-hash for counter-factual wallet
-      address counterFactualAddress = address(
-        uint256(
-          keccak256(
-            abi.encodePacked(
-              byte(0xff),
-              FACTORY,
-              imageHash,
-              INIT_CODE_HASH
-            )
-          )
-        )
-      );
-
-      knownImageHashes[counterFactualAddress] = imageHash;
     }
   }
 
@@ -235,6 +222,9 @@ contract RequireUtils is SignatureValidator {
 
       // Register last event for image-hash
       lastImageHashUpdate[imageHash] = block.number;
+
+      // Register known image-hash for counter-factual wallet
+      knownImageHashes[_wallet] = imageHash;
     }
   }
 
