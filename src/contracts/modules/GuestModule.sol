@@ -18,11 +18,11 @@ import "../interfaces/IERC1271Wallet.sol";
 
 
 /**
- * GuestModule implements an Arcadeum wallet without signatures, nonce or replay protection.
+ * GuestModule implements an Sequence wallet without signatures, nonce or replay protection.
  * executing transactions using this wallet is not an authenticated process, and can be done by any address.
  *
  * @notice This contract is completely public with no security, designed to execute pre-signed transactions
- *   and use Arcadeum tools without using the wallets.
+ *   and use Sequence tools without using the wallets.
  */
 contract GuestModule is
   ModuleAuth,
