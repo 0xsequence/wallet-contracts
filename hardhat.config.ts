@@ -40,6 +40,7 @@ const config: HardhatUserConfig = {
     goerli: networkConfig('goerli'),
     matic: networkConfig('matic'),
     mumbai: networkConfig('mumbai'),
+    arbitrum: networkConfig('arbitrum'),
     arbitrumTestnet: networkConfig('arbitrum-testnet'),
     ganache: ganacheNetwork,
     coverage: {

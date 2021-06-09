@@ -3,7 +3,7 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum-testnet'
+type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum' | 'arbitrum-testnet'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -17,24 +17,45 @@ export const getEnvConfig = (env: string) => {
   return envLoad.parsed || {}
 }
 
+export const networkGasMultiplier = (network: EthereumNetworksTypes): number => {
+  switch (network) {
+    case 'arbitrum-testnet':
+    case 'arbitrum':
+      return 5
+
+    default:
+      return 1
+  }
+}
+
+export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
+  const config = getEnvConfig('PROD')
+
+  switch (network) {
+    case 'mumbai':
+      return 'https://rpc-mumbai.matic.today/'
+    
+    case 'ropsten':
+      return "http://192.168.122.1:8546"
+
+    case 'matic':
+      return 'https://rpc-mainnet.matic.network'
+
+    case 'arbitrum-testnet':
+      return 'https://rinkeby.arbitrum.io/rpc'
+    
+    case 'arbitrum':
+      return 'https://arb1.arbitrum.io/rpc'
+
+    default:
+      return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
+  }
+}
+
 export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig & { etherscan?: string } => {
   const config = getEnvConfig('PROD')
   return {
-    url: (function(network) {
-      switch (network) {
-        case 'mumbai':
-          return 'https://rpc-mumbai.matic.today/'
-
-        case 'matic':
-          return 'https://rpc-mainnet.matic.network'
-
-        case 'arbitrum-testnet':
-          return 'https://kovan4.arbitrum.io/rpc'
-
-        default:
-          return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
-      }
-    })(network),
+    url: networkRpcUrl(network),
     accounts: {
       mnemonic: config['ETH_MNEMONIC'],
       initialIndex: 0,
@@ -43,7 +64,7 @@ export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig
     },
     gas: 'auto',
     gasPrice: 'auto',
-    gasMultiplier: 1,
+    gasMultiplier: networkGasMultiplier(network),
     timeout: 20000,
     httpHeaders: {},
     etherscan: config['ETHERSCAN']
