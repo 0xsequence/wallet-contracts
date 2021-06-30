@@ -222,6 +222,56 @@ export async function walletMultiSign(
   )
 }
 
+export async function signAndEncodeMetaTxn(
+  wallet: MainModule,
+  owner: ethers.Wallet,
+  txs: {
+    delegateCall: boolean;
+    revertOnError: boolean;
+    gasLimit: BigNumberish;
+    target: string;
+    value: BigNumberish;
+    data: BytesLike;
+  }[],
+  networkId: BigNumberish,
+  nonce: BigNumberish | undefined = undefined,
+  forceDynamicSize: boolean = false
+) {
+  return multiSignAndEncodeMetaTxn(
+    wallet,
+    [{weight: 1, owner }],
+    1,
+    txs,
+    networkId,
+    nonce,
+    forceDynamicSize
+  )
+}
+
+export async function multiSignAndEncodeMetaTxn(
+  wallet: MainModule,
+  accounts: {
+    weight: BigNumberish,
+    owner: string | ethers.Wallet
+  }[],
+  threshold: BigNumberish,
+  txs: {
+    delegateCall: boolean;
+    revertOnError: boolean;
+    gasLimit: BigNumberish;
+    target: string;
+    value: BigNumberish;
+    data: BytesLike;
+  }[],
+  networkId: BigNumberish,
+  nonce: BigNumberish | undefined = undefined,
+  forceDynamicSize: boolean = false
+): Promise<string> {
+  if (!nonce) nonce = await nextNonce(wallet)
+  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize)
+  return wallet.contract.methods.execute(txs, nonce, signature).encodeABI()
+}
+
 export async function multiSignMetaTransactions(
   wallet: MainModule,
   accounts: {
