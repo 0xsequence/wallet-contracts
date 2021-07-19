@@ -3,8 +3,8 @@ pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./commons/ModuleIgnoreAuthUpgradable.sol";
+import "./commons/ModuleIgnoreNonceCalls.sol";
 import "./commons/ModuleHooks.sol";
-import "./commons/ModuleCalls.sol";
 import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
 
@@ -17,7 +17,7 @@ import "./commons/ModuleCreator.sol";
  */
 contract MainModuleGasEstimation is
   ModuleIgnoreAuthUpgradable,
-  ModuleCalls,
+  ModuleIgnoreNonceCalls,
   ModuleUpdate,
   ModuleHooks,
   ModuleCreator
@@ -35,7 +35,7 @@ contract MainModuleGasEstimation is
     bytes4 _interfaceID
   ) public override(
     ModuleIgnoreAuthUpgradable,
-    ModuleCalls,
+    ModuleIgnoreNonceCalls,
     ModuleUpdate,
     ModuleHooks,
     ModuleCreator
