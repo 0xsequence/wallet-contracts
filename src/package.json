@@ -1,6 +1,6 @@
 {
   "name": "@0xsequence/wallet-contracts",
-  "version": "1.9.1",
+  "version": "1.9.3",
   "description": "Sequence Smart Wallet contracts",
   "repository": "https://github.com/0xsequence/wallet-contracts",
   "homepage": "https://sequence.build",
