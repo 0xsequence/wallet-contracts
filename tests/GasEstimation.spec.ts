@@ -273,6 +273,30 @@ contract('Estimate gas usage', (accounts: string[]) => {
   
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 4000)
         })
+        it('Should estimate multiple transactions with bad nonce', async () => {
+          const transaction = [{
+            delegateCall: false,
+            revertOnError: true,
+            gasLimit: 0,
+            target: callReceiver.address,
+            value: ethers.constants.Zero,
+            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+          }, {
+            delegateCall: false,
+            revertOnError: true,
+            gasLimit: 0,
+            target: callReceiver.address,
+            value: ethers.constants.Zero,
+            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))).encodeABI()
+          }]
+  
+          const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId, 999999999)
+  
+          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
+          const gasUsed = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0) as any).receipt.gasUsed
+  
+          expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 4000)
+        })
         it('Should estimate multiple transactions with failing transactions', async () => {
           const altCallReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
           await altCallReceiver.setRevertFlag(true)
