@@ -12,6 +12,6 @@ contract RequireFreshSigner {
   }
 
   function requireFreshSigner(address _signer) external {
-    require(REQUIRE_UTILS.lastSignerUpdate(_signer) == 0, "RequireFreshSigner#requireFreshSigner: SIGNER_IN_OTHER_WALLET");
+    require(REQUIRE_UTILS.lastSignerUpdate(_signer) == 0, "RequireFreshSigner#requireFreshSigner: DUPLICATED_SIGNER");
   }
 }
