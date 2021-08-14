@@ -1026,7 +1026,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const storageValue = await web3.eth.getStorageAt(wallet.address, wallet.address)
 
-      expect(ethers.utils.getAddress(ethers.utils.hexStripZeros(storageValue))).to.equal(newImplementation.address)
+      expect(ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], storageValue)[0])).to.equal(newImplementation.address)
     })
   })
   describe('External calls', () => {
