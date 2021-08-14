@@ -7,7 +7,8 @@ import {
   SequenceUtils__factory,
   MainModuleUpgradable__factory,
   GuestModule__factory,
-  Factory__factory
+  Factory__factory,
+  RequireFreshSigner__factory
 } from '../src/gen/typechain'
 
 import { UniversalDeployer } from '@0xsequence/deployer'
@@ -68,6 +69,7 @@ const main = async () => {
   const mainModuleUpgradeable = await universalDeployer.deploy('MainModuleUpgradable', MainModuleUpgradable__factory, txParams)
   const guestModule = await universalDeployer.deploy('GuestModule', GuestModule__factory, txParams)
   const sequenceUtils = await universalDeployer.deploy('SequenceUtils', SequenceUtils__factory, txParams, 0, walletFactory.address, mainModule.address)
+  const requireFreshSignerLib = await universalDeployer.deploy('RequireFreshSignerLib', RequireFreshSigner__factory, txParams, 0, sequenceUtils.address)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
   fs.writeFileSync(`./src/networks/${network.name}.json`, JSON.stringify(buildNetworkJson(
@@ -76,6 +78,7 @@ const main = async () => {
     { name: "MainModuleUpgradable", address: mainModuleUpgradeable.address },
     { name: "GuestModule", address: guestModule.address },
     { name: "SequenceUtils", address: sequenceUtils.address },
+    { name: "RequireFreshSignerLib", address: requireFreshSignerLib.address }
   ), null, 2))
   prompt.succeed()
 
@@ -86,6 +89,7 @@ const main = async () => {
   await attempVerify("MainModuleUpgradable", MainModuleUpgradable__factory, mainModuleUpgradeable.address)
   await attempVerify("GuestModule", GuestModule__factory, guestModule.address)
   await attempVerify("SequenceUtils", SequenceUtils__factory, sequenceUtils.address, walletFactory.address, mainModule.address)
+  await attempVerify("RequireFreshSignerLib", RequireFreshSigner__factory, requireFreshSignerLib.address, sequenceUtils.address)
 
   prompt.succeed()
 }

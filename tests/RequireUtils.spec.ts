@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce } from './utils'
+import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce, walletSign } from './utils'
 
-import { MainModule, Factory, RequireUtils, CallReceiverMock } from 'src/gen/typechain'
+import { MainModule, Factory, RequireUtils, CallReceiverMock, RequireFreshSigner } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
@@ -9,6 +9,7 @@ const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
 const RequireUtilsArtifact = artifacts.require('RequireUtils')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
+const RequireFreshSignerArtifact = artifacts.require('RequireFreshSigner')
 
 import { web3 } from 'hardhat'
 
@@ -22,9 +23,11 @@ contract('Require utils', (accounts: string[]) => {
   let factory: Factory
   let module: MainModule
   let requireUtils: RequireUtils
+  let requireFreshSigner: RequireFreshSigner
 
   let owner: ethers.Wallet
   let wallet: MainModule
+  let salt: string
 
   let networkId: number
 
@@ -37,26 +40,125 @@ contract('Require utils', (accounts: string[]) => {
     networkId = process.env.NET_ID ? parseInt(process.env.NET_ID) : await web3.eth.net.getId()
     // Deploy expirable util
     requireUtils = await RequireUtilsArtifact.new(factory.address, module.address)
+    // Deploy require fresh signer lib
+    requireFreshSigner = await RequireFreshSignerArtifact.new(requireUtils.address)
   })
 
   beforeEach(async () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-    const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
+    salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
     await factory.deploy(module.address, salt)
     wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
   })
-  describe('Require min-nonce', () => {
-    const stubTxns = [
-      {
-        delegateCall: false,
-        revertOnError: true,
-        gasLimit: optimalGasLimit,
-        target: ethers.constants.AddressZero,
-        value: ethers.constants.Zero,
-        data: '0x'
-      }
-    ]
 
+  const stubTxns = [
+    {
+      delegateCall: false,
+      revertOnError: true,
+      gasLimit: optimalGasLimit,
+      target: ethers.constants.AddressZero,
+      value: ethers.constants.Zero,
+      data: '0x'
+    }
+  ]
+
+  describe('Require fresh signer', () => {
+    it('Should pass if signer is new', async () => {
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      await signAndExecuteMetaTx(wallet, owner, stubTxns, networkId)
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transactions = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: requireFreshSigner.address,
+          value: ethers.constants.Zero,
+          data: requireFreshSigner.contract.methods.requireFreshSigner(owner.address).encodeABI()
+        },
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        }
+      ]
+
+      await signAndExecuteMetaTx(wallet, owner, transactions, networkId)
+
+      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValB()).to.equal(valB)
+    })
+    it('Should fail if signer is not new', async () => {
+      const message = ethers.utils.hexlify(ethers.utils.randomBytes(96))
+      const digest = ethers.utils.keccak256(message)
+      const preSubDigest = ethers.utils.solidityPack(
+        ['string', 'uint256', 'address', 'bytes'],
+        ['\x19\x01', networkId, wallet.address, digest]
+      )
+
+      const signature = await walletSign(owner, preSubDigest)
+
+      await factory.deploy(module.address, salt)
+      await signAndExecuteMetaTx(
+        wallet,
+        owner,
+        [
+          {
+            delegateCall: false,
+            revertOnError: true,
+            gasLimit: ethers.constants.Zero,
+            target: requireUtils.address,
+            value: ethers.constants.Zero,
+            data: requireUtils.contract.methods
+              .publishInitialSigners(
+                wallet.address,
+                digest,
+                1,
+                signature,
+                true
+              )
+              .encodeABI()
+          }
+        ],
+        networkId
+      )
+
+      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      await signAndExecuteMetaTx(wallet, owner, stubTxns, networkId)
+
+      const valA = 5423
+      const valB = web3.utils.randomHex(120)
+
+      const transactions = [
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: requireFreshSigner.address,
+          value: ethers.constants.Zero,
+          data: requireFreshSigner.contract.methods.requireFreshSigner(owner.address).encodeABI()
+        },
+        {
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: optimalGasLimit,
+          target: callReceiver.address,
+          value: ethers.constants.Zero,
+          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        }
+      ]
+
+      const tx = signAndExecuteMetaTx(wallet, owner, transactions, networkId)
+      await expect(tx).to.be.rejectedWith(RevertError("RequireFreshSigner#requireFreshSigner: DUPLICATED_SIGNER"))
+    })
+  })
+  describe('Require min-nonce', () => {
     it('Should pass nonce increased from self-wallet', async () => {
       const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
       await signAndExecuteMetaTx(wallet, owner, stubTxns, networkId)
