@@ -52,10 +52,44 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
   }
 }
 
+export const networkChainId = (network: EthereumNetworksTypes): number => {
+  const config = getEnvConfig('PROD')
+
+  switch (network) {
+    case 'mumbai':
+      return 80001
+    
+    case 'ropsten':
+      return 3
+
+    case 'matic':
+      return 137
+
+    case 'arbitrum-testnet':
+      return 421611
+    
+    case 'arbitrum':
+      return 42161
+
+    case 'rinkeby':
+      return 4
+
+    case 'goerli':
+      return 5
+
+    case 'mainnet':
+      return 1
+
+    case 'kovan':
+      return 42
+  }
+}
+
 export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig & { etherscan?: string } => {
   const config = getEnvConfig('PROD')
   return {
     url: networkRpcUrl(network),
+    chainId: networkChainId(network),
     accounts: {
       mnemonic: config['ETH_MNEMONIC'],
       initialIndex: 0,
