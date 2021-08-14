@@ -34,12 +34,9 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
   switch (network) {
     case 'mumbai':
       return 'https://rpc-mumbai.matic.today/'
-    
-    case 'ropsten':
-      return "http://192.168.122.1:8546"
 
     case 'matic':
-      return 'https://rpc-mainnet.matic.network'
+      return 'https://nodes.sequence.app/matic'
 
     case 'arbitrum-testnet':
       return 'https://rinkeby.arbitrum.io/rpc'
