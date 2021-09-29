@@ -11,9 +11,10 @@ For more information see, [https://sequence.build](https://sequence.build)
 Please visit [https://sequence.app](https://sequence.app) to access the Sequence Wallet via your Web Browser, or
 download "Sequence Wallet" from the respective Apple/Google stores.
 
-You may also access or interface with a Sequence Wallet via [sequence.js](https://github.com/0xsequence/sequence.js). The
+You may also access, interface or develop your own Sequence Wallet via [sequence.js](https://github.com/0xsequence/sequence.js). The
 sequence.js library offers a full open source library to interact, create, deploy and manage a Sequence Smart Wallet Account,
-as defined by the contracts in this respository.
+as defined by the contracts in this respository. Also see [go-sequence](https://github.com/0xsequence/go-sequence) for an implementation
+in Go.
 
 
 ## Connecting your Dapp with Sequence Wallet
