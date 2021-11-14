@@ -35,6 +35,7 @@ interface MainModuleGasEstimationInterface extends ethers.utils.Interface {
     "readNonce(uint256)": FunctionFragment;
     "removeHook(bytes4)": FunctionFragment;
     "selfExecute(tuple[])": FunctionFragment;
+    "simulateExecute(tuple[])": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "updateImageHash(bytes32)": FunctionFragment;
     "updateImplementation(address)": FunctionFragment;
@@ -104,6 +105,19 @@ interface MainModuleGasEstimationInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "simulateExecute",
+    values: [
+      {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[]
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
@@ -145,6 +159,10 @@ interface MainModuleGasEstimationInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "removeHook", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "selfExecute",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "simulateExecute",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -397,6 +415,30 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    simulateExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "simulateExecute(tuple[])"(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     supportsInterface(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
@@ -590,6 +632,30 @@ export class MainModuleGasEstimation extends Contract {
   ): Promise<ContractTransaction>;
 
   "selfExecute(tuple[])"(
+    _txs: {
+      delegateCall: boolean;
+      revertOnError: boolean;
+      gasLimit: BigNumberish;
+      target: string;
+      value: BigNumberish;
+      data: BytesLike;
+    }[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  simulateExecute(
+    _txs: {
+      delegateCall: boolean;
+      revertOnError: boolean;
+      gasLimit: BigNumberish;
+      target: string;
+      value: BigNumberish;
+      data: BytesLike;
+    }[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "simulateExecute(tuple[])"(
     _txs: {
       delegateCall: boolean;
       revertOnError: boolean;
@@ -801,6 +867,44 @@ export class MainModuleGasEstimation extends Contract {
       }[],
       overrides?: CallOverrides
     ): Promise<void>;
+
+    simulateExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: CallOverrides
+    ): Promise<
+      ([boolean, boolean, string, BigNumber] & {
+        executed: boolean;
+        succeeded: boolean;
+        result: string;
+        gasUsed: BigNumber;
+      })[]
+    >;
+
+    "simulateExecute(tuple[])"(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: CallOverrides
+    ): Promise<
+      ([boolean, boolean, string, BigNumber] & {
+        executed: boolean;
+        succeeded: boolean;
+        result: string;
+        gasUsed: BigNumber;
+      })[]
+    >;
 
     supportsInterface(
       _interfaceID: BytesLike,
@@ -1039,6 +1143,30 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    simulateExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "simulateExecute(tuple[])"(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     supportsInterface(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
@@ -1236,6 +1364,30 @@ export class MainModuleGasEstimation extends Contract {
     ): Promise<PopulatedTransaction>;
 
     "selfExecute(tuple[])"(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    simulateExecute(
+      _txs: {
+        delegateCall: boolean;
+        revertOnError: boolean;
+        gasLimit: BigNumberish;
+        target: string;
+        value: BigNumberish;
+        data: BytesLike;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "simulateExecute(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;

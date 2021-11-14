@@ -22,6 +22,55 @@ contract MainModuleGasEstimation is
   ModuleHooks,
   ModuleCreator
 {
+  struct SimulateResult {
+    bool executed;
+    bool succeeded;
+    bytes result;
+    uint256 gasUsed;
+  }
+
+  /**
+   * @notice Simulate each transaction in a bundle for gas usage and execution result
+   * @param _txs Transactions to process
+   * @return The gas used and execution result for each transaction in the bundle
+   */
+  function simulateExecute(Transaction[] calldata _txs) public virtual returns (SimulateResult[] memory) {
+    SimulateResult[] memory results = new SimulateResult[](_txs.length);
+
+    // Execute transaction
+    for (uint256 i = 0; i < _txs.length; i++) {
+      Transaction memory transaction = _txs[i];
+
+      require(gasleft() >= transaction.gasLimit, "ModuleCalls#_execute: NOT_ENOUGH_GAS");
+
+      results[i].executed = true;
+
+      if (transaction.delegateCall) {
+        uint256 initialGas = gasleft();
+
+        (results[i].succeeded, results[i].result) = transaction.target.delegatecall{
+          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
+        }(transaction.data);
+
+        results[i].gasUsed = initialGas - gasleft();
+      } else {
+        uint256 initialGas = gasleft();
+
+        (results[i].succeeded, results[i].result) = transaction.target.call{
+          value: transaction.value,
+          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
+        }(transaction.data);
+
+        results[i].gasUsed = initialGas - gasleft();
+      }
+
+      if (!results[i].succeeded && _txs[i].revertOnError) {
+        break;
+      }
+    }
+
+    return results;
+  }
 
   /**
    * @notice Query if a contract implements an interface
