@@ -41,7 +41,7 @@ contract MainModuleGasEstimation is
     for (uint256 i = 0; i < _txs.length; i++) {
       Transaction memory transaction = _txs[i];
 
-      require(gasleft() >= transaction.gasLimit, "ModuleCalls#_execute: NOT_ENOUGH_GAS");
+      require(gasleft() >= transaction.gasLimit, "MainModuleGasEstimation#simulateExecute: NOT_ENOUGH_GAS");
 
       results[i].executed = true;
 
