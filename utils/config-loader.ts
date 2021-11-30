@@ -3,7 +3,7 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum' | 'arbitrum-testnet'
+type EthereumNetworksTypes = 'binance' | 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum' | 'arbitrum-testnet' | 'avalanche'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -43,6 +43,12 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
     
     case 'arbitrum':
       return 'https://arb1.arbitrum.io/rpc'
+    
+    case 'avalanche':
+      return 'https://api.avax.network/ext/bc/C/rpc'
+    
+    case 'binance':
+      return 'https://bsc-dataseed1.binance.org'
 
     default:
       return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
@@ -79,6 +85,12 @@ export const networkChainId = (network: EthereumNetworksTypes): number => {
 
     case 'kovan':
       return 42
+
+    case 'avalanche':
+      return 43114
+
+    case 'binance':
+      return 56
   }
 }
 

@@ -33,6 +33,7 @@ const config: HardhatUserConfig = {
     tests: '../tests'
   },
   networks: {
+    binance: networkConfig('binance'),
     mainnet: networkConfig('mainnet'),
     ropsten: networkConfig('ropsten'),
     rinkeby: networkConfig('rinkeby'),
@@ -42,6 +43,7 @@ const config: HardhatUserConfig = {
     mumbai: networkConfig('mumbai'),
     arbitrum: networkConfig('arbitrum'),
     arbitrumTestnet: networkConfig('arbitrum-testnet'),
+    avalanche: networkConfig('avalanche'),
     ganache: ganacheNetwork,
     coverage: {
       url: 'http://localhost:8555'
