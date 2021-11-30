@@ -39,7 +39,7 @@
   "devDependencies": {
     "@0xsequence/deployer": "^0.21.5",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
-    "@nomiclabs/hardhat-etherscan": "^2.1.4",
+    "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@tenderly/hardhat-tenderly": "^1.0.11",
