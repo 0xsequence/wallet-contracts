@@ -42,7 +42,7 @@ contract GapNonceUtils {
     // is above the current nonce
     require(
       _nonce > currentNonce,
-      "MainModule#_auth: INVALID_NONCE"
+      "GapNonceUtils#_requireGapNonce: INVALID_NONCE"
     );
 
     // Store new nonce value
