@@ -7,7 +7,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     o[k2] = m[k];
 }));
 exports.__esModule = true;
-exports.SequenceUtils__factory = exports.RequireUtils__factory = exports.MultiCallUtils__factory = exports.RequireFreshSigner__factory = exports.GasEstimator__factory = exports.MainModuleUpgradable__factory = exports.MainModuleGasEstimation__factory = exports.MainModule__factory = exports.GuestModule__factory = exports.ModuleUpdate__factory = exports.ModuleIgnoreNonceCalls__factory = exports.ModuleIgnoreAuthUpgradable__factory = exports.ModuleHooks__factory = exports.ModuleERC165__factory = exports.ModuleCreator__factory = exports.ModuleCalls__factory = exports.ModuleAuthUpgradable__factory = exports.ModuleAuth__factory = exports.IModuleUpdate__factory = exports.IModuleHooks__factory = exports.IModuleCreator__factory = exports.IModuleCalls__factory = exports.IModuleAuthUpgradable__factory = exports.ModuleMock__factory = exports.LibBytesImpl__factory = exports.HookMock__factory = exports.HookCallerMock__factory = exports.GasBurnerMock__factory = exports.ERC165CheckerMock__factory = exports.DelegateCallMock__factory = exports.CallReceiverMock__factory = exports.Migrations__factory = exports.IERC721Receiver__factory = exports.IERC223Receiver__factory = exports.IERC1155Receiver__factory = exports.IERC1271Wallet__factory = exports.Factory__factory = void 0;
+exports.SessionUtils__factory = exports.SequenceUtils__factory = exports.RequireUtils__factory = exports.MultiCallUtils__factory = exports.RequireFreshSigner__factory = exports.GasEstimator__factory = exports.NonceResetUtils__factory = exports.GapNonceUtils__factory = exports.MainModuleUpgradable__factory = exports.MainModuleGasEstimation__factory = exports.MainModule__factory = exports.GuestModule__factory = exports.ModuleUpdate__factory = exports.ModuleIgnoreNonceCalls__factory = exports.ModuleIgnoreAuthUpgradable__factory = exports.ModuleHooks__factory = exports.ModuleERC165__factory = exports.ModuleCreator__factory = exports.ModuleCalls__factory = exports.ModuleAuthUpgradable__factory = exports.ModuleAuth__factory = exports.IModuleUpdate__factory = exports.IModuleHooks__factory = exports.IModuleCreator__factory = exports.IModuleCalls__factory = exports.IModuleAuthUpgradable__factory = exports.ModuleMock__factory = exports.LibBytesImpl__factory = exports.HookMock__factory = exports.HookCallerMock__factory = exports.GasBurnerMock__factory = exports.ERC165CheckerMock__factory = exports.DelegateCallMock__factory = exports.CallReceiverMock__factory = exports.Migrations__factory = exports.IERC721Receiver__factory = exports.IERC223Receiver__factory = exports.IERC1155Receiver__factory = exports.IERC1271Wallet__factory = exports.Factory__factory = void 0;
 var Factory__factory_1 = require("./factories/Factory__factory");
 __createBinding(exports, Factory__factory_1, "Factory__factory");
 var IERC1271Wallet__factory_1 = require("./factories/IERC1271Wallet__factory");
@@ -72,6 +72,10 @@ var MainModuleGasEstimation__factory_1 = require("./factories/MainModuleGasEstim
 __createBinding(exports, MainModuleGasEstimation__factory_1, "MainModuleGasEstimation__factory");
 var MainModuleUpgradable__factory_1 = require("./factories/MainModuleUpgradable__factory");
 __createBinding(exports, MainModuleUpgradable__factory_1, "MainModuleUpgradable__factory");
+var GapNonceUtils__factory_1 = require("./factories/GapNonceUtils__factory");
+__createBinding(exports, GapNonceUtils__factory_1, "GapNonceUtils__factory");
+var NonceResetUtils__factory_1 = require("./factories/NonceResetUtils__factory");
+__createBinding(exports, NonceResetUtils__factory_1, "NonceResetUtils__factory");
 var GasEstimator__factory_1 = require("./factories/GasEstimator__factory");
 __createBinding(exports, GasEstimator__factory_1, "GasEstimator__factory");
 var RequireFreshSigner__factory_1 = require("./factories/RequireFreshSigner__factory");
@@ -82,3 +86,5 @@ var RequireUtils__factory_1 = require("./factories/RequireUtils__factory");
 __createBinding(exports, RequireUtils__factory_1, "RequireUtils__factory");
 var SequenceUtils__factory_1 = require("./factories/SequenceUtils__factory");
 __createBinding(exports, SequenceUtils__factory_1, "SequenceUtils__factory");
+var SessionUtils__factory_1 = require("./factories/SessionUtils__factory");
+__createBinding(exports, SessionUtils__factory_1, "SessionUtils__factory");
