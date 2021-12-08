@@ -8,14 +8,14 @@ contract GapNonceUtils {
   event GapNonceChange(uint256 _space, uint256 _oldNonce, uint256 _newNonce);
 
   //                       GAP_NONCE_KEY = keccak256("org.sequence.module.gapnonce.nonce");
-  bytes32 private constant GAP_NONCE_KEY = bytes32(keccak256("org.sequence.module.gapnonce.nonce"));
+  bytes32 internal constant GAP_NONCE_KEY = bytes32(keccak256("org.sequence.module.gapnonce.nonce"));
 
   /**
    * @notice Returns the current nonce for a given gap space
    * @param _space Nonce space, each space keeps an independent nonce count
    * @return The current nonce
    */
-  function _readGapNonce(uint256 _space) private view returns (uint256) {
+  function _readGapNonce(uint256 _space) internal view returns (uint256) {
     return uint256(ModuleStorage.readBytes32Map(GAP_NONCE_KEY, bytes32(_space)));
   }
 
@@ -24,7 +24,7 @@ contract GapNonceUtils {
    * @param _space Nonce space, each space keeps an independent nonce count
    * @param _nonce Nonce to write to the space
    */
-  function _writeGapNonce(uint256 _space, uint256 _nonce) private {
+  function _writeGapNonce(uint256 _space, uint256 _nonce) internal {
     ModuleStorage.writeBytes32Map(GAP_NONCE_KEY, bytes32(_space), bytes32(_nonce));
   }
 

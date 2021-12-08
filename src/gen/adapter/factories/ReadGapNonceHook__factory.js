@@ -18,31 +18,31 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-exports.GapNonceUtils__factory = void 0;
+exports.ReadGapNonceHook__factory = void 0;
 var ethers_1 = require("ethers");
-var GapNonceUtils__factory = /** @class */ (function (_super) {
-    __extends(GapNonceUtils__factory, _super);
-    function GapNonceUtils__factory(signer) {
+var ReadGapNonceHook__factory = /** @class */ (function (_super) {
+    __extends(ReadGapNonceHook__factory, _super);
+    function ReadGapNonceHook__factory(signer) {
         return _super.call(this, _abi, _bytecode, signer) || this;
     }
-    GapNonceUtils__factory.prototype.deploy = function (overrides) {
+    ReadGapNonceHook__factory.prototype.deploy = function (overrides) {
         return _super.prototype.deploy.call(this, overrides || {});
     };
-    GapNonceUtils__factory.prototype.getDeployTransaction = function (overrides) {
+    ReadGapNonceHook__factory.prototype.getDeployTransaction = function (overrides) {
         return _super.prototype.getDeployTransaction.call(this, overrides || {});
     };
-    GapNonceUtils__factory.prototype.attach = function (address) {
+    ReadGapNonceHook__factory.prototype.attach = function (address) {
         return _super.prototype.attach.call(this, address);
     };
-    GapNonceUtils__factory.prototype.connect = function (signer) {
+    ReadGapNonceHook__factory.prototype.connect = function (signer) {
         return _super.prototype.connect.call(this, signer);
     };
-    GapNonceUtils__factory.connect = function (address, signerOrProvider) {
+    ReadGapNonceHook__factory.connect = function (address, signerOrProvider) {
         return new ethers_1.Contract(address, _abi, signerOrProvider);
     };
-    return GapNonceUtils__factory;
+    return ReadGapNonceHook__factory;
 }(ethers_1.ContractFactory));
-exports.GapNonceUtils__factory = GapNonceUtils__factory;
+exports.ReadGapNonceHook__factory = ReadGapNonceHook__factory;
 var _abi = [
     {
         anonymous: false,
@@ -69,5 +69,24 @@ var _abi = [
         name: "GapNonceChange",
         type: "event"
     },
+    {
+        inputs: [
+            {
+                internalType: "uint256",
+                name: "_space",
+                type: "uint256"
+            },
+        ],
+        name: "readGapNonce",
+        outputs: [
+            {
+                internalType: "uint256",
+                name: "",
+                type: "uint256"
+            },
+        ],
+        stateMutability: "view",
+        type: "function"
+    },
 ];
-var _bytecode = "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212207976a2e0a87c7c1d1807c131401a36a6418434d623240a22efc38e681874430764736f6c63430007060033";
+var _bytecode = "0x6080604052348015600f57600080fd5b5060f08061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063cc63f2e214602d575b600080fd5b604760048036036020811015604157600080fd5b50356059565b60408051918252519081900360200190f35b60006062826068565b92915050565b604080517f2a37c7c3c3449f4795b05559a0f92a1730815bf20be16b02bbd6dbb8ae8532fe6020808301919091528183018490528251808303840181526060909201909252805191012054600090606256fea264697066735822122006da06cc3b46b46b1da6c62a31a1a1a363de6dfd4921769fae48454830ba190864736f6c63430007060033";
