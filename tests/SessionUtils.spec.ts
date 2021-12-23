@@ -70,6 +70,27 @@ contract('Session utils', () => {
     // Update wallet obj
     const addr = addressOf(factory.address, mainModule.address, imageHash)
     wallet = await MainModuleArtifact.at(addr)
+    // Update wallet
+    const newWallet = (await MainModuleUpgradableArtifact.at(wallet.address)) as MainModuleUpgradable
+    const migrateBundle = [
+      {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.Two.pow(18),
+        target: wallet.address,
+        value: ethers.constants.Zero,
+        data: wallet.contract.methods.updateImplementation(mainModuleUpgradable.address).encodeABI()
+      },
+      {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: ethers.constants.Two.pow(18),
+        target: wallet.address,
+        value: ethers.constants.Zero,
+        data: newWallet.contract.methods.updateImageHash(imageHash).encodeABI()
+      }
+    ]
+    await signAndExecuteMetaTx(wallet, owner, migrateBundle, networkId)
   })
 
   // This is only used for testing, in production
@@ -277,5 +298,28 @@ contract('Session utils', () => {
       const gapNonce = await readGapNonce.readGapNonce(SessionSpace)
       expect(gapNonce).to.eq.BN(2)
     })
+  })
+  it('Should reject non-upgraded wallet', async () => {
+    // Create new signer
+    const owner = ethers.Wallet.createRandom()
+    // Encode imageHash of wallet
+    const imageHash = encodeImageHash(1, [{ weight: 1, address: owner.address }])
+    // Deploy wallet
+    await factory.deploy(mainModule.address, imageHash)
+    // Update wallet obj
+    const addr = addressOf(factory.address, mainModule.address, imageHash)
+    const wallet = await MainModuleArtifact.at(addr)
+
+    const txs = [{
+      target: sessionUtils.address,
+      delegateCall: true,
+      revertOnError: true,
+      data: sessionUtils.contract.methods.requireSessionNonce(1).encodeABI(),
+      gasLimit: ethers.constants.Zero,
+      value: ethers.constants.Zero
+    }]
+
+    const tx = signAndExecuteMetaTx(wallet, owner, txs, networkId)
+    await expect(tx).to.be.rejectedWith(RevertError("SessionUtils#requireSessionNonce: WALLET_NOT_UPGRADED"))
   })
 })

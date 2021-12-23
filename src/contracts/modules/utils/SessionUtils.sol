@@ -4,6 +4,9 @@ pragma solidity 0.7.6;
 import "./commons/GapNonceUtils.sol";
 import "./commons/NonceResetUtils.sol";
 
+import "../commons/ModuleERC165.sol";
+import "../commons/interfaces/IModuleAuthUpgradable.sol";
+
 
 contract SessionUtils is GapNonceUtils, NonceResetUtils {
   //                       SESSION_SPACE = bytes32(uint256(uint160(bytes20(keccak256("org.sequence.sessions.space")))));
@@ -21,5 +24,12 @@ contract SessionUtils is GapNonceUtils, NonceResetUtils {
 
     // Reset regular nonce
     _resetNonce(SESSION_SPACE);
+  
+    // Should support AuthModuleUpgradable
+    // otherwise the wallet wasn't upgraded
+    require(
+      ModuleERC165(address(this)).supportsInterface(type(IModuleAuthUpgradable).interfaceId),
+      "SessionUtils#requireSessionNonce: WALLET_NOT_UPGRADED"
+    );
   }
 }
