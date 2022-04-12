@@ -70,7 +70,7 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
     // Verify that signatures are valid
     require(
       _signatureValidation(txHash, _signature),
-      "ModuleCalls#execute: INVALID_SIGNATURE"
+      "ModuleIgnoreNonceCalls#execute: INVALID_SIGNATURE"
     );
 
     // Execute the transactions

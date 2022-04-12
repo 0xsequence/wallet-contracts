@@ -22,5 +22,9 @@
   {
     "contractName": "RequireFreshSignerLib",
     "address": "0xE6B9B21C077F382333220a072e4c44280b873907"
+  },
+  {
+    "contractName": "SessionUtils",
+    "address": "0x300C03193BfC2f64462D0F309666806329d631DB"
   }
 ]
