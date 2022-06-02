@@ -23,6 +23,7 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
   functions: {
     "execute(tuple[],uint256,bytes)": FunctionFragment;
     "nonce()": FunctionFragment;
+    "readGapNonce(uint256)": FunctionFragment;
     "readNonce(uint256)": FunctionFragment;
     "selfExecute(tuple[])": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
@@ -44,6 +45,10 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(functionFragment: "nonce", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "readGapNonce",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "readNonce",
     values: [BigNumberish]
@@ -68,6 +73,10 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
 
   decodeFunctionResult(functionFragment: "execute", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "nonce", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "readGapNonce",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "readNonce", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "selfExecute",
@@ -79,11 +88,15 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
   ): Result;
 
   events: {
+    "GapNonceChange(uint256,uint256,uint256)": EventFragment;
+    "NoNonceUsed()": EventFragment;
     "NonceChange(uint256,uint256)": EventFragment;
     "TxExecuted(bytes32)": EventFragment;
     "TxFailed(bytes32,bytes)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "GapNonceChange"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "NoNonceUsed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NonceChange"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TxExecuted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TxFailed"): EventFragment;
@@ -165,6 +178,16 @@ export class ModuleCalls extends Contract {
 
     "nonce()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     readNonce(
       _space: BigNumberish,
       overrides?: CallOverrides
@@ -241,6 +264,16 @@ export class ModuleCalls extends Contract {
   nonce(overrides?: CallOverrides): Promise<BigNumber>;
 
   "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+  readGapNonce(
+    _space: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "readGapNonce(uint256)"(
+    _space: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   readNonce(
     _space: BigNumberish,
@@ -319,6 +352,16 @@ export class ModuleCalls extends Contract {
 
     "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     readNonce(
       _space: BigNumberish,
       overrides?: CallOverrides
@@ -365,6 +408,17 @@ export class ModuleCalls extends Contract {
   };
 
   filters: {
+    GapNonceChange(
+      _space: null,
+      _oldNonce: null,
+      _newNonce: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber, BigNumber],
+      { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
+    >;
+
+    NoNonceUsed(): TypedEventFilter<[], {}>;
+
     NonceChange(
       _space: null,
       _newNonce: null
@@ -413,6 +467,16 @@ export class ModuleCalls extends Contract {
     nonce(overrides?: CallOverrides): Promise<BigNumber>;
 
     "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     readNonce(
       _space: BigNumberish,
@@ -491,6 +555,16 @@ export class ModuleCalls extends Contract {
     nonce(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "nonce()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     readNonce(
       _space: BigNumberish,

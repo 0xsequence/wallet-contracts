@@ -67,7 +67,7 @@
     "husky": "^4.2.3",
     "rimraf": "^3.0.2",
     "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb",
-    "solhint": "^3.3.4",
+    "solhint": "^3.3.7",
     "solidity-coverage": "^0.7.16",
     "ts-node": "^9.1.1",
     "typechain": "^4.0.3",

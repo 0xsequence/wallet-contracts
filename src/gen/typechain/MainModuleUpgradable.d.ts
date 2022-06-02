@@ -31,6 +31,7 @@ interface MainModuleUpgradableInterface extends ethers.utils.Interface {
     "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)": FunctionFragment;
     "onERC1155Received(address,address,uint256,uint256,bytes)": FunctionFragment;
     "onERC721Received(address,address,uint256,bytes)": FunctionFragment;
+    "readGapNonce(uint256)": FunctionFragment;
     "readHook(bytes4)": FunctionFragment;
     "readNonce(uint256)": FunctionFragment;
     "removeHook(bytes4)": FunctionFragment;
@@ -80,6 +81,10 @@ interface MainModuleUpgradableInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "onERC721Received",
     values: [string, string, BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "readGapNonce",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "readHook", values: [BytesLike]): string;
   encodeFunctionData(
@@ -140,6 +145,10 @@ interface MainModuleUpgradableInterface extends ethers.utils.Interface {
     functionFragment: "onERC721Received",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "readGapNonce",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "readHook", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "readNonce", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "removeHook", data: BytesLike): Result;
@@ -162,16 +171,20 @@ interface MainModuleUpgradableInterface extends ethers.utils.Interface {
 
   events: {
     "CreatedContract(address)": EventFragment;
+    "GapNonceChange(uint256,uint256,uint256)": EventFragment;
     "ImageHashUpdated(bytes32)": EventFragment;
     "ImplementationUpdated(address)": EventFragment;
+    "NoNonceUsed()": EventFragment;
     "NonceChange(uint256,uint256)": EventFragment;
     "TxExecuted(bytes32)": EventFragment;
     "TxFailed(bytes32,bytes)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "CreatedContract"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "GapNonceChange"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ImageHashUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ImplementationUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "NoNonceUsed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NonceChange"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TxExecuted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TxFailed"): EventFragment;
@@ -342,6 +355,16 @@ export class MainModuleUpgradable extends Contract {
       arg3: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
     readHook(
       _signature: BytesLike,
@@ -550,6 +573,16 @@ export class MainModuleUpgradable extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  readGapNonce(
+    _space: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "readGapNonce(uint256)"(
+    _space: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   readHook(_signature: BytesLike, overrides?: CallOverrides): Promise<string>;
 
   "readHook(bytes4)"(
@@ -754,6 +787,16 @@ export class MainModuleUpgradable extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     readHook(_signature: BytesLike, overrides?: CallOverrides): Promise<string>;
 
     "readHook(bytes4)"(
@@ -838,6 +881,15 @@ export class MainModuleUpgradable extends Contract {
       _contract: null
     ): TypedEventFilter<[string], { _contract: string }>;
 
+    GapNonceChange(
+      _space: null,
+      _oldNonce: null,
+      _newNonce: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber, BigNumber],
+      { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
+    >;
+
     ImageHashUpdated(
       newImageHash: null
     ): TypedEventFilter<[string], { newImageHash: string }>;
@@ -845,6 +897,8 @@ export class MainModuleUpgradable extends Contract {
     ImplementationUpdated(
       newImplementation: null
     ): TypedEventFilter<[string], { newImplementation: string }>;
+
+    NoNonceUsed(): TypedEventFilter<[], {}>;
 
     NonceChange(
       _space: null,
@@ -983,6 +1037,16 @@ export class MainModuleUpgradable extends Contract {
       arg2: BigNumberish,
       arg3: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     readHook(
@@ -1191,6 +1255,16 @@ export class MainModuleUpgradable extends Contract {
       arg2: BigNumberish,
       arg3: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    readGapNonce(
+      _space: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "readGapNonce(uint256)"(
+      _space: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     readHook(

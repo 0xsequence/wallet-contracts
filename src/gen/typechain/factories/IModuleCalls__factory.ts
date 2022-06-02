@@ -18,6 +18,80 @@ export class IModuleCalls__factory {
 
 const _abi = [
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_provided",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_current",
+        type: "uint256",
+      },
+    ],
+    name: "BadGapNonce",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_space",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_nonce",
+        type: "uint256",
+      },
+    ],
+    name: "ExpectedEmptyNonce",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_type",
+        type: "uint256",
+      },
+    ],
+    name: "InvalidNonceType",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "_space",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "_oldNonce",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "_newNonce",
+        type: "uint256",
+      },
+    ],
+    name: "GapNonceChange",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [],
+    name: "NoNonceUsed",
+    type: "event",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -126,6 +200,25 @@ const _abi = [
   {
     inputs: [],
     name: "nonce",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_space",
+        type: "uint256",
+      },
+    ],
+    name: "readGapNonce",
     outputs: [
       {
         internalType: "uint256",

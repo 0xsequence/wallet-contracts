@@ -7,7 +7,7 @@ import "../../commons/ModuleStorage.sol";
 contract GapNonceUtils {
   event GapNonceChange(uint256 _space, uint256 _oldNonce, uint256 _newNonce);
 
-  //                       GAP_NONCE_KEY = keccak256("org.sequence.module.gapnonce.nonce");
+  //                        GAP_NONCE_KEY = keccak256("org.sequence.module.gapnonce.nonce");
   bytes32 internal constant GAP_NONCE_KEY = bytes32(keccak256("org.sequence.module.gapnonce.nonce"));
 
   /**

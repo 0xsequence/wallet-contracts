@@ -5,9 +5,17 @@ pragma experimental ABIEncoderV2;
 
 interface IModuleCalls {
   // Events
+  event GapNonceChange(uint256 _space, uint256 _oldNonce, uint256 _newNonce);
   event NonceChange(uint256 _space, uint256 _newNonce);
+  event NoNonceUsed();
+
   event TxFailed(bytes32 _tx, bytes _reason);
   event TxExecuted(bytes32 _tx) anonymous;
+
+  // Errors
+  error InvalidNonceType(uint256 _type);
+  error BadGapNonce(uint256 _provided, uint256 _current);
+  error ExpectedEmptyNonce(uint256 _space, uint256 _nonce);
 
   // Transaction structure
   struct Transaction {
@@ -32,6 +40,13 @@ interface IModuleCalls {
    * @return The next nonce
    */
   function readNonce(uint256 _space) external view returns (uint256);
+
+  /**
+   * @notice Returns the current nonce for a given gap space
+   * @param _space Nonce space, each space keeps an independent nonce count
+   * @return The current nonce
+   */
+  function readGapNonce(uint256 _space) external view returns (uint256);
 
   /**
    * @notice Allow wallet owner to execute an action

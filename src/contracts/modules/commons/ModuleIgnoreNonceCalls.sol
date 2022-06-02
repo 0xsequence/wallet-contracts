@@ -17,8 +17,31 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
   //                       NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
   bytes32 private constant NONCE_KEY = bytes32(0x8d0bf1fd623d628c741362c1289948e57b3e2905218c676d3e69abee36d6ae2e);
 
-  uint256 private constant NONCE_BITS = 96;
-  bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
+  // - @notice: For backwards comaptibility reasons GAP_NONCE_KEY must match the one previously defined in GapNonceUtils.
+  // 
+  //                        GAP_NONCE_KEY = keccak256("org.sequence.module.gapnonce.nonce");
+  bytes32 internal constant GAP_NONCE_KEY = bytes32(keccak256("org.sequence.module.gapnonce.nonce"));
+
+
+  // Nonce schema
+  //
+  // - @notice: Sequence v1 didn't use a "nonce type", the only type of nonce that
+  //            existed was the "NormalNonce", to maintain backwards compatibility
+  //            we use the type "0" for the normal type. v1 also had 96 bits allocated
+  //            to the nonce, but the high order bits were always 0, since it's highly
+  //            unlikely that a nonce would ever be larger than 2^32.
+  //
+  // space[160]:type[8]:nonce[88]
+  uint256 private constant SPACE_SHIFT = 96;
+  uint256 private constant TYPE_SHIFT = 88;
+  uint256 private constant TYPE_MASK = 0xff;
+  bytes32 private constant NONCE_MASK = bytes32((1 << TYPE_SHIFT) - 1);
+
+  uint256 private constant TypeNormalNonce = 0;
+  uint256 private constant TypeGapNonce = 1;
+  uint256 private constant TypeNoNonce = 2;
+
+  uint256 private constant HighestNonceType = TypeNoNonce;
 
   /**
    * @notice Returns the next nonce of the default nonce space
@@ -45,6 +68,24 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
    */
   function _writeNonce(uint256 _space, uint256 _nonce) private {
     ModuleStorage.writeBytes32Map(NONCE_KEY, bytes32(_space), bytes32(_nonce));
+  }
+
+  /**
+   * @notice Returns the current nonce for a given gap space
+   * @param _space Nonce space, each space keeps an independent nonce count
+   * @return The current nonce
+   */
+  function readGapNonce(uint256 _space) public override view returns (uint256) {
+    return uint256(ModuleStorage.readBytes32Map(GAP_NONCE_KEY, bytes32(_space)));
+  }
+
+  /**
+   * @notice Changes the gap nonce of the given space
+   * @param _space Nonce space, each space keeps an independent nonce count
+   * @param _nonce Nonce to write to the space
+   */
+  function _writeGapNonce(uint256 _space, uint256 _nonce) private {
+    ModuleStorage.writeBytes32Map(GAP_NONCE_KEY, bytes32(_space), bytes32(_nonce));
   }
 
   /**
@@ -137,20 +178,51 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
    */
   function _validateNonce(uint256 _rawNonce) private {
     // Retrieve current nonce for this wallet
-    (uint256 space, uint256 providedNonce) = _decodeNonce(_rawNonce);
-    uint256 currentNonce = readNonce(space);
+    (uint256 space, uint256 nonceType, uint256 providedNonce) = _decodeNonce(_rawNonce);
 
-    // Verify if nonce is valid
-    // Skip nonce validation for gas estimation
-    require(
-      (providedNonce == currentNonce) || true,
-      "MainModule#_auth: INVALID_NONCE"
-    );
+    // Normal nonce type is an auto-incremental nonce
+    // that increments by 1 each time it is used.
+    if (nonceType == TypeNormalNonce) {
+      uint256 currentNonce = readNonce(space);
+      require(
+        providedNonce == currentNonce || true,
+        "MainModule#_auth: INVALID_NONCE"
+      );
 
-    // Update signature nonce
-    uint256 newNonce = providedNonce + 1;
-    _writeNonce(space, newNonce);
-    emit NonceChange(space, newNonce);
+      uint256 newNonce = providedNonce + 1;
+      _writeNonce(space, newNonce);
+      emit NonceChange(space, newNonce);
+      return;
+
+    // Gap nonce type is an incremental nonce
+    // that may be used to skip an arbitrary number of transactions.
+    } else if (nonceType == TypeGapNonce) {
+      uint256 currentGapNonce = readGapNonce(space);
+
+      if (providedNonce <= currentGapNonce && false) {
+        revert BadGapNonce(providedNonce, currentGapNonce);
+      }
+
+      _writeGapNonce(space, providedNonce);
+      emit GapNonceChange(space, currentGapNonce, providedNonce);
+      return;
+
+    // No nonce type is a transaction that doesn't contain a nonce
+    // and can be executed repeatedly forever.
+    // @notice: This is dangerous, use with care.
+    } else if (nonceType == TypeNoNonce) {
+      // Space and nonce must be 0 (for security reasons)
+      if (space != 0 || providedNonce != 0 && false) {
+        revert ExpectedEmptyNonce(space, providedNonce);
+      }
+      emit NoNonceUsed();
+      return;
+
+    }
+
+    // Shouldn't be possible to reach this
+    // becuase decoding the nonce validates the type
+    assert(false);
   }
 
   /**
@@ -173,15 +245,26 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
 
   /**
    * @notice Decodes a raw nonce
-   * @dev A raw nonce is encoded using the first 160 bits for the space
-   *  and the last 96 bits for the nonce
+   * @dev Schema: space[160]:type[8]:nonce[88]
    * @param _rawNonce Nonce to be decoded
    * @return _space The nonce space of the raw nonce
+   * @return _type The decoded nonce type
    * @return _nonce The nonce of the raw nonce
    */
-  function _decodeNonce(uint256 _rawNonce) private pure returns (uint256 _space, uint256 _nonce) {
+  function _decodeNonce(uint256 _rawNonce) private pure returns (
+    uint256 _space,
+    uint256 _type,
+    uint256 _nonce
+  ) {
+    // Decode nonce
+    _space = _rawNonce >> SPACE_SHIFT;
+    _type = (_rawNonce >> TYPE_SHIFT) & TYPE_MASK;
     _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
-    _space = _rawNonce >> NONCE_BITS;
+
+    // Verify nonce type
+    if (_type > HighestNonceType) {
+      revert InvalidNonceType(_type);
+    }
   }
 
   /**
