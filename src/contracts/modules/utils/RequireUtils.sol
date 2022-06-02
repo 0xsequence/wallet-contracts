@@ -44,7 +44,7 @@ contract RequireUtils is SignatureValidator {
   mapping(address => bytes32) public knownImageHashes;
   mapping(bytes32 => uint256) public lastImageHashUpdate;
 
-  constructor(address _factory, address _mainModule) public {
+  constructor(address _factory, address _mainModule) {
     FACTORY = _factory;
     INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(uint160(_mainModule))));
   }
