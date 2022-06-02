@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity 0.8.14;
 import "./Wallet.sol";
 
 
@@ -14,7 +14,7 @@ contract Factory {
    *      passed for each transaction.
    */
   function deploy(address _mainModule, bytes32 _salt) public payable returns (address _contract) {
-    bytes memory code = abi.encodePacked(Wallet.creationCode, uint256(_mainModule));
+    bytes memory code = abi.encodePacked(Wallet.creationCode, uint256(uint160(_mainModule)));
     assembly { _contract := create2(callvalue(), add(code, 32), mload(code), _salt) }
   }
 }

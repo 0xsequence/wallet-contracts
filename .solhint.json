@@ -17,7 +17,7 @@
     "no-unused-vars": "off",
     "no-inline-assembly": "off",
     "visibility-modifier-order": "off",
-    "compiler-version": ["error", "0.7.6"],
+    "compiler-version": ["error", "0.8.14"],
     "func-visibility": ["warn", {"ignoreConstructors":true}],
     "reason-string": ["warn", {"maxLength": 96}]
   }

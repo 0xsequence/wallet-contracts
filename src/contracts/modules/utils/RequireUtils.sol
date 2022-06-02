@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity 0.8.14;
 pragma experimental ABIEncoderV2;
 
 import "../commons/interfaces/IModuleCalls.sol";
@@ -46,7 +46,7 @@ contract RequireUtils is SignatureValidator {
 
   constructor(address _factory, address _mainModule) public {
     FACTORY = _factory;
-    INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(_mainModule)));
+    INIT_CODE_HASH = keccak256(abi.encodePacked(Wallet.creationCode, uint256(uint160(_mainModule))));
   }
 
   /**
@@ -79,13 +79,15 @@ contract RequireUtils is SignatureValidator {
     } else {
       // Check counter-factual
       require(address(
-        uint256(
-          keccak256(
-            abi.encodePacked(
-              byte(0xff),
-              FACTORY,
-              imageHash,
-              INIT_CODE_HASH
+        uint160(
+          uint256(
+            keccak256(
+              abi.encodePacked(
+                hex"ff",
+                FACTORY,
+                imageHash,
+                INIT_CODE_HASH
+              )
             )
           )
         )
@@ -201,13 +203,15 @@ contract RequireUtils is SignatureValidator {
 
     // Check against counter-factual imageHash
     require(address(
-      uint256(
-        keccak256(
-          abi.encodePacked(
-            byte(0xff),
-            FACTORY,
-            imageHash,
-            INIT_CODE_HASH
+      uint160(
+        uint256(
+          keccak256(
+            abi.encodePacked(
+              hex"ff",
+              FACTORY,
+              imageHash,
+              INIT_CODE_HASH
+            )
           )
         )
       )

@@ -17,7 +17,7 @@ const ganacheNetwork = {
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.7.6',
+    version: '0.8.14',
     settings: {
       optimizer: {
         enabled: true,

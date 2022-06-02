@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity 0.8.14;
 pragma experimental ABIEncoderV2;
 
 import "../commons/interfaces/IModuleCalls.sol";
@@ -94,7 +94,7 @@ contract MultiCallUtils {
     assembly { codeHash := extcodehash(_addr) }
   }
 
-  function callChainId() external pure returns (uint256 id) {
+  function callChainId() external view returns (uint256 id) {
     assembly { id := chainid() }
   }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity 0.8.14;
 
 import "./interfaces/IModuleHooks.sol";
 
@@ -53,7 +53,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @return The address of the implementation hook, address(0) if none
   */
   function _readHook(bytes4 _signature) private view returns (address) {
-    return address(uint256(ModuleStorage.readBytes32Map(HOOKS_KEY, _signature)));
+    return address(uint160(uint256(ModuleStorage.readBytes32Map(HOOKS_KEY, _signature))));
   }
 
   /**
@@ -62,7 +62,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @param _implementation Hook implementation contract
   */
   function _writeHook(bytes4 _signature, address _implementation) private {
-    ModuleStorage.writeBytes32Map(HOOKS_KEY, _signature, bytes32(uint256(_implementation)));
+    ModuleStorage.writeBytes32Map(HOOKS_KEY, _signature, bytes32(uint256(uint160(_implementation))));
   }
 
   /**
