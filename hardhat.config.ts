@@ -42,6 +42,7 @@ const config: HardhatUserConfig = {
     mumbai: networkConfig('mumbai'),
     arbitrum: networkConfig('arbitrum'),
     arbitrumTestnet: networkConfig('arbitrum-testnet'),
+    optimism: networkConfig('optimism'),
     ganache: ganacheNetwork,
     coverage: {
       url: 'http://localhost:8555'
