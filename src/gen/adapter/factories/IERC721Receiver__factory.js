@@ -5,15 +5,6 @@
 exports.__esModule = true;
 exports.IERC721Receiver__factory = void 0;
 var ethers_1 = require("ethers");
-var IERC721Receiver__factory = /** @class */ (function () {
-    function IERC721Receiver__factory() {
-    }
-    IERC721Receiver__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return IERC721Receiver__factory;
-}());
-exports.IERC721Receiver__factory = IERC721Receiver__factory;
 var _abi = [
     {
         inputs: [
@@ -50,3 +41,16 @@ var _abi = [
         type: "function"
     },
 ];
+var IERC721Receiver__factory = /** @class */ (function () {
+    function IERC721Receiver__factory() {
+    }
+    IERC721Receiver__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    IERC721Receiver__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    IERC721Receiver__factory.abi = _abi;
+    return IERC721Receiver__factory;
+}());
+exports.IERC721Receiver__factory = IERC721Receiver__factory;

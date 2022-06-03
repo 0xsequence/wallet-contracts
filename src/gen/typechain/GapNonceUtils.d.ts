@@ -9,13 +9,13 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface GapNonceUtilsInterface extends ethers.utils.Interface {
   functions: {};
@@ -27,7 +27,15 @@ interface GapNonceUtilsInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "GapNonceChange"): EventFragment;
 }
 
-export class GapNonceUtils extends Contract {
+export type GapNonceChangeEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber] & {
+    _space: BigNumber;
+    _oldNonce: BigNumber;
+    _newNonce: BigNumber;
+  }
+>;
+
+export class GapNonceUtils extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -75,10 +83,19 @@ export class GapNonceUtils extends Contract {
   callStatic: {};
 
   filters: {
+    "GapNonceChange(uint256,uint256,uint256)"(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber, BigNumber],
+      { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
+    >;
+
     GapNonceChange(
-      _space: null,
-      _oldNonce: null,
-      _newNonce: null
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
     ): TypedEventFilter<
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }

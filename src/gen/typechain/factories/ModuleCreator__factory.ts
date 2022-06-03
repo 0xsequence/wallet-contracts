@@ -2,39 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, Contract, ContractFactory, Overrides } from "ethers";
+import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import { Provider, TransactionRequest } from "@ethersproject/providers";
-
-import type { ModuleCreator } from "../ModuleCreator";
-
-export class ModuleCreator__factory extends ContractFactory {
-  constructor(signer?: Signer) {
-    super(_abi, _bytecode, signer);
-  }
-
-  deploy(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ModuleCreator> {
-    return super.deploy(overrides || {}) as Promise<ModuleCreator>;
-  }
-  getDeployTransaction(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(overrides || {});
-  }
-  attach(address: string): ModuleCreator {
-    return super.attach(address) as ModuleCreator;
-  }
-  connect(signer: Signer): ModuleCreator__factory {
-    return super.connect(signer) as ModuleCreator__factory;
-  }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ModuleCreator {
-    return new Contract(address, _abi, signerOrProvider) as ModuleCreator;
-  }
-}
+import type { ModuleCreator, ModuleCreatorInterface } from "../ModuleCreator";
 
 const _abi = [
   {
@@ -92,3 +62,43 @@ const _abi = [
 
 const _bytecode =
   "0x608060405234801561001057600080fd5b506103a1806100206000396000f3fe6080604052600436106100295760003560e01c806301ffc9a71461002e57806390042baf14610063575b600080fd5b34801561003a57600080fd5b5061004e610049366004610224565b61009b565b60405190151581526020015b60405180910390f35b61007661007136600461029c565b610136565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200161005a565b60007f6ffbd451000000000000000000000000000000000000000000000000000000007fffffffff000000000000000000000000000000000000000000000000000000008316016100ee57506001919050565b507fffffffff00000000000000000000000000000000000000000000000000000000167f01ffc9a7000000000000000000000000000000000000000000000000000000001490565b60003330146101cb576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602760248201527f4d6f64756c6553656c6641757468236f6e6c7953656c663a204e4f545f41555460448201527f484f52495a454400000000000000000000000000000000000000000000000000606482015260840160405180910390fd5b81516020830134f060405173ffffffffffffffffffffffffffffffffffffffff821681529091507fa506ad4e7f05eceba62a023c3219e5bd98a615f4fa87e2afb08a2da5cf62bf0c9060200160405180910390a1919050565b60006020828403121561023657600080fd5b81357fffffffff000000000000000000000000000000000000000000000000000000008116811461026657600080fd5b9392505050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b6000602082840312156102ae57600080fd5b813567ffffffffffffffff808211156102c657600080fd5b818401915084601f8301126102da57600080fd5b8135818111156102ec576102ec61026d565b604051601f82017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0908116603f011681019083821181831017156103325761033261026d565b8160405282815287602084870101111561034b57600080fd5b82602086016020830137600092810160200192909252509594505050505056fea26469706673582212209feb2f3f59fe01d675e8f9c005fbdaf7685784bdf488e0aed949e9c48a6c310364736f6c634300080e0033";
+
+export class ModuleCreator__factory extends ContractFactory {
+  constructor(
+    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
+  ) {
+    if (args.length === 1) {
+      super(_abi, _bytecode, args[0]);
+    } else {
+      super(...args);
+    }
+  }
+
+  deploy(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ModuleCreator> {
+    return super.deploy(overrides || {}) as Promise<ModuleCreator>;
+  }
+  getDeployTransaction(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): TransactionRequest {
+    return super.getDeployTransaction(overrides || {});
+  }
+  attach(address: string): ModuleCreator {
+    return super.attach(address) as ModuleCreator;
+  }
+  connect(signer: Signer): ModuleCreator__factory {
+    return super.connect(signer) as ModuleCreator__factory;
+  }
+  static readonly bytecode = _bytecode;
+  static readonly abi = _abi;
+  static createInterface(): ModuleCreatorInterface {
+    return new utils.Interface(_abi) as ModuleCreatorInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): ModuleCreator {
+    return new Contract(address, _abi, signerOrProvider) as ModuleCreator;
+  }
+}

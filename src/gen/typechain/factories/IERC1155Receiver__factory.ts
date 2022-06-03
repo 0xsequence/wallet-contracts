@@ -2,19 +2,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-
-import type { IERC1155Receiver } from "../IERC1155Receiver";
-
-export class IERC1155Receiver__factory {
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): IERC1155Receiver {
-    return new Contract(address, _abi, signerOrProvider) as IERC1155Receiver;
-  }
-}
+import type {
+  IERC1155Receiver,
+  IERC1155ReceiverInterface,
+} from "../IERC1155Receiver";
 
 const _abi = [
   {
@@ -96,3 +89,16 @@ const _abi = [
     type: "function",
   },
 ];
+
+export class IERC1155Receiver__factory {
+  static readonly abi = _abi;
+  static createInterface(): IERC1155ReceiverInterface {
+    return new utils.Interface(_abi) as IERC1155ReceiverInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): IERC1155Receiver {
+    return new Contract(address, _abi, signerOrProvider) as IERC1155Receiver;
+  }
+}

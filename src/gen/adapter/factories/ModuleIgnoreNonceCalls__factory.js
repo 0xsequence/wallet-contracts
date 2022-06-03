@@ -5,15 +5,6 @@
 exports.__esModule = true;
 exports.ModuleIgnoreNonceCalls__factory = void 0;
 var ethers_1 = require("ethers");
-var ModuleIgnoreNonceCalls__factory = /** @class */ (function () {
-    function ModuleIgnoreNonceCalls__factory() {
-    }
-    ModuleIgnoreNonceCalls__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return ModuleIgnoreNonceCalls__factory;
-}());
-exports.ModuleIgnoreNonceCalls__factory = ModuleIgnoreNonceCalls__factory;
 var _abi = [
     {
         inputs: [
@@ -311,3 +302,16 @@ var _abi = [
         type: "function"
     },
 ];
+var ModuleIgnoreNonceCalls__factory = /** @class */ (function () {
+    function ModuleIgnoreNonceCalls__factory() {
+    }
+    ModuleIgnoreNonceCalls__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    ModuleIgnoreNonceCalls__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    ModuleIgnoreNonceCalls__factory.abi = _abi;
+    return ModuleIgnoreNonceCalls__factory;
+}());
+exports.ModuleIgnoreNonceCalls__factory = ModuleIgnoreNonceCalls__factory;

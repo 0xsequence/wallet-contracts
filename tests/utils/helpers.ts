@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
 import { BytesLike, BigNumberish } from 'ethers'
-import { MainModule } from 'src/gen/typechain'
+import { MainModule, MainModuleUpgradable } from 'src/gen/typechain'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 // createTestWallet creates a new wallet
@@ -269,11 +269,12 @@ export async function multiSignAndEncodeMetaTxn(
 ): Promise<string> {
   if (!nonce) nonce = await nextNonce(wallet)
   const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize)
-  return wallet.contract.methods.execute(txs, nonce, signature).encodeABI()
+  return (await wallet.execute(txs, nonce, signature)).data
+  // return wallet.contract.methods.execute(txs, nonce, signature).encodeABI()
 }
 
 export async function multiSignMetaTransactions(
-  wallet: MainModule,
+  wallet: MainModule | MainModuleUpgradable,
   accounts: {
     weight: BigNumberish,
     owner: string | ethers.Wallet
@@ -295,12 +296,12 @@ export async function multiSignMetaTransactions(
   return walletMultiSign(accounts, threshold, data, forceDynamicSize)
 }
 
-export async function nextNonce(wallet: MainModule) {
+export async function nextNonce(wallet: MainModule | MainModuleUpgradable) {
   return (await wallet.nonce()).toNumber()
 }
 
 export async function signAndExecuteMetaTx(
-  wallet: MainModule,
+  wallet: MainModule | MainModuleUpgradable,
   owner: ethers.Wallet,
   txs: {
     delegateCall: boolean;
@@ -312,7 +313,8 @@ export async function signAndExecuteMetaTx(
   }[],
   networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined,
-  forceDynamicSize: boolean = false
+  forceDynamicSize: boolean = false,
+  gasLimit?: BigNumberish
 ) {
   return multiSignAndExecuteMetaTx(
     wallet,
@@ -321,15 +323,16 @@ export async function signAndExecuteMetaTx(
     txs,
     networkId,
     nonce,
-    forceDynamicSize
+    forceDynamicSize,
+    gasLimit
   )
 }
 
 export async function multiSignAndExecuteMetaTx(
-  wallet: MainModule,
+  wallet: MainModule | MainModuleUpgradable,
   accounts: {
     weight: BigNumberish,
-    owner: string | ethers.Wallet
+    owner: string | ethers.Wallet
   }[],
   threshold: BigNumberish,
   txs: {
@@ -342,11 +345,12 @@ export async function multiSignAndExecuteMetaTx(
   }[],
   networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined,
-  forceDynamicSize: boolean = false
+  forceDynamicSize: boolean = false,
+  gasLimit?: BigNumberish
 ) {
   if (!nonce) nonce = await nextNonce(wallet)
   const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize)
-  return wallet.execute(txs, nonce, signature)
+  return wallet.execute(txs, nonce, signature, { gasLimit })
 }
 
 export function encodeImageHash(

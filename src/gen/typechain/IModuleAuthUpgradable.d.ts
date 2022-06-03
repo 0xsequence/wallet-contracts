@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IModuleAuthUpgradableInterface extends ethers.utils.Interface {
   functions: {
@@ -40,7 +40,7 @@ interface IModuleAuthUpgradableInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class IModuleAuthUpgradable extends Contract {
+export class IModuleAuthUpgradable extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -86,14 +86,7 @@ export class IModuleAuthUpgradable extends Contract {
   functions: {
     imageHash(overrides?: CallOverrides): Promise<[string]>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<[string]>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -101,14 +94,7 @@ export class IModuleAuthUpgradable extends Contract {
 
   imageHash(overrides?: CallOverrides): Promise<string>;
 
-  "imageHash()"(overrides?: CallOverrides): Promise<string>;
-
   updateImageHash(
-    _imageHash: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "updateImageHash(bytes32)"(
     _imageHash: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -116,14 +102,7 @@ export class IModuleAuthUpgradable extends Contract {
   callStatic: {
     imageHash(overrides?: CallOverrides): Promise<string>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<string>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -134,14 +113,7 @@ export class IModuleAuthUpgradable extends Contract {
   estimateGas: {
     imageHash(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -150,14 +122,7 @@ export class IModuleAuthUpgradable extends Contract {
   populateTransaction: {
     imageHash(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

@@ -5,15 +5,6 @@
 exports.__esModule = true;
 exports.ModuleAuthUpgradable__factory = void 0;
 var ethers_1 = require("ethers");
-var ModuleAuthUpgradable__factory = /** @class */ (function () {
-    function ModuleAuthUpgradable__factory() {
-    }
-    ModuleAuthUpgradable__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return ModuleAuthUpgradable__factory;
-}());
-exports.ModuleAuthUpgradable__factory = ModuleAuthUpgradable__factory;
 var _abi = [
     {
         anonymous: false,
@@ -122,3 +113,16 @@ var _abi = [
         type: "function"
     },
 ];
+var ModuleAuthUpgradable__factory = /** @class */ (function () {
+    function ModuleAuthUpgradable__factory() {
+    }
+    ModuleAuthUpgradable__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    ModuleAuthUpgradable__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    ModuleAuthUpgradable__factory.abi = _abi;
+    return ModuleAuthUpgradable__factory;
+}());
+exports.ModuleAuthUpgradable__factory = ModuleAuthUpgradable__factory;

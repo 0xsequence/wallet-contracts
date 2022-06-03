@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   PayableOverrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface FactoryInterface extends ethers.utils.Interface {
   functions: {
@@ -34,7 +34,7 @@ interface FactoryInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class Factory extends Contract {
+export class Factory extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -83,12 +83,6 @@ export class Factory extends Contract {
       _salt: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "deploy(address,bytes32)"(
-      _mainModule: string,
-      _salt: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   deploy(
@@ -97,20 +91,8 @@ export class Factory extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "deploy(address,bytes32)"(
-    _mainModule: string,
-    _salt: BytesLike,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     deploy(
-      _mainModule: string,
-      _salt: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    "deploy(address,bytes32)"(
       _mainModule: string,
       _salt: BytesLike,
       overrides?: CallOverrides
@@ -125,22 +107,10 @@ export class Factory extends Contract {
       _salt: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "deploy(address,bytes32)"(
-      _mainModule: string,
-      _salt: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     deploy(
-      _mainModule: string,
-      _salt: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "deploy(address,bytes32)"(
       _mainModule: string,
       _salt: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }

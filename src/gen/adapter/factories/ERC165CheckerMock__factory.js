@@ -20,29 +20,6 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 exports.ERC165CheckerMock__factory = void 0;
 var ethers_1 = require("ethers");
-var ERC165CheckerMock__factory = /** @class */ (function (_super) {
-    __extends(ERC165CheckerMock__factory, _super);
-    function ERC165CheckerMock__factory(signer) {
-        return _super.call(this, _abi, _bytecode, signer) || this;
-    }
-    ERC165CheckerMock__factory.prototype.deploy = function (overrides) {
-        return _super.prototype.deploy.call(this, overrides || {});
-    };
-    ERC165CheckerMock__factory.prototype.getDeployTransaction = function (overrides) {
-        return _super.prototype.getDeployTransaction.call(this, overrides || {});
-    };
-    ERC165CheckerMock__factory.prototype.attach = function (address) {
-        return _super.prototype.attach.call(this, address);
-    };
-    ERC165CheckerMock__factory.prototype.connect = function (signer) {
-        return _super.prototype.connect.call(this, signer);
-    };
-    ERC165CheckerMock__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return ERC165CheckerMock__factory;
-}(ethers_1.ContractFactory));
-exports.ERC165CheckerMock__factory = ERC165CheckerMock__factory;
 var _abi = [
     {
         inputs: [
@@ -70,3 +47,42 @@ var _abi = [
     },
 ];
 var _bytecode = "0x608060405234801561001057600080fd5b50610226806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c8063e9c5438414610030575b600080fd5b61004361003e366004610179565b610057565b604051901515815260200160405180910390f35b60008080610085857f01ffc9a70000000000000000000000000000000000000000000000000000000061012c565b9092509050811580610095575080155b156100a557600092505050610126565b6100cf857fffffffff0000000000000000000000000000000000000000000000000000000061012c565b90925090508115806100e057508015155b156100f057600092505050610126565b6100fa858561012c565b909250905060018214801561010f5750806001145b1561011f57600192505050610126565b6000925050505b92915050565b6040517f01ffc9a7000000000000000000000000000000000000000000000000000000008082526004820183905260009182919060208160248189617530fa905190969095509350505050565b6000806040838503121561018c57600080fd5b823573ffffffffffffffffffffffffffffffffffffffff811681146101b057600080fd5b915060208301357fffffffff00000000000000000000000000000000000000000000000000000000811681146101e557600080fd5b80915050925092905056fea264697066735822122063da1367391973376706d1e7adde90e1d2a6755257efe9baacf1771c833a2f7164736f6c634300080e0033";
+var ERC165CheckerMock__factory = /** @class */ (function (_super) {
+    __extends(ERC165CheckerMock__factory, _super);
+    function ERC165CheckerMock__factory() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var _this = this;
+        if (args.length === 1) {
+            _this = _super.call(this, _abi, _bytecode, args[0]) || this;
+        }
+        else {
+            _this = _super.apply(this, args) || this;
+        }
+        return _this;
+    }
+    ERC165CheckerMock__factory.prototype.deploy = function (overrides) {
+        return _super.prototype.deploy.call(this, overrides || {});
+    };
+    ERC165CheckerMock__factory.prototype.getDeployTransaction = function (overrides) {
+        return _super.prototype.getDeployTransaction.call(this, overrides || {});
+    };
+    ERC165CheckerMock__factory.prototype.attach = function (address) {
+        return _super.prototype.attach.call(this, address);
+    };
+    ERC165CheckerMock__factory.prototype.connect = function (signer) {
+        return _super.prototype.connect.call(this, signer);
+    };
+    ERC165CheckerMock__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    ERC165CheckerMock__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    ERC165CheckerMock__factory.bytecode = _bytecode;
+    ERC165CheckerMock__factory.abi = _abi;
+    return ERC165CheckerMock__factory;
+}(ethers_1.ContractFactory));
+exports.ERC165CheckerMock__factory = ERC165CheckerMock__factory;

@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface HookCallerMockInterface extends ethers.utils.Interface {
   functions: {
@@ -82,7 +82,7 @@ interface HookCallerMockInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class HookCallerMock extends Contract {
+export class HookCallerMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -131,29 +131,12 @@ export class HookCallerMock extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "callERC1155BatchReceived(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     callERC1155Received(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "callERC1155Received(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     callERC1271isValidSignatureData(
-      _addr: string,
-      _data: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
-    "callERC1271isValidSignatureData(address,bytes,bytes)"(
       _addr: string,
       _data: BytesLike,
       _signature: BytesLike,
@@ -167,29 +150,12 @@ export class HookCallerMock extends Contract {
       overrides?: CallOverrides
     ): Promise<[void]>;
 
-    "callERC1271isValidSignatureHash(address,bytes32,bytes)"(
-      _addr: string,
-      _hash: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
     callERC223Received(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "callERC223Received(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     callERC721Received(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "callERC721Received(address)"(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -200,29 +166,12 @@ export class HookCallerMock extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "callERC1155BatchReceived(address)"(
-    _addr: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callERC1155Received(
     _addr: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "callERC1155Received(address)"(
-    _addr: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callERC1271isValidSignatureData(
-    _addr: string,
-    _data: BytesLike,
-    _signature: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  "callERC1271isValidSignatureData(address,bytes,bytes)"(
     _addr: string,
     _data: BytesLike,
     _signature: BytesLike,
@@ -236,29 +185,12 @@ export class HookCallerMock extends Contract {
     overrides?: CallOverrides
   ): Promise<void>;
 
-  "callERC1271isValidSignatureHash(address,bytes32,bytes)"(
-    _addr: string,
-    _hash: BytesLike,
-    _signature: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
   callERC223Received(
     _addr: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "callERC223Received(address)"(
-    _addr: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callERC721Received(
-    _addr: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "callERC721Received(address)"(
     _addr: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -269,29 +201,12 @@ export class HookCallerMock extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "callERC1155BatchReceived(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     callERC1155Received(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "callERC1155Received(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     callERC1271isValidSignatureData(
-      _addr: string,
-      _data: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "callERC1271isValidSignatureData(address,bytes,bytes)"(
       _addr: string,
       _data: BytesLike,
       _signature: BytesLike,
@@ -305,26 +220,9 @@ export class HookCallerMock extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "callERC1271isValidSignatureHash(address,bytes32,bytes)"(
-      _addr: string,
-      _hash: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     callERC223Received(_addr: string, overrides?: CallOverrides): Promise<void>;
 
-    "callERC223Received(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     callERC721Received(_addr: string, overrides?: CallOverrides): Promise<void>;
-
-    "callERC721Received(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {};
@@ -335,17 +233,7 @@ export class HookCallerMock extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "callERC1155BatchReceived(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     callERC1155Received(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "callERC1155Received(address)"(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -357,21 +245,7 @@ export class HookCallerMock extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "callERC1271isValidSignatureData(address,bytes,bytes)"(
-      _addr: string,
-      _data: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callERC1271isValidSignatureHash(
-      _addr: string,
-      _hash: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "callERC1271isValidSignatureHash(address,bytes32,bytes)"(
       _addr: string,
       _hash: BytesLike,
       _signature: BytesLike,
@@ -383,17 +257,7 @@ export class HookCallerMock extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "callERC223Received(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     callERC721Received(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "callERC721Received(address)"(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -405,29 +269,12 @@ export class HookCallerMock extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "callERC1155BatchReceived(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     callERC1155Received(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "callERC1155Received(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     callERC1271isValidSignatureData(
-      _addr: string,
-      _data: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "callERC1271isValidSignatureData(address,bytes,bytes)"(
       _addr: string,
       _data: BytesLike,
       _signature: BytesLike,
@@ -441,29 +288,12 @@ export class HookCallerMock extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "callERC1271isValidSignatureHash(address,bytes32,bytes)"(
-      _addr: string,
-      _hash: BytesLike,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     callERC223Received(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "callERC223Received(address)"(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     callERC721Received(
-      _addr: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "callERC721Received(address)"(
       _addr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

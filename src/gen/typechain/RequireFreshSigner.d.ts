@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface RequireFreshSignerInterface extends ethers.utils.Interface {
   functions: {
@@ -46,7 +46,7 @@ interface RequireFreshSignerInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class RequireFreshSigner extends Contract {
+export class RequireFreshSigner extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -92,14 +92,7 @@ export class RequireFreshSigner extends Contract {
   functions: {
     REQUIRE_UTILS(overrides?: CallOverrides): Promise<[string]>;
 
-    "REQUIRE_UTILS()"(overrides?: CallOverrides): Promise<[string]>;
-
     requireFreshSigner(
-      _signer: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "requireFreshSigner(address)"(
       _signer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -107,14 +100,7 @@ export class RequireFreshSigner extends Contract {
 
   REQUIRE_UTILS(overrides?: CallOverrides): Promise<string>;
 
-  "REQUIRE_UTILS()"(overrides?: CallOverrides): Promise<string>;
-
   requireFreshSigner(
-    _signer: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "requireFreshSigner(address)"(
     _signer: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -122,14 +108,7 @@ export class RequireFreshSigner extends Contract {
   callStatic: {
     REQUIRE_UTILS(overrides?: CallOverrides): Promise<string>;
 
-    "REQUIRE_UTILS()"(overrides?: CallOverrides): Promise<string>;
-
     requireFreshSigner(
-      _signer: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "requireFreshSigner(address)"(
       _signer: string,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -140,14 +119,7 @@ export class RequireFreshSigner extends Contract {
   estimateGas: {
     REQUIRE_UTILS(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "REQUIRE_UTILS()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     requireFreshSigner(
-      _signer: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "requireFreshSigner(address)"(
       _signer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -156,14 +128,7 @@ export class RequireFreshSigner extends Contract {
   populateTransaction: {
     REQUIRE_UTILS(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "REQUIRE_UTILS()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     requireFreshSigner(
-      _signer: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "requireFreshSigner(address)"(
       _signer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

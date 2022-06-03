@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface MigrationsInterface extends ethers.utils.Interface {
   functions: {
@@ -52,7 +52,7 @@ interface MigrationsInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class Migrations extends Contract {
+export class Migrations extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -98,20 +98,9 @@ export class Migrations extends Contract {
   functions: {
     last_completed_migration(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "last_completed_migration()"(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     owner(overrides?: CallOverrides): Promise<[string]>;
 
-    "owner()"(overrides?: CallOverrides): Promise<[string]>;
-
     setCompleted(
-      completed: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "setCompleted(uint256)"(
       completed: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -120,27 +109,13 @@ export class Migrations extends Contract {
       new_address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "upgrade(address)"(
-      new_address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   last_completed_migration(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "last_completed_migration()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   owner(overrides?: CallOverrides): Promise<string>;
 
-  "owner()"(overrides?: CallOverrides): Promise<string>;
-
   setCompleted(
-    completed: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "setCompleted(uint256)"(
     completed: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -150,36 +125,17 @@ export class Migrations extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "upgrade(address)"(
-    new_address: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     last_completed_migration(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "last_completed_migration()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<string>;
-
-    "owner()"(overrides?: CallOverrides): Promise<string>;
 
     setCompleted(
       completed: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "setCompleted(uint256)"(
-      completed: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     upgrade(new_address: string, overrides?: CallOverrides): Promise<void>;
-
-    "upgrade(address)"(
-      new_address: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {};
@@ -187,28 +143,14 @@ export class Migrations extends Contract {
   estimateGas: {
     last_completed_migration(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "last_completed_migration()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "owner()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     setCompleted(
       completed: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "setCompleted(uint256)"(
-      completed: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     upgrade(
-      new_address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "upgrade(address)"(
       new_address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -219,30 +161,14 @@ export class Migrations extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "last_completed_migration()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "owner()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     setCompleted(
       completed: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "setCompleted(uint256)"(
-      completed: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     upgrade(
-      new_address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "upgrade(address)"(
       new_address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

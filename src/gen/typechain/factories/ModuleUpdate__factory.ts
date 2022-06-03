@@ -2,39 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, Contract, ContractFactory, Overrides } from "ethers";
+import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import { Provider, TransactionRequest } from "@ethersproject/providers";
-
-import type { ModuleUpdate } from "../ModuleUpdate";
-
-export class ModuleUpdate__factory extends ContractFactory {
-  constructor(signer?: Signer) {
-    super(_abi, _bytecode, signer);
-  }
-
-  deploy(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ModuleUpdate> {
-    return super.deploy(overrides || {}) as Promise<ModuleUpdate>;
-  }
-  getDeployTransaction(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(overrides || {});
-  }
-  attach(address: string): ModuleUpdate {
-    return super.attach(address) as ModuleUpdate;
-  }
-  connect(signer: Signer): ModuleUpdate__factory {
-    return super.connect(signer) as ModuleUpdate__factory;
-  }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ModuleUpdate {
-    return new Contract(address, _abi, signerOrProvider) as ModuleUpdate;
-  }
-}
+import type { ModuleUpdate, ModuleUpdateInterface } from "../ModuleUpdate";
 
 const _abi = [
   {
@@ -86,3 +56,43 @@ const _abi = [
 
 const _bytecode =
   "0x608060405234801561001057600080fd5b50610353806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c806301ffc9a71461003b578063025b22bc14610062575b600080fd5b61004e61004936600461029e565b610077565b604051901515815260200160405180910390f35b6100756100703660046102e7565b610112565b005b60007ffda4dd44000000000000000000000000000000000000000000000000000000007fffffffff000000000000000000000000000000000000000000000000000000008316016100ca57506001919050565b507fffffffff00000000000000000000000000000000000000000000000000000000167f01ffc9a7000000000000000000000000000000000000000000000000000000001490565b3330146101a6576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602760248201527f4d6f64756c6553656c6641757468236f6e6c7953656c663a204e4f545f41555460448201527f484f52495a45440000000000000000000000000000000000000000000000000060648201526084015b60405180910390fd5b73ffffffffffffffffffffffffffffffffffffffff81163b61024a576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603960248201527f4d6f64756c6555706461746523757064617465496d706c656d656e746174696f60448201527f6e3a20494e56414c49445f494d504c454d454e544154494f4e00000000000000606482015260840161019d565b610252813055565b60405173ffffffffffffffffffffffffffffffffffffffff821681527f310ba5f1d2ed074b51e2eccd052a47ae9ab7c6b800d1fca3db3999d6a592ca039060200160405180910390a150565b6000602082840312156102b057600080fd5b81357fffffffff00000000000000000000000000000000000000000000000000000000811681146102e057600080fd5b9392505050565b6000602082840312156102f957600080fd5b813573ffffffffffffffffffffffffffffffffffffffff811681146102e057600080fdfea2646970667358221220b119d5f77465767a2db1208b5878fa35b662c2df4e4191ab925ce53e1e0a32da64736f6c634300080e0033";
+
+export class ModuleUpdate__factory extends ContractFactory {
+  constructor(
+    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
+  ) {
+    if (args.length === 1) {
+      super(_abi, _bytecode, args[0]);
+    } else {
+      super(...args);
+    }
+  }
+
+  deploy(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ModuleUpdate> {
+    return super.deploy(overrides || {}) as Promise<ModuleUpdate>;
+  }
+  getDeployTransaction(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): TransactionRequest {
+    return super.getDeployTransaction(overrides || {});
+  }
+  attach(address: string): ModuleUpdate {
+    return super.attach(address) as ModuleUpdate;
+  }
+  connect(signer: Signer): ModuleUpdate__factory {
+    return super.connect(signer) as ModuleUpdate__factory;
+  }
+  static readonly bytecode = _bytecode;
+  static readonly abi = _abi;
+  static createInterface(): ModuleUpdateInterface {
+    return new utils.Interface(_abi) as ModuleUpdateInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): ModuleUpdate {
+    return new Contract(address, _abi, signerOrProvider) as ModuleUpdate;
+  }
+}

@@ -9,14 +9,14 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ModuleAuthInterface extends ethers.utils.Interface {
   functions: {
@@ -45,7 +45,7 @@ interface ModuleAuthInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class ModuleAuth extends Contract {
+export class ModuleAuth extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -105,11 +105,6 @@ export class ModuleAuth extends Contract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
-
-    "supportsInterface(bytes4)"(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
   };
 
   "isValidSignature(bytes32,bytes)"(
@@ -129,11 +124,6 @@ export class ModuleAuth extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  "supportsInterface(bytes4)"(
-    _interfaceID: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
   callStatic: {
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
@@ -148,11 +138,6 @@ export class ModuleAuth extends Contract {
     ): Promise<string>;
 
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<boolean>;
@@ -177,11 +162,6 @@ export class ModuleAuth extends Contract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    "supportsInterface(bytes4)"(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -198,11 +178,6 @@ export class ModuleAuth extends Contract {
     ): Promise<PopulatedTransaction>;
 
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

@@ -2,23 +2,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-
-import type { ModuleAuthUpgradable } from "../ModuleAuthUpgradable";
-
-export class ModuleAuthUpgradable__factory {
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ModuleAuthUpgradable {
-    return new Contract(
-      address,
-      _abi,
-      signerOrProvider
-    ) as ModuleAuthUpgradable;
-  }
-}
+import type {
+  ModuleAuthUpgradable,
+  ModuleAuthUpgradableInterface,
+} from "../ModuleAuthUpgradable";
 
 const _abi = [
   {
@@ -128,3 +117,20 @@ const _abi = [
     type: "function",
   },
 ];
+
+export class ModuleAuthUpgradable__factory {
+  static readonly abi = _abi;
+  static createInterface(): ModuleAuthUpgradableInterface {
+    return new utils.Interface(_abi) as ModuleAuthUpgradableInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): ModuleAuthUpgradable {
+    return new Contract(
+      address,
+      _abi,
+      signerOrProvider
+    ) as ModuleAuthUpgradable;
+  }
+}

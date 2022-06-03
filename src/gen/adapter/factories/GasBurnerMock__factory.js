@@ -20,29 +20,6 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 exports.GasBurnerMock__factory = void 0;
 var ethers_1 = require("ethers");
-var GasBurnerMock__factory = /** @class */ (function (_super) {
-    __extends(GasBurnerMock__factory, _super);
-    function GasBurnerMock__factory(signer) {
-        return _super.call(this, _abi, _bytecode, signer) || this;
-    }
-    GasBurnerMock__factory.prototype.deploy = function (overrides) {
-        return _super.prototype.deploy.call(this, overrides || {});
-    };
-    GasBurnerMock__factory.prototype.getDeployTransaction = function (overrides) {
-        return _super.prototype.getDeployTransaction.call(this, overrides || {});
-    };
-    GasBurnerMock__factory.prototype.attach = function (address) {
-        return _super.prototype.attach.call(this, address);
-    };
-    GasBurnerMock__factory.prototype.connect = function (signer) {
-        return _super.prototype.connect.call(this, signer);
-    };
-    GasBurnerMock__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return GasBurnerMock__factory;
-}(ethers_1.ContractFactory));
-exports.GasBurnerMock__factory = GasBurnerMock__factory;
 var _abi = [
     {
         anonymous: false,
@@ -72,3 +49,42 @@ var _abi = [
     },
 ];
 var _bytecode = "0x608060405234801561001057600080fd5b5061014c806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80634ad5d16f14610030575b600080fd5b61004361003e3660046100bf565b610045565b005b7fb5769a7bae701ca7bcd4ed2e803959a466a236728fcb0dc25fa836e3a38bc2225a60405190815260200160405180910390a16000805a90505b825a61008b90836100d8565b10156100ba5760408051602081018490520160405160208183030381529060405280519060200120915061007f565b505050565b6000602082840312156100d157600080fd5b5035919050565b600082821015610111577f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b50039056fea2646970667358221220eaf95b5106974db997508decff9655c10466c340d493c53df6575d2043f9f11464736f6c634300080e0033";
+var GasBurnerMock__factory = /** @class */ (function (_super) {
+    __extends(GasBurnerMock__factory, _super);
+    function GasBurnerMock__factory() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var _this = this;
+        if (args.length === 1) {
+            _this = _super.call(this, _abi, _bytecode, args[0]) || this;
+        }
+        else {
+            _this = _super.apply(this, args) || this;
+        }
+        return _this;
+    }
+    GasBurnerMock__factory.prototype.deploy = function (overrides) {
+        return _super.prototype.deploy.call(this, overrides || {});
+    };
+    GasBurnerMock__factory.prototype.getDeployTransaction = function (overrides) {
+        return _super.prototype.getDeployTransaction.call(this, overrides || {});
+    };
+    GasBurnerMock__factory.prototype.attach = function (address) {
+        return _super.prototype.attach.call(this, address);
+    };
+    GasBurnerMock__factory.prototype.connect = function (signer) {
+        return _super.prototype.connect.call(this, signer);
+    };
+    GasBurnerMock__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    GasBurnerMock__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    GasBurnerMock__factory.bytecode = _bytecode;
+    GasBurnerMock__factory.abi = _abi;
+    return GasBurnerMock__factory;
+}(ethers_1.ContractFactory));
+exports.GasBurnerMock__factory = GasBurnerMock__factory;

@@ -2,39 +2,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, Contract, ContractFactory, Overrides } from "ethers";
+import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import { Provider, TransactionRequest } from "@ethersproject/providers";
-
-import type { ReadGapNonceHook } from "../ReadGapNonceHook";
-
-export class ReadGapNonceHook__factory extends ContractFactory {
-  constructor(signer?: Signer) {
-    super(_abi, _bytecode, signer);
-  }
-
-  deploy(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ReadGapNonceHook> {
-    return super.deploy(overrides || {}) as Promise<ReadGapNonceHook>;
-  }
-  getDeployTransaction(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(overrides || {});
-  }
-  attach(address: string): ReadGapNonceHook {
-    return super.attach(address) as ReadGapNonceHook;
-  }
-  connect(signer: Signer): ReadGapNonceHook__factory {
-    return super.connect(signer) as ReadGapNonceHook__factory;
-  }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ReadGapNonceHook {
-    return new Contract(address, _abi, signerOrProvider) as ReadGapNonceHook;
-  }
-}
+import type {
+  ReadGapNonceHook,
+  ReadGapNonceHookInterface,
+} from "../ReadGapNonceHook";
 
 const _abi = [
   {
@@ -85,3 +58,43 @@ const _abi = [
 
 const _bytecode =
   "0x608060405234801561001057600080fd5b5061012e806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063cc63f2e214602d575b600080fd5b603c603836600460e0565b604e565b60405190815260200160405180910390f35b6000605782605d565b92915050565b600060577f2a37c7c3c3449f4795b05559a0f92a1730815bf20be16b02bbd6dbb8ae8532fe83600080838360405160200160a1929190918252602082015260400190565b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0818403018152919052805160209091012054949350505050565b60006020828403121560f157600080fd5b503591905056fea26469706673582212203736e418cb1752d807c8df945bf47c4b79b79eebf2693d3518bcf2a02717e94464736f6c634300080e0033";
+
+export class ReadGapNonceHook__factory extends ContractFactory {
+  constructor(
+    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
+  ) {
+    if (args.length === 1) {
+      super(_abi, _bytecode, args[0]);
+    } else {
+      super(...args);
+    }
+  }
+
+  deploy(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ReadGapNonceHook> {
+    return super.deploy(overrides || {}) as Promise<ReadGapNonceHook>;
+  }
+  getDeployTransaction(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): TransactionRequest {
+    return super.getDeployTransaction(overrides || {});
+  }
+  attach(address: string): ReadGapNonceHook {
+    return super.attach(address) as ReadGapNonceHook;
+  }
+  connect(signer: Signer): ReadGapNonceHook__factory {
+    return super.connect(signer) as ReadGapNonceHook__factory;
+  }
+  static readonly bytecode = _bytecode;
+  static readonly abi = _abi;
+  static createInterface(): ReadGapNonceHookInterface {
+    return new utils.Interface(_abi) as ReadGapNonceHookInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): ReadGapNonceHook {
+    return new Contract(address, _abi, signerOrProvider) as ReadGapNonceHook;
+  }
+}

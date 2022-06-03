@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   PayableOverrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ModuleCreatorInterface extends ethers.utils.Interface {
   functions: {
@@ -50,7 +50,9 @@ interface ModuleCreatorInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "CreatedContract"): EventFragment;
 }
 
-export class ModuleCreator extends Contract {
+export type CreatedContractEvent = TypedEvent<[string] & { _contract: string }>;
+
+export class ModuleCreator extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -99,17 +101,7 @@ export class ModuleCreator extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
@@ -120,17 +112,7 @@ export class ModuleCreator extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "createContract(bytes)"(
-    _code: BytesLike,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   supportsInterface(
-    _interfaceID: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "supportsInterface(bytes4)"(
     _interfaceID: BytesLike,
     overrides?: CallOverrides
   ): Promise<boolean>;
@@ -141,25 +123,19 @@ export class ModuleCreator extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<boolean>;
   };
 
   filters: {
+    "CreatedContract(address)"(
+      _contract?: null
+    ): TypedEventFilter<[string], { _contract: string }>;
+
     CreatedContract(
-      _contract: null
+      _contract?: null
     ): TypedEventFilter<[string], { _contract: string }>;
   };
 
@@ -169,17 +145,7 @@ export class ModuleCreator extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -191,17 +157,7 @@ export class ModuleCreator extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

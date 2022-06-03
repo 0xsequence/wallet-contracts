@@ -2,19 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-
-import type { ModuleCalls } from "../ModuleCalls";
-
-export class ModuleCalls__factory {
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ModuleCalls {
-    return new Contract(address, _abi, signerOrProvider) as ModuleCalls;
-  }
-}
+import type { ModuleCalls, ModuleCallsInterface } from "../ModuleCalls";
 
 const _abi = [
   {
@@ -313,3 +303,16 @@ const _abi = [
     type: "function",
   },
 ];
+
+export class ModuleCalls__factory {
+  static readonly abi = _abi;
+  static createInterface(): ModuleCallsInterface {
+    return new utils.Interface(_abi) as ModuleCallsInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): ModuleCalls {
+    return new Contract(address, _abi, signerOrProvider) as ModuleCalls;
+  }
+}

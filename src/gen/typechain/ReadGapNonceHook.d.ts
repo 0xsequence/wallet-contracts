@@ -9,14 +9,14 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ReadGapNonceHookInterface extends ethers.utils.Interface {
   functions: {
@@ -40,7 +40,15 @@ interface ReadGapNonceHookInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "GapNonceChange"): EventFragment;
 }
 
-export class ReadGapNonceHook extends Contract {
+export type GapNonceChangeEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber] & {
+    _space: BigNumber;
+    _oldNonce: BigNumber;
+    _newNonce: BigNumber;
+  }
+>;
+
+export class ReadGapNonceHook extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -88,19 +96,9 @@ export class ReadGapNonceHook extends Contract {
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
-
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
   };
 
   readGapNonce(
-    _space: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  "readGapNonce(uint256)"(
     _space: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
@@ -110,18 +108,22 @@ export class ReadGapNonceHook extends Contract {
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
   };
 
   filters: {
+    "GapNonceChange(uint256,uint256,uint256)"(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber, BigNumber],
+      { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
+    >;
+
     GapNonceChange(
-      _space: null,
-      _oldNonce: null,
-      _newNonce: null
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
     ): TypedEventFilter<
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
@@ -133,20 +135,10 @@ export class ReadGapNonceHook extends Contract {
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     readGapNonce(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "readGapNonce(uint256)"(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

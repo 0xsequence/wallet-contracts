@@ -2,39 +2,18 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, Contract, ContractFactory, PayableOverrides } from "ethers";
+import {
+  Signer,
+  utils,
+  Contract,
+  ContractFactory,
+  PayableOverrides,
+} from "ethers";
 import { Provider, TransactionRequest } from "@ethersproject/providers";
-
-import type { CallReceiverMock } from "../CallReceiverMock";
-
-export class CallReceiverMock__factory extends ContractFactory {
-  constructor(signer?: Signer) {
-    super(_abi, _bytecode, signer);
-  }
-
-  deploy(
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<CallReceiverMock> {
-    return super.deploy(overrides || {}) as Promise<CallReceiverMock>;
-  }
-  getDeployTransaction(
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(overrides || {});
-  }
-  attach(address: string): CallReceiverMock {
-    return super.attach(address) as CallReceiverMock;
-  }
-  connect(signer: Signer): CallReceiverMock__factory {
-    return super.connect(signer) as CallReceiverMock__factory;
-  }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): CallReceiverMock {
-    return new Contract(address, _abi, signerOrProvider) as CallReceiverMock;
-  }
-}
+import type {
+  CallReceiverMock,
+  CallReceiverMockInterface,
+} from "../CallReceiverMock";
 
 const _abi = [
   {
@@ -103,3 +82,43 @@ const _abi = [
 
 const _bytecode =
   "0x6080604052610484806100136000396000f3fe60806040526004361061003f5760003560e01c8063381ba14014610044578063ad387c8a14610092578063c0aec4d3146100a5578063ebd35e47146100ce575b600080fd5b34801561005057600080fd5b5061009061005f3660046102e3565b600280547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016911515919091179055565b005b6100906100a036600461030c565b6100f0565b3480156100b157600080fd5b506100bb60005481565b6040519081526020015b60405180910390f35b3480156100da57600080fd5b506100e361019e565b6040516100c59190610388565b60025460ff1615610187576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602660248201527f43616c6c52656365697665724d6f636b237465737443616c6c3a20524556455260448201527f545f464c41470000000000000000000000000000000000000000000000000000606482015260840160405180910390fd5b60008390556101986001838361022c565b50505050565b600180546101ab906103fb565b80601f01602080910402602001604051908101604052809291908181526020018280546101d7906103fb565b80156102245780601f106101f957610100808354040283529160200191610224565b820191906000526020600020905b81548152906001019060200180831161020757829003601f168201915b505050505081565b828054610238906103fb565b90600052602060002090601f01602090048101928261025a57600085556102be565b82601f10610291578280017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff008235161785556102be565b828001600101855582156102be579182015b828111156102be5782358255916020019190600101906102a3565b506102ca9291506102ce565b5090565b5b808211156102ca57600081556001016102cf565b6000602082840312156102f557600080fd5b8135801515811461030557600080fd5b9392505050565b60008060006040848603121561032157600080fd5b83359250602084013567ffffffffffffffff8082111561034057600080fd5b818601915086601f83011261035457600080fd5b81358181111561036357600080fd5b87602082850101111561037557600080fd5b6020830194508093505050509250925092565b600060208083528351808285015260005b818110156103b557858101830151858201604001528201610399565b818111156103c7576000604083870101525b50601f017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe016929092016040019392505050565b600181811c9082168061040f57607f821691505b602082108103610448577f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b5091905056fea2646970667358221220fc72cc9da566d041a843b02c096382e9a90b41c8e373e59885b942745ad2bbc864736f6c634300080e0033";
+
+export class CallReceiverMock__factory extends ContractFactory {
+  constructor(
+    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
+  ) {
+    if (args.length === 1) {
+      super(_abi, _bytecode, args[0]);
+    } else {
+      super(...args);
+    }
+  }
+
+  deploy(
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<CallReceiverMock> {
+    return super.deploy(overrides || {}) as Promise<CallReceiverMock>;
+  }
+  getDeployTransaction(
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): TransactionRequest {
+    return super.getDeployTransaction(overrides || {});
+  }
+  attach(address: string): CallReceiverMock {
+    return super.attach(address) as CallReceiverMock;
+  }
+  connect(signer: Signer): CallReceiverMock__factory {
+    return super.connect(signer) as CallReceiverMock__factory;
+  }
+  static readonly bytecode = _bytecode;
+  static readonly abi = _abi;
+  static createInterface(): CallReceiverMockInterface {
+    return new utils.Interface(_abi) as CallReceiverMockInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): CallReceiverMock {
+    return new Contract(address, _abi, signerOrProvider) as CallReceiverMock;
+  }
+}

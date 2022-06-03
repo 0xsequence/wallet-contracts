@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   PayableOverrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IModuleCreatorInterface extends ethers.utils.Interface {
   functions: {
@@ -37,7 +37,7 @@ interface IModuleCreatorInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class IModuleCreator extends Contract {
+export class IModuleCreator extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -85,11 +85,6 @@ export class IModuleCreator extends Contract {
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   createContract(
@@ -97,18 +92,8 @@ export class IModuleCreator extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "createContract(bytes)"(
-    _code: BytesLike,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     createContract(
-      _code: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    "createContract(bytes)"(
       _code: BytesLike,
       overrides?: CallOverrides
     ): Promise<string>;
@@ -121,20 +106,10 @@ export class IModuleCreator extends Contract {
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     createContract(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "createContract(bytes)"(
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

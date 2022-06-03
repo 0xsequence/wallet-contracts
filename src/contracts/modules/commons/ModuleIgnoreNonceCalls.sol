@@ -212,7 +212,7 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
     // @notice: This is dangerous, use with care.
     } else if (nonceType == TypeNoNonce) {
       // Space and nonce must be 0 (for security reasons)
-      if (space != 0 || providedNonce != 0 && false) {
+      if ((space != 0 || providedNonce != 0) && false) {
         revert ExpectedEmptyNonce(space, providedNonce);
       }
       emit NoNonceUsed();

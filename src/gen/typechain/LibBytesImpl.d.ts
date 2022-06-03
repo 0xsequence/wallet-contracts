@@ -9,14 +9,14 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface LibBytesImplInterface extends ethers.utils.Interface {
   functions: {
@@ -84,7 +84,7 @@ interface LibBytesImplInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class LibBytesImpl extends Contract {
+export class LibBytesImpl extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -134,20 +134,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<[string, BigNumber]>;
 
-    "readAddress(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber]>;
-
     readBytes(
-      _data: BytesLike,
-      _index: BigNumberish,
-      _size: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber]>;
-
-    "readBytes(bytes,uint256,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       _size: BigNumberish,
@@ -160,19 +147,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    "readBytes32(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
     readBytes66(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber]>;
-
-    "readBytes66(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
@@ -183,30 +158,13 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<[number, BigNumber]>;
 
-    "readFirstUint16(bytes)"(
-      _data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[number, BigNumber]>;
-
     readUint16(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[number, BigNumber]>;
 
-    "readUint16(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number, BigNumber]>;
-
     readUint8Uint8(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number, number, BigNumber]>;
-
-    "readUint8Uint8(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
@@ -219,20 +177,7 @@ export class LibBytesImpl extends Contract {
     overrides?: CallOverrides
   ): Promise<[string, BigNumber]>;
 
-  "readAddress(bytes,uint256)"(
-    _data: BytesLike,
-    _index: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[string, BigNumber]>;
-
   readBytes(
-    _data: BytesLike,
-    _index: BigNumberish,
-    _size: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[string, BigNumber]>;
-
-  "readBytes(bytes,uint256,uint256)"(
     _data: BytesLike,
     _index: BigNumberish,
     _size: BigNumberish,
@@ -245,19 +190,7 @@ export class LibBytesImpl extends Contract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  "readBytes32(bytes,uint256)"(
-    _data: BytesLike,
-    _index: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   readBytes66(
-    _data: BytesLike,
-    _index: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[string, BigNumber]>;
-
-  "readBytes66(bytes,uint256)"(
     _data: BytesLike,
     _index: BigNumberish,
     overrides?: CallOverrides
@@ -268,30 +201,13 @@ export class LibBytesImpl extends Contract {
     overrides?: CallOverrides
   ): Promise<[number, BigNumber]>;
 
-  "readFirstUint16(bytes)"(
-    _data: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<[number, BigNumber]>;
-
   readUint16(
     _data: BytesLike,
     _index: BigNumberish,
     overrides?: CallOverrides
   ): Promise<[number, BigNumber]>;
 
-  "readUint16(bytes,uint256)"(
-    _data: BytesLike,
-    _index: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[number, BigNumber]>;
-
   readUint8Uint8(
-    _data: BytesLike,
-    _index: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[number, number, BigNumber]>;
-
-  "readUint8Uint8(bytes,uint256)"(
     _data: BytesLike,
     _index: BigNumberish,
     overrides?: CallOverrides
@@ -304,20 +220,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<[string, BigNumber]>;
 
-    "readAddress(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber]>;
-
     readBytes(
-      _data: BytesLike,
-      _index: BigNumberish,
-      _size: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber]>;
-
-    "readBytes(bytes,uint256,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       _size: BigNumberish,
@@ -330,19 +233,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "readBytes32(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     readBytes66(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber]>;
-
-    "readBytes66(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
@@ -353,30 +244,13 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<[number, BigNumber]>;
 
-    "readFirstUint16(bytes)"(
-      _data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[number, BigNumber]>;
-
     readUint16(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[number, BigNumber]>;
 
-    "readUint16(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number, BigNumber]>;
-
     readUint8Uint8(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number, number, BigNumber]>;
-
-    "readUint8Uint8(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
@@ -392,20 +266,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readAddress(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readBytes(
-      _data: BytesLike,
-      _index: BigNumberish,
-      _size: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "readBytes(bytes,uint256,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       _size: BigNumberish,
@@ -418,19 +279,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readBytes32(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readBytes66(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "readBytes66(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
@@ -441,30 +290,13 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readFirstUint16(bytes)"(
-      _data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readUint16(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readUint16(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readUint8Uint8(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "readUint8Uint8(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
@@ -478,20 +310,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readAddress(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     readBytes(
-      _data: BytesLike,
-      _index: BigNumberish,
-      _size: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "readBytes(bytes,uint256,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       _size: BigNumberish,
@@ -504,19 +323,7 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readBytes32(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     readBytes66(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "readBytes66(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
@@ -527,30 +334,13 @@ export class LibBytesImpl extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readFirstUint16(bytes)"(
-      _data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     readUint16(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readUint16(bytes,uint256)"(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     readUint8Uint8(
-      _data: BytesLike,
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "readUint8Uint8(bytes,uint256)"(
       _data: BytesLike,
       _index: BigNumberish,
       overrides?: CallOverrides

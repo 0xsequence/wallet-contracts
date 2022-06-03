@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IERC223ReceiverInterface extends ethers.utils.Interface {
   functions: {
@@ -37,7 +37,7 @@ interface IERC223ReceiverInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class IERC223Receiver extends Contract {
+export class IERC223Receiver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -87,13 +87,6 @@ export class IERC223Receiver extends Contract {
       arg2: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "tokenFallback(address,uint256,bytes)"(
-      arg0: string,
-      arg1: BigNumberish,
-      arg2: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   tokenFallback(
@@ -103,22 +96,8 @@ export class IERC223Receiver extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "tokenFallback(address,uint256,bytes)"(
-    arg0: string,
-    arg1: BigNumberish,
-    arg2: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     tokenFallback(
-      arg0: string,
-      arg1: BigNumberish,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "tokenFallback(address,uint256,bytes)"(
       arg0: string,
       arg1: BigNumberish,
       arg2: BytesLike,
@@ -135,24 +114,10 @@ export class IERC223Receiver extends Contract {
       arg2: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "tokenFallback(address,uint256,bytes)"(
-      arg0: string,
-      arg1: BigNumberish,
-      arg2: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     tokenFallback(
-      arg0: string,
-      arg1: BigNumberish,
-      arg2: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "tokenFallback(address,uint256,bytes)"(
       arg0: string,
       arg1: BigNumberish,
       arg2: BytesLike,

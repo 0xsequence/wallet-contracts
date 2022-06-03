@@ -5,15 +5,6 @@
 exports.__esModule = true;
 exports.ModuleERC165__factory = void 0;
 var ethers_1 = require("ethers");
-var ModuleERC165__factory = /** @class */ (function () {
-    function ModuleERC165__factory() {
-    }
-    ModuleERC165__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return ModuleERC165__factory;
-}());
-exports.ModuleERC165__factory = ModuleERC165__factory;
 var _abi = [
     {
         inputs: [
@@ -35,3 +26,16 @@ var _abi = [
         type: "function"
     },
 ];
+var ModuleERC165__factory = /** @class */ (function () {
+    function ModuleERC165__factory() {
+    }
+    ModuleERC165__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    ModuleERC165__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    ModuleERC165__factory.abi = _abi;
+    return ModuleERC165__factory;
+}());
+exports.ModuleERC165__factory = ModuleERC165__factory;

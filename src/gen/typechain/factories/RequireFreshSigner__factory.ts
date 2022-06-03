@@ -2,44 +2,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, Contract, ContractFactory, Overrides } from "ethers";
+import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import { Provider, TransactionRequest } from "@ethersproject/providers";
-
-import type { RequireFreshSigner } from "../RequireFreshSigner";
-
-export class RequireFreshSigner__factory extends ContractFactory {
-  constructor(signer?: Signer) {
-    super(_abi, _bytecode, signer);
-  }
-
-  deploy(
-    _requireUtils: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<RequireFreshSigner> {
-    return super.deploy(
-      _requireUtils,
-      overrides || {}
-    ) as Promise<RequireFreshSigner>;
-  }
-  getDeployTransaction(
-    _requireUtils: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(_requireUtils, overrides || {});
-  }
-  attach(address: string): RequireFreshSigner {
-    return super.attach(address) as RequireFreshSigner;
-  }
-  connect(signer: Signer): RequireFreshSigner__factory {
-    return super.connect(signer) as RequireFreshSigner__factory;
-  }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): RequireFreshSigner {
-    return new Contract(address, _abi, signerOrProvider) as RequireFreshSigner;
-  }
-}
+import type {
+  RequireFreshSigner,
+  RequireFreshSignerInterface,
+} from "../RequireFreshSigner";
 
 const _abi = [
   {
@@ -83,3 +51,48 @@ const _abi = [
 
 const _bytecode =
   "0x60a060405234801561001057600080fd5b5060405161030038038061030083398101604081905261002f91610040565b6001600160a01b0316608052610070565b60006020828403121561005257600080fd5b81516001600160a01b038116811461006957600080fd5b9392505050565b608051610270610090600039600081816055015260e501526102706000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80630df0c4191461003b578063cfc63a4914610050575b600080fd5b61004e6100493660046101e4565b6100a0565b005b6100777f000000000000000000000000000000000000000000000000000000000000000081565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b6040517f1cd05dc400000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff82811660048301527f00000000000000000000000000000000000000000000000000000000000000001690631cd05dc490602401602060405180830381865afa15801561012c573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101509190610221565b156101e1576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f5265717569726546726573685369676e6572237265717569726546726573685360448201527f69676e65723a204455504c4943415445445f5349474e45520000000000000000606482015260840160405180910390fd5b50565b6000602082840312156101f657600080fd5b813573ffffffffffffffffffffffffffffffffffffffff8116811461021a57600080fd5b9392505050565b60006020828403121561023357600080fd5b505191905056fea2646970667358221220e27049c6043c8f027fc83398a86241b463ae7468314a24db32662cab87848f5a64736f6c634300080e0033";
+
+export class RequireFreshSigner__factory extends ContractFactory {
+  constructor(
+    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
+  ) {
+    if (args.length === 1) {
+      super(_abi, _bytecode, args[0]);
+    } else {
+      super(...args);
+    }
+  }
+
+  deploy(
+    _requireUtils: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<RequireFreshSigner> {
+    return super.deploy(
+      _requireUtils,
+      overrides || {}
+    ) as Promise<RequireFreshSigner>;
+  }
+  getDeployTransaction(
+    _requireUtils: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): TransactionRequest {
+    return super.getDeployTransaction(_requireUtils, overrides || {});
+  }
+  attach(address: string): RequireFreshSigner {
+    return super.attach(address) as RequireFreshSigner;
+  }
+  connect(signer: Signer): RequireFreshSigner__factory {
+    return super.connect(signer) as RequireFreshSigner__factory;
+  }
+  static readonly bytecode = _bytecode;
+  static readonly abi = _abi;
+  static createInterface(): RequireFreshSignerInterface {
+    return new utils.Interface(_abi) as RequireFreshSignerInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): RequireFreshSigner {
+    return new Contract(address, _abi, signerOrProvider) as RequireFreshSigner;
+  }
+}

@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface GasEstimatorInterface extends ethers.utils.Interface {
   functions: {
@@ -34,7 +34,7 @@ interface GasEstimatorInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class GasEstimator extends Contract {
+export class GasEstimator extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -83,12 +83,6 @@ export class GasEstimator extends Contract {
       _data: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "estimate(address,bytes)"(
-      _to: string,
-      _data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   estimate(
@@ -97,26 +91,8 @@ export class GasEstimator extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "estimate(address,bytes)"(
-    _to: string,
-    _data: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     estimate(
-      _to: string,
-      _data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, string, BigNumber] & {
-        success: boolean;
-        result: string;
-        gas: BigNumber;
-      }
-    >;
-
-    "estimate(address,bytes)"(
       _to: string,
       _data: BytesLike,
       overrides?: CallOverrides
@@ -137,22 +113,10 @@ export class GasEstimator extends Contract {
       _data: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "estimate(address,bytes)"(
-      _to: string,
-      _data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     estimate(
-      _to: string,
-      _data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "estimate(address,bytes)"(
       _to: string,
       _data: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }

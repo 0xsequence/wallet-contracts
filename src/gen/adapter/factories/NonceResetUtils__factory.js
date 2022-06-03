@@ -20,29 +20,6 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 exports.NonceResetUtils__factory = void 0;
 var ethers_1 = require("ethers");
-var NonceResetUtils__factory = /** @class */ (function (_super) {
-    __extends(NonceResetUtils__factory, _super);
-    function NonceResetUtils__factory(signer) {
-        return _super.call(this, _abi, _bytecode, signer) || this;
-    }
-    NonceResetUtils__factory.prototype.deploy = function (overrides) {
-        return _super.prototype.deploy.call(this, overrides || {});
-    };
-    NonceResetUtils__factory.prototype.getDeployTransaction = function (overrides) {
-        return _super.prototype.getDeployTransaction.call(this, overrides || {});
-    };
-    NonceResetUtils__factory.prototype.attach = function (address) {
-        return _super.prototype.attach.call(this, address);
-    };
-    NonceResetUtils__factory.prototype.connect = function (signer) {
-        return _super.prototype.connect.call(this, signer);
-    };
-    NonceResetUtils__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return NonceResetUtils__factory;
-}(ethers_1.ContractFactory));
-exports.NonceResetUtils__factory = NonceResetUtils__factory;
 var _abi = [
     {
         anonymous: false,
@@ -59,3 +36,42 @@ var _abi = [
     },
 ];
 var _bytecode = "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220207c1aa1a9da646b15250728081a074bf6cd18825841afe78f6be11b56d8258c64736f6c634300080e0033";
+var NonceResetUtils__factory = /** @class */ (function (_super) {
+    __extends(NonceResetUtils__factory, _super);
+    function NonceResetUtils__factory() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var _this = this;
+        if (args.length === 1) {
+            _this = _super.call(this, _abi, _bytecode, args[0]) || this;
+        }
+        else {
+            _this = _super.apply(this, args) || this;
+        }
+        return _this;
+    }
+    NonceResetUtils__factory.prototype.deploy = function (overrides) {
+        return _super.prototype.deploy.call(this, overrides || {});
+    };
+    NonceResetUtils__factory.prototype.getDeployTransaction = function (overrides) {
+        return _super.prototype.getDeployTransaction.call(this, overrides || {});
+    };
+    NonceResetUtils__factory.prototype.attach = function (address) {
+        return _super.prototype.attach.call(this, address);
+    };
+    NonceResetUtils__factory.prototype.connect = function (signer) {
+        return _super.prototype.connect.call(this, signer);
+    };
+    NonceResetUtils__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    NonceResetUtils__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    NonceResetUtils__factory.bytecode = _bytecode;
+    NonceResetUtils__factory.abi = _abi;
+    return NonceResetUtils__factory;
+}(ethers_1.ContractFactory));
+exports.NonceResetUtils__factory = NonceResetUtils__factory;

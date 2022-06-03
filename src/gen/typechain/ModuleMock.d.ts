@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ModuleMockInterface extends ethers.utils.Interface {
   functions: {
@@ -35,7 +35,9 @@ interface ModuleMockInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Pong"): EventFragment;
 }
 
-export class ModuleMock extends Contract {
+export type PongEvent = TypedEvent<[] & {}>;
+
+export class ModuleMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -82,27 +84,19 @@ export class ModuleMock extends Contract {
     ping(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "ping()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   ping(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "ping()"(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     ping(overrides?: CallOverrides): Promise<void>;
-
-    "ping()"(overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
+    "Pong()"(): TypedEventFilter<[], {}>;
+
     Pong(): TypedEventFilter<[], {}>;
   };
 
@@ -110,18 +104,10 @@ export class ModuleMock extends Contract {
     ping(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "ping()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     ping(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "ping()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ModuleIgnoreAuthUpgradableInterface extends ethers.utils.Interface {
   functions: {
@@ -62,7 +62,11 @@ interface ModuleIgnoreAuthUpgradableInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ImageHashUpdated"): EventFragment;
 }
 
-export class ModuleIgnoreAuthUpgradable extends Contract {
+export type ImageHashUpdatedEvent = TypedEvent<
+  [string] & { newImageHash: string }
+>;
+
+export class ModuleIgnoreAuthUpgradable extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -108,8 +112,6 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
   functions: {
     imageHash(overrides?: CallOverrides): Promise<[string]>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<[string]>;
-
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -127,25 +129,13 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    "supportsInterface(bytes4)"(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
 
   imageHash(overrides?: CallOverrides): Promise<string>;
-
-  "imageHash()"(overrides?: CallOverrides): Promise<string>;
 
   "isValidSignature(bytes32,bytes)"(
     _hash: BytesLike,
@@ -164,17 +154,7 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  "supportsInterface(bytes4)"(
-    _interfaceID: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
   updateImageHash(
-    _imageHash: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "updateImageHash(bytes32)"(
     _imageHash: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -182,8 +162,6 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
   callStatic: {
     imageHash(overrides?: CallOverrides): Promise<string>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<string>;
-
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -201,32 +179,24 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    "supportsInterface(bytes4)"(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
   };
 
   filters: {
+    "ImageHashUpdated(bytes32)"(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+
     ImageHashUpdated(
-      newImageHash: null
+      newImageHash?: null
     ): TypedEventFilter<[string], { newImageHash: string }>;
   };
 
   estimateGas: {
     imageHash(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "imageHash()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
@@ -245,17 +215,7 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "supportsInterface(bytes4)"(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -264,8 +224,6 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
   populateTransaction: {
     imageHash(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -283,17 +241,7 @@ export class ModuleIgnoreAuthUpgradable extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "supportsInterface(bytes4)"(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

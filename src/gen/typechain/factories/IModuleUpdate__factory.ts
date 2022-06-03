@@ -2,19 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-
-import type { IModuleUpdate } from "../IModuleUpdate";
-
-export class IModuleUpdate__factory {
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): IModuleUpdate {
-    return new Contract(address, _abi, signerOrProvider) as IModuleUpdate;
-  }
-}
+import type { IModuleUpdate, IModuleUpdateInterface } from "../IModuleUpdate";
 
 const _abi = [
   {
@@ -31,3 +21,16 @@ const _abi = [
     type: "function",
   },
 ];
+
+export class IModuleUpdate__factory {
+  static readonly abi = _abi;
+  static createInterface(): IModuleUpdateInterface {
+    return new utils.Interface(_abi) as IModuleUpdateInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): IModuleUpdate {
+    return new Contract(address, _abi, signerOrProvider) as IModuleUpdate;
+  }
+}

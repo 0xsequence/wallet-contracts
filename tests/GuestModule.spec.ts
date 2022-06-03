@@ -1,37 +1,49 @@
+import { expect } from './utils'
+import { GuestModule, CallReceiverMock, HookCallerMock, GuestModule__factory, CallReceiverMock__factory, HookCallerMock__factory, MainModuleUpgradable__factory } from 'src/gen/typechain'
+import { ethers as hethers } from 'hardhat'
 import * as ethers from 'ethers'
-import { expect, RevertError } from './utils'
-
-import { GuestModule, CallReceiverMock, HookCallerMock, MainModuleUpgradable } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const GuestModuleArtifact = artifacts.require('GuestModule')
-const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
-const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
-const HookCallerMockArtifact = artifacts.require('HookCallerMock')
 
-import { web3 } from 'hardhat'
+contract('GuestModule', () => {
+  let mainModuleUpgradableFactory: MainModuleUpgradable__factory
+  let guestModuleFactory: GuestModule__factory
+  let callReceiverFactory: CallReceiverMock__factory
+  let hookMockFactory: HookCallerMock__factory
 
-contract('GuestModule', (accounts: string[]) => {
   let module: GuestModule
   let callReceiver: CallReceiverMock
   let hookMock: HookCallerMock
 
   describe('GuestModule wallet', () => {
     before(async () => {
+      mainModuleUpgradableFactory = await hethers.getContractFactory('MainModuleUpgradable') as MainModuleUpgradable__factory
+      guestModuleFactory = await hethers.getContractFactory('GuestModule') as GuestModule__factory
+      callReceiverFactory = await hethers.getContractFactory('CallReceiverMock') as CallReceiverMock__factory
+      hookMockFactory = await hethers.getContractFactory('HookCallerMock') as HookCallerMock__factory
+
       // Deploy wallet factory
-      module = await GuestModuleArtifact.new()
-      callReceiver = await CallReceiverMockArtifact.new()
-      hookMock = await HookCallerMockArtifact.new()
+      module = await guestModuleFactory.deploy()
+      callReceiver = await callReceiverFactory.deploy()
+      hookMock = await hookMockFactory.deploy()
     })
 
-    let valA
-    let valB
-    let transactions
+    let valA: ethers.BigNumber
+    let valB: string
+
+    let transactions: {
+      delegateCall: boolean;
+      revertOnError: boolean;
+      gasLimit: ethers.BigNumberish;
+      target: string;
+      value: ethers.BigNumberish;
+      data: ethers.BytesLike;
+    }[]
 
     beforeEach(async () => {
-      valA = web3.utils.toBN(web3.utils.randomHex(3)).toNumber()
-      valB = web3.utils.randomHex(120)
+      valA = ethers.BigNumber.from(ethers.utils.randomBytes(3))
+      valB = ethers.utils.hexlify(ethers.utils.randomBytes(120))
 
       transactions = [
         {
@@ -40,7 +52,7 @@ contract('GuestModule', (accounts: string[]) => {
           gasLimit: ethers.constants.Two.pow(20),
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
     })
@@ -48,21 +60,21 @@ contract('GuestModule', (accounts: string[]) => {
     it('Should accept transactions without signature', async () => {
       await module.execute(transactions, 0, [])
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions on selfExecute', async () => {
       await module.selfExecute(transactions)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions with random signature', async () => {
-      const signature = web3.utils.randomHex(69)
+      const signature = ethers.utils.randomBytes(96)
 
       await module.execute(transactions, 0, signature)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions with random nonce', async () => {
@@ -70,7 +82,7 @@ contract('GuestModule', (accounts: string[]) => {
 
       await module.execute(transactions, nonce, [])
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should revert on delegateCall transactions', async () => {
@@ -81,15 +93,16 @@ contract('GuestModule', (accounts: string[]) => {
           gasLimit: 1000000,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
       const tx = module.selfExecute(transactions)
-      await expect(tx).to.be.rejectedWith(RevertError('GuestModule#_executeGuest: delegateCall not allowed'))
+      await expect(tx).to.be.rejectedWith('GuestModule#_executeGuest: delegateCall not allowed')
     })
     it('Should not accept ETH', async () => {
-      const tx = module.send(1, { from: accounts[0] })
+      // const tx = module.send(1, { from: accounts[0] })
+      const tx = hethers.provider.getSigner().sendTransaction({ value: 1, to: module.address })
       await expect(tx).to.be.rejected
     })
     it('Should not implement hooks', async () => {
@@ -97,8 +110,8 @@ contract('GuestModule', (accounts: string[]) => {
       await expect(tx).to.be.rejected
     })
     it('Should not be upgradeable', async () => {
-      const mainModule = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
-      const newImageHash = web3.utils.randomHex(32)
+      const mainModule = mainModuleUpgradableFactory.attach((await guestModuleFactory.deploy()).address)
+      const newImageHash = ethers.utils.hexlify(ethers.utils.randomBytes(32))
 
       const migrateBundle = [
         {
@@ -107,7 +120,7 @@ contract('GuestModule', (accounts: string[]) => {
           gasLimit: ethers.constants.Two.pow(18),
           target: module.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImplementation(mainModule.address).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImplementation', [mainModule.address])
         },
         {
           delegateCall: false,
@@ -115,7 +128,7 @@ contract('GuestModule', (accounts: string[]) => {
           gasLimit: ethers.constants.Two.pow(18),
           target: module.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImageHash(newImageHash).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImageHash', [newImageHash])
         }
       ]
 
@@ -126,7 +139,7 @@ contract('GuestModule', (accounts: string[]) => {
           gasLimit: ethers.constants.Two.pow(18),
           target: module.address,
           value: ethers.constants.Zero,
-          data: module.contract.methods.selfExecute(migrateBundle).encodeABI()
+          data: mainModule.interface.encodeFunctionData('selfExecute', [migrateBundle])
         }
       ]
 

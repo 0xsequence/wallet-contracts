@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   PayableOverrides,
@@ -18,7 +18,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface SequenceUtilsInterface extends ethers.utils.Interface {
   functions: {
@@ -40,8 +40,8 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
     "lastImageHashUpdate(bytes32)": FunctionFragment;
     "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
-    "multiCall(tuple[])": FunctionFragment;
-    "publishConfig(address,uint256,tuple[],bool)": FunctionFragment;
+    "multiCall((bool,bool,uint256,address,uint256,bytes)[])": FunctionFragment;
+    "publishConfig(address,uint256,(uint256,address)[],bool)": FunctionFragment;
     "publishInitialSigners(address,bytes32,uint256,bytes,bool)": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
@@ -244,7 +244,20 @@ interface SequenceUtilsInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "RequiredSigner"): EventFragment;
 }
 
-export class SequenceUtils extends Contract {
+export type RequiredConfigEvent = TypedEvent<
+  [string, string, BigNumber, string] & {
+    _wallet: string;
+    _imageHash: string;
+    _threshold: BigNumber;
+    _signers: string;
+  }
+>;
+
+export type RequiredSignerEvent = TypedEvent<
+  [string, string] & { _wallet: string; _signer: string }
+>;
+
+export class SequenceUtils extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -293,21 +306,9 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callBlockNumber()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     callBlockhash(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "callBlockhash(uint256)"(
       _i: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
@@ -316,16 +317,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { id: BigNumber }>;
 
-    "callChainId()"(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { id: BigNumber }>;
-
     callCode(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[string] & { code: string }>;
-
-    "callCode(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<[string] & { code: string }>;
@@ -335,55 +327,26 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[string] & { codeHash: string }>;
 
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[string] & { codeHash: string }>;
-
     callCodeSize(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { size: BigNumber }>;
-
-    "callCodeSize(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { size: BigNumber }>;
 
     callCoinbase(overrides?: CallOverrides): Promise<[string]>;
 
-    "callCoinbase()"(overrides?: CallOverrides): Promise<[string]>;
-
     callDifficulty(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "callDifficulty()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     callGasLeft(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callGasLeft()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     callGasLimit(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "callGasLimit()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     callGasPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callGasPrice()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     callOrigin(overrides?: CallOverrides): Promise<[string]>;
-
-    "callOrigin()"(overrides?: CallOverrides): Promise<[string]>;
 
     callTimestamp(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callTimestamp()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     knownImageHashes(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "knownImageHashes(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<[string]>;
@@ -393,17 +356,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "lastImageHashUpdate(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     lastSignerUpdate(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    "lastSignerUpdate(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
@@ -413,24 +366,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -450,24 +386,7 @@ export class SequenceUtils extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "publishConfig(address,uint256,tuple[],bool)"(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     publishInitialSigners(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -482,18 +401,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[void]>;
 
-    "requireMinNonce(address,uint256)"(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
     requireNonExpired(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
-    "requireNonExpired(uint256)"(
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[void]>;
@@ -501,119 +409,44 @@ export class SequenceUtils extends Contract {
 
   callBalanceOf(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callBalanceOf(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   callBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callBlockNumber()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callBlockhash(_i: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-  "callBlockhash(uint256)"(
-    _i: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   callChainId(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callChainId()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callCode(_addr: string, overrides?: CallOverrides): Promise<string>;
 
-  "callCode(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   callCodeHash(_addr: string, overrides?: CallOverrides): Promise<string>;
-
-  "callCodeHash(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   callCodeSize(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callCodeSize(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   callCoinbase(overrides?: CallOverrides): Promise<string>;
-
-  "callCoinbase()"(overrides?: CallOverrides): Promise<string>;
 
   callDifficulty(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callDifficulty()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   callGasLeft(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callGasLeft()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   callGasPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callGasPrice()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callOrigin(overrides?: CallOverrides): Promise<string>;
 
-  "callOrigin()"(overrides?: CallOverrides): Promise<string>;
-
   callTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-  "knownImageHashes(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   lastImageHashUpdate(
     arg0: BytesLike,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "lastImageHashUpdate(bytes32)"(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   lastSignerUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  "lastSignerUpdate(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   lastWalletUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "lastWalletUpdate(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   multiCall(
-    _txs: {
-      delegateCall: boolean;
-      revertOnError: boolean;
-      gasLimit: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: BytesLike;
-    }[],
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "multiCall(tuple[])"(
     _txs: {
       delegateCall: boolean;
       revertOnError: boolean;
@@ -633,24 +466,7 @@ export class SequenceUtils extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "publishConfig(address,uint256,tuple[],bool)"(
-    _wallet: string,
-    _threshold: BigNumberish,
-    _members: { weight: BigNumberish; signer: string }[],
-    _index: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   publishInitialSigners(
-    _wallet: string,
-    _hash: BytesLike,
-    _sizeMembers: BigNumberish,
-    _signature: BytesLike,
-    _index: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
     _wallet: string,
     _hash: BytesLike,
     _sizeMembers: BigNumberish,
@@ -665,18 +481,7 @@ export class SequenceUtils extends Contract {
     overrides?: CallOverrides
   ): Promise<void>;
 
-  "requireMinNonce(address,uint256)"(
-    _wallet: string,
-    _nonce: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
   requireNonExpired(
-    _expiration: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  "requireNonExpired(uint256)"(
     _expiration: BigNumberish,
     overrides?: CallOverrides
   ): Promise<void>;
@@ -684,88 +489,35 @@ export class SequenceUtils extends Contract {
   callStatic: {
     callBalanceOf(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callBlockNumber()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callBlockhash(_i: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-    "callBlockhash(uint256)"(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     callChainId(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callChainId()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callCode(_addr: string, overrides?: CallOverrides): Promise<string>;
 
-    "callCode(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     callCodeHash(_addr: string, overrides?: CallOverrides): Promise<string>;
-
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     callCodeSize(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callCodeSize(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callCoinbase(overrides?: CallOverrides): Promise<string>;
-
-    "callCoinbase()"(overrides?: CallOverrides): Promise<string>;
 
     callDifficulty(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callDifficulty()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasLeft(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasLeft()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasPrice()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callOrigin(overrides?: CallOverrides): Promise<string>;
 
-    "callOrigin()"(overrides?: CallOverrides): Promise<string>;
-
     callTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
 
-    "knownImageHashes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     lastImageHashUpdate(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "lastImageHashUpdate(bytes32)"(
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -775,36 +527,12 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastSignerUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean[], string[]] & { _successes: boolean[]; _results: string[] }
-    >;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -826,24 +554,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "publishConfig(address,uint256,tuple[],bool)"(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     publishInitialSigners(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -858,29 +569,18 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "requireMinNonce(address,uint256)"(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     requireNonExpired(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "requireNonExpired(uint256)"(
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
   };
 
   filters: {
-    RequiredConfig(
-      _wallet: string | null,
-      _imageHash: BytesLike | null,
-      _threshold: null,
-      _signers: null
+    "RequiredConfig(address,bytes32,uint256,bytes)"(
+      _wallet?: string | null,
+      _imageHash?: BytesLike | null,
+      _threshold?: null,
+      _signers?: null
     ): TypedEventFilter<
       [string, string, BigNumber, string],
       {
@@ -891,93 +591,65 @@ export class SequenceUtils extends Contract {
       }
     >;
 
+    RequiredConfig(
+      _wallet?: string | null,
+      _imageHash?: BytesLike | null,
+      _threshold?: null,
+      _signers?: null
+    ): TypedEventFilter<
+      [string, string, BigNumber, string],
+      {
+        _wallet: string;
+        _imageHash: string;
+        _threshold: BigNumber;
+        _signers: string;
+      }
+    >;
+
+    "RequiredSigner(address,address)"(
+      _wallet?: string | null,
+      _signer?: string | null
+    ): TypedEventFilter<[string, string], { _wallet: string; _signer: string }>;
+
     RequiredSigner(
-      _wallet: string | null,
-      _signer: string | null
+      _wallet?: string | null,
+      _signer?: string | null
     ): TypedEventFilter<[string, string], { _wallet: string; _signer: string }>;
   };
 
   estimateGas: {
     callBalanceOf(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callBlockNumber()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callBlockhash(
       _i: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "callBlockhash(uint256)"(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callChainId(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callChainId()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callCode(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callCode(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callCodeHash(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     callCodeSize(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callCodeSize(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callCoinbase(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callCoinbase()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callDifficulty(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callDifficulty()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasLeft(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasLeft()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasPrice()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callOrigin(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callOrigin()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     knownImageHashes(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "knownImageHashes(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -987,17 +659,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastImageHashUpdate(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     lastSignerUpdate(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "lastSignerUpdate(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1007,24 +669,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -1044,24 +689,7 @@ export class SequenceUtils extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "publishConfig(address,uint256,tuple[],bool)"(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     publishInitialSigners(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -1076,18 +704,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "requireMinNonce(address,uint256)"(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     requireNonExpired(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "requireNonExpired(uint256)"(
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1099,37 +716,16 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callBlockNumber()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     callBlockhash(
       _i: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "callBlockhash(uint256)"(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     callChainId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callChainId()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callCode(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "callCode(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1139,57 +735,26 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     callCodeSize(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "callCodeSize(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     callCoinbase(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callCoinbase()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callDifficulty(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callDifficulty()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     callGasLeft(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callGasLeft()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callGasLimit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callGasLimit()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     callGasPrice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callGasPrice()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callOrigin(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callOrigin()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     callTimestamp(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callTimestamp()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     knownImageHashes(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "knownImageHashes(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1199,17 +764,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "lastImageHashUpdate(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     lastSignerUpdate(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "lastSignerUpdate(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1219,24 +774,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -1256,24 +794,7 @@ export class SequenceUtils extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "publishConfig(address,uint256,tuple[],bool)"(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     publishInitialSigners(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
       _wallet: string,
       _hash: BytesLike,
       _sizeMembers: BigNumberish,
@@ -1288,18 +809,7 @@ export class SequenceUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "requireMinNonce(address,uint256)"(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     requireNonExpired(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "requireNonExpired(uint256)"(
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

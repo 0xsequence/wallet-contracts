@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   PayableOverrides,
@@ -18,13 +18,13 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface MainModuleGasEstimationInterface extends ethers.utils.Interface {
   functions: {
     "addHook(bytes4,address)": FunctionFragment;
     "createContract(bytes)": FunctionFragment;
-    "execute(tuple[],uint256,bytes)": FunctionFragment;
+    "execute((bool,bool,uint256,address,uint256,bytes)[],uint256,bytes)": FunctionFragment;
     "imageHash()": FunctionFragment;
     "isValidSignature(bytes32,bytes)": FunctionFragment;
     "nonce()": FunctionFragment;
@@ -35,7 +35,7 @@ interface MainModuleGasEstimationInterface extends ethers.utils.Interface {
     "readHook(bytes4)": FunctionFragment;
     "readNonce(uint256)": FunctionFragment;
     "removeHook(bytes4)": FunctionFragment;
-    "selfExecute(tuple[])": FunctionFragment;
+    "selfExecute((bool,bool,uint256,address,uint256,bytes)[])": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "updateImageHash(bytes32)": FunctionFragment;
     "updateImplementation(address)": FunctionFragment;
@@ -190,7 +190,37 @@ interface MainModuleGasEstimationInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "TxFailed"): EventFragment;
 }
 
-export class MainModuleGasEstimation extends Contract {
+export type CreatedContractEvent = TypedEvent<[string] & { _contract: string }>;
+
+export type GapNonceChangeEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber] & {
+    _space: BigNumber;
+    _oldNonce: BigNumber;
+    _newNonce: BigNumber;
+  }
+>;
+
+export type ImageHashUpdatedEvent = TypedEvent<
+  [string] & { newImageHash: string }
+>;
+
+export type ImplementationUpdatedEvent = TypedEvent<
+  [string] & { newImplementation: string }
+>;
+
+export type NoNonceUsedEvent = TypedEvent<[] & {}>;
+
+export type NonceChangeEvent = TypedEvent<
+  [BigNumber, BigNumber] & { _space: BigNumber; _newNonce: BigNumber }
+>;
+
+export type TxExecutedEvent = TypedEvent<[string] & { _tx: string }>;
+
+export type TxFailedEvent = TypedEvent<
+  [string, string] & { _tx: string; _reason: string }
+>;
+
+export class MainModuleGasEstimation extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -240,18 +270,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     createContract(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "createContract(bytes)"(
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -270,23 +289,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "execute(tuple[],uint256,bytes)"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     imageHash(overrides?: CallOverrides): Promise<[string]>;
-
-    "imageHash()"(overrides?: CallOverrides): Promise<[string]>;
 
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
@@ -302,18 +305,7 @@ export class MainModuleGasEstimation extends Contract {
 
     nonce(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "nonce()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     onERC1155BatchReceived(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish[],
-      arg3: BigNumberish[],
-      arg4: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish[],
@@ -331,24 +323,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "onERC1155Received(address,address,uint256,uint256,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BigNumberish,
-      arg4: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     onERC721Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "onERC721Received(address,address,uint256,bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish,
@@ -361,17 +336,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     readHook(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "readHook(bytes4)"(
       _signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<[string]>;
@@ -381,17 +346,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "readNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     removeHook(
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "removeHook(bytes4)"(
       _signature: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -408,24 +363,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "selfExecute(tuple[])"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
@@ -435,17 +373,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "updateImageHash(bytes32)"(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     updateImplementation(
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "updateImplementation(address)"(
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -457,18 +385,7 @@ export class MainModuleGasEstimation extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "addHook(bytes4,address)"(
-    _signature: BytesLike,
-    _implementation: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   createContract(
-    _code: BytesLike,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "createContract(bytes)"(
     _code: BytesLike,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -487,23 +404,7 @@ export class MainModuleGasEstimation extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "execute(tuple[],uint256,bytes)"(
-    _txs: {
-      delegateCall: boolean;
-      revertOnError: boolean;
-      gasLimit: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: BytesLike;
-    }[],
-    _nonce: BigNumberish,
-    _signature: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   imageHash(overrides?: CallOverrides): Promise<string>;
-
-  "imageHash()"(overrides?: CallOverrides): Promise<string>;
 
   "isValidSignature(bytes32,bytes)"(
     _hash: BytesLike,
@@ -519,18 +420,7 @@ export class MainModuleGasEstimation extends Contract {
 
   nonce(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   onERC1155BatchReceived(
-    arg0: string,
-    arg1: string,
-    arg2: BigNumberish[],
-    arg3: BigNumberish[],
-    arg4: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"(
     arg0: string,
     arg1: string,
     arg2: BigNumberish[],
@@ -548,24 +438,7 @@ export class MainModuleGasEstimation extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "onERC1155Received(address,address,uint256,uint256,bytes)"(
-    arg0: string,
-    arg1: string,
-    arg2: BigNumberish,
-    arg3: BigNumberish,
-    arg4: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   onERC721Received(
-    arg0: string,
-    arg1: string,
-    arg2: BigNumberish,
-    arg3: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "onERC721Received(address,address,uint256,bytes)"(
     arg0: string,
     arg1: string,
     arg2: BigNumberish,
@@ -578,34 +451,14 @@ export class MainModuleGasEstimation extends Contract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "readGapNonce(uint256)"(
-    _space: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   readHook(_signature: BytesLike, overrides?: CallOverrides): Promise<string>;
-
-  "readHook(bytes4)"(
-    _signature: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   readNonce(
     _space: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "readNonce(uint256)"(
-    _space: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   removeHook(
-    _signature: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "removeHook(bytes4)"(
     _signature: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -622,24 +475,7 @@ export class MainModuleGasEstimation extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "selfExecute(tuple[])"(
-    _txs: {
-      delegateCall: boolean;
-      revertOnError: boolean;
-      gasLimit: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: BytesLike;
-    }[],
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   supportsInterface(
-    _interfaceID: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "supportsInterface(bytes4)"(
     _interfaceID: BytesLike,
     overrides?: CallOverrides
   ): Promise<boolean>;
@@ -649,17 +485,7 @@ export class MainModuleGasEstimation extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "updateImageHash(bytes32)"(
-    _imageHash: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   updateImplementation(
-    _implementation: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "updateImplementation(address)"(
     _implementation: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -671,37 +497,12 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     createContract(
       _code: BytesLike,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     execute(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "execute(tuple[],uint256,bytes)"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -717,8 +518,6 @@ export class MainModuleGasEstimation extends Contract {
 
     imageHash(overrides?: CallOverrides): Promise<string>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<string>;
-
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -733,18 +532,7 @@ export class MainModuleGasEstimation extends Contract {
 
     nonce(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     onERC1155BatchReceived(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish[],
-      arg3: BigNumberish[],
-      arg4: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish[],
@@ -762,24 +550,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "onERC1155Received(address,address,uint256,uint256,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BigNumberish,
-      arg4: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     onERC721Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    "onERC721Received(address,address,uint256,bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish,
@@ -792,48 +563,16 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readHook(_signature: BytesLike, overrides?: CallOverrides): Promise<string>;
-
-    "readHook(bytes4)"(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     readNonce(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     removeHook(_signature: BytesLike, overrides?: CallOverrides): Promise<void>;
 
-    "removeHook(bytes4)"(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     selfExecute(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "selfExecute(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -850,17 +589,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    "supportsInterface(bytes4)"(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
     updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "updateImageHash(bytes32)"(
       _imageHash: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -869,50 +598,85 @@ export class MainModuleGasEstimation extends Contract {
       _implementation: string,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    "updateImplementation(address)"(
-      _implementation: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {
-    CreatedContract(
-      _contract: null
+    "CreatedContract(address)"(
+      _contract?: null
     ): TypedEventFilter<[string], { _contract: string }>;
 
-    GapNonceChange(
-      _space: null,
-      _oldNonce: null,
-      _newNonce: null
+    CreatedContract(
+      _contract?: null
+    ): TypedEventFilter<[string], { _contract: string }>;
+
+    "GapNonceChange(uint256,uint256,uint256)"(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
     ): TypedEventFilter<
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
     >;
 
-    ImageHashUpdated(
-      newImageHash: null
+    GapNonceChange(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber, BigNumber],
+      { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
+    >;
+
+    "ImageHashUpdated(bytes32)"(
+      newImageHash?: null
     ): TypedEventFilter<[string], { newImageHash: string }>;
 
-    ImplementationUpdated(
-      newImplementation: null
+    ImageHashUpdated(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+
+    "ImplementationUpdated(address)"(
+      newImplementation?: null
     ): TypedEventFilter<[string], { newImplementation: string }>;
+
+    ImplementationUpdated(
+      newImplementation?: null
+    ): TypedEventFilter<[string], { newImplementation: string }>;
+
+    "NoNonceUsed()"(): TypedEventFilter<[], {}>;
 
     NoNonceUsed(): TypedEventFilter<[], {}>;
 
-    NonceChange(
-      _space: null,
-      _newNonce: null
+    "NonceChange(uint256,uint256)"(
+      _space?: null,
+      _newNonce?: null
     ): TypedEventFilter<
       [BigNumber, BigNumber],
       { _space: BigNumber; _newNonce: BigNumber }
     >;
 
-    TxExecuted(_tx: null): TypedEventFilter<[string], { _tx: string }>;
+    NonceChange(
+      _space?: null,
+      _newNonce?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber],
+      { _space: BigNumber; _newNonce: BigNumber }
+    >;
+
+    "TxExecuted(bytes32)"(
+      _tx?: null
+    ): TypedEventFilter<[string], { _tx: string }>;
+
+    TxExecuted(_tx?: null): TypedEventFilter<[string], { _tx: string }>;
+
+    "TxFailed(bytes32,bytes)"(
+      _tx?: null,
+      _reason?: null
+    ): TypedEventFilter<[string, string], { _tx: string; _reason: string }>;
 
     TxFailed(
-      _tx: null,
-      _reason: null
+      _tx?: null,
+      _reason?: null
     ): TypedEventFilter<[string, string], { _tx: string; _reason: string }>;
   };
 
@@ -923,37 +687,12 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     createContract(
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "createContract(bytes)"(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     execute(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "execute(tuple[],uint256,bytes)"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -969,8 +708,6 @@ export class MainModuleGasEstimation extends Contract {
 
     imageHash(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "imageHash()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -985,18 +722,7 @@ export class MainModuleGasEstimation extends Contract {
 
     nonce(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     onERC1155BatchReceived(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish[],
-      arg3: BigNumberish[],
-      arg4: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish[],
@@ -1014,24 +740,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "onERC1155Received(address,address,uint256,uint256,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BigNumberish,
-      arg4: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     onERC721Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "onERC721Received(address,address,uint256,bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish,
@@ -1044,17 +753,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readHook(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "readHook(bytes4)"(
       _signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1064,17 +763,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     removeHook(
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "removeHook(bytes4)"(
       _signature: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -1091,24 +780,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "selfExecute(tuple[])"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1118,17 +790,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "updateImageHash(bytes32)"(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     updateImplementation(
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "updateImplementation(address)"(
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -1141,18 +803,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     createContract(
-      _code: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "createContract(bytes)"(
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
@@ -1171,23 +822,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "execute(tuple[],uint256,bytes)"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     imageHash(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "imageHash()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
@@ -1203,18 +838,7 @@ export class MainModuleGasEstimation extends Contract {
 
     nonce(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "nonce()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     onERC1155BatchReceived(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish[],
-      arg3: BigNumberish[],
-      arg4: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish[],
@@ -1232,24 +856,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "onERC1155Received(address,address,uint256,uint256,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BigNumberish,
-      arg4: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     onERC721Received(
-      arg0: string,
-      arg1: string,
-      arg2: BigNumberish,
-      arg3: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "onERC721Received(address,address,uint256,bytes)"(
       arg0: string,
       arg1: string,
       arg2: BigNumberish,
@@ -1262,17 +869,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     readHook(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "readHook(bytes4)"(
       _signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1282,17 +879,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     removeHook(
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "removeHook(bytes4)"(
       _signature: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
@@ -1309,24 +896,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "selfExecute(tuple[])"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1336,17 +906,7 @@ export class MainModuleGasEstimation extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "updateImageHash(bytes32)"(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     updateImplementation(
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "updateImplementation(address)"(
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

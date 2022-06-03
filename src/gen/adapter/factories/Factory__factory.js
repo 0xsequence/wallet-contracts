@@ -20,29 +20,6 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 exports.Factory__factory = void 0;
 var ethers_1 = require("ethers");
-var Factory__factory = /** @class */ (function (_super) {
-    __extends(Factory__factory, _super);
-    function Factory__factory(signer) {
-        return _super.call(this, _abi, _bytecode, signer) || this;
-    }
-    Factory__factory.prototype.deploy = function (overrides) {
-        return _super.prototype.deploy.call(this, overrides || {});
-    };
-    Factory__factory.prototype.getDeployTransaction = function (overrides) {
-        return _super.prototype.getDeployTransaction.call(this, overrides || {});
-    };
-    Factory__factory.prototype.attach = function (address) {
-        return _super.prototype.attach.call(this, address);
-    };
-    Factory__factory.prototype.connect = function (signer) {
-        return _super.prototype.connect.call(this, signer);
-    };
-    Factory__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return Factory__factory;
-}(ethers_1.ContractFactory));
-exports.Factory__factory = Factory__factory;
 var _abi = [
     {
         inputs: [
@@ -70,3 +47,42 @@ var _abi = [
     },
 ];
 var _bytecode = "0x608060405234801561001057600080fd5b506101a9806100206000396000f3fe60806040526004361061001e5760003560e01c806332c02a1414610023575b600080fd5b6100366100313660046100c5565b61005f565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b60008060405180606001604052806028815260200161014c602891398473ffffffffffffffffffffffffffffffffffffffff166040516020016100a392919061010a565b60405160208183030381529060405290508281516020830134f5949350505050565b600080604083850312156100d857600080fd5b823573ffffffffffffffffffffffffffffffffffffffff811681146100fc57600080fd5b946020939093013593505050565b6000835160005b8181101561012b5760208187018101518583015201610111565b8181111561013a576000828501525b50919091019182525060200191905056fe603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3a2646970667358221220842a6b0f229d93a3371cde5b7e4f0018e523032df7d54918d28dee3aa4d057bd64736f6c634300080e0033";
+var Factory__factory = /** @class */ (function (_super) {
+    __extends(Factory__factory, _super);
+    function Factory__factory() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var _this = this;
+        if (args.length === 1) {
+            _this = _super.call(this, _abi, _bytecode, args[0]) || this;
+        }
+        else {
+            _this = _super.apply(this, args) || this;
+        }
+        return _this;
+    }
+    Factory__factory.prototype.deploy = function (overrides) {
+        return _super.prototype.deploy.call(this, overrides || {});
+    };
+    Factory__factory.prototype.getDeployTransaction = function (overrides) {
+        return _super.prototype.getDeployTransaction.call(this, overrides || {});
+    };
+    Factory__factory.prototype.attach = function (address) {
+        return _super.prototype.attach.call(this, address);
+    };
+    Factory__factory.prototype.connect = function (signer) {
+        return _super.prototype.connect.call(this, signer);
+    };
+    Factory__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    Factory__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    Factory__factory.bytecode = _bytecode;
+    Factory__factory.abi = _abi;
+    return Factory__factory;
+}(ethers_1.ContractFactory));
+exports.Factory__factory = Factory__factory;

@@ -2,39 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, Contract, ContractFactory, Overrides } from "ethers";
+import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import { Provider, TransactionRequest } from "@ethersproject/providers";
-
-import type { GasBurnerMock } from "../GasBurnerMock";
-
-export class GasBurnerMock__factory extends ContractFactory {
-  constructor(signer?: Signer) {
-    super(_abi, _bytecode, signer);
-  }
-
-  deploy(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<GasBurnerMock> {
-    return super.deploy(overrides || {}) as Promise<GasBurnerMock>;
-  }
-  getDeployTransaction(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(overrides || {});
-  }
-  attach(address: string): GasBurnerMock {
-    return super.attach(address) as GasBurnerMock;
-  }
-  connect(signer: Signer): GasBurnerMock__factory {
-    return super.connect(signer) as GasBurnerMock__factory;
-  }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): GasBurnerMock {
-    return new Contract(address, _abi, signerOrProvider) as GasBurnerMock;
-  }
-}
+import type { GasBurnerMock, GasBurnerMockInterface } from "../GasBurnerMock";
 
 const _abi = [
   {
@@ -67,3 +37,43 @@ const _abi = [
 
 const _bytecode =
   "0x608060405234801561001057600080fd5b5061014c806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80634ad5d16f14610030575b600080fd5b61004361003e3660046100bf565b610045565b005b7fb5769a7bae701ca7bcd4ed2e803959a466a236728fcb0dc25fa836e3a38bc2225a60405190815260200160405180910390a16000805a90505b825a61008b90836100d8565b10156100ba5760408051602081018490520160405160208183030381529060405280519060200120915061007f565b505050565b6000602082840312156100d157600080fd5b5035919050565b600082821015610111577f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b50039056fea2646970667358221220eaf95b5106974db997508decff9655c10466c340d493c53df6575d2043f9f11464736f6c634300080e0033";
+
+export class GasBurnerMock__factory extends ContractFactory {
+  constructor(
+    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
+  ) {
+    if (args.length === 1) {
+      super(_abi, _bytecode, args[0]);
+    } else {
+      super(...args);
+    }
+  }
+
+  deploy(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<GasBurnerMock> {
+    return super.deploy(overrides || {}) as Promise<GasBurnerMock>;
+  }
+  getDeployTransaction(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): TransactionRequest {
+    return super.getDeployTransaction(overrides || {});
+  }
+  attach(address: string): GasBurnerMock {
+    return super.attach(address) as GasBurnerMock;
+  }
+  connect(signer: Signer): GasBurnerMock__factory {
+    return super.connect(signer) as GasBurnerMock__factory;
+  }
+  static readonly bytecode = _bytecode;
+  static readonly abi = _abi;
+  static createInterface(): GasBurnerMockInterface {
+    return new utils.Interface(_abi) as GasBurnerMockInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): GasBurnerMock {
+    return new Contract(address, _abi, signerOrProvider) as GasBurnerMock;
+  }
+}

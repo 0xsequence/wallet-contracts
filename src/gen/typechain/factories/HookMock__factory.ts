@@ -2,39 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, Contract, ContractFactory, Overrides } from "ethers";
+import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import { Provider, TransactionRequest } from "@ethersproject/providers";
-
-import type { HookMock } from "../HookMock";
-
-export class HookMock__factory extends ContractFactory {
-  constructor(signer?: Signer) {
-    super(_abi, _bytecode, signer);
-  }
-
-  deploy(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<HookMock> {
-    return super.deploy(overrides || {}) as Promise<HookMock>;
-  }
-  getDeployTransaction(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(overrides || {});
-  }
-  attach(address: string): HookMock {
-    return super.attach(address) as HookMock;
-  }
-  connect(signer: Signer): HookMock__factory {
-    return super.connect(signer) as HookMock__factory;
-  }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): HookMock {
-    return new Contract(address, _abi, signerOrProvider) as HookMock;
-  }
-}
+import type { HookMock, HookMockInterface } from "../HookMock";
 
 const _abi = [
   {
@@ -60,3 +30,43 @@ const _abi = [
 
 const _bytecode =
   "0x608060405234801561001057600080fd5b50610110806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063b68fe6cf14602d575b600080fd5b603c6038366004605f565b604e565b60405190815260200160405180910390f35b600060598260026077565b92915050565b600060208284031215607057600080fd5b5035919050565b6000817fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff048311821515161560d5577f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b50029056fea26469706673582212204a6fbb77c716291fffb9370d15aebc130978e3e42f47bf5db76a3aaa625ec37664736f6c634300080e0033";
+
+export class HookMock__factory extends ContractFactory {
+  constructor(
+    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
+  ) {
+    if (args.length === 1) {
+      super(_abi, _bytecode, args[0]);
+    } else {
+      super(...args);
+    }
+  }
+
+  deploy(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<HookMock> {
+    return super.deploy(overrides || {}) as Promise<HookMock>;
+  }
+  getDeployTransaction(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): TransactionRequest {
+    return super.getDeployTransaction(overrides || {});
+  }
+  attach(address: string): HookMock {
+    return super.attach(address) as HookMock;
+  }
+  connect(signer: Signer): HookMock__factory {
+    return super.connect(signer) as HookMock__factory;
+  }
+  static readonly bytecode = _bytecode;
+  static readonly abi = _abi;
+  static createInterface(): HookMockInterface {
+    return new utils.Interface(_abi) as HookMockInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): HookMock {
+    return new Contract(address, _abi, signerOrProvider) as HookMock;
+  }
+}

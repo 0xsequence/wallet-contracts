@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   PayableOverrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface MultiCallUtilsInterface extends ethers.utils.Interface {
   functions: {
@@ -35,7 +35,7 @@ interface MultiCallUtilsInterface extends ethers.utils.Interface {
     "callGasPrice()": FunctionFragment;
     "callOrigin()": FunctionFragment;
     "callTimestamp()": FunctionFragment;
-    "multiCall(tuple[])": FunctionFragment;
+    "multiCall((bool,bool,uint256,address,uint256,bytes)[])": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -160,7 +160,7 @@ interface MultiCallUtilsInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class MultiCallUtils extends Contract {
+export class MultiCallUtils extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -209,21 +209,9 @@ export class MultiCallUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callBlockNumber()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     callBlockhash(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "callBlockhash(uint256)"(
       _i: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
@@ -232,16 +220,7 @@ export class MultiCallUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { id: BigNumber }>;
 
-    "callChainId()"(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { id: BigNumber }>;
-
     callCode(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[string] & { code: string }>;
-
-    "callCode(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<[string] & { code: string }>;
@@ -251,62 +230,26 @@ export class MultiCallUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[string] & { codeHash: string }>;
 
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[string] & { codeHash: string }>;
-
     callCodeSize(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { size: BigNumber }>;
-
-    "callCodeSize(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { size: BigNumber }>;
 
     callCoinbase(overrides?: CallOverrides): Promise<[string]>;
 
-    "callCoinbase()"(overrides?: CallOverrides): Promise<[string]>;
-
     callDifficulty(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "callDifficulty()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     callGasLeft(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callGasLeft()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     callGasLimit(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "callGasLimit()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     callGasPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callGasPrice()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     callOrigin(overrides?: CallOverrides): Promise<[string]>;
-
-    "callOrigin()"(overrides?: CallOverrides): Promise<[string]>;
 
     callTimestamp(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "callTimestamp()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -321,88 +264,33 @@ export class MultiCallUtils extends Contract {
 
   callBalanceOf(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callBalanceOf(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   callBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callBlockNumber()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callBlockhash(_i: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-  "callBlockhash(uint256)"(
-    _i: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   callChainId(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callChainId()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callCode(_addr: string, overrides?: CallOverrides): Promise<string>;
 
-  "callCode(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   callCodeHash(_addr: string, overrides?: CallOverrides): Promise<string>;
-
-  "callCodeHash(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   callCodeSize(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callCodeSize(address)"(
-    _addr: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   callCoinbase(overrides?: CallOverrides): Promise<string>;
-
-  "callCoinbase()"(overrides?: CallOverrides): Promise<string>;
 
   callDifficulty(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callDifficulty()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   callGasLeft(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callGasLeft()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   callGasPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "callGasPrice()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callOrigin(overrides?: CallOverrides): Promise<string>;
 
-  "callOrigin()"(overrides?: CallOverrides): Promise<string>;
-
   callTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   multiCall(
-    _txs: {
-      delegateCall: boolean;
-      revertOnError: boolean;
-      gasLimit: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: BytesLike;
-    }[],
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "multiCall(tuple[])"(
     _txs: {
       delegateCall: boolean;
       revertOnError: boolean;
@@ -417,90 +305,33 @@ export class MultiCallUtils extends Contract {
   callStatic: {
     callBalanceOf(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callBlockNumber()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callBlockhash(_i: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-    "callBlockhash(uint256)"(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     callChainId(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callChainId()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callCode(_addr: string, overrides?: CallOverrides): Promise<string>;
 
-    "callCode(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     callCodeHash(_addr: string, overrides?: CallOverrides): Promise<string>;
-
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     callCodeSize(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callCodeSize(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callCoinbase(overrides?: CallOverrides): Promise<string>;
-
-    "callCoinbase()"(overrides?: CallOverrides): Promise<string>;
 
     callDifficulty(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callDifficulty()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasLeft(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasLeft()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasPrice()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callOrigin(overrides?: CallOverrides): Promise<string>;
 
-    "callOrigin()"(overrides?: CallOverrides): Promise<string>;
-
     callTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean[], string[]] & { _successes: boolean[]; _results: string[] }
-    >;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -520,91 +351,36 @@ export class MultiCallUtils extends Contract {
   estimateGas: {
     callBalanceOf(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callBlockNumber()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callBlockhash(
       _i: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "callBlockhash(uint256)"(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callChainId(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callChainId()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callCode(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callCode(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callCodeHash(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     callCodeSize(_addr: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callCodeSize(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     callCoinbase(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callCoinbase()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callDifficulty(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callDifficulty()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasLeft(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasLeft()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callGasPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "callGasPrice()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     callOrigin(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callOrigin()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     callTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "callTimestamp()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;
@@ -623,37 +399,16 @@ export class MultiCallUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "callBalanceOf(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     callBlockNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callBlockNumber()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     callBlockhash(
       _i: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "callBlockhash(uint256)"(
-      _i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     callChainId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callChainId()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callCode(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "callCode(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -663,64 +418,26 @@ export class MultiCallUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "callCodeHash(address)"(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     callCodeSize(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "callCodeSize(address)"(
       _addr: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     callCoinbase(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callCoinbase()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callDifficulty(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callDifficulty()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     callGasLeft(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callGasLeft()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callGasLimit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callGasLimit()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     callGasPrice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callGasPrice()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     callOrigin(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "callOrigin()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     callTimestamp(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "callTimestamp()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     multiCall(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "multiCall(tuple[])"(
       _txs: {
         delegateCall: boolean;
         revertOnError: boolean;

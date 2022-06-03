@@ -2,19 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-
-import type { ModuleERC165 } from "../ModuleERC165";
-
-export class ModuleERC165__factory {
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ModuleERC165 {
-    return new Contract(address, _abi, signerOrProvider) as ModuleERC165;
-  }
-}
+import type { ModuleERC165, ModuleERC165Interface } from "../ModuleERC165";
 
 const _abi = [
   {
@@ -37,3 +27,16 @@ const _abi = [
     type: "function",
   },
 ];
+
+export class ModuleERC165__factory {
+  static readonly abi = _abi;
+  static createInterface(): ModuleERC165Interface {
+    return new utils.Interface(_abi) as ModuleERC165Interface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): ModuleERC165 {
+    return new Contract(address, _abi, signerOrProvider) as ModuleERC165;
+  }
+}

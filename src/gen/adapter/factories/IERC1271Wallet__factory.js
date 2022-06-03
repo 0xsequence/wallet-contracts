@@ -5,15 +5,6 @@
 exports.__esModule = true;
 exports.IERC1271Wallet__factory = void 0;
 var ethers_1 = require("ethers");
-var IERC1271Wallet__factory = /** @class */ (function () {
-    function IERC1271Wallet__factory() {
-    }
-    IERC1271Wallet__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return IERC1271Wallet__factory;
-}());
-exports.IERC1271Wallet__factory = IERC1271Wallet__factory;
 var _abi = [
     {
         inputs: [
@@ -64,3 +55,16 @@ var _abi = [
         type: "function"
     },
 ];
+var IERC1271Wallet__factory = /** @class */ (function () {
+    function IERC1271Wallet__factory() {
+    }
+    IERC1271Wallet__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    IERC1271Wallet__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    IERC1271Wallet__factory.abi = _abi;
+    return IERC1271Wallet__factory;
+}());
+exports.IERC1271Wallet__factory = IERC1271Wallet__factory;

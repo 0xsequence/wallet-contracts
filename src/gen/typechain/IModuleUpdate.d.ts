@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IModuleUpdateInterface extends ethers.utils.Interface {
   functions: {
@@ -37,7 +37,7 @@ interface IModuleUpdateInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class IModuleUpdate extends Contract {
+export class IModuleUpdate extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -85,11 +85,6 @@ export class IModuleUpdate extends Contract {
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "updateImplementation(address)"(
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   updateImplementation(
@@ -97,18 +92,8 @@ export class IModuleUpdate extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "updateImplementation(address)"(
-    _implementation: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     updateImplementation(
-      _implementation: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "updateImplementation(address)"(
       _implementation: string,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -121,20 +106,10 @@ export class IModuleUpdate extends Contract {
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "updateImplementation(address)"(
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     updateImplementation(
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "updateImplementation(address)"(
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

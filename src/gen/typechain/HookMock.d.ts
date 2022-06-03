@@ -9,14 +9,14 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface HookMockInterface extends ethers.utils.Interface {
   functions: {
@@ -36,7 +36,7 @@ interface HookMockInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class HookMock extends Contract {
+export class HookMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -84,11 +84,6 @@ export class HookMock extends Contract {
       _num: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
-
-    "onHookMockCall(uint256)"(
-      _num: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
   };
 
   onHookMockCall(
@@ -96,18 +91,8 @@ export class HookMock extends Contract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "onHookMockCall(uint256)"(
-    _num: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   callStatic: {
     onHookMockCall(
-      _num: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "onHookMockCall(uint256)"(
       _num: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -120,20 +105,10 @@ export class HookMock extends Contract {
       _num: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    "onHookMockCall(uint256)"(
-      _num: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     onHookMockCall(
-      _num: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "onHookMockCall(uint256)"(
       _num: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

@@ -20,29 +20,6 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 exports.HookMock__factory = void 0;
 var ethers_1 = require("ethers");
-var HookMock__factory = /** @class */ (function (_super) {
-    __extends(HookMock__factory, _super);
-    function HookMock__factory(signer) {
-        return _super.call(this, _abi, _bytecode, signer) || this;
-    }
-    HookMock__factory.prototype.deploy = function (overrides) {
-        return _super.prototype.deploy.call(this, overrides || {});
-    };
-    HookMock__factory.prototype.getDeployTransaction = function (overrides) {
-        return _super.prototype.getDeployTransaction.call(this, overrides || {});
-    };
-    HookMock__factory.prototype.attach = function (address) {
-        return _super.prototype.attach.call(this, address);
-    };
-    HookMock__factory.prototype.connect = function (signer) {
-        return _super.prototype.connect.call(this, signer);
-    };
-    HookMock__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return HookMock__factory;
-}(ethers_1.ContractFactory));
-exports.HookMock__factory = HookMock__factory;
 var _abi = [
     {
         inputs: [
@@ -65,3 +42,42 @@ var _abi = [
     },
 ];
 var _bytecode = "0x608060405234801561001057600080fd5b50610110806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063b68fe6cf14602d575b600080fd5b603c6038366004605f565b604e565b60405190815260200160405180910390f35b600060598260026077565b92915050565b600060208284031215607057600080fd5b5035919050565b6000817fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff048311821515161560d5577f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b50029056fea26469706673582212204a6fbb77c716291fffb9370d15aebc130978e3e42f47bf5db76a3aaa625ec37664736f6c634300080e0033";
+var HookMock__factory = /** @class */ (function (_super) {
+    __extends(HookMock__factory, _super);
+    function HookMock__factory() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var _this = this;
+        if (args.length === 1) {
+            _this = _super.call(this, _abi, _bytecode, args[0]) || this;
+        }
+        else {
+            _this = _super.apply(this, args) || this;
+        }
+        return _this;
+    }
+    HookMock__factory.prototype.deploy = function (overrides) {
+        return _super.prototype.deploy.call(this, overrides || {});
+    };
+    HookMock__factory.prototype.getDeployTransaction = function (overrides) {
+        return _super.prototype.getDeployTransaction.call(this, overrides || {});
+    };
+    HookMock__factory.prototype.attach = function (address) {
+        return _super.prototype.attach.call(this, address);
+    };
+    HookMock__factory.prototype.connect = function (signer) {
+        return _super.prototype.connect.call(this, signer);
+    };
+    HookMock__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    HookMock__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    HookMock__factory.bytecode = _bytecode;
+    HookMock__factory.abi = _abi;
+    return HookMock__factory;
+}(ethers_1.ContractFactory));
+exports.HookMock__factory = HookMock__factory;

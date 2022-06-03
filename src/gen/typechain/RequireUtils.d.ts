@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface RequireUtilsInterface extends ethers.utils.Interface {
   functions: {
@@ -25,7 +25,7 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
     "lastImageHashUpdate(bytes32)": FunctionFragment;
     "lastSignerUpdate(address)": FunctionFragment;
     "lastWalletUpdate(address)": FunctionFragment;
-    "publishConfig(address,uint256,tuple[],bool)": FunctionFragment;
+    "publishConfig(address,uint256,(uint256,address)[],bool)": FunctionFragment;
     "publishInitialSigners(address,bytes32,uint256,bytes,bool)": FunctionFragment;
     "requireMinNonce(address,uint256)": FunctionFragment;
     "requireNonExpired(uint256)": FunctionFragment;
@@ -111,7 +111,20 @@ interface RequireUtilsInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "RequiredSigner"): EventFragment;
 }
 
-export class RequireUtils extends Contract {
+export type RequiredConfigEvent = TypedEvent<
+  [string, string, BigNumber, string] & {
+    _wallet: string;
+    _imageHash: string;
+    _threshold: BigNumber;
+    _signers: string;
+  }
+>;
+
+export type RequiredSignerEvent = TypedEvent<
+  [string, string] & { _wallet: string; _signer: string }
+>;
+
+export class RequireUtils extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -160,17 +173,7 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    "knownImageHashes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
     lastImageHashUpdate(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    "lastImageHashUpdate(bytes32)"(
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
@@ -180,30 +183,12 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "lastSignerUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     publishConfig(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
@@ -220,22 +205,7 @@ export class RequireUtils extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     requireMinNonce(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
-    "requireMinNonce(address,uint256)"(
       _wallet: string,
       _nonce: BigNumberish,
       overrides?: CallOverrides
@@ -245,53 +215,20 @@ export class RequireUtils extends Contract {
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[void]>;
-
-    "requireNonExpired(uint256)"(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
   };
 
   knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-  "knownImageHashes(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   lastImageHashUpdate(
     arg0: BytesLike,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "lastImageHashUpdate(bytes32)"(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   lastSignerUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  "lastSignerUpdate(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   lastWalletUpdate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  "lastWalletUpdate(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   publishConfig(
-    _wallet: string,
-    _threshold: BigNumberish,
-    _members: { weight: BigNumberish; signer: string }[],
-    _index: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "publishConfig(address,uint256,tuple[],bool)"(
     _wallet: string,
     _threshold: BigNumberish,
     _members: { weight: BigNumberish; signer: string }[],
@@ -308,22 +245,7 @@ export class RequireUtils extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
-    _wallet: string,
-    _hash: BytesLike,
-    _sizeMembers: BigNumberish,
-    _signature: BytesLike,
-    _index: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   requireMinNonce(
-    _wallet: string,
-    _nonce: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  "requireMinNonce(address,uint256)"(
     _wallet: string,
     _nonce: BigNumberish,
     overrides?: CallOverrides
@@ -334,25 +256,10 @@ export class RequireUtils extends Contract {
     overrides?: CallOverrides
   ): Promise<void>;
 
-  "requireNonExpired(uint256)"(
-    _expiration: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
   callStatic: {
     knownImageHashes(arg0: string, overrides?: CallOverrides): Promise<string>;
 
-    "knownImageHashes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     lastImageHashUpdate(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "lastImageHashUpdate(bytes32)"(
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -362,30 +269,12 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastSignerUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     publishConfig(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
@@ -402,22 +291,7 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     requireMinNonce(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "requireMinNonce(address,uint256)"(
       _wallet: string,
       _nonce: BigNumberish,
       overrides?: CallOverrides
@@ -427,19 +301,14 @@ export class RequireUtils extends Contract {
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    "requireNonExpired(uint256)"(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {
-    RequiredConfig(
-      _wallet: string | null,
-      _imageHash: BytesLike | null,
-      _threshold: null,
-      _signers: null
+    "RequiredConfig(address,bytes32,uint256,bytes)"(
+      _wallet?: string | null,
+      _imageHash?: BytesLike | null,
+      _threshold?: null,
+      _signers?: null
     ): TypedEventFilter<
       [string, string, BigNumber, string],
       {
@@ -450,9 +319,29 @@ export class RequireUtils extends Contract {
       }
     >;
 
+    RequiredConfig(
+      _wallet?: string | null,
+      _imageHash?: BytesLike | null,
+      _threshold?: null,
+      _signers?: null
+    ): TypedEventFilter<
+      [string, string, BigNumber, string],
+      {
+        _wallet: string;
+        _imageHash: string;
+        _threshold: BigNumber;
+        _signers: string;
+      }
+    >;
+
+    "RequiredSigner(address,address)"(
+      _wallet?: string | null,
+      _signer?: string | null
+    ): TypedEventFilter<[string, string], { _wallet: string; _signer: string }>;
+
     RequiredSigner(
-      _wallet: string | null,
-      _signer: string | null
+      _wallet?: string | null,
+      _signer?: string | null
     ): TypedEventFilter<[string, string], { _wallet: string; _signer: string }>;
   };
 
@@ -462,17 +351,7 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "knownImageHashes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     lastImageHashUpdate(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "lastImageHashUpdate(bytes32)"(
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -482,30 +361,12 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastSignerUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     publishConfig(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
@@ -522,33 +383,13 @@ export class RequireUtils extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     requireMinNonce(
       _wallet: string,
       _nonce: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "requireMinNonce(address,uint256)"(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     requireNonExpired(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "requireNonExpired(uint256)"(
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -560,17 +401,7 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "knownImageHashes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     lastImageHashUpdate(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "lastImageHashUpdate(bytes32)"(
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -580,30 +411,12 @@ export class RequireUtils extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "lastSignerUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     lastWalletUpdate(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "lastWalletUpdate(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     publishConfig(
-      _wallet: string,
-      _threshold: BigNumberish,
-      _members: { weight: BigNumberish; signer: string }[],
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "publishConfig(address,uint256,tuple[],bool)"(
       _wallet: string,
       _threshold: BigNumberish,
       _members: { weight: BigNumberish; signer: string }[],
@@ -620,33 +433,13 @@ export class RequireUtils extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "publishInitialSigners(address,bytes32,uint256,bytes,bool)"(
-      _wallet: string,
-      _hash: BytesLike,
-      _sizeMembers: BigNumberish,
-      _signature: BytesLike,
-      _index: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     requireMinNonce(
       _wallet: string,
       _nonce: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "requireMinNonce(address,uint256)"(
-      _wallet: string,
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     requireNonExpired(
-      _expiration: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "requireNonExpired(uint256)"(
       _expiration: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

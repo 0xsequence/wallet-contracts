@@ -5,15 +5,6 @@
 exports.__esModule = true;
 exports.ModuleAuth__factory = void 0;
 var ethers_1 = require("ethers");
-var ModuleAuth__factory = /** @class */ (function () {
-    function ModuleAuth__factory() {
-    }
-    ModuleAuth__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return ModuleAuth__factory;
-}());
-exports.ModuleAuth__factory = ModuleAuth__factory;
 var _abi = [
     {
         inputs: [
@@ -83,3 +74,16 @@ var _abi = [
         type: "function"
     },
 ];
+var ModuleAuth__factory = /** @class */ (function () {
+    function ModuleAuth__factory() {
+    }
+    ModuleAuth__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    ModuleAuth__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    ModuleAuth__factory.abi = _abi;
+    return ModuleAuth__factory;
+}());
+exports.ModuleAuth__factory = ModuleAuth__factory;

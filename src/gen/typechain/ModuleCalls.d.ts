@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,15 +17,15 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ModuleCallsInterface extends ethers.utils.Interface {
   functions: {
-    "execute(tuple[],uint256,bytes)": FunctionFragment;
+    "execute((bool,bool,uint256,address,uint256,bytes)[],uint256,bytes)": FunctionFragment;
     "nonce()": FunctionFragment;
     "readGapNonce(uint256)": FunctionFragment;
     "readNonce(uint256)": FunctionFragment;
-    "selfExecute(tuple[])": FunctionFragment;
+    "selfExecute((bool,bool,uint256,address,uint256,bytes)[])": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
   };
 
@@ -102,7 +102,27 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "TxFailed"): EventFragment;
 }
 
-export class ModuleCalls extends Contract {
+export type GapNonceChangeEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber] & {
+    _space: BigNumber;
+    _oldNonce: BigNumber;
+    _newNonce: BigNumber;
+  }
+>;
+
+export type NoNonceUsedEvent = TypedEvent<[] & {}>;
+
+export type NonceChangeEvent = TypedEvent<
+  [BigNumber, BigNumber] & { _space: BigNumber; _newNonce: BigNumber }
+>;
+
+export type TxExecutedEvent = TypedEvent<[string] & { _tx: string }>;
+
+export type TxFailedEvent = TypedEvent<
+  [string, string] & { _tx: string; _reason: string }
+>;
+
+export class ModuleCalls extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -160,40 +180,14 @@ export class ModuleCalls extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "execute(tuple[],uint256,bytes)"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     nonce(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "nonce()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     readGapNonce(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     readNonce(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    "readNonce(uint256)"(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
@@ -210,24 +204,7 @@ export class ModuleCalls extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "selfExecute(tuple[])"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
@@ -247,40 +224,14 @@ export class ModuleCalls extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "execute(tuple[],uint256,bytes)"(
-    _txs: {
-      delegateCall: boolean;
-      revertOnError: boolean;
-      gasLimit: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: BytesLike;
-    }[],
-    _nonce: BigNumberish,
-    _signature: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   nonce(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   readGapNonce(
     _space: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "readGapNonce(uint256)"(
-    _space: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   readNonce(
-    _space: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  "readNonce(uint256)"(
     _space: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
@@ -297,24 +248,7 @@ export class ModuleCalls extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "selfExecute(tuple[])"(
-    _txs: {
-      delegateCall: boolean;
-      revertOnError: boolean;
-      gasLimit: BigNumberish;
-      target: string;
-      value: BigNumberish;
-      data: BytesLike;
-    }[],
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   supportsInterface(
-    _interfaceID: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "supportsInterface(bytes4)"(
     _interfaceID: BytesLike,
     overrides?: CallOverrides
   ): Promise<boolean>;
@@ -334,40 +268,14 @@ export class ModuleCalls extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "execute(tuple[],uint256,bytes)"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     nonce(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     readGapNonce(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readNonce(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "readNonce(uint256)"(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -384,54 +292,65 @@ export class ModuleCalls extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "selfExecute(tuple[])"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<boolean>;
   };
 
   filters: {
-    GapNonceChange(
-      _space: null,
-      _oldNonce: null,
-      _newNonce: null
+    "GapNonceChange(uint256,uint256,uint256)"(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
     ): TypedEventFilter<
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
     >;
 
+    GapNonceChange(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber, BigNumber],
+      { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
+    >;
+
+    "NoNonceUsed()"(): TypedEventFilter<[], {}>;
+
     NoNonceUsed(): TypedEventFilter<[], {}>;
 
-    NonceChange(
-      _space: null,
-      _newNonce: null
+    "NonceChange(uint256,uint256)"(
+      _space?: null,
+      _newNonce?: null
     ): TypedEventFilter<
       [BigNumber, BigNumber],
       { _space: BigNumber; _newNonce: BigNumber }
     >;
 
-    TxExecuted(_tx: null): TypedEventFilter<[string], { _tx: string }>;
+    NonceChange(
+      _space?: null,
+      _newNonce?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber],
+      { _space: BigNumber; _newNonce: BigNumber }
+    >;
+
+    "TxExecuted(bytes32)"(
+      _tx?: null
+    ): TypedEventFilter<[string], { _tx: string }>;
+
+    TxExecuted(_tx?: null): TypedEventFilter<[string], { _tx: string }>;
+
+    "TxFailed(bytes32,bytes)"(
+      _tx?: null,
+      _reason?: null
+    ): TypedEventFilter<[string, string], { _tx: string; _reason: string }>;
 
     TxFailed(
-      _tx: null,
-      _reason: null
+      _tx?: null,
+      _reason?: null
     ): TypedEventFilter<[string, string], { _tx: string; _reason: string }>;
   };
 
@@ -450,40 +369,14 @@ export class ModuleCalls extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "execute(tuple[],uint256,bytes)"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     nonce(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "nonce()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     readGapNonce(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     readNonce(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "readNonce(uint256)"(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -500,24 +393,7 @@ export class ModuleCalls extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "selfExecute(tuple[])"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -538,40 +414,14 @@ export class ModuleCalls extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "execute(tuple[],uint256,bytes)"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      _nonce: BigNumberish,
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     nonce(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "nonce()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     readGapNonce(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readGapNonce(uint256)"(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     readNonce(
-      _space: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "readNonce(uint256)"(
       _space: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -588,24 +438,7 @@ export class ModuleCalls extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "selfExecute(tuple[])"(
-      _txs: {
-        delegateCall: boolean;
-        revertOnError: boolean;
-        gasLimit: BigNumberish;
-        target: string;
-        value: BigNumberish;
-        data: BytesLike;
-      }[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     supportsInterface(
-      _interfaceID: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "supportsInterface(bytes4)"(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

@@ -91,7 +91,8 @@ export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig
       mnemonic: config['ETH_MNEMONIC'],
       initialIndex: 0,
       count: 10,
-      path: `m/44'/60'/0'/0`
+      path: `m/44'/60'/0'/0`,
+      passphrase: ''
     },
     gas: 'auto',
     gasPrice: 'auto',

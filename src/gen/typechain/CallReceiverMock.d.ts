@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   PayableOverrides,
@@ -18,7 +18,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface CallReceiverMockInterface extends ethers.utils.Interface {
   functions: {
@@ -50,7 +50,7 @@ interface CallReceiverMockInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class CallReceiverMock extends Contract {
+export class CallReceiverMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -96,18 +96,9 @@ export class CallReceiverMock extends Contract {
   functions: {
     lastValA(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "lastValA()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     lastValB(overrides?: CallOverrides): Promise<[string]>;
 
-    "lastValB()"(overrides?: CallOverrides): Promise<[string]>;
-
     setRevertFlag(
-      _revertFlag: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "setRevertFlag(bool)"(
       _revertFlag: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -117,28 +108,13 @@ export class CallReceiverMock extends Contract {
       _valB: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "testCall(uint256,bytes)"(
-      _valA: BigNumberish,
-      _valB: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   lastValA(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "lastValA()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   lastValB(overrides?: CallOverrides): Promise<string>;
 
-  "lastValB()"(overrides?: CallOverrides): Promise<string>;
-
   setRevertFlag(
-    _revertFlag: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "setRevertFlag(bool)"(
     _revertFlag: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -149,38 +125,17 @@ export class CallReceiverMock extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "testCall(uint256,bytes)"(
-    _valA: BigNumberish,
-    _valB: BytesLike,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     lastValA(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "lastValA()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     lastValB(overrides?: CallOverrides): Promise<string>;
-
-    "lastValB()"(overrides?: CallOverrides): Promise<string>;
 
     setRevertFlag(
       _revertFlag: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "setRevertFlag(bool)"(
-      _revertFlag: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     testCall(
-      _valA: BigNumberish,
-      _valB: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "testCall(uint256,bytes)"(
       _valA: BigNumberish,
       _valB: BytesLike,
       overrides?: CallOverrides
@@ -192,29 +147,14 @@ export class CallReceiverMock extends Contract {
   estimateGas: {
     lastValA(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "lastValA()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     lastValB(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "lastValB()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     setRevertFlag(
       _revertFlag: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "setRevertFlag(bool)"(
-      _revertFlag: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     testCall(
-      _valA: BigNumberish,
-      _valB: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "testCall(uint256,bytes)"(
       _valA: BigNumberish,
       _valB: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -224,29 +164,14 @@ export class CallReceiverMock extends Contract {
   populateTransaction: {
     lastValA(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "lastValA()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     lastValB(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "lastValB()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     setRevertFlag(
       _revertFlag: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "setRevertFlag(bool)"(
-      _revertFlag: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     testCall(
-      _valA: BigNumberish,
-      _valB: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "testCall(uint256,bytes)"(
       _valA: BigNumberish,
       _valB: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }

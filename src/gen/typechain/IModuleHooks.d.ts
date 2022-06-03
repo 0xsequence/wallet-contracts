@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IModuleHooksInterface extends ethers.utils.Interface {
   functions: {
@@ -43,7 +43,7 @@ interface IModuleHooksInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class IModuleHooks extends Contract {
+export class IModuleHooks extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -93,28 +93,12 @@ export class IModuleHooks extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     readHook(
       _signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    "readHook(bytes4)"(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
     removeHook(
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "removeHook(bytes4)"(
       _signature: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -126,25 +110,9 @@ export class IModuleHooks extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "addHook(bytes4,address)"(
-    _signature: BytesLike,
-    _implementation: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   readHook(_signature: BytesLike, overrides?: CallOverrides): Promise<string>;
 
-  "readHook(bytes4)"(
-    _signature: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   removeHook(
-    _signature: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "removeHook(bytes4)"(
     _signature: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -156,25 +124,9 @@ export class IModuleHooks extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     readHook(_signature: BytesLike, overrides?: CallOverrides): Promise<string>;
 
-    "readHook(bytes4)"(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     removeHook(_signature: BytesLike, overrides?: CallOverrides): Promise<void>;
-
-    "removeHook(bytes4)"(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {};
@@ -186,28 +138,12 @@ export class IModuleHooks extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     readHook(
       _signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "readHook(bytes4)"(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     removeHook(
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "removeHook(bytes4)"(
       _signature: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -220,28 +156,12 @@ export class IModuleHooks extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "addHook(bytes4,address)"(
-      _signature: BytesLike,
-      _implementation: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     readHook(
       _signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "readHook(bytes4)"(
-      _signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     removeHook(
-      _signature: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "removeHook(bytes4)"(
       _signature: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

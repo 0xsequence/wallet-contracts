@@ -9,14 +9,14 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ERC165CheckerMockInterface extends ethers.utils.Interface {
   functions: {
@@ -36,7 +36,7 @@ interface ERC165CheckerMockInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class ERC165CheckerMock extends Contract {
+export class ERC165CheckerMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -85,12 +85,6 @@ export class ERC165CheckerMock extends Contract {
       _interfaceId: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
-
-    "doesContractImplementInterface(address,bytes4)"(
-      _contract: string,
-      _interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
   };
 
   doesContractImplementInterface(
@@ -99,20 +93,8 @@ export class ERC165CheckerMock extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  "doesContractImplementInterface(address,bytes4)"(
-    _contract: string,
-    _interfaceId: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
   callStatic: {
     doesContractImplementInterface(
-      _contract: string,
-      _interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "doesContractImplementInterface(address,bytes4)"(
       _contract: string,
       _interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -127,22 +109,10 @@ export class ERC165CheckerMock extends Contract {
       _interfaceId: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    "doesContractImplementInterface(address,bytes4)"(
-      _contract: string,
-      _interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     doesContractImplementInterface(
-      _contract: string,
-      _interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "doesContractImplementInterface(address,bytes4)"(
       _contract: string,
       _interfaceId: BytesLike,
       overrides?: CallOverrides

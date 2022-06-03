@@ -1,8 +1,9 @@
 import * as ethers from 'ethers'
+import { ethers as hethers } from 'hardhat'
+
 import {
   expect,
   signAndExecuteMetaTx,
-  RevertError,
   encodeImageHash,
   encodeNonce,
   addressOf,
@@ -14,25 +15,28 @@ import {
   Factory,
   RequireUtils,
   SessionUtils,
-  ReadGapNonceHook
+  ReadGapNonceHook,
+  Factory__factory,
+  MainModule__factory,
+  MainModuleUpgradable__factory,
+  RequireUtils__factory,
+  SessionUtils__factory,
+  ReadGapNonceHook__factory
 } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const FactoryArtifact = artifacts.require('Factory')
-const MainModuleArtifact = artifacts.require('MainModule')
-const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
-const RequireUtilsArtifact = artifacts.require('RequireUtils')
-const SessionUtilsArtifact = artifacts.require('SessionUtils')
-const ReadGapNonceHookArtifact = artifacts.require('ReadGapNonceHook')
-
-import { web3 } from 'hardhat'
-
 contract('Session utils', () => {
   const SessionSpace = ethers.BigNumber.from("861879107978547650890364157709704413515112855535")
 
+  let factoryFactory: Factory__factory
+  let mainModuleFactory: MainModule__factory
+  let mainModuleUpgradableFactory: MainModuleUpgradable__factory
+  let requireUtilsFactory: RequireUtils__factory
+  let sessionUtilsFactory: SessionUtils__factory
+  let readGapNonceHookFactory: ReadGapNonceHook__factory
+  
   let factory: Factory
-
   let mainModule: MainModule
   let mainModuleUpgradable: MainModuleUpgradable
   let requireUtils: RequireUtils
@@ -45,19 +49,26 @@ contract('Session utils', () => {
   let networkId: number
 
   before(async () => {
+    factoryFactory = await hethers.getContractFactory('Factory') as Factory__factory
+    mainModuleFactory = await hethers.getContractFactory('MainModule') as MainModule__factory
+    mainModuleUpgradableFactory = await hethers.getContractFactory('MainModuleUpgradable') as MainModuleUpgradable__factory
+    requireUtilsFactory = await hethers.getContractFactory('RequireUtils') as RequireUtils__factory
+    sessionUtilsFactory = await hethers.getContractFactory('SessionUtils') as SessionUtils__factory
+    readGapNonceHookFactory = await hethers.getContractFactory('ReadGapNonceHook') as ReadGapNonceHook__factory
+
     // Deploy wallet factory
-    factory = (await FactoryArtifact.new())
+    factory = await factoryFactory.deploy()
     // Deploy MainModule
-    mainModule = (await MainModuleArtifact.new(factory.address))
-    mainModuleUpgradable = (await MainModuleUpgradableArtifact.new())
+    mainModule = await mainModuleFactory.deploy(factory.address)
+    mainModuleUpgradable = await mainModuleUpgradableFactory.deploy()
     // Get network ID
-    networkId = process.env.NET_ID ? parseInt(process.env.NET_ID) : await web3.eth.net.getId()
+    networkId = process.env.NET_ID ? parseInt(process.env.NET_ID) : hethers.provider.network.chainId
     // Deploy RequireUtils
-    requireUtils = await RequireUtilsArtifact.new(factory.address, mainModule.address)
+    requireUtils = await requireUtilsFactory.deploy(factory.address, mainModule.address)
     // Deploy session utils
-    sessionUtils = await SessionUtilsArtifact.new()
+    sessionUtils = await sessionUtilsFactory.deploy()
     // Deploy read gap nonce hook
-    readGapNonceHook = await ReadGapNonceHookArtifact.new()
+    readGapNonceHook = await readGapNonceHookFactory.deploy()
   })
 
   beforeEach(async () => {
@@ -69,9 +80,9 @@ contract('Session utils', () => {
     await factory.deploy(mainModule.address, imageHash)
     // Update wallet obj
     const addr = addressOf(factory.address, mainModule.address, imageHash)
-    wallet = await MainModuleArtifact.at(addr)
+    wallet = mainModuleFactory.attach(addr)
     // Update wallet
-    const newWallet = (await MainModuleUpgradableArtifact.at(wallet.address)) as MainModuleUpgradable
+    const newWallet = mainModuleUpgradableFactory.attach(wallet.address)
     const migrateBundle = [
       {
         delegateCall: false,
@@ -79,7 +90,7 @@ contract('Session utils', () => {
         gasLimit: ethers.constants.Two.pow(18),
         target: wallet.address,
         value: ethers.constants.Zero,
-        data: wallet.contract.methods.updateImplementation(mainModuleUpgradable.address).encodeABI()
+        data: wallet.interface.encodeFunctionData('updateImplementation', [mainModuleUpgradable.address])
       },
       {
         delegateCall: false,
@@ -87,7 +98,7 @@ contract('Session utils', () => {
         gasLimit: ethers.constants.Two.pow(18),
         target: wallet.address,
         value: ethers.constants.Zero,
-        data: newWallet.contract.methods.updateImageHash(imageHash).encodeABI()
+        data: newWallet.interface.encodeFunctionData('updateImageHash', [imageHash])
       }
     ]
     await signAndExecuteMetaTx(wallet, owner, migrateBundle, networkId)
@@ -99,7 +110,7 @@ contract('Session utils', () => {
   async function registerGapNonceHook(): Promise<ReadGapNonceHook> {
     const txs = [{
       target: wallet.address,
-      data: wallet.contract.methods.addHook("0xcc63f2e2", readGapNonceHook.address).encodeABI(),
+      data: wallet.interface.encodeFunctionData('addHook', ["0xcc63f2e2", readGapNonceHook.address]),
       revertOnError: true,
       delegateCall: false,
       value: ethers.constants.Zero,
@@ -109,7 +120,7 @@ contract('Session utils', () => {
     await signAndExecuteMetaTx(wallet, owner, txs, networkId)
 
     expect(await wallet.readHook("0xcc63f2e2")).to.equal(readGapNonceHook.address)
-    return ReadGapNonceHookArtifact.at(wallet.address)
+    return readGapNonceHookFactory.attach(wallet.address)
   }
 
   describe('Gap nonce', async () => {
@@ -118,7 +129,7 @@ contract('Session utils', () => {
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(1).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [1]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -127,19 +138,19 @@ contract('Session utils', () => {
 
       // Session space nonce should be zero
       const nonce = await wallet.readNonce(SessionSpace)
-      expect(nonce).to.eq.BN(0)
+      expect(nonce).to.equal(0)
 
       // Gap nonce should be one
       const readGapNonce = await registerGapNonceHook()
       const gapNonce = await readGapNonce.readGapNonce(SessionSpace)
-      expect(gapNonce).to.eq.BN(1)
+      expect(gapNonce).to.equal(1)
     })
     it('Should enforce nonce with gap', async () => {
       const txs = [{
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(3).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [3]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -148,19 +159,19 @@ contract('Session utils', () => {
 
       // Session space nonce should be zero
       const nonce = await wallet.readNonce(SessionSpace)
-      expect(nonce).to.eq.BN(0)
+      expect(nonce).to.equal(0)
 
       // Gap nonce should be one
       const readGapNonce = await registerGapNonceHook()
       const gapNonce = await readGapNonce.readGapNonce(SessionSpace)
-      expect(gapNonce).to.eq.BN(3)
+      expect(gapNonce).to.equal(3)
     })
     it('Should enforce nonce with gap starting, starting in one', async () => {
       const txs = [{
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(1).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [1]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -171,7 +182,7 @@ contract('Session utils', () => {
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(4).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [4]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -180,31 +191,31 @@ contract('Session utils', () => {
 
       // Session space nonce should be zero
       const nonce = await wallet.readNonce(SessionSpace)
-      expect(nonce).to.eq.BN(0)
+      expect(nonce).to.equal(0)
 
       // Gap nonce should be one
       const readGapNonce = await registerGapNonceHook()
       const gapNonce = await readGapNonce.readGapNonce(SessionSpace)
-      expect(gapNonce).to.eq.BN(4)
+      expect(gapNonce).to.equal(4)
     })
     it('Should reject transaction with gap nonce zero', async () => {
       const txs = [{
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(0).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [0]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
 
-      await expect(signAndExecuteMetaTx(wallet, owner, txs, networkId)).to.be.rejectedWith(RevertError('GapNonceUtils#_requireGapNonce: INVALID_NONCE'))
+      await expect(signAndExecuteMetaTx(wallet, owner, txs, networkId)).to.be.rejectedWith('GapNonceUtils#_requireGapNonce: INVALID_NONCE')
     })
     it('Should reject transaction with gap below current nonce', async () => {
       const txs = [{
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(10).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [10]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -215,12 +226,12 @@ contract('Session utils', () => {
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(5).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [5]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
 
-      await expect(signAndExecuteMetaTx(wallet, owner, txs2, networkId)).to.be.rejectedWith(RevertError('GapNonceUtils#_requireGapNonce: INVALID_NONCE'))
+      await expect(signAndExecuteMetaTx(wallet, owner, txs2, networkId)).to.be.rejectedWith('GapNonceUtils#_requireGapNonce: INVALID_NONCE')
     })
   })
   describe('Reset nonce', async () => {
@@ -229,7 +240,7 @@ contract('Session utils', () => {
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(1).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [1]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -240,12 +251,12 @@ contract('Session utils', () => {
 
       // Session space nonce should be zero
       const nonce = await wallet.readNonce(SessionSpace)
-      expect(nonce).to.eq.BN(0)
+      expect(nonce).to.equal(0)
 
       // Gap nonce should be one
       const readGapNonce = await registerGapNonceHook()
       const gapNonce = await readGapNonce.readGapNonce(SessionSpace)
-      expect(gapNonce).to.eq.BN(1)
+      expect(gapNonce).to.equal(1)
     })
     it('Should increase the session nonce if not using the session util', async () => {
       const txs = [{
@@ -262,14 +273,14 @@ contract('Session utils', () => {
 
       // Session space nonce should be one
       const nonce = await wallet.readNonce(SessionSpace)
-      expect(nonce).to.eq.BN(1)
+      expect(nonce).to.equal(1)
     })
     it('Should use the same nonce twice, but the different gap nonces', async () => {
       const txs = [{
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(1).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [1]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -281,7 +292,7 @@ contract('Session utils', () => {
         target: sessionUtils.address,
         delegateCall: true,
         revertOnError: true,
-        data: sessionUtils.contract.methods.requireSessionNonce(2).encodeABI(),
+        data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [2]),
         gasLimit: ethers.constants.Zero,
         value: ethers.constants.Zero
       }]
@@ -291,12 +302,12 @@ contract('Session utils', () => {
 
       // Session space nonce should be zero
       const nonce = await wallet.readNonce(SessionSpace)
-      expect(nonce).to.eq.BN(0)
+      expect(nonce).to.equal(0)
 
       // Gap nonce should be two
       const readGapNonce = await registerGapNonceHook()
       const gapNonce = await readGapNonce.readGapNonce(SessionSpace)
-      expect(gapNonce).to.eq.BN(2)
+      expect(gapNonce).to.equal(2)
     })
   })
   it('Should reject non-upgraded wallet', async () => {
@@ -308,18 +319,18 @@ contract('Session utils', () => {
     await factory.deploy(mainModule.address, imageHash)
     // Update wallet obj
     const addr = addressOf(factory.address, mainModule.address, imageHash)
-    const wallet = await MainModuleArtifact.at(addr)
+    const wallet = mainModuleFactory.attach(addr)
 
     const txs = [{
       target: sessionUtils.address,
       delegateCall: true,
       revertOnError: true,
-      data: sessionUtils.contract.methods.requireSessionNonce(1).encodeABI(),
+      data: sessionUtils.interface.encodeFunctionData('requireSessionNonce', [1]),
       gasLimit: ethers.constants.Zero,
       value: ethers.constants.Zero
     }]
 
     const tx = signAndExecuteMetaTx(wallet, owner, txs, networkId)
-    await expect(tx).to.be.rejectedWith(RevertError("SessionUtils#requireSessionNonce: WALLET_NOT_UPGRADED"))
+    await expect(tx).to.be.rejectedWith("SessionUtils#requireSessionNonce: WALLET_NOT_UPGRADED")
   })
 })

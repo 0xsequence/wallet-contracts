@@ -1,16 +1,9 @@
-import * as ethers from 'ethers'
 import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf, addressOf } from './utils'
-
-import { MainModule, MainModuleUpgradable, Factory, ERC165CheckerMock } from 'src/gen/typechain'
+import { MainModule, MainModuleUpgradable, Factory, ERC165CheckerMock, Factory__factory, MainModule__factory, MainModuleUpgradable__factory, ERC165CheckerMock__factory } from 'src/gen/typechain'
+import { ethers as hethers } from 'hardhat'
+import * as ethers from 'ethers'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
-
-const FactoryArtifact = artifacts.require('Factory')
-const MainModuleArtifact = artifacts.require('MainModule')
-const Erc165CheckerMockArtifact = artifacts.require('ERC165CheckerMock')
-const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
-
-import { web3 } from 'hardhat'
 
 const interfaceIds = [
   'IModuleHooks',
@@ -25,42 +18,46 @@ const interfaceIds = [
 ]
 
 contract('ERC165', () => {
-  let factory
-  let module
+  let factoryFactory: Factory__factory
+  let mainModuleFactory: MainModule__factory
+  let mainModuleUpgradableFactory: MainModuleUpgradable__factory
+  let erc165CheckerMockFactory: ERC165CheckerMock__factory
 
-  let owner
-  let wallet
+  let factory: Factory
+  let module: MainModule
+  let moduleUpgradable: MainModuleUpgradable
+  let erc165checker: ERC165CheckerMock
 
-  let moduleUpgradable
-
-  let erc165checker
-
-  let networkId
+  let owner: ethers.Wallet
+  let wallet: MainModule | MainModuleUpgradable
+  let networkId: ethers.BigNumberish
 
   before(async () => {
-    // Deploy wallet factory
-    factory = (await FactoryArtifact.new()) as Factory
-    // Deploy MainModule
-    module = (await MainModuleArtifact.new(factory.address)) as MainModule
-    moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
-    // Deploy ERC165 Checker
-    erc165checker = (await Erc165CheckerMockArtifact.new()) as ERC165CheckerMock
-    // Get network ID
-    networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
+    factoryFactory = await hethers.getContractFactory('Factory') as Factory__factory
+    mainModuleFactory = await hethers.getContractFactory('MainModule') as MainModule__factory
+    mainModuleUpgradableFactory = await hethers.getContractFactory('MainModuleUpgradable') as MainModuleUpgradable__factory
+    erc165CheckerMockFactory = await hethers.getContractFactory('ERC165CheckerMock') as ERC165CheckerMock__factory
+  
+    factory = await factoryFactory.deploy()
+    module = await mainModuleFactory.deploy(factory.address)
+    moduleUpgradable = await mainModuleUpgradableFactory.deploy()
+    erc165checker = await erc165CheckerMockFactory.deploy()
+
+    networkId = process.env.NET_ID ? process.env.NET_ID : hethers.provider.network.chainId
   })
 
   beforeEach(async () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
     await factory.deploy(module.address, salt)
-    wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+    wallet = mainModuleFactory.attach(addressOf(factory.address, module.address, salt))
   })
 
   describe('Implement all interfaces for ERC165 on MainModule', () => {
     interfaceIds.forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {
         const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
-        expect(web3.utils.toBN(interfaceId)).to.not.eq.BN(0)
+        expect(ethers.BigNumber.from(interfaceId).isZero()).to.be.false
 
         const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, interfaceId)
         expect(erc165result).to.be.true
@@ -72,7 +69,7 @@ contract('ERC165', () => {
       const newOwner = new ethers.Wallet(ethers.utils.randomBytes(32))
       const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwner.address }])
 
-      const newWallet = (await MainModuleUpgradableArtifact.at(wallet.address)) as MainModuleUpgradable
+      const newWallet = mainModuleUpgradableFactory.attach(wallet.address)
 
       const migrateTransactions = [
         {
@@ -81,7 +78,7 @@ contract('ERC165', () => {
           gasLimit: ethers.constants.Two.pow(21),
           target: wallet.address,
           value: ethers.constants.Zero,
-          data: wallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
+          data: wallet.interface.encodeFunctionData('updateImplementation', [moduleUpgradable.address])
         },
         {
           delegateCall: false,
@@ -89,17 +86,18 @@ contract('ERC165', () => {
           gasLimit: ethers.constants.Two.pow(21),
           target: wallet.address,
           value: ethers.constants.Zero,
-          data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+          data: newWallet.interface.encodeFunctionData('updateImageHash', [newImageHash])
         }
       ]
 
       await signAndExecuteMetaTx(wallet, owner, migrateTransactions, networkId)
       wallet = newWallet
     })
+
     interfaceIds.concat('IModuleAuthUpgradable').forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {
         const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
-        expect(web3.utils.toBN(interfaceId)).to.not.eq.BN(0)
+        expect(ethers.BigNumber.from(interfaceId).isZero()).to.be.false
 
         const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, interfaceId)
         expect(erc165result).to.be.true

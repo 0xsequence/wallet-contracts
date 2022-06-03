@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface SessionUtilsInterface extends ethers.utils.Interface {
   functions: {
@@ -43,7 +43,17 @@ interface SessionUtilsInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ResetNonce"): EventFragment;
 }
 
-export class SessionUtils extends Contract {
+export type GapNonceChangeEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber] & {
+    _space: BigNumber;
+    _oldNonce: BigNumber;
+    _newNonce: BigNumber;
+  }
+>;
+
+export type ResetNonceEvent = TypedEvent<[BigNumber] & { _space: BigNumber }>;
+
+export class SessionUtils extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -91,19 +101,9 @@ export class SessionUtils extends Contract {
       _nonce: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "requireSessionNonce(uint256)"(
-      _nonce: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   requireSessionNonce(
-    _nonce: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "requireSessionNonce(uint256)"(
     _nonce: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -113,25 +113,33 @@ export class SessionUtils extends Contract {
       _nonce: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    "requireSessionNonce(uint256)"(
-      _nonce: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {
-    GapNonceChange(
-      _space: null,
-      _oldNonce: null,
-      _newNonce: null
+    "GapNonceChange(uint256,uint256,uint256)"(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
     ): TypedEventFilter<
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
     >;
 
+    GapNonceChange(
+      _space?: null,
+      _oldNonce?: null,
+      _newNonce?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber, BigNumber],
+      { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
+    >;
+
+    "ResetNonce(uint256)"(
+      _space?: null
+    ): TypedEventFilter<[BigNumber], { _space: BigNumber }>;
+
     ResetNonce(
-      _space: null
+      _space?: null
     ): TypedEventFilter<[BigNumber], { _space: BigNumber }>;
   };
 
@@ -140,20 +148,10 @@ export class SessionUtils extends Contract {
       _nonce: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "requireSessionNonce(uint256)"(
-      _nonce: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     requireSessionNonce(
-      _nonce: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "requireSessionNonce(uint256)"(
       _nonce: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

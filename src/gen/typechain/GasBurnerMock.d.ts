@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface GasBurnerMockInterface extends ethers.utils.Interface {
   functions: {
@@ -38,7 +38,9 @@ interface GasBurnerMockInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ProvidedGas"): EventFragment;
 }
 
-export class GasBurnerMock extends Contract {
+export type ProvidedGasEvent = TypedEvent<[BigNumber] & { _val: BigNumber }>;
+
+export class GasBurnerMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -86,11 +88,6 @@ export class GasBurnerMock extends Contract {
       _burn: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    "burnGas(uint256)"(
-      _burn: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   burnGas(
@@ -98,22 +95,18 @@ export class GasBurnerMock extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "burnGas(uint256)"(
-    _burn: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     burnGas(_burn: BigNumberish, overrides?: CallOverrides): Promise<void>;
-
-    "burnGas(uint256)"(
-      _burn: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {
-    ProvidedGas(_val: null): TypedEventFilter<[BigNumber], { _val: BigNumber }>;
+    "ProvidedGas(uint256)"(
+      _val?: null
+    ): TypedEventFilter<[BigNumber], { _val: BigNumber }>;
+
+    ProvidedGas(
+      _val?: null
+    ): TypedEventFilter<[BigNumber], { _val: BigNumber }>;
   };
 
   estimateGas: {
@@ -121,20 +114,10 @@ export class GasBurnerMock extends Contract {
       _burn: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    "burnGas(uint256)"(
-      _burn: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     burnGas(
-      _burn: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "burnGas(uint256)"(
       _burn: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

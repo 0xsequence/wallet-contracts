@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface DelegateCallMockInterface extends ethers.utils.Interface {
   functions: {
@@ -50,7 +50,9 @@ interface DelegateCallMockInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Readed"): EventFragment;
 }
 
-export class DelegateCallMock extends Contract {
+export type ReadedEvent = TypedEvent<[BigNumber] & { _val: BigNumber }>;
+
+export class DelegateCallMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -99,28 +101,12 @@ export class DelegateCallMock extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "read(uint256)"(
-      _key: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     setRevertFlag(
       _revertFlag: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "setRevertFlag(bool)"(
-      _revertFlag: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     write(
-      _key: BigNumberish,
-      _val: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "write(uint256,uint256)"(
       _key: BigNumberish,
       _val: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -132,17 +118,7 @@ export class DelegateCallMock extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "read(uint256)"(
-    _key: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   setRevertFlag(
-    _revertFlag: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "setRevertFlag(bool)"(
     _revertFlag: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -153,26 +129,10 @@ export class DelegateCallMock extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "write(uint256,uint256)"(
-    _key: BigNumberish,
-    _val: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     read(_key: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
-    "read(uint256)"(
-      _key: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     setRevertFlag(
-      _revertFlag: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "setRevertFlag(bool)"(
       _revertFlag: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -182,16 +142,14 @@ export class DelegateCallMock extends Contract {
       _val: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    "write(uint256,uint256)"(
-      _key: BigNumberish,
-      _val: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {
-    Readed(_val: null): TypedEventFilter<[BigNumber], { _val: BigNumber }>;
+    "Readed(uint256)"(
+      _val?: null
+    ): TypedEventFilter<[BigNumber], { _val: BigNumber }>;
+
+    Readed(_val?: null): TypedEventFilter<[BigNumber], { _val: BigNumber }>;
   };
 
   estimateGas: {
@@ -200,28 +158,12 @@ export class DelegateCallMock extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "read(uint256)"(
-      _key: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     setRevertFlag(
       _revertFlag: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "setRevertFlag(bool)"(
-      _revertFlag: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     write(
-      _key: BigNumberish,
-      _val: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "write(uint256,uint256)"(
       _key: BigNumberish,
       _val: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -234,28 +176,12 @@ export class DelegateCallMock extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "read(uint256)"(
-      _key: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     setRevertFlag(
       _revertFlag: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "setRevertFlag(bool)"(
-      _revertFlag: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     write(
-      _key: BigNumberish,
-      _val: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "write(uint256,uint256)"(
       _key: BigNumberish,
       _val: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }

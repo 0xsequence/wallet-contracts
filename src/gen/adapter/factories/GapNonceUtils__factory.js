@@ -20,29 +20,6 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 exports.GapNonceUtils__factory = void 0;
 var ethers_1 = require("ethers");
-var GapNonceUtils__factory = /** @class */ (function (_super) {
-    __extends(GapNonceUtils__factory, _super);
-    function GapNonceUtils__factory(signer) {
-        return _super.call(this, _abi, _bytecode, signer) || this;
-    }
-    GapNonceUtils__factory.prototype.deploy = function (overrides) {
-        return _super.prototype.deploy.call(this, overrides || {});
-    };
-    GapNonceUtils__factory.prototype.getDeployTransaction = function (overrides) {
-        return _super.prototype.getDeployTransaction.call(this, overrides || {});
-    };
-    GapNonceUtils__factory.prototype.attach = function (address) {
-        return _super.prototype.attach.call(this, address);
-    };
-    GapNonceUtils__factory.prototype.connect = function (signer) {
-        return _super.prototype.connect.call(this, signer);
-    };
-    GapNonceUtils__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return GapNonceUtils__factory;
-}(ethers_1.ContractFactory));
-exports.GapNonceUtils__factory = GapNonceUtils__factory;
 var _abi = [
     {
         anonymous: false,
@@ -71,3 +48,42 @@ var _abi = [
     },
 ];
 var _bytecode = "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220a49dff8843b69befb5dd387ea51ebf52acf46fd6e70f5922fb4b75297fceab8864736f6c634300080e0033";
+var GapNonceUtils__factory = /** @class */ (function (_super) {
+    __extends(GapNonceUtils__factory, _super);
+    function GapNonceUtils__factory() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var _this = this;
+        if (args.length === 1) {
+            _this = _super.call(this, _abi, _bytecode, args[0]) || this;
+        }
+        else {
+            _this = _super.apply(this, args) || this;
+        }
+        return _this;
+    }
+    GapNonceUtils__factory.prototype.deploy = function (overrides) {
+        return _super.prototype.deploy.call(this, overrides || {});
+    };
+    GapNonceUtils__factory.prototype.getDeployTransaction = function (overrides) {
+        return _super.prototype.getDeployTransaction.call(this, overrides || {});
+    };
+    GapNonceUtils__factory.prototype.attach = function (address) {
+        return _super.prototype.attach.call(this, address);
+    };
+    GapNonceUtils__factory.prototype.connect = function (signer) {
+        return _super.prototype.connect.call(this, signer);
+    };
+    GapNonceUtils__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    GapNonceUtils__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    GapNonceUtils__factory.bytecode = _bytecode;
+    GapNonceUtils__factory.abi = _abi;
+    return GapNonceUtils__factory;
+}(ethers_1.ContractFactory));
+exports.GapNonceUtils__factory = GapNonceUtils__factory;

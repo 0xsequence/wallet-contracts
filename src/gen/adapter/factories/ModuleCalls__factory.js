@@ -5,15 +5,6 @@
 exports.__esModule = true;
 exports.ModuleCalls__factory = void 0;
 var ethers_1 = require("ethers");
-var ModuleCalls__factory = /** @class */ (function () {
-    function ModuleCalls__factory() {
-    }
-    ModuleCalls__factory.connect = function (address, signerOrProvider) {
-        return new ethers_1.Contract(address, _abi, signerOrProvider);
-    };
-    return ModuleCalls__factory;
-}());
-exports.ModuleCalls__factory = ModuleCalls__factory;
 var _abi = [
     {
         inputs: [
@@ -311,3 +302,16 @@ var _abi = [
         type: "function"
     },
 ];
+var ModuleCalls__factory = /** @class */ (function () {
+    function ModuleCalls__factory() {
+    }
+    ModuleCalls__factory.createInterface = function () {
+        return new ethers_1.utils.Interface(_abi);
+    };
+    ModuleCalls__factory.connect = function (address, signerOrProvider) {
+        return new ethers_1.Contract(address, _abi, signerOrProvider);
+    };
+    ModuleCalls__factory.abi = _abi;
+    return ModuleCalls__factory;
+}());
+exports.ModuleCalls__factory = ModuleCalls__factory;
