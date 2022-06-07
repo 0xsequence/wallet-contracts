@@ -1049,7 +1049,8 @@ contract('MainModule', (accounts: string[]) => {
 
       const storageValue = await hethers.provider.getStorageAt(wallet.address, wallet.address)
 
-      expect(ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], storageValue)[0])).to.equal(newImplementation.address)
+      const paddedValue = ethers.utils.zeroPad(storageValue, 32)
+      expect(ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], paddedValue)[0])).to.equal(newImplementation.address)
     })
   })
   describe('External calls', () => {
