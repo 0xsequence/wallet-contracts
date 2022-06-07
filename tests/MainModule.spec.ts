@@ -971,6 +971,126 @@ contract('MainModule', (accounts: string[]) => {
           await expect(tx).to.be.rejectedWith('MainModule#_auth: INVALID_NONCE')
         })
       })
+      context('special nonce types', () => {
+        let callReceiver: CallReceiverMock
+        let transaction: any
+        let clear = async () => {
+          await callReceiver.testCall(0, [])
+          expect(await callReceiver.lastValA()).to.equal(0)
+        }
+
+        let encodeNonce = (space: ethers.BigNumberish, type: ethers.BigNumberish, nonce: ethers.BigNumberish) => {
+          return ethers.utils.solidityPack(['uint160', 'uint8', 'uint88'], [space, type, nonce])
+        }
+
+        beforeEach(async () => {
+          callReceiver = await callReceiverMockFactory.deploy()
+
+          transaction = {
+            target: callReceiver.address,
+            delegateCall: false,
+            revertOnError: true,
+            gasLimit: 0,
+            value: 0,
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, []]),
+          }
+        })
+        context('transactions with gap nonce', () => {
+          it("Should accept a gap nonce incremented by one", async () => {
+            const nonce = encodeNonce(0, 1, 1)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            expect(await callReceiver.lastValA()).to.equal(1)
+          })
+          it("Should accept a gap nonce incremented by 10", async () => {
+            const nonce = encodeNonce(0, 1, 10)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            expect(await callReceiver.lastValA()).to.equal(1)
+          })
+          it("Should accept a gap nonce incremented by 2 ** 88 - 1 (max)", async () => {
+            const nonce = encodeNonce(0, 1, "309485009821345068724781055")
+            await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            expect(await callReceiver.lastValA()).to.equal(1)
+          })
+          it("Should reject same gap nonce (zero)", async () => {
+            const nonce = encodeNonce(0, 1, 0)
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expect(tx).to.be.rejectedWith('BadGapNonce(0, 0)')
+          })
+          it("Should reject same gap nonce (one)", async () => {
+            const nonce = encodeNonce(0, 1, 1)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expect(tx).to.be.rejectedWith('BadGapNonce(1, 1)')
+          })
+          it("Should reject lower gap nonce", async () => {
+            const nonce = encodeNonce(0, 1, 10)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+
+            const badNonce = encodeNonce(0, 1, 5)
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, badNonce)
+            await expect(tx).to.be.rejectedWith('BadGapNonce(5, 10)')
+          })
+          it("Should use paralel gap nonces", async () => {
+            const nonce1 = encodeNonce(0, 1, 1)
+            const nonce2 = encodeNonce(1, 1, 1)
+            const tx1 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce1)
+            expect(await callReceiver.lastValA()).to.equal(1)
+            await clear()
+
+            const tx2 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce2)
+            expect(await callReceiver.lastValA()).to.equal(1)
+
+            expect(tx1.data).to.not.equal(tx2.data)
+          })
+        })
+        context('transactions without nonce', () => {
+          it("Should relay 3 times a transaction without nonce (no-nonce type)", async () => {
+            const nonce = encodeNonce(0, 2, 0)
+  
+            const tx1 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            expect(await callReceiver.lastValA()).to.equal(1)
+  
+            await clear()
+
+            // Call again with same nonce
+            const tx2 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            expect(await callReceiver.lastValA()).to.equal(1)
+  
+            await clear()
+  
+            // Call again with same nonce
+            const tx3 = await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            expect(await callReceiver.lastValA()).to.equal(1)
+  
+            // The 3 tx datas should be equal
+            expect(tx1.data).to.equal(tx2.data)
+            expect(tx1.data).to.equal(tx3.data)
+          })
+          it("Should fail if transaction has a non-zero nonce value", async () => {
+            const nonce = encodeNonce(0, 2, 1)
+  
+            const tx1 = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expect(tx1).to.be.rejectedWith('ExpectedEmptyNonce(0, 1)')
+          })
+          it("Should fail if transaction has a non-zero space value", async () => {
+            const nonce = encodeNonce(3, 2, 0)
+  
+            const tx1 = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expect(tx1).to.be.rejectedWith('ExpectedEmptyNonce(3, 0)')
+          })
+          it("Should fail if transaction has a non-zero space and nonce values", async () => {
+            const nonce = encodeNonce(29443, 2, 65535)
+  
+            const tx1 = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expect(tx1).to.be.rejectedWith('ExpectedEmptyNonce(29443, 65535)')
+          })
+        })
+        it('Should reject bad nonce type', async () => {
+          const nonce = encodeNonce(0, 3, 0)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+          await expect(tx).to.be.rejectedWith('InvalidNonceType(3)')
+        })
+      })
     })
     it('Should reject signature with invalid flag', async () => {
       const signature = '0x00010301'
