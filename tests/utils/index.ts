@@ -24,3 +24,11 @@ export function b(raw: ethers.BigNumberish): ethers.BigNumber {
 export function randomHex(length: number): string {
   return ethers.utils.hexlify(ethers.utils.randomBytes(length))
 }
+
+export async function expectToBeRejected(promise: Promise<any>, error: string) {
+  if (!process.env.COVERAGE) {
+    await expect(promise).to.be.rejectedWith(error)
+  } else {
+    await expect(promise).to.be.rejected
+  }
+}

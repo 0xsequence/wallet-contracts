@@ -21,7 +21,8 @@ import {
   MetaTransactionsType,
   encodeMessageSubDigest,
   b,
-  randomHex
+  randomHex,
+  expectToBeRejected
 } from './utils'
 
 import {
@@ -1014,13 +1015,13 @@ contract('MainModule', (accounts: string[]) => {
           it("Should reject same gap nonce (zero)", async () => {
             const nonce = encodeNonce(0, 1, 0)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-            await expect(tx).to.be.rejectedWith('BadGapNonce(0, 0)')
+            await expectToBeRejected(tx, 'BadGapNonce(0, 0)')
           })
           it("Should reject same gap nonce (one)", async () => {
             const nonce = encodeNonce(0, 1, 1)
             await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-            await expect(tx).to.be.rejectedWith('BadGapNonce(1, 1)')
+            await expectToBeRejected(tx, 'BadGapNonce(1, 1)')
           })
           it("Should reject lower gap nonce", async () => {
             const nonce = encodeNonce(0, 1, 10)
@@ -1028,7 +1029,7 @@ contract('MainModule', (accounts: string[]) => {
 
             const badNonce = encodeNonce(0, 1, 5)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, badNonce)
-            await expect(tx).to.be.rejectedWith('BadGapNonce(5, 10)')
+            await expectToBeRejected(tx, 'BadGapNonce(5, 10)')
           })
           it("Should use paralel gap nonces", async () => {
             const nonce1 = encodeNonce(0, 1, 1)
@@ -1069,26 +1070,26 @@ contract('MainModule', (accounts: string[]) => {
           it("Should fail if transaction has a non-zero nonce value", async () => {
             const nonce = encodeNonce(0, 2, 1)
   
-            const tx1 = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-            await expect(tx1).to.be.rejectedWith('ExpectedEmptyNonce(0, 1)')
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expectToBeRejected(tx, 'ExpectedEmptyNonce(0, 1)')
           })
           it("Should fail if transaction has a non-zero space value", async () => {
             const nonce = encodeNonce(3, 2, 0)
   
-            const tx1 = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-            await expect(tx1).to.be.rejectedWith('ExpectedEmptyNonce(3, 0)')
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expectToBeRejected(tx, 'ExpectedEmptyNonce(3, 0)')
           })
           it("Should fail if transaction has a non-zero space and nonce values", async () => {
             const nonce = encodeNonce(29443, 2, 65535)
   
-            const tx1 = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-            await expect(tx1).to.be.rejectedWith('ExpectedEmptyNonce(29443, 65535)')
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expectToBeRejected(tx, 'ExpectedEmptyNonce(29443, 65535)')
           })
         })
         it('Should reject bad nonce type', async () => {
           const nonce = encodeNonce(0, 3, 0)
           const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-          await expect(tx).to.be.rejectedWith('InvalidNonceType(3)')
+          await expectToBeRejected(tx, 'InvalidNonceType(3)')
         })
       })
     })
