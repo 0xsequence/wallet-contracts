@@ -2,7 +2,40 @@
   "_format": "hh-sol-artifact-1",
   "contractName": "IModuleAuth",
   "sourceName": "contracts/modules/commons/interfaces/IModuleAuth.sol",
-  "abi": [],
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_addr",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_signature",
+          "type": "bytes"
+        }
+      ],
+      "name": "InvalidNestedSignature",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_flag",
+          "type": "uint256"
+        }
+      ],
+      "name": "InvalidSignatureFlag",
+      "type": "error"
+    }
+  ],
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "linkReferences": {},

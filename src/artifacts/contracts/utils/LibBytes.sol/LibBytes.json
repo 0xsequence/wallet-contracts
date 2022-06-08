@@ -2,9 +2,122 @@
   "_format": "hh-sol-artifact-1",
   "contractName": "LibBytes",
   "sourceName": "contracts/utils/LibBytes.sol",
-  "abi": [],
-  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122074383b34042cff307949d4082cc966cf6b2b3ca0bd954715f71be4ac91e34be664736f6c634300080e0033",
-  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122074383b34042cff307949d4082cc966cf6b2b3ca0bd954715f71be4ac91e34be664736f6c634300080e0033",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReadAddressOutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReadBytes32OutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReadBytes66OutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_datam",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_length",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReadBytesOutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        }
+      ],
+      "name": "ReadFirstUint16OutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReadUint16OutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReadUint8Uint8OutOfBounds",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220bdc45cf87053bcb9144c8cdeb844e9f03480b0f0b8e3f133719f449b10b5bd0564736f6c634300080e0033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220bdc45cf87053bcb9144c8cdeb844e9f03480b0f0b8e3f133719f449b10b5bd0564736f6c634300080e0033",
   "linkReferences": {},
   "deployedLinkReferences": {}
 }

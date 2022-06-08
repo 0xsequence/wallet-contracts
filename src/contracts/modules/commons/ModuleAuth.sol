@@ -90,12 +90,12 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
         // Read dynamic size signature
         bytes memory signature;
         (signature, rindex) = _signature.readBytes(rindex, size);
-        require(isValidSignature(_hash, addr, signature), "ModuleAuth#_signatureValidation: INVALID_SIGNATURE");
+        if (!isValidSignature(_hash, addr, signature)) revert InvalidNestedSignature(_hash, addr, signature);
 
         // Acumulate total weight of the signature
         totalWeight += addrWeight;
       } else {
-        revert("ModuleAuth#_signatureValidation INVALID_FLAG");
+        revert InvalidSignatureFlag(flag);
       }
 
       // Write weight and address to image

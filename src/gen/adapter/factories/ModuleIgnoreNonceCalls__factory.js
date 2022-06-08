@@ -10,6 +10,11 @@ var _abi = [
         inputs: [
             {
                 internalType: "uint256",
+                name: "_space",
+                type: "uint256"
+            },
+            {
+                internalType: "uint256",
                 name: "_provided",
                 type: "uint256"
             },
@@ -31,11 +36,53 @@ var _abi = [
             },
             {
                 internalType: "uint256",
+                name: "_provided",
+                type: "uint256"
+            },
+            {
+                internalType: "uint256",
+                name: "_current",
+                type: "uint256"
+            },
+        ],
+        name: "BadNonce",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "uint256",
+                name: "_space",
+                type: "uint256"
+            },
+            {
+                internalType: "uint256",
                 name: "_nonce",
                 type: "uint256"
             },
         ],
         name: "ExpectedEmptyNonce",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "bytes32",
+                name: "_hash",
+                type: "bytes32"
+            },
+            {
+                internalType: "address",
+                name: "_addr",
+                type: "address"
+            },
+            {
+                internalType: "bytes",
+                name: "_signature",
+                type: "bytes"
+            },
+        ],
+        name: "InvalidNestedSignature",
         type: "error"
     },
     {
@@ -47,6 +94,65 @@ var _abi = [
             },
         ],
         name: "InvalidNonceType",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "bytes32",
+                name: "_hash",
+                type: "bytes32"
+            },
+            {
+                internalType: "bytes",
+                name: "_signature",
+                type: "bytes"
+            },
+        ],
+        name: "InvalidSignature",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "uint256",
+                name: "_flag",
+                type: "uint256"
+            },
+        ],
+        name: "InvalidSignatureFlag",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "uint256",
+                name: "_requested",
+                type: "uint256"
+            },
+            {
+                internalType: "uint256",
+                name: "_available",
+                type: "uint256"
+            },
+        ],
+        name: "NotEnoughGas",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "address",
+                name: "_sender",
+                type: "address"
+            },
+            {
+                internalType: "address",
+                name: "_self",
+                type: "address"
+            },
+        ],
+        name: "OnlySelfAuth",
         type: "error"
     },
     {

@@ -11,6 +11,11 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
+        name: "_space",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
         name: "_provided",
         type: "uint256",
       },
@@ -21,6 +26,27 @@ const _abi = [
       },
     ],
     name: "BadGapNonce",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_space",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_provided",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_current",
+        type: "uint256",
+      },
+    ],
+    name: "BadNonce",
     type: "error",
   },
   {
@@ -48,6 +74,38 @@ const _abi = [
       },
     ],
     name: "InvalidNonceType",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "_hash",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes",
+        name: "_signature",
+        type: "bytes",
+      },
+    ],
+    name: "InvalidSignature",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_requested",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_available",
+        type: "uint256",
+      },
+    ],
+    name: "NotEnoughGas",
     type: "error",
   },
   {

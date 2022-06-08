@@ -3,6 +3,10 @@ pragma solidity 0.8.14;
 
 
 interface IModuleHooks {
+  // Errors
+  error HookAlreadyExists(bytes4 _signature);
+  error HookDoesNotExist(bytes4 _signature);
+
   /**
    * @notice Reads the implementation hook of a signature
    * @param _signature Signature function

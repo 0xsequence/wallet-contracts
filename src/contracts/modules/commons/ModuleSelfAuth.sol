@@ -3,8 +3,12 @@ pragma solidity 0.8.14;
 
 
 contract ModuleSelfAuth {
+  error OnlySelfAuth(address _sender, address _self);
+
   modifier onlySelf() {
-    require(msg.sender == address(this), "ModuleSelfAuth#onlySelf: NOT_AUTHORIZED");
+    if (msg.sender != address(this)) {
+      revert OnlySelfAuth(msg.sender, address(this));
+    }
     _;
   }
 }

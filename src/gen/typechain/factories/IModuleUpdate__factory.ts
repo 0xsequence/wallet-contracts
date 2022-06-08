@@ -15,6 +15,17 @@ const _abi = [
         type: "address",
       },
     ],
+    name: "InvalidImplementation",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_implementation",
+        type: "address",
+      },
+    ],
     name: "updateImplementation",
     outputs: [],
     stateMutability: "nonpayable",

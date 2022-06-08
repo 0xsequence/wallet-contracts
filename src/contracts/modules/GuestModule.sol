@@ -29,6 +29,8 @@ contract GuestModule is
   ModuleCalls,
   ModuleCreator
 {
+  error DelegateCallNotAllowed();
+
   /**
    * @notice Allow any caller to execute an action
    * @param _txs Transactions to process
@@ -75,8 +77,8 @@ contract GuestModule is
       bool success;
       bytes memory result;
 
-      require(!transaction.delegateCall, 'GuestModule#_executeGuest: delegateCall not allowed');
-      require(gasleft() >= transaction.gasLimit, "GuestModule#_executeGuest: NOT_ENOUGH_GAS");
+      if (transaction.delegateCall) revert DelegateCallNotAllowed();
+      if (gasleft() < transaction.gasLimit) revert NotEnoughGas(transaction.gasLimit, gasleft());
 
       // solhint-disable
       (success, result) = transaction.target.call{

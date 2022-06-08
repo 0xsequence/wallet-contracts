@@ -109,10 +109,9 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
     bytes32 txHash = _subDigest(keccak256(abi.encode(_nonce, _txs)));
 
     // Verify that signatures are valid
-    require(
-      _signatureValidation(txHash, _signature),
-      "ModuleIgnoreNonceCalls#execute: INVALID_SIGNATURE"
-    );
+    if (!_signatureValidation(txHash, _signature)) {
+      revert InvalidSignature(txHash, _signature);
+    }
 
     // Execute the transactions
     _execute(txHash, _txs);
@@ -149,7 +148,7 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
       bool success;
       bytes memory result;
 
-      require(gasleft() >= transaction.gasLimit, "ModuleCalls#_execute: NOT_ENOUGH_GAS");
+      if (gasleft() < transaction.gasLimit) revert NotEnoughGas(transaction.gasLimit, gasleft());
 
       if (transaction.delegateCall) {
         (success, result) = transaction.target.delegatecall{
@@ -184,10 +183,9 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
     // that increments by 1 each time it is used.
     if (nonceType == TypeNormalNonce) {
       uint256 currentNonce = readNonce(space);
-      require(
-        providedNonce == currentNonce || true,
-        "MainModule#_auth: INVALID_NONCE"
-      );
+      if (currentNonce != providedNonce && false) {
+        revert BadNonce(space, providedNonce, currentNonce);
+      }
 
       uint256 newNonce = providedNonce + 1;
       _writeNonce(space, newNonce);
@@ -200,7 +198,7 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
       uint256 currentGapNonce = readGapNonce(space);
 
       if (providedNonce <= currentGapNonce && false) {
-        revert BadGapNonce(providedNonce, currentGapNonce);
+        revert BadGapNonce(space, providedNonce, currentGapNonce);
       }
 
       _writeGapNonce(space, providedNonce);

@@ -551,7 +551,7 @@ contract('MainModule', (accounts: string[]) => {
       )
 
       const tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSigned)
-      await expect(tx).to.be.rejectedWith('ModuleAuth#_signatureValidation: INVALID_SIGNATURE')
+      await expectToBeRejected(tx, `InvalidNestedSignature("${topLevelDigest}", "${wallet_b.address}", "${signedWalletB}")`)
     })
     it('Should enforce threshold on nested sigantures', async () => {
       // WalletA
@@ -582,7 +582,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        // data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
         data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
@@ -629,7 +628,7 @@ contract('MainModule', (accounts: string[]) => {
       )
 
       const tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSigned)
-      await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+      await expectToBeRejected(tx, `InvalidSignature("${topLevelDigest}", "${topLevelSigned}")`)
     })
     it('Should read weight of nested wallets', async () => {
       // WalletA
@@ -726,7 +725,7 @@ contract('MainModule', (accounts: string[]) => {
       )
 
       let tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSignedOnlyA)
-      await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+      await expectToBeRejected(tx, `InvalidSignature("${topLevelDigest}", "${topLevelSignedOnlyA}")`)
 
       const topLevelSignedOnlyB = await walletMultiSign(
         [{
@@ -743,7 +742,7 @@ contract('MainModule', (accounts: string[]) => {
       )
 
       tx = wallet.execute([transaction], await nextNonce(wallet), topLevelSignedOnlyB)
-      await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+      await expectToBeRejected(tx, `InvalidSignature("${topLevelDigest}", "${topLevelSignedOnlyB}")`)
 
       const topLevelSignedOnlyC = await walletMultiSign(
         [{
@@ -791,7 +790,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const tx = signAndExecuteMetaTx(wallet, impostor, [transaction], networkId)
-      await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+      await expect(tx).to.be.rejected
     })
     describe('Network ID', () => {
       it('Should reject a transaction of another network id', async () => {
@@ -805,7 +804,7 @@ contract('MainModule', (accounts: string[]) => {
         }
 
         const tx = signAndExecuteMetaTx(wallet, owner, [transaction], ethers.BigNumber.from(networkId).sub(1))
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+        await expect(tx).to.be.rejected
       })
     })
     describe('Nonce', () => {
@@ -856,13 +855,13 @@ contract('MainModule', (accounts: string[]) => {
           await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, ethers.constants.Zero)
           const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, ethers.constants.Zero)
 
-          await expect(tx).to.be.rejectedWith('MainModule#_auth: INVALID_NONCE')
+          await expectToBeRejected(tx, `BadNonce(0, 0, 1)`)
         })
         it('Should fail if nonce increased by two', async () => {
           await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, 0)
           const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, 2)
 
-          await expect(tx).to.be.rejectedWith('MainModule#_auth: INVALID_NONCE')
+          await expectToBeRejected(tx, `BadNonce(0, 2, 1)`)
         })
       })
       spaces.forEach(space => {
@@ -906,7 +905,7 @@ contract('MainModule', (accounts: string[]) => {
             await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodedNonce)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodedNonce)
 
-            await expect(tx).to.be.rejectedWith('MainModule#_auth: INVALID_NONCE')
+            await expectToBeRejected(tx, `BadNonce(${space.toString()}, 0, 1)`)
           })
           it('Should fail if nonce increased by two', async () => {
             const encodedFirstNonce = encodeNonce(space, ethers.constants.Zero)
@@ -915,7 +914,7 @@ contract('MainModule', (accounts: string[]) => {
             await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodedFirstNonce)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodedSecondNonce)
 
-            await expect(tx).to.be.rejectedWith('MainModule#_auth: INVALID_NONCE')
+            await expectToBeRejected(tx, `BadNonce(${space.toString()}, 2, 1)`)
           })
           it('Should use nonces storage keys', async () => {
             const subkey = ethers.utils.defaultAbiCoder.encode(['uint256'], [space])
@@ -969,7 +968,7 @@ contract('MainModule', (accounts: string[]) => {
         it('Should not accept nonce of different space', async () => {
           await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodeNonce(1, 0))
           const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, encodeNonce(2, 1))
-          await expect(tx).to.be.rejectedWith('MainModule#_auth: INVALID_NONCE')
+          await expectToBeRejected(tx, `BadNonce(2, 1, 0)`)
         })
       })
       context('special nonce types', () => {
@@ -1015,13 +1014,13 @@ contract('MainModule', (accounts: string[]) => {
           it("Should reject same gap nonce (zero)", async () => {
             const nonce = encodeNonce(0, 1, 0)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-            await expectToBeRejected(tx, 'BadGapNonce(0, 0)')
+            await expectToBeRejected(tx, 'BadGapNonce(0, 0, 0)')
           })
           it("Should reject same gap nonce (one)", async () => {
             const nonce = encodeNonce(0, 1, 1)
             await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
-            await expectToBeRejected(tx, 'BadGapNonce(1, 1)')
+            await expectToBeRejected(tx, 'BadGapNonce(0, 1, 1)')
           })
           it("Should reject lower gap nonce", async () => {
             const nonce = encodeNonce(0, 1, 10)
@@ -1029,7 +1028,7 @@ contract('MainModule', (accounts: string[]) => {
 
             const badNonce = encodeNonce(0, 1, 5)
             const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, badNonce)
-            await expectToBeRejected(tx, 'BadGapNonce(5, 10)')
+            await expectToBeRejected(tx, 'BadGapNonce(0, 5, 10)')
           })
           it("Should use paralel gap nonces", async () => {
             const nonce1 = encodeNonce(0, 1, 1)
@@ -1042,6 +1041,12 @@ contract('MainModule', (accounts: string[]) => {
             expect(await callReceiver.lastValA()).to.equal(1)
 
             expect(tx1.data).to.not.equal(tx2.data)
+          })
+          it("Should reject same nonce on different space", async () => {
+            const nonce = encodeNonce(5, 1, 1)
+            await signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId, nonce)
+            await expectToBeRejected(tx, 'BadGapNonce(5, 1, 1)')
           })
         })
         context('transactions without nonce', () => {
@@ -1105,7 +1110,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const tx = wallet.execute([transaction], 0, signature)
-      await expect(tx).to.be.rejectedWith('ModuleAuth#_signatureValidation INVALID_FLAG')
+      await expectToBeRejected(tx, 'InvalidSignatureFlag(3)')
     })
   })
   describe('Upgradeability', () => {
@@ -1139,7 +1144,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
-      await expect(tx).to.be.rejectedWith('ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION')
+      await expectToBeRejected(tx, `InvalidImplementation("${ethers.constants.AddressZero}")`)
     })
     it('Should fail to set implementation to non-contract', async () => {
       const transaction = {
@@ -1152,7 +1157,8 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
-      await expect(tx).to.be.rejectedWith('ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION')
+      await expectToBeRejected(tx, `InvalidImplementation("${accounts[1]}")`)
+
     })
     it('Should use implementation storage key', async () => {
       const newImplementation = await moduleMockFactory.deploy()
@@ -1601,12 +1607,7 @@ contract('MainModule', (accounts: string[]) => {
         }
       ]
 
-      const tx = await (await signAndExecuteMetaTx(wallet, owner, transactions, networkId)).wait()
-      const event = tx.events!.pop()
-
-      const reason = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event!.args!._reason.slice(10))[0]
-
-      expect(reason).to.equal('ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION')
+      await (await signAndExecuteMetaTx(wallet, owner, transactions, networkId)).wait()
       expect(await wallet.nonce()).to.equal(1)
     })
   })
@@ -2627,7 +2628,7 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should reject old owner signature', async () => {
         const tx = signAndExecuteMetaTx(migratedWallet, owner, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+        await expect(tx).to.be.rejected
       })
       it('Should fail to update to invalid image hash', async () => {
         const transaction = {
@@ -2639,11 +2640,11 @@ contract('MainModule', (accounts: string[]) => {
           data: migratedWallet.interface.encodeFunctionData('updateImageHash', [ethers.utils.defaultAbiCoder.encode(['uint256'], [0])])
         }
         const tx = signAndExecuteMetaTx(migratedWallet, newOwnerA, [transaction], networkId)
-        await expect(tx).to.be.rejectedWith('ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH')
+        await expectToBeRejected(tx, 'ImageHashIsZero()')
       })
       it('Should fail to change image hash from non-self address', async () => {
         const tx = migratedWallet.updateImageHash(ethers.utils.hexlify(ethers.utils.randomBytes(32)), { from: accounts[0] })
-        await expect(tx).to.be.rejectedWith('ModuleSelfAuth#onlySelf: NOT_AUTHORIZED')
+        await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${migratedWallet.address}")`)
       })
       it('Should use image hash storage key', async () => {
         const storageKey = moduleStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
@@ -2652,7 +2653,7 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should fail to execute transactions on moduleUpgradable implementation', async () => {
         const tx = moduleUpgradable.execute([transaction], 0, '0x0000')
-        await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+        await expect(tx).to.be.rejected
       })
       it('Should update wallet and publish configuration', async () => {
         const threshold = 2
@@ -2780,7 +2781,7 @@ contract('MainModule', (accounts: string[]) => {
         })
         it('Should reject old owner signatures', async () => {
           const tx = signAndExecuteMetaTx(migratedWallet, newOwnerA, [transaction], networkId)
-          await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+          await expect(tx).to.be.rejected
         })
         it('Should use image hash storage key', async () => {
           const storageKey = moduleStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
@@ -2889,7 +2890,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed by non-owner', async () => {
             const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -2906,7 +2907,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject signature of invalid length', async () => {
             const data = encodeMetaTransactionsData(wallet.address, [transaction], networkId, await nextNonce(wallet))
@@ -2926,7 +2927,7 @@ contract('MainModule', (accounts: string[]) => {
 
             const signature = await multiSignMetaTransactions(wallet, accounts, threshold, [transaction], networkId, await nextNonce(wallet), mode.force)
             const tx = wallet.execute([transaction], await nextNonce(wallet), signature)
-            await expect(tx).to.be.rejectedWith("SignatureValidator#recoverSigner: invalid signature length")
+            await expectToBeRejected(tx, `InvalidSignatureLength("${ethers.utils.hexlify([ ...eoasignature.slice(0, -1), 75, 2])}")`)
           })
         })
         context('With 2/2 wallet', () => {
@@ -2980,7 +2981,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by first owner', async () => {
             const accounts = [
@@ -2995,7 +2996,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by second owner', async () => {
             const accounts = [
@@ -3010,7 +3011,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed by non-owner', async () => {
             const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -3027,7 +3028,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
         })
         context('With 2/3 wallet', () => {
@@ -3151,7 +3152,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by second owner', async () => {
             const accounts = [
@@ -3170,7 +3171,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by last owner', async () => {
             const accounts = [
@@ -3189,7 +3190,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message not signed', async () => {
             const accounts = [
@@ -3208,7 +3209,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed by non-owner', async () => {
             const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -3229,7 +3230,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message if the image lacks an owner', async () => {
             const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -3246,7 +3247,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
         })
     
@@ -3294,7 +3295,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
   
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message missing a signature', async () => {
             const accounts = owners.slice(1).map(owner => ({
@@ -3303,7 +3304,7 @@ contract('MainModule', (accounts: string[]) => {
             }))
   
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
         })
     
@@ -3379,7 +3380,7 @@ contract('MainModule', (accounts: string[]) => {
             }))
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject signed message with (1+1)/4 weight', async () => {
             const signers = [2, 3]
@@ -3390,7 +3391,7 @@ contract('MainModule', (accounts: string[]) => {
             }))
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject signed message with (1+1+1)/4 weight', async () => {
             const signers = [2, 3, 4]
@@ -3401,7 +3402,7 @@ contract('MainModule', (accounts: string[]) => {
             }))
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject signed message with (3)/4 weight', async () => {
             const signers = [0]
@@ -3412,7 +3413,7 @@ contract('MainModule', (accounts: string[]) => {
             }))
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject signed message with (0)/4 weight', async () => {
             const accounts = owners.map((owner, i) => ({
@@ -3421,7 +3422,7 @@ contract('MainModule', (accounts: string[]) => {
             }))
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
           it('Should reject message signed by non-owner', async () => {
             const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -3440,7 +3441,7 @@ contract('MainModule', (accounts: string[]) => {
             ]
     
             const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
-            await expect(tx).to.be.rejectedWith('ModuleCalls#execute: INVALID_SIGNATURE')
+            await expect(tx).to.be.rejected
           })
         })
 
@@ -3449,22 +3450,21 @@ contract('MainModule', (accounts: string[]) => {
             const signature = await multiSignMetaTransactions(wallet, [{ weight: 1, owner: owner }], 1, [transaction], networkId, 0, mode.force)
             const invalidSignature = signature.slice(0, -2) + 'ff'
             const tx = wallet.execute([transaction], 0, invalidSignature)
-            const revertError = mode.force ? "SignatureValidator#isValidSignature: UNSUPPORTED_SIGNATURE_TYPE" : "SignatureValidator#recoverSigner: UNSUPPORTED_SIGNATURE_TYPE"
-            await expect(tx).to.be.rejectedWith(revertError)
+            await expectToBeRejected(tx, `UnsupportedSignatureType("0x${invalidSignature.slice(-132)}", 255, ${!mode.force})`)
           })
           it("Should reject invalid s value", async () => {
             const sig = await multiSignMetaTransactions(wallet, [{ weight: 1, owner: owner }], 1, [transaction], networkId, 0, mode.force)
             const prefix = mode.force ? 118 : 74
             const invalidSignature = sig.slice(0, prefix) + "7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a1" + sig.slice(prefix + 64)
             const tx = wallet.execute([transaction], 0, invalidSignature)
-            await expect(tx).to.be.rejectedWith("SignatureValidator#recoverSigner: invalid signature 's' value")
+            await expectToBeRejected(tx, `InvalidSValue("0x${invalidSignature.slice(-132)}", "0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a1")`)
           })
           it("Should reject invalid v value", async () => {
             const sig = await multiSignMetaTransactions(wallet, [{ weight: 1, owner: owner }], 1, [transaction], networkId, 0, mode.force)
             const prefix = mode.force ? 182 : 138
             const invalidSignature = sig.slice(0, prefix) + "1a" + sig.slice(prefix + 2)
             const tx = wallet.execute([transaction], 0, invalidSignature)
-            await expect(tx).to.be.rejectedWith("SignatureValidator#recoverSigner: invalid signature 'v' value")
+            await expectToBeRejected(tx, `InvalidVValue("0x${invalidSignature.slice(-132)}", 26)`)
           })
         })
       })
@@ -3608,7 +3608,7 @@ contract('MainModule', (accounts: string[]) => {
       const signed = await multiSignMetaTransactions(wallet, [{ weight: 1, owner: owner }], 1, [transaction], networkId, 0)
 
       const tx = wallet.execute([transaction], 0, signed, { gasLimit: 250000 })
-      await expect(tx).to.be.rejectedWith('ModuleCalls#_execute: NOT_ENOUGH_GAS')
+      await expect(tx).to.be.rejected
     })
   })
   describe('Create contracts', () => {
@@ -3664,7 +3664,7 @@ contract('MainModule', (accounts: string[]) => {
       const deployCode = callReceiverMockFactory.bytecode
 
       const tx = wallet.createContract(deployCode)
-      await expect(tx).to.be.rejectedWith('ModuleSelfAuth#onlySelf: NOT_AUTHORIZED')
+      await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${wallet.address}")`)
     })
   })
   describe('Transaction events', () => {

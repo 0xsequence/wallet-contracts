@@ -3,6 +3,9 @@ pragma solidity 0.8.14;
 
 
 interface IModuleUpdate {
+  // Errors
+  error InvalidImplementation(address _implementation);
+
   /**
    * @notice Updates the implementation of the base wallet
    * @param _implementation New main module implementation

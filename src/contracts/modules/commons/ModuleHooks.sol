@@ -32,7 +32,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @dev Can't overwrite hooks that are part of the mainmodule (those defined below)
    */
   function addHook(bytes4 _signature, address _implementation) external override onlySelf {
-    require(_readHook(_signature) == address(0), "ModuleHooks#addHook: HOOK_ALREADY_REGISTERED");
+    if (_readHook(_signature) != address(0)) revert HookAlreadyExists(_signature);
     _writeHook(_signature, _implementation);
   }
 
@@ -43,7 +43,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    *      without upgrading the wallet
    */
   function removeHook(bytes4 _signature) external override onlySelf {
-    require(_readHook(_signature) != address(0), "ModuleHooks#removeHook: HOOK_NOT_REGISTERED");
+    if (_readHook(_signature) == address(0)) revert HookDoesNotExist(_signature);
     _writeHook(_signature, address(0));
   }
 

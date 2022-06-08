@@ -11,6 +11,13 @@ import "./LibBytes.sol";
  * Notes: Methods are strongly inspired by contracts in https://github.com/0xProject/0x-monorepo/blob/development/
  */
 contract SignatureValidator {
+  // Errors
+  error InvalidSignatureLength(bytes _signature);
+  error InvalidSValue(bytes _signature, bytes32 _s);
+  error InvalidVValue(bytes _signature, uint256 _v);
+  error UnsupportedSignatureType(bytes _signature, uint256 _type, bool _recoverMode);
+  error SignerIsAddress0(bytes _signature);
+
   using LibBytes for bytes;
 
   /***********************************|
@@ -42,7 +49,7 @@ contract SignatureValidator {
     bytes32 _hash,
     bytes memory _signature
   ) internal pure returns (address signer) {
-    require(_signature.length == 66, "SignatureValidator#recoverSigner: invalid signature length");
+    if (_signature.length != 66) revert InvalidSignatureLength(_signature);
     uint256 signatureType = uint8(_signature[_signature.length - 1]);
 
     // Variables are not scoped in Solidity.
@@ -64,11 +71,11 @@ contract SignatureValidator {
     // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/cryptography/ECDSA.sol
 
     if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
-      revert("SignatureValidator#recoverSigner: invalid signature 's' value");
+      revert InvalidSValue(_signature, s);
     }
 
     if (v != 27 && v != 28) {
-      revert("SignatureValidator#recoverSigner: invalid signature 'v' value");
+      revert InvalidVValue(_signature, v);
     }
 
     // Signature using EIP712
@@ -90,14 +97,11 @@ contract SignatureValidator {
       // that we currently support. In this case returning false
       // may lead the caller to incorrectly believe that the
       // signature was invalid.)
-      revert("SignatureValidator#recoverSigner: UNSUPPORTED_SIGNATURE_TYPE");
+      revert UnsupportedSignatureType(_signature, signatureType, true);
     }
 
     // Prevent signer from being 0x0
-    require(
-      signer != address(0x0),
-      "SignatureValidator#recoverSigner: INVALID_SIGNER"
-    );
+    if (signer == address(0x0)) revert SignerIsAddress0(_signature);
 
     return signer;
   }
@@ -132,7 +136,7 @@ contract SignatureValidator {
       // that we currently support. In this case returning false
       // may lead the caller to incorrectly believe that the
       // signature was invalid.)
-      revert("SignatureValidator#isValidSignature: UNSUPPORTED_SIGNATURE_TYPE");
+      revert UnsupportedSignatureType(_signature, signatureType, false);
     }
   }
 }

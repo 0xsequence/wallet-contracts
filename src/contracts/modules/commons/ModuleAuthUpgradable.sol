@@ -22,7 +22,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    *      passed for each transaction.
    */
   function updateImageHash(bytes32 _imageHash) external override onlySelf {
-    require(_imageHash != bytes32(0), "ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH");
+    if (_imageHash == bytes32(0)) revert ImageHashIsZero();
     ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
     emit ImageHashUpdated(_imageHash);
   }

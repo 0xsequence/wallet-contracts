@@ -21,7 +21,7 @@ contract ModuleUpdate is IModuleUpdate, ModuleERC165, ModuleSelfAuth, Implementa
    * @dev WARNING Updating the implementation can brick the wallet
    */
   function updateImplementation(address _implementation) external override onlySelf {
-    require(_implementation.isContract(), "ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION");
+    if (!_implementation.isContract()) revert InvalidImplementation(_implementation);
     _setImplementation(_implementation);
     emit ImplementationUpdated(_implementation);
   }

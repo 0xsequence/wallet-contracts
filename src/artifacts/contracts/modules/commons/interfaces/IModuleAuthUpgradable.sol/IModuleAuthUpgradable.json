@@ -5,6 +5,11 @@
   "abi": [
     {
       "inputs": [],
+      "name": "ImageHashIsZero",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "imageHash",
       "outputs": [
         {

@@ -13,6 +13,28 @@ var _abi = [
                 name: "_signature",
                 type: "bytes4"
             },
+        ],
+        name: "HookAlreadyExists",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "bytes4",
+                name: "_signature",
+                type: "bytes4"
+            },
+        ],
+        name: "HookDoesNotExist",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "bytes4",
+                name: "_signature",
+                type: "bytes4"
+            },
             {
                 internalType: "address",
                 name: "_implementation",

@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { expect, b } from './utils'
+import { expect, b, expectStaticToBeRejected, encodeError } from './utils'
 import { ethers as hethers } from 'hardhat'
 
 import { MultiCallUtils, CallReceiverMock, CallReceiverMock__factory } from 'src/gen/typechain'
@@ -177,7 +177,7 @@ contract('Multi call utils', (accounts: string[]) => {
         }
       ])
 
-      await expect(tx).to.be.rejectedWith('MultiCallUtils#multiCall: CALL_REVERTED')
+      await expectStaticToBeRejected(tx, `CallReverted(uint256,bytes)`, 1, encodeError("CallReceiverMock#testCall: REVERT_FLAG"))
     })
     it('Fail if batch includes delegate call', async () => {
       const bytes = ethers.utils.randomBytes(422)
@@ -203,7 +203,7 @@ contract('Multi call utils', (accounts: string[]) => {
         }
       ])
 
-      await expect(tx).to.be.rejectedWith('MultiCallUtils#multiCall: delegateCall not allowed')
+      await expectStaticToBeRejected(tx, `DelegateCallNotAllowed(uint256)`, 0)
     })
     it('Fail if not enough gas for call', async () => {
       const bytes = ethers.utils.randomBytes(422)
@@ -231,7 +231,7 @@ contract('Multi call utils', (accounts: string[]) => {
         }
       ])
 
-      await expect(tx).to.be.rejectedWith('MultiCallUtils#multiCall: NOT_ENOUGH_GAS')
+      await expectStaticToBeRejected(tx, `NotEnoughGas(uint256,uint256)`, b(2).pow(256).sub(b(1)), '*')
     })
     it('Should call globals', async () => {
       const i = multiCall.interface

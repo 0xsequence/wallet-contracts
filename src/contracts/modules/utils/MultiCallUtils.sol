@@ -6,6 +6,10 @@ import "../commons/interfaces/IModuleCalls.sol";
 
 
 contract MultiCallUtils {
+  // Errors
+  error DelegateCallNotAllowed(uint256 _index);
+  error CallReverted(uint256 _index, bytes _result);
+
   function multiCall(
     IModuleCalls.Transaction[] memory _txs
   ) public payable returns (
@@ -18,8 +22,8 @@ contract MultiCallUtils {
     for (uint256 i = 0; i < _txs.length; i++) {
       IModuleCalls.Transaction memory transaction = _txs[i];
 
-      require(!transaction.delegateCall, 'MultiCallUtils#multiCall: delegateCall not allowed');
-      require(gasleft() >= transaction.gasLimit, "MultiCallUtils#multiCall: NOT_ENOUGH_GAS");
+      if (transaction.delegateCall) revert DelegateCallNotAllowed(i);
+      if (gasleft() < transaction.gasLimit) revert IModuleCalls.NotEnoughGas(transaction.gasLimit, gasleft());
 
       // solhint-disable
       (_successes[i], _results[i]) = transaction.target.call{
@@ -28,7 +32,7 @@ contract MultiCallUtils {
       }(transaction.data);
       // solhint-enable
 
-      require(_successes[i] || !_txs[i].revertOnError, 'MultiCallUtils#multiCall: CALL_REVERTED');
+      if (!_successes[i] && _txs[i].revertOnError) revert CallReverted(i, _results[i]);
     }
   }
 

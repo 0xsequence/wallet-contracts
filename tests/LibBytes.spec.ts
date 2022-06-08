@@ -1,6 +1,6 @@
 import { ethers as hethers } from 'hardhat'
 import * as ethers from 'ethers'
-import { expect, randomHex } from './utils'
+import { expect, expectStaticToBeRejected, randomHex } from './utils'
 
 import { LibBytesImpl, LibBytesImpl__factory } from 'src/gen/typechain'
 
@@ -28,7 +28,7 @@ contract('LibBytes', () => {
     })
     it('Should fail first uint16 out of bounds', async () => {
       const tx = libBytes.readFirstUint16('0x5a')
-      await expect(tx).to.be.rejectedWith('LibBytes#readFirstUint16: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, `ReadFirstUint16OutOfBounds(bytes)`, `0x5a`)
     })
   })
 
@@ -53,11 +53,11 @@ contract('LibBytes', () => {
     })
     it('Should fail read bool and uint8 out of bounds', async () => {
       const tx = libBytes.readUint8Uint8('0x5a', 0)
-      await expect(tx).to.be.rejectedWith('LibBytes#readUint8Uint8: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, 'ReadUint8Uint8OutOfBounds(bytes,uint256)', '0x5a', 0)
     })
     it('Should fail read bool and uint16 fully out of bounds', async () => {
       const tx = libBytes.readUint8Uint8('0x5a9ca2', 12)
-      await expect(tx).to.be.rejectedWith('LibBytes#readUint8Uint8: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, 'ReadUint8Uint8OutOfBounds(bytes,uint256)', '0x5a9ca2', 12)
     })
   })
 
@@ -92,11 +92,11 @@ contract('LibBytes', () => {
     it('Should fail read address out of bounds', async () => {
       const data = randomHex(44).concat(addr.slice(2))
       const tx = libBytes.readAddress(data, 45)
-      await expect(tx).to.be.rejectedWith('LibBytes#readAddress: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, "ReadAddressOutOfBounds(bytes,uint256)", data, 45)
     })
     it('Should fail read address totally out of bounds', async () => {
       const tx = libBytes.readAddress('0x010203', 345)
-      await expect(tx).to.be.rejectedWith('LibBytes#readAddress: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, "ReadAddressOutOfBounds(bytes,uint256)", '0x010203', 345)
     })
   })
 
@@ -131,11 +131,11 @@ contract('LibBytes', () => {
     it('Should fail read bytes66 out of bounds', async () => {
       const data = randomHex(33).concat(bytes66.slice(2))
       const tx = libBytes.readBytes66(data, 34)
-      await expect(tx).to.be.rejectedWith('LibBytes#readBytes66: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, "ReadBytes66OutOfBounds(bytes,uint256)", data, 34)
     })
     it('Should fail read bytes66 totally out of bounds', async () => {
       const tx = libBytes.readBytes66('0x010203', 345)
-      await expect(tx).to.be.rejectedWith('LibBytes#readBytes66: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, "ReadBytes66OutOfBounds(bytes,uint256)", '0x010203', 345)
     })
   })
 
@@ -167,11 +167,11 @@ contract('LibBytes', () => {
     it('Should fail read bytes32 out of bounds', async () => {
       const data = randomHex(11).concat(bytes32.slice(2))
       const tx = libBytes.readBytes32(data, 12)
-      await expect(tx).to.be.rejectedWith('LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED')
+      await expectStaticToBeRejected(tx, "ReadBytes32OutOfBounds(bytes,uint256)", data, 12)
     })
     it('Should fail read bytes32 totally out of bounds', async () => {
       const tx = libBytes.readBytes32('0x010203', 3145)
-      await expect(tx).to.be.rejectedWith('LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED')
+      await expectStaticToBeRejected(tx, "ReadBytes32OutOfBounds(bytes,uint256)", '0x010203', 3145)
     })
   })
 
@@ -193,11 +193,11 @@ contract('LibBytes', () => {
     })
     it('Should fail read uint16 out of bounds', async () => {
       const tx = libBytes.readUint16('0x5a', 0)
-      await expect(tx).to.be.rejectedWith('LibBytes#readUint16: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, "ReadUint16OutOfBounds(bytes,uint256)", '0x5a', 0)
     })
     it('Should fail read uint16 fully out of bounds', async () => {
       const tx = libBytes.readUint16('0x5a9ca2', 12)
-      await expect(tx).to.be.rejectedWith('LibBytes#readUint16: OUT_OF_BOUNDS')
+      await expectStaticToBeRejected(tx, "ReadUint16OutOfBounds(bytes,uint256)", '0x5a9ca2', 12)
     })
   })
 
@@ -251,11 +251,11 @@ contract('LibBytes', () => {
         it('Should fail read bytes out of bounds', async () => {
           const data = randomHex(11).concat(bytes.slice(2))
           const tx = libBytes.readBytes(data, 12, size)
-          await expect(tx).to.be.rejectedWith('LibBytes#readBytes: OUT_OF_BOUNDS')
+          await expectStaticToBeRejected(tx, "ReadBytesOutOfBounds(bytes,uint256,uint256)", data, 12, size)
         })
         it('Should fail read bytes totally out of bounds', async () => {
           const tx = libBytes.readBytes('0x010203', 3145, size)
-          await expect(tx).to.be.rejectedWith('LibBytes#readBytes: OUT_OF_BOUNDS')
+          await expectStaticToBeRejected(tx, "ReadBytesOutOfBounds(bytes,uint256,uint256)", '0x010203', 3145, size)
         })
       })
     })

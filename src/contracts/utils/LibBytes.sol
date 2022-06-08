@@ -4,6 +4,15 @@ pragma solidity 0.8.14;
 library LibBytes {
   using LibBytes for bytes;
 
+  // Errors
+  error ReadFirstUint16OutOfBounds(bytes _data);
+  error ReadUint8Uint8OutOfBounds(bytes _data, uint256 _index);
+  error ReadAddressOutOfBounds(bytes _data, uint256 _index);
+  error ReadBytes66OutOfBounds(bytes _data, uint256 _index);
+  error ReadBytes32OutOfBounds(bytes _data, uint256 _index);
+  error ReadUint16OutOfBounds(bytes _data, uint256 _index);
+  error ReadBytesOutOfBounds(bytes _datam, uint256 _index, uint256 _length);
+
   /***********************************|
   |        Read Bytes Functions       |
   |__________________________________*/
@@ -20,12 +29,12 @@ library LibBytes {
     uint16 a,
     uint256 newIndex
   ) {
+    if (data.length < 2) revert ReadFirstUint16OutOfBounds(data);
     assembly {
       let word := mload(add(32, data))
       a := shr(240, word)
       newIndex := 2
     }
-    require(2 <= data.length, "LibBytes#readFirstUint16: OUT_OF_BOUNDS");
   }
 
   /**
@@ -50,8 +59,7 @@ library LibBytes {
       b := and(shr(240, word), 0xff)
       newIndex := add(index, 2)
     }
-    assert(newIndex > index);
-    require(newIndex <= data.length, "LibBytes#readUint8Uint8: OUT_OF_BOUNDS");
+    if (newIndex > data.length) revert ReadUint8Uint8OutOfBounds(data, index);
   }
 
   /**
@@ -73,8 +81,7 @@ library LibBytes {
       a := and(shr(96, word), 0xffffffffffffffffffffffffffffffffffffffff)
       newIndex := add(index, 20)
     }
-    assert(newIndex > index);
-    require(newIndex <= data.length, "LibBytes#readAddress: OUT_OF_BOUNDS");
+    if (newIndex > data.length) revert ReadAddressOutOfBounds(data, index);
   }
 
   /**
@@ -99,8 +106,7 @@ library LibBytes {
       mstore(add(a, 66), mload(add(offset, 34)))
       newIndex := add(index, 66)
     }
-    assert(newIndex > index);
-    require(newIndex <= data.length, "LibBytes#readBytes66: OUT_OF_BOUNDS");
+    if (newIndex > data.length) revert ReadBytes66OutOfBounds(data, index);
   }
 
   /**
@@ -112,18 +118,11 @@ library LibBytes {
   function readBytes32(
     bytes memory b,
     uint256 index
-  )
-    internal
-    pure
-    returns (bytes32 result)
-  {
-    require(
-      b.length >= index + 32,
-      "LibBytes#readBytes32: GREATER_OR_EQUAL_TO_32_LENGTH_REQUIRED"
-    );
-
+  ) internal pure returns (bytes32 result) {
     // Arrays are prefixed by a 256 bit length parameter
     uint256 pos = index + 32;
+
+    if (b.length < pos) revert ReadBytes32OutOfBounds(b, index);
 
     // Read the bytes32 from array memory
     assembly {
@@ -148,8 +147,7 @@ library LibBytes {
       a := and(shr(240, word), 0xffff)
       newIndex := add(index, 2)
     }
-    assert(newIndex > index);
-    require(newIndex <= data.length, "LibBytes#readUint16: OUT_OF_BOUNDS");
+    if (newIndex > data.length) revert ReadUint16OutOfBounds(data, index);
   }
 
   /**
@@ -190,6 +188,6 @@ library LibBytes {
     }
 
     assert(newIndex >= index);
-    require(newIndex <= data.length, "LibBytes#readBytes: OUT_OF_BOUNDS");
+    if (newIndex > data.length) revert ReadBytesOutOfBounds(data, index, size);
   }
 }

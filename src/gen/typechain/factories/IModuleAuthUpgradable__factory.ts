@@ -12,6 +12,11 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "ImageHashIsZero",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "imageHash",
     outputs: [
       {

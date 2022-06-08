@@ -8,6 +8,11 @@ var ethers_1 = require("ethers");
 var _abi = [
     {
         inputs: [],
+        name: "ImageHashIsZero",
+        type: "error"
+    },
+    {
+        inputs: [],
         name: "imageHash",
         outputs: [
             {

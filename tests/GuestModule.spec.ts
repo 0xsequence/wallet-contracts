@@ -1,4 +1,4 @@
-import { expect } from './utils'
+import { expect, expectToBeRejected } from './utils'
 import { GuestModule, CallReceiverMock, HookCallerMock, GuestModule__factory, CallReceiverMock__factory, HookCallerMock__factory, MainModuleUpgradable__factory } from 'src/gen/typechain'
 import { ethers as hethers } from 'hardhat'
 import * as ethers from 'ethers'
@@ -98,7 +98,7 @@ contract('GuestModule', () => {
       ]
 
       const tx = module.selfExecute(transactions)
-      await expect(tx).to.be.rejectedWith('GuestModule#_executeGuest: delegateCall not allowed')
+      await expectToBeRejected(tx, 'DelegateCallNotAllowed()')
     })
     it('Should not accept ETH', async () => {
       // const tx = module.send(1, { from: accounts[0] })
