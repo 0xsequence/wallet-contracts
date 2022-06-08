@@ -141,31 +141,33 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
     bytes32 _txHash,
     Transaction[] memory _txs
   ) private {
-    // Execute transaction
-    for (uint256 i = 0; i < _txs.length; i++) {
-      Transaction memory transaction = _txs[i];
+    unchecked {
+      // Execute transaction
+      for (uint256 i = 0; i < _txs.length; i++) {
+        Transaction memory transaction = _txs[i];
 
-      bool success;
-      bytes memory result;
+        bool success;
+        bytes memory result;
 
-      if (gasleft() < transaction.gasLimit) revert NotEnoughGas(transaction.gasLimit, gasleft());
+        if (gasleft() < transaction.gasLimit) revert NotEnoughGas(transaction.gasLimit, gasleft());
 
-      if (transaction.delegateCall) {
-        (success, result) = transaction.target.delegatecall{
-          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
-        }(transaction.data);
-      } else {
-        (success, result) = transaction.target.call{
-          value: transaction.value,
-          gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
-        }(transaction.data);
-      }
+        if (transaction.delegateCall) {
+          (success, result) = transaction.target.delegatecall{
+            gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
+          }(transaction.data);
+        } else {
+          (success, result) = transaction.target.call{
+            value: transaction.value,
+            gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
+          }(transaction.data);
+        }
 
-      if (success) {
-        emit TxExecuted(_txHash);
-      } else {
-        _revertBytes(transaction, _txHash, result);
-      }
+        if (success) {
+          emit TxExecuted(_txHash);
+        } else {
+          _revertBytes(transaction, _txHash, result);
+        }
+      } 
     }
   }
 
@@ -254,14 +256,16 @@ abstract contract ModuleIgnoreNonceCalls is IModuleCalls, IModuleAuth, ModuleERC
     uint256 _type,
     uint256 _nonce
   ) {
-    // Decode nonce
-    _space = _rawNonce >> SPACE_SHIFT;
-    _type = (_rawNonce >> TYPE_SHIFT) & TYPE_MASK;
-    _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
+    unchecked {
+      // Decode nonce
+      _space = _rawNonce >> SPACE_SHIFT;
+      _type = (_rawNonce >> TYPE_SHIFT) & TYPE_MASK;
+      _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
 
-    // Verify nonce type
-    if (_type > HighestNonceType) {
-      revert InvalidNonceType(_type);
+      // Verify nonce type
+      if (_type > HighestNonceType) {
+        revert InvalidNonceType(_type);
+      } 
     }
   }
 

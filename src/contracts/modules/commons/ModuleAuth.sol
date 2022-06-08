@@ -51,58 +51,60 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
   )
     internal override view returns (bool)
   {
-    (
-      uint16 threshold,  // required threshold signature
-      uint256 rindex     // read index
-    ) = _signature.readFirstUint16();
+    unchecked {
+      (
+        uint16 threshold,  // required threshold signature
+        uint256 rindex     // read index
+      ) = _signature.readFirstUint16();
 
-    // Start image hash generation
-    bytes32 imageHash = bytes32(uint256(threshold));
+      // Start image hash generation
+      bytes32 imageHash = bytes32(uint256(threshold));
 
-    // Acumulated weight of signatures
-    uint256 totalWeight;
+      // Acumulated weight of signatures
+      uint256 totalWeight;
 
-    // Iterate until the image is completed
-    while (rindex < _signature.length) {
-      // Read next item type and addrWeight
-      uint256 flag; uint256 addrWeight; address addr;
-      (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
+      // Iterate until the image is completed
+      while (rindex < _signature.length) {
+        // Read next item type and addrWeight
+        uint256 flag; uint256 addrWeight; address addr;
+        (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
 
-      if (flag == FLAG_ADDRESS) {
-        // Read plain address
-        (addr, rindex) = _signature.readAddress(rindex);
-      } else if (flag == FLAG_SIGNATURE) {
-        // Read single signature and recover signer
-        bytes memory signature;
-        (signature, rindex) = _signature.readBytes66(rindex);
-        addr = recoverSigner(_hash, signature);
+        if (flag == FLAG_ADDRESS) {
+          // Read plain address
+          (addr, rindex) = _signature.readAddress(rindex);
+        } else if (flag == FLAG_SIGNATURE) {
+          // Read single signature and recover signer
+          bytes memory signature;
+          (signature, rindex) = _signature.readBytes66(rindex);
+          addr = recoverSigner(_hash, signature);
 
-        // Acumulate total weight of the signature
-        totalWeight += addrWeight;
-      } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
-        // Read signer
-        (addr, rindex) = _signature.readAddress(rindex);
+          // Acumulate total weight of the signature
+          totalWeight += addrWeight;
+        } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
+          // Read signer
+          (addr, rindex) = _signature.readAddress(rindex);
 
-        // Read signature size
-        uint256 size;
-        (size, rindex) = _signature.readUint16(rindex);
+          // Read signature size
+          uint256 size;
+          (size, rindex) = _signature.readUint16(rindex);
 
-        // Read dynamic size signature
-        bytes memory signature;
-        (signature, rindex) = _signature.readBytes(rindex, size);
-        if (!isValidSignature(_hash, addr, signature)) revert InvalidNestedSignature(_hash, addr, signature);
+          // Read dynamic size signature
+          bytes memory signature;
+          (signature, rindex) = _signature.readBytes(rindex, size);
+          if (!isValidSignature(_hash, addr, signature)) revert InvalidNestedSignature(_hash, addr, signature);
 
-        // Acumulate total weight of the signature
-        totalWeight += addrWeight;
-      } else {
-        revert InvalidSignatureFlag(flag);
+          // Acumulate total weight of the signature
+          totalWeight += addrWeight;
+        } else {
+          revert InvalidSignatureFlag(flag);
+        }
+
+        // Write weight and address to image
+        imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
       }
 
-      // Write weight and address to image
-      imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
+      return totalWeight >= threshold && _isValidImage(imageHash);
     }
-
-    return totalWeight >= threshold && _isValidImage(imageHash);
   }
 
   /**
