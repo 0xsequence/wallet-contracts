@@ -72,7 +72,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @param _space Nonce space, each space keeps an independent nonce count
    * @return The current nonce
    */
-  function readGapNonce(uint256 _space) public override view returns (uint256) {
+  function readGapNonce(uint256 _space) public override virtual view returns (uint256) {
     return uint256(ModuleStorage.readBytes32Map(GAP_NONCE_KEY, bytes32(_space)));
   }
 

@@ -28,7 +28,7 @@ abstract contract ModuleAuthFixed is ModuleAuth {
    * @param _imageHash Hash image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
+  function _isValidImage(bytes32 _imageHash) internal override virtual view returns (bool) {
     return address(
       uint160(
         uint256(

@@ -34,7 +34,7 @@ contract MainModuleGasEstimation is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
-    ModuleIgnoreAuthUpgradable,
+    ModuleAuthUpgradable,
     ModuleIgnoreNonceCalls,
     ModuleUpdate,
     ModuleHooks,

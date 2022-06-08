@@ -15,7 +15,7 @@ contract ModuleCreator is IModuleCreator, ModuleERC165, ModuleSelfAuth {
    * @param _code Creation code of the contract
    * @return addr The address of the created contract
    */
-  function createContract(bytes memory _code) public override payable onlySelf returns (address addr) {
+  function createContract(bytes memory _code) public override virtual payable onlySelf returns (address addr) {
     assembly { addr := create(callvalue(), add(_code, 32), mload(_code)) }
     emit CreatedContract(addr);
   }

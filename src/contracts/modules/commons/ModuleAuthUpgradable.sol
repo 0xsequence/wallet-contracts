@@ -21,7 +21,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    *      could make transactions impossible to execute as all the signers must be
    *      passed for each transaction.
    */
-  function updateImageHash(bytes32 _imageHash) external override onlySelf {
+  function updateImageHash(bytes32 _imageHash) external override virtual onlySelf {
     if (_imageHash == bytes32(0)) revert ImageHashIsZero();
     ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
     emit ImageHashUpdated(_imageHash);
@@ -30,7 +30,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
   /**
    * @notice Returns the current image hash of the wallet
    */
-  function imageHash() external override view returns (bytes32) {
+  function imageHash() external override virtual view returns (bytes32) {
     return ModuleStorage.readBytes32(IMAGE_HASH_KEY);
   }
 
@@ -40,7 +40,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    * @param _imageHash Hash image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
+  function _isValidImage(bytes32 _imageHash) internal override virtual view returns (bool) {
     return _imageHash != bytes32(0) && _imageHash == ModuleStorage.readBytes32(IMAGE_HASH_KEY);
   }
 

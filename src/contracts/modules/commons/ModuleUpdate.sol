@@ -20,7 +20,7 @@ contract ModuleUpdate is IModuleUpdate, ModuleERC165, ModuleSelfAuth, Implementa
    * @param _implementation New main module implementation
    * @dev WARNING Updating the implementation can brick the wallet
    */
-  function updateImplementation(address _implementation) external override onlySelf {
+  function updateImplementation(address _implementation) external override virtual onlySelf {
     if (!_implementation.isContract()) revert InvalidImplementation(_implementation);
     _setImplementation(_implementation);
     emit ImplementationUpdated(_implementation);

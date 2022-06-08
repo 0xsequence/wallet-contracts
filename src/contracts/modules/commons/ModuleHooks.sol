@@ -21,7 +21,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @param _signature Signature function
    * @return The address of the implementation hook, address(0) if none
   */
-  function readHook(bytes4 _signature) external override view returns (address) {
+  function readHook(bytes4 _signature) external override virtual view returns (address) {
     return _readHook(_signature);
   }
 
@@ -31,7 +31,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @param _implementation Hook implementation contract
    * @dev Can't overwrite hooks that are part of the mainmodule (those defined below)
    */
-  function addHook(bytes4 _signature, address _implementation) external override onlySelf {
+  function addHook(bytes4 _signature, address _implementation) external override virtual onlySelf {
     if (_readHook(_signature) != address(0)) revert HookAlreadyExists(_signature);
     _writeHook(_signature, _implementation);
   }
@@ -42,7 +42,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @dev Can't remove hooks that are part of the mainmodule (those defined below) 
    *      without upgrading the wallet
    */
-  function removeHook(bytes4 _signature) external override onlySelf {
+  function removeHook(bytes4 _signature) external override virtual onlySelf {
     if (_readHook(_signature) == address(0)) revert HookDoesNotExist(_signature);
     _writeHook(_signature, address(0));
   }
@@ -75,7 +75,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
     uint256,
     uint256,
     bytes calldata
-  ) external override returns (bytes4) {
+  ) external override virtual returns (bytes4) {
     return ModuleHooks.onERC1155Received.selector;
   }
 
@@ -89,7 +89,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
     uint256[] calldata,
     uint256[] calldata,
     bytes calldata
-  ) external override returns (bytes4) {
+  ) external override virtual returns (bytes4) {
     return ModuleHooks.onERC1155BatchReceived.selector;
   }
 
@@ -97,7 +97,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @notice Handle the receipt of a single ERC721 token.
    * @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
    */
-  function onERC721Received(address, address, uint256, bytes calldata) external override returns (bytes4) {
+  function onERC721Received(address, address, uint256, bytes calldata) external override virtual returns (bytes4) {
     return ModuleHooks.onERC721Received.selector;
   }
 

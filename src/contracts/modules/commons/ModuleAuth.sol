@@ -49,7 +49,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     bytes32 _hash,
     bytes memory _signature
   )
-    internal override view returns (bool)
+    internal override virtual view returns (bool)
   {
     unchecked {
       (
@@ -119,7 +119,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    * @param _digest Pre-final digest
    * @return hashed data for this wallet
    */
-  function _subDigest(bytes32 _digest) internal override view returns (bytes32) {
+  function _subDigest(bytes32 _digest) internal override virtual view returns (bytes32) {
     uint256 chainId; assembly { chainId := chainid() }
     return keccak256(
       abi.encodePacked(
@@ -143,7 +143,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
   function isValidSignature(
     bytes calldata _data,
     bytes calldata _signatures
-  ) external override view returns (bytes4) {
+  ) external override virtual view returns (bytes4) {
     // Validate signatures
     if (_signatureValidation(_subDigest(keccak256(_data)), _signatures)) {
       return SELECTOR_ERC1271_BYTES_BYTES;
@@ -162,7 +162,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
   function isValidSignature(
     bytes32 _hash,
     bytes calldata _signatures
-  ) external override view returns (bytes4) {
+  ) external override virtual view returns (bytes4) {
     // Validate signatures
     if (_signatureValidation(_subDigest(_hash), _signatures)) {
       return SELECTOR_ERC1271_BYTES32_BYTES;
