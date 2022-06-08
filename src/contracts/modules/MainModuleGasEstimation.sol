@@ -35,7 +35,7 @@ contract MainModuleGasEstimation is
     bytes4 _interfaceID
   ) public override(
     ModuleAuthUpgradable,
-    ModuleIgnoreNonceCalls,
+    ModuleCalls,
     ModuleUpdate,
     ModuleHooks,
     ModuleCreator

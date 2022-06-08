@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.14;
 
-import "./interfaces/IModuleAuthUpgradable.sol";
 import "./ModuleAuthUpgradable.sol";
-
-import "./ModuleSelfAuth.sol";
-import "./ModuleAuth.sol";
-import "./ModuleStorage.sol";
 
 
 /**
