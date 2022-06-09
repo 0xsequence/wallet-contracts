@@ -22,7 +22,8 @@ import {
   encodeMessageSubDigest,
   b,
   randomHex,
-  expectToBeRejected
+  expectToBeRejected,
+  SignatureType
 } from './utils'
 
 import {
@@ -1111,6 +1112,21 @@ contract('MainModule', (accounts: string[]) => {
 
       const tx = wallet.execute([transaction], 0, signature)
       await expectToBeRejected(tx, 'InvalidSignatureFlag(3)')
+    })
+    it("Should reject signature with bad encoding type", async () => {
+      const signature = '0x2012'
+
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: ethers.Wallet.createRandom().address,
+        value: ethers.constants.Zero,
+        data: []
+      }
+
+      const tx = wallet.execute([transaction], 0, signature)
+      await expectToBeRejected(tx, 'InvalidSignatureType(32)')
     })
   })
   describe('Upgradeability', () => {
@@ -2802,11 +2818,21 @@ contract('MainModule', (accounts: string[]) => {
     }
 
     const modes = [{
-      name: "Forced dynamic signature encoding",
+      name: "Forced dynamic part encoding, legacy signature type",
       force: true,
+      signatureType: SignatureType.Legacy
     }, {
-      name: "Default signature encoding",
+      name: "Default part encoding, legacy signature encoding",
       force: false,
+      signatureType: SignatureType.Legacy
+    }, {
+      name: "Forced dynamic part encoding, dynamic signature type",
+      force: true,
+      signatureType: SignatureType.DynamicLegacy
+    }, {
+      name: "Default part encoding, dynamic signature type",
+      force: false,
+      signatureType: SignatureType.DynamicLegacy
     }]
 
     modes.map((mode) => {
@@ -2847,7 +2873,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should accept signed message by second owner', async () => {
             const accounts = [
@@ -2861,7 +2887,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should accept signed message by both owners', async () => {
             const accounts = [
@@ -2875,7 +2901,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should reject message without signatures', async () => {
             const accounts = [
@@ -2889,7 +2915,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message signed by non-owner', async () => {
@@ -2906,7 +2932,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject signature of invalid length', async () => {
@@ -2925,7 +2951,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
 
-            const signature = await multiSignMetaTransactions(wallet, accounts, threshold, [transaction], networkId, await nextNonce(wallet), mode.force)
+            const signature = await multiSignMetaTransactions(wallet, accounts, threshold, [transaction], networkId, await nextNonce(wallet), mode.force, mode.signatureType)
             const tx = wallet.execute([transaction], await nextNonce(wallet), signature)
             await expectToBeRejected(tx, `InvalidSignatureLength("${ethers.utils.hexlify([ ...eoasignature.slice(0, -1), 75, 2])}")`)
           })
@@ -2966,7 +2992,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should reject message without signatures', async () => {
             const accounts = [
@@ -2980,7 +3006,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by first owner', async () => {
@@ -2995,7 +3021,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by second owner', async () => {
@@ -3010,7 +3036,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message signed by non-owner', async () => {
@@ -3027,7 +3053,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
         })
@@ -3079,7 +3105,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should accept signed message by first and last owner', async () => {
             const accounts = [
@@ -3097,7 +3123,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should accept signed message by second and last owner', async () => {
             const accounts = [
@@ -3115,7 +3141,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should accept signed message by all owners', async () => {
             const accounts = [
@@ -3133,7 +3159,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
           })
           it('Should reject message signed only by first owner', async () => {
             const accounts = [
@@ -3151,7 +3177,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by second owner', async () => {
@@ -3170,7 +3196,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message signed only by last owner', async () => {
@@ -3189,7 +3215,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message not signed', async () => {
@@ -3208,7 +3234,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message signed by non-owner', async () => {
@@ -3229,7 +3255,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message if the image lacks an owner', async () => {
@@ -3246,7 +3272,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
     
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, undefined, mode.signatureType)
             await expect(tx).to.be.rejected
           })
         })
@@ -3279,7 +3305,7 @@ contract('MainModule', (accounts: string[]) => {
               owner: owner
             }))
   
-            const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000)
+            const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000, mode.signatureType)
           })
           it('Should reject message signed by non-owner', async () => {
             const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
@@ -3294,7 +3320,7 @@ contract('MainModule', (accounts: string[]) => {
               }
             ]
   
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000, mode.signatureType)
             await expect(tx).to.be.rejected
           })
           it('Should reject message missing a signature', async () => {
@@ -3303,7 +3329,7 @@ contract('MainModule', (accounts: string[]) => {
               owner: owner
             }))
   
-            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000)
+            const tx = multiSignAndExecuteMetaTx(wallet, accounts, threshold, [transaction], networkId, undefined, mode.force, 6000000, mode.signatureType)
             await expect(tx).to.be.rejected
           })
         })

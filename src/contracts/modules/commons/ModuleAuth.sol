@@ -9,7 +9,34 @@ import "./interfaces/IModuleAuth.sol";
 
 import "./ModuleERC165.sol";
 
+/**
+  Signature encoding:
 
+  First byte defines the type:
+
+  - 0x00 for v1 -(Legacy)
+  - 0x01 for v2 - Dynamic legacy (legacy with thershold above 255, it's legacy shifted by 8 bits)
+
+  Type 0x00 and 0x01:
+  
+    The signature must be solidity packed and contain the total number of owners,
+    the threshold, the weight and either the address or a signature for each owner.
+    Each weight & (address or signature) pair is prefixed by a flag that signals if such pair
+    contains an address or a signature. The aggregated weight of the signatures must surpass the threshold.
+
+    Flag types:
+      0x00 - Signature
+      0x01 - Address
+
+    E.g:
+      abi.encodePacked(
+        uint16 threshold,
+        uint8 01,  uint8 weight_1, address signer_1,
+        uint8 00, uint8 weight_2, bytes signature_2,
+        ...
+        uint8 01,  uint8 weight_5, address signer_5
+      )
+*/
 abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, IERC1271Wallet {
   using LibBytes for bytes;
 
@@ -20,30 +47,14 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
   bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
 
+  uint256 private constant LEGACY_TYPE = 0x00;
+  uint256 private constant DYNAMIC_LEGACY_TYPE = 0x01;
+
   /**
    * @notice Verify if signer is default wallet owner
    * @param _digest     Digest of the signed message
    * @param _signature  Array of signatures with signers ordered
    *                    like the the keys in the multisig configs
-   *
-   * @dev The signature must be solidity packed and contain the total number of owners,
-   *      the threshold, the weight and either the address or a signature for each owner.
-   *
-   *      Each weight & (address or signature) pair is prefixed by a flag that signals if such pair
-   *      contains an address or a signature. The aggregated weight of the signatures must surpass the threshold.
-   *
-   *      Flag types:
-   *        0x00 - Signature
-   *        0x01 - Address
-   *
-   *      E.g:
-   *      abi.encodePacked(
-   *        uint16 threshold,
-   *        uint8 01,  uint8 weight_1, address signer_1,
-   *        uint8 00, uint8 weight_2, bytes signature_2,
-   *        ...
-   *        uint8 01,  uint8 weight_5, address signer_5
-   *      )
    */
   function _signatureValidation(
     bytes32 _digest,
@@ -53,10 +64,22 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
       // Compute subdigest
       subDigest = _subDigest(_digest);
 
-      (
-        uint16 threshold,  // required threshold signature
-        uint256 rindex     // read index
-      ) = _signature.readFirstUint16();
+      // Get signature type
+      (uint8 signatureType, uint256 rindex) = _signature.readFirstUint8();
+
+      if (signatureType == LEGACY_TYPE) {
+        // Legacy signatures didn't have a type, so we need
+        // to reset the pointer back to zero, so it uses 0x00 as part
+        // of the threshold.
+        rindex = 0;
+      } else if (signatureType == DYNAMIC_LEGACY_TYPE) {
+        // DO NOTHING, for now
+      } else {
+        revert InvalidSignatureType(signatureType);
+      }
+
+      uint16 threshold;
+      (threshold, rindex) = _signature.readUint16(rindex);
 
       // Start image hash generation
       bytes32 imageHash = bytes32(uint256(threshold));

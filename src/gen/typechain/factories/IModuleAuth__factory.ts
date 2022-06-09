@@ -39,6 +39,17 @@ const _abi = [
     name: "InvalidSignatureFlag",
     type: "error",
   },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_type",
+        type: "uint256",
+      },
+    ],
+    name: "InvalidSignatureType",
+    type: "error",
+  },
 ];
 
 export class IModuleAuth__factory {

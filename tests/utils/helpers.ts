@@ -179,6 +179,11 @@ export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Walle
   }
 }
 
+export enum SignatureType {
+  Legacy = 0,
+  DynamicLegacy = 1,
+}
+
 export async function walletMultiSign(
   accounts: {
     weight: BigNumberish,
@@ -188,7 +193,8 @@ export async function walletMultiSign(
   threshold: BigNumberish,
   message: string,
   forceDynamicSize: boolean = false,
-  hashed = false
+  hashed = false,
+  signatureType: SignatureType = SignatureType.Legacy
 ) {
   const sorted = accounts.sort((a, b) => compareAddr(a.owner, b.owner))
   const accountBytes = await Promise.all(
@@ -216,10 +222,21 @@ export async function walletMultiSign(
     })
   )
 
-  return ethers.utils.solidityPack(
-    ['uint16', ...Array(accounts.length).fill('bytes')],
-    [threshold, ...accountBytes]
-  )
+  if (signatureType === SignatureType.Legacy) {
+    return ethers.utils.solidityPack(
+      ['uint16', ...Array(accounts.length).fill('bytes')],
+      [threshold, ...accountBytes]
+    )
+  }
+
+  if (signatureType === SignatureType.DynamicLegacy) {
+    return ethers.utils.solidityPack(
+      ['uint8', 'uint16', ...Array(accounts.length).fill('bytes')],
+      [signatureType, threshold, ...accountBytes]
+    )
+  }
+
+  throw new Error('Unknown signature type ' + signatureType)
 }
 
 export async function signAndEncodeMetaTxn(
@@ -290,10 +307,11 @@ export async function multiSignMetaTransactions(
   }[],
   networkId: BigNumberish,
   nonce: BigNumberish,
-  forceDynamicSize: boolean = false
+  forceDynamicSize: boolean = false,
+  signatureType: SignatureType = SignatureType.Legacy
 ) {
   const data = encodeMetaTransactionsData(wallet.address, txs, networkId, nonce)
-  return walletMultiSign(accounts, threshold, data, forceDynamicSize)
+  return walletMultiSign(accounts, threshold, data, forceDynamicSize, undefined, signatureType)
 }
 
 export async function nextNonce(wallet: MainModule | MainModuleUpgradable) {
@@ -346,10 +364,11 @@ export async function multiSignAndExecuteMetaTx(
   networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined,
   forceDynamicSize: boolean = false,
-  gasLimit?: BigNumberish
+  gasLimit?: BigNumberish,
+  signatureType: SignatureType = SignatureType.Legacy
 ) {
   if (!nonce) nonce = await nextNonce(wallet)
-  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize)
+  const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize, signatureType)
   return wallet.execute(txs, nonce, signature, { gasLimit })
 }
 

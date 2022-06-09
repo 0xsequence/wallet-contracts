@@ -69,6 +69,17 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "_type",
+        type: "uint256",
+      },
+    ],
+    name: "InvalidSignatureType",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes",
         name: "_signature",
         type: "bytes",
@@ -159,7 +170,7 @@ const _abi = [
         type: "bytes",
       },
     ],
-    name: "ReadFirstUint16OutOfBounds",
+    name: "ReadFirstUint8OutOfBounds",
     type: "error",
   },
   {

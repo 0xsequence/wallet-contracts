@@ -319,7 +319,7 @@ contract('Require utils', (accounts: string[]) => {
   })
   describe('Expirable transactions', () => {
     it('Should pass if non expired', async () => {
-      await requireUtils.requireNonExpired(now() + 1480)
+      await requireUtils.requireNonExpired(now() + 14800)
     })
     it('Should fail if expired', async () => {
       const tx = requireUtils.requireNonExpired(now() - 1)
@@ -338,7 +338,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.interface.encodeFunctionData('requireNonExpired', [now() + 1480])
+          data: requireUtils.interface.encodeFunctionData('requireNonExpired', [now() + 14800])
         },
         {
           delegateCall: false,

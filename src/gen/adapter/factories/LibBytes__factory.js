@@ -108,6 +108,17 @@ var _abi = [
                 name: "_data",
                 type: "bytes"
             },
+        ],
+        name: "ReadFirstUint8OutOfBounds",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "bytes",
+                name: "_data",
+                type: "bytes"
+            },
             {
                 internalType: "uint256",
                 name: "_index",
@@ -134,7 +145,7 @@ var _abi = [
         type: "error"
     },
 ];
-var _bytecode = "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220bdc45cf87053bcb9144c8cdeb844e9f03480b0f0b8e3f133719f449b10b5bd0564736f6c634300080e0033";
+var _bytecode = "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212200bd1efb3eed28f43274d1c0f752b111144442ceb49e346bc7531fc434c9fd2a564736f6c634300080e0033";
 var LibBytes__factory = /** @class */ (function (_super) {
     __extends(LibBytes__factory, _super);
     function LibBytes__factory() {

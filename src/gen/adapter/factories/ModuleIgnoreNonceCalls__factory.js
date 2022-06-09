@@ -127,6 +127,17 @@ var _abi = [
         inputs: [
             {
                 internalType: "uint256",
+                name: "_type",
+                type: "uint256"
+            },
+        ],
+        name: "InvalidSignatureType",
+        type: "error"
+    },
+    {
+        inputs: [
+            {
+                internalType: "uint256",
                 name: "_requested",
                 type: "uint256"
             },

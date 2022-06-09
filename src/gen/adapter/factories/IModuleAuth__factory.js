@@ -38,6 +38,17 @@ var _abi = [
         name: "InvalidSignatureFlag",
         type: "error"
     },
+    {
+        inputs: [
+            {
+                internalType: "uint256",
+                name: "_type",
+                type: "uint256"
+            },
+        ],
+        name: "InvalidSignatureType",
+        type: "error"
+    },
 ];
 var IModuleAuth__factory = /** @class */ (function () {
     function IModuleAuth__factory() {

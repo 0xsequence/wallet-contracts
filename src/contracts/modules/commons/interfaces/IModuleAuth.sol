@@ -6,6 +6,7 @@ abstract contract IModuleAuth {
   // Errors
   error InvalidNestedSignature(bytes32 _hash, address _addr, bytes _signature);
   error InvalidSignatureFlag(uint256 _flag);
+  error InvalidSignatureType(uint256 _type);
 
   /**
    * @notice Hashed _data to be signed

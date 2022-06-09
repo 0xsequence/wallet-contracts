@@ -6,6 +6,7 @@ library LibBytes {
 
   // Errors
   error ReadFirstUint16OutOfBounds(bytes _data);
+  error ReadFirstUint8OutOfBounds(bytes _data);
   error ReadUint8Uint8OutOfBounds(bytes _data, uint256 _index);
   error ReadAddressOutOfBounds(bytes _data, uint256 _index);
   error ReadBytes66OutOfBounds(bytes _data, uint256 _index);
@@ -34,6 +35,20 @@ library LibBytes {
       let word := mload(add(32, data))
       a := shr(240, word)
       newIndex := 2
+    }
+  }
+
+  function readFirstUint8(
+    bytes memory data
+  ) internal pure returns (
+    uint8 a,
+    uint256 newIndex
+  ) {
+    if (data.length == 0) revert ReadFirstUint8OutOfBounds(data);
+    assembly {
+      let word := mload(add(32, data))
+      a := shr(248, word)
+      newIndex := 1
     }
   }
 
