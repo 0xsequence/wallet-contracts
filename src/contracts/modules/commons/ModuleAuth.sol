@@ -90,14 +90,28 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
         subDigest = _subDigest(_digest, chainId);
       }
 
-      uint16 threshold;
-      (threshold, rindex) = _signature.readUint16(rindex);
+      // Decode signature
+      (bytes32 imageHash, uint256 weight, uint256 threshold) = _recoverSignature(subDigest, _signature, rindex);
+
+      isValid = weight >= threshold && _isValidImage(imageHash);
+    }
+  }
+
+  function _recoverSignature(
+    bytes32 _msgSubDigest,
+    bytes memory _signature,
+    uint256 _rindex
+  ) internal virtual view returns (
+    bytes32 _imageHash,
+    uint256 _weight,
+    uint256 _thershold
+  ) {
+    unchecked {
+      uint256 rindex = _rindex;
+      (_thershold, rindex) = _signature.readUint16(rindex);
 
       // Start image hash generation
-      bytes32 imageHash = bytes32(uint256(threshold));
-
-      // Acumulated weight of signatures
-      uint256 totalWeight;
+      _imageHash = bytes32(uint256(_thershold));
 
       // Iterate until the image is completed
       while (rindex < _signature.length) {
@@ -112,10 +126,10 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
           // Read single signature and recover signer
           bytes memory signature;
           (signature, rindex) = _signature.readBytes66(rindex);
-          addr = recoverSigner(subDigest, signature);
+          addr = recoverSigner(_msgSubDigest, signature);
 
           // Acumulate total weight of the signature
-          totalWeight += addrWeight;
+          _weight += addrWeight;
         } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
           // Read signer
           (addr, rindex) = _signature.readAddress(rindex);
@@ -127,19 +141,17 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
           // Read dynamic size signature
           bytes memory signature;
           (signature, rindex) = _signature.readBytes(rindex, size);
-          if (!isValidSignature(subDigest, addr, signature)) revert InvalidNestedSignature(subDigest, addr, signature);
+          if (!isValidSignature(_msgSubDigest, addr, signature)) revert InvalidNestedSignature(_msgSubDigest, addr, signature);
 
           // Acumulate total weight of the signature
-          totalWeight += addrWeight;
+          _weight += addrWeight;
         } else {
           revert InvalidSignatureFlag(flag);
         }
 
         // Write weight and address to image
-        imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
+        _imageHash = keccak256(abi.encode(_imageHash, addrWeight, addr));
       }
-
-      isValid = totalWeight >= threshold && _isValidImage(imageHash);
     }
   }
 
