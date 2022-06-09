@@ -182,6 +182,7 @@ export function compareAddr(a: string | ethers.Wallet, b: string | ethers.Walle
 export enum SignatureType {
   Legacy = 0,
   DynamicLegacy = 1,
+  NoChaindDynamic = 2,
 }
 
 export async function walletMultiSign(
@@ -230,6 +231,13 @@ export async function walletMultiSign(
   }
 
   if (signatureType === SignatureType.DynamicLegacy) {
+    return ethers.utils.solidityPack(
+      ['uint8', 'uint16', ...Array(accounts.length).fill('bytes')],
+      [signatureType, threshold, ...accountBytes]
+    )
+  }
+
+  if (signatureType === SignatureType.NoChaindDynamic) {
     return ethers.utils.solidityPack(
       ['uint8', 'uint16', ...Array(accounts.length).fill('bytes')],
       [signatureType, threshold, ...accountBytes]
@@ -332,7 +340,8 @@ export async function signAndExecuteMetaTx(
   networkId: BigNumberish,
   nonce: BigNumberish | undefined = undefined,
   forceDynamicSize: boolean = false,
-  gasLimit?: BigNumberish
+  gasLimit?: BigNumberish,
+  signatureType: SignatureType = SignatureType.Legacy
 ) {
   return multiSignAndExecuteMetaTx(
     wallet,
@@ -342,7 +351,8 @@ export async function signAndExecuteMetaTx(
     networkId,
     nonce,
     forceDynamicSize,
-    gasLimit
+    gasLimit,
+    signatureType
   )
 }
 

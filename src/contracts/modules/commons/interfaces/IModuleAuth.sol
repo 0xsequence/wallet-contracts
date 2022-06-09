@@ -11,10 +11,12 @@ abstract contract IModuleAuth {
   /**
    * @notice Hashed _data to be signed
    * @param _digest Pre-final digest
+   * @param _chainId Chain ID for the subDigest
    * @return hashed data for this wallet
    */
   function _subDigest(
-    bytes32 _digest
+    bytes32 _digest,
+    uint256 _chainId
   ) internal virtual view returns (bytes32);
 
   /**

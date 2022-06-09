@@ -91,7 +91,7 @@ library LibBytes {
     address a,
     uint256 newIndex
   ) {
-    assembly {
+    assembly  {
       let word := mload(add(index, add(32, data)))
       a := and(shr(96, word), 0xffffffffffffffffffffffffffffffffffffffff)
       newIndex := add(index, 20)

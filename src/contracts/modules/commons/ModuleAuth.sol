@@ -16,6 +16,7 @@ import "./ModuleERC165.sol";
 
   - 0x00 for v1 -(Legacy)
   - 0x01 for v2 - Dynamic legacy (legacy with thershold above 255, it's legacy shifted by 8 bits)
+  - 0x02 for v3 - Dynamic v2 without chainId on subDigest (uses zero)
 
   Type 0x00 and 0x01:
   
@@ -49,6 +50,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
 
   uint256 private constant LEGACY_TYPE = 0x00;
   uint256 private constant DYNAMIC_LEGACY_TYPE = 0x01;
+  uint256 private constant DYNAMIC_NO_CHAIN_ID_TYPE = 0x02;
 
   /**
    * @notice Verify if signer is default wallet owner
@@ -61,21 +63,31 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     bytes memory _signature
   ) internal override virtual view returns (bool isValid, bytes32 subDigest) {
     unchecked {
-      // Compute subdigest
-      subDigest = _subDigest(_digest);
-
       // Get signature type
       (uint8 signatureType, uint256 rindex) = _signature.readFirstUint8();
 
-      if (signatureType == LEGACY_TYPE) {
-        // Legacy signatures didn't have a type, so we need
-        // to reset the pointer back to zero, so it uses 0x00 as part
-        // of the threshold.
-        rindex = 0;
-      } else if (signatureType == DYNAMIC_LEGACY_TYPE) {
-        // DO NOTHING, for now
-      } else {
-        revert InvalidSignatureType(signatureType);
+      // Get chainId for computing the subdigest
+      // (do it now because a type may override it)
+      {
+        uint256 chainId = block.chainid;
+
+        if (signatureType == LEGACY_TYPE) {
+          // Legacy signatures didn't have a type, so we need
+          // to reset the pointer back to zero, so it uses 0x00 as part
+          // of the threshold.
+          rindex = 0;
+        } else if (signatureType == DYNAMIC_LEGACY_TYPE) {
+          // DO NOTHING, for now
+        } else if (signatureType == DYNAMIC_NO_CHAIN_ID_TYPE) {
+          // Replace chainId with 0
+          // for universal signatures
+          chainId = 0;
+        } else {
+          revert InvalidSignatureType(signatureType);
+        }
+
+        // Compute subdigest
+        subDigest = _subDigest(_digest, chainId);
       }
 
       uint16 threshold;
@@ -143,12 +155,11 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    * @param _digest Pre-final digest
    * @return hashed data for this wallet
    */
-  function _subDigest(bytes32 _digest) internal override virtual view returns (bytes32) {
-    uint256 chainId; assembly { chainId := chainid() }
+  function _subDigest(bytes32 _digest, uint256 _chanId) internal override virtual view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
-        chainId,
+        _chanId,
         address(this),
         _digest
       )

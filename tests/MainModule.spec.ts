@@ -794,18 +794,35 @@ contract('MainModule', (accounts: string[]) => {
       await expect(tx).to.be.rejected
     })
     describe('Network ID', () => {
-      it('Should reject a transaction of another network id', async () => {
-        const transaction = {
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: optimalGasLimit,
-          target: ethers.constants.AddressZero,
-          value: ethers.constants.Zero,
-          data: []
-        }
+      const transaction = {
+        delegateCall: false,
+        revertOnError: true,
+        gasLimit: optimalGasLimit,
+        target: ethers.constants.AddressZero,
+        value: ethers.constants.Zero,
+        data: []
+      }
 
+      it('Should reject a transaction of another network id', async () => {
         const tx = signAndExecuteMetaTx(wallet, owner, [transaction], ethers.BigNumber.from(networkId).sub(1))
-        await expect(tx).to.be.rejected
+        await expect(tx).to.be.rejectedWith('InvalidSignature')
+      })
+      context('Universal network signatures', async () => {
+        it('Should reject signature for another network id, even if encoded as universal', async () => {
+          const nid = ethers.BigNumber.from(networkId).sub(1)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nid, undefined, undefined, undefined, SignatureType.NoChaindDynamic)
+          await expect(tx).to.be.rejectedWith('InvalidSignature')
+        })
+        it('Should reject signature with chainId zero if not using special encoding', async () => {
+          const nid = ethers.BigNumber.from(0)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nid)
+          await expect(tx).to.be.rejectedWith('InvalidSignature')
+        })
+        it('Should accept transaction with chainId zero if encoded with no chaind type', async () => {
+          const nid = ethers.BigNumber.from(0)
+          const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nid, undefined, undefined, undefined, SignatureType.NoChaindDynamic)
+          await expect(tx).to.be.fulfilled
+        })
       })
     })
     describe('Nonce', () => {

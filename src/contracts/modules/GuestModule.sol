@@ -41,7 +41,7 @@ contract GuestModule is
     bytes memory
   ) public override {
     // Hash transaction bundle
-    bytes32 txHash = _subDigest(keccak256(abi.encode('guest:', _txs)));
+    bytes32 txHash = _subDigest(keccak256(abi.encode('guest:', _txs)), block.chainid);
 
     // Execute the transactions
     _executeGuest(txHash, _txs);
@@ -55,7 +55,7 @@ contract GuestModule is
     Transaction[] memory _txs
   ) public override {
     // Hash transaction bundle
-    bytes32 txHash = _subDigest(keccak256(abi.encode('self:', _txs)));
+    bytes32 txHash = _subDigest(keccak256(abi.encode('self:', _txs)), block.chainid);
 
     // Execute the transactions
     _executeGuest(txHash, _txs);
