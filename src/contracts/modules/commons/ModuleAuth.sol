@@ -22,7 +22,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
 
   /**
    * @notice Verify if signer is default wallet owner
-   * @param _hash       Hashed signed message
+   * @param _digest     Digest of the signed message
    * @param _signature  Array of signatures with signers ordered
    *                    like the the keys in the multisig configs
    *
@@ -46,12 +46,13 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    *      )
    */
   function _signatureValidation(
-    bytes32 _hash,
+    bytes32 _digest,
     bytes memory _signature
-  )
-    internal override virtual view returns (bool)
-  {
+  ) internal override virtual view returns (bool isValid, bytes32 subDigest) {
     unchecked {
+      // Compute subdigest
+      subDigest = _subDigest(_digest);
+
       (
         uint16 threshold,  // required threshold signature
         uint256 rindex     // read index
@@ -76,7 +77,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
           // Read single signature and recover signer
           bytes memory signature;
           (signature, rindex) = _signature.readBytes66(rindex);
-          addr = recoverSigner(_hash, signature);
+          addr = recoverSigner(subDigest, signature);
 
           // Acumulate total weight of the signature
           totalWeight += addrWeight;
@@ -91,7 +92,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
           // Read dynamic size signature
           bytes memory signature;
           (signature, rindex) = _signature.readBytes(rindex, size);
-          if (!isValidSignature(_hash, addr, signature)) revert InvalidNestedSignature(_hash, addr, signature);
+          if (!isValidSignature(subDigest, addr, signature)) revert InvalidNestedSignature(subDigest, addr, signature);
 
           // Acumulate total weight of the signature
           totalWeight += addrWeight;
@@ -103,7 +104,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
         imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
       }
 
-      return totalWeight >= threshold && _isValidImage(imageHash);
+      isValid = totalWeight >= threshold && _isValidImage(imageHash);
     }
   }
 
@@ -145,7 +146,8 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     bytes calldata _signatures
   ) external override virtual view returns (bytes4) {
     // Validate signatures
-    if (_signatureValidation(_subDigest(keccak256(_data)), _signatures)) {
+    (bool isValid,) = _signatureValidation(keccak256(_data), _signatures);
+    if (isValid) {
       return SELECTOR_ERC1271_BYTES_BYTES;
     }
   }
@@ -164,7 +166,8 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     bytes calldata _signatures
   ) external override virtual view returns (bytes4) {
     // Validate signatures
-    if (_signatureValidation(_subDigest(_hash), _signatures)) {
+    (bool isValid,) = _signatureValidation(_hash, _signatures);
+    if (isValid) {
       return SELECTOR_ERC1271_BYTES32_BYTES;
     }
   }

@@ -18,12 +18,12 @@ abstract contract IModuleAuth {
 
   /**
    * @notice Verify if signer is default wallet owner
-   * @param _hash Hashed signed message
+   * @param _digest Digest of the signed message
    * @param _signature Encoded signature
    * @return True is the signature is valid
    */
   function _signatureValidation(
-    bytes32 _hash,
+    bytes32 _digest,
     bytes memory _signature
-  ) internal virtual view returns (bool);
+  ) internal virtual view returns (bool, bytes32);
 }

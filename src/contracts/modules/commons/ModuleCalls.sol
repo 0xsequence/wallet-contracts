@@ -102,11 +102,9 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     // Validate and update nonce
     _validateNonce(_nonce);
 
-    // Hash transaction bundle
-    bytes32 txHash = _subDigest(keccak256(abi.encode(_nonce, _txs)));
-
-    // Verify that signatures are valid
-    if (!_signatureValidation(txHash, _signature)) {
+    // Hash and verify transaction bundle
+    (bool isValid, bytes32 txHash) = _signatureValidation(keccak256(abi.encode(_nonce, _txs)), _signature);
+    if (!isValid) {
       revert InvalidSignature(txHash, _signature);
     }
 
