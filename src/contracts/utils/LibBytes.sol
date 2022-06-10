@@ -38,6 +38,20 @@ library LibBytes {
     }
   }
 
+  function cReadFirstUint16(
+    bytes calldata data
+  ) internal pure returns (
+    uint16 a,
+    uint256 newIndex
+  ) {
+    if (data.length < 2) revert ReadFirstUint16OutOfBounds(data);
+    assembly {
+      let word := calldataload(data.offset)
+      a := shr(240, word)
+      newIndex := 2
+    }
+  }
+
   function readFirstUint8(
     bytes memory data
   ) internal pure returns (
@@ -49,6 +63,43 @@ library LibBytes {
       let word := mload(add(32, data))
       a := shr(248, word)
       newIndex := 1
+    }
+  }
+
+  function cReadFirstUint8(
+    bytes calldata data
+  ) internal pure returns (
+    uint8 a,
+    uint256 newIndex
+  ) {
+    if (data.length == 0) revert ReadFirstUint8OutOfBounds(data);
+    assembly {
+      let word := calldataload(data.offset)
+      a := shr(248, word)
+      newIndex := 1
+    }
+  }
+
+  function mcReadBytes32(
+    bytes calldata data,
+    uint256 index
+  ) internal pure returns (
+    bytes32 a
+  ) {
+    assembly {
+      a := calldataload(add(data.offset, index))
+    }
+  }
+
+  function mcReadUint8(
+    bytes calldata data,
+    uint256 index
+  ) internal pure returns (
+    uint8 a
+  ) {
+    assembly {
+      let word := calldataload(add(data.offset, index))
+      a := shr(248, word)
     }
   }
 
@@ -77,6 +128,22 @@ library LibBytes {
     if (newIndex > data.length) revert ReadUint8Uint8OutOfBounds(data, index);
   }
 
+  function cReadUint8Uint8(
+    bytes calldata data,
+    uint256 index
+  ) internal pure returns (
+    uint8 a,
+    uint8 b,
+    uint256 newIndex
+  ) {
+    assembly {
+      let word := calldataload(add(index, data.offset))
+      a := shr(248, word)
+      b := and(shr(240, word), 0xff)
+      newIndex := add(index, 2)
+    }
+  }
+
   /**
    * @dev Reads an address value from a position in a byte array.
    * @param data Byte array to be read.
@@ -97,6 +164,20 @@ library LibBytes {
       newIndex := add(index, 20)
     }
     if (newIndex > data.length) revert ReadAddressOutOfBounds(data, index);
+  }
+
+  function cReadAddress(
+    bytes calldata data,
+    uint256 index
+  ) internal pure returns (
+    address a,
+    uint256 newIndex
+  ) {
+    assembly  {
+      let word := calldataload(add(index,data.offset))
+      a := and(shr(96, word), 0xffffffffffffffffffffffffffffffffffffffff)
+      newIndex := add(index, 20)
+    }
   }
 
   /**
@@ -163,6 +244,17 @@ library LibBytes {
       newIndex := add(index, 2)
     }
     if (newIndex > data.length) revert ReadUint16OutOfBounds(data, index);
+  }
+
+  function cReadUint16(
+    bytes calldata data,
+    uint256 index
+  ) internal pure returns (uint16 a, uint256 newIndex) {
+    assembly {
+      let word := calldataload(add(index, data.offset))
+      a := and(shr(240, word), 0xffff)
+      newIndex := add(index, 2)
+    }
   }
 
   /**

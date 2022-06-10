@@ -15,8 +15,16 @@ contract LibBytesImpl {
     return _data.readUint8Uint8(_index);
   }
 
+  function cReadUint8Uint8(bytes calldata _data, uint256 _index) external pure returns (uint8, uint8, uint256) {
+    return _data.cReadUint8Uint8(_index);
+  }
+
   function readAddress(bytes calldata _data, uint256 _index) external pure returns (address, uint256) {
     return _data.readAddress(_index);
+  }
+
+  function cReadAddress(bytes calldata _data, uint256 _index) external pure returns (address, uint256) {
+    return _data.cReadAddress(_index);
   }
 
   function readBytes66(bytes calldata _data, uint256 _index) external pure returns (bytes memory, uint256) {
@@ -29,6 +37,10 @@ contract LibBytesImpl {
 
   function readUint16(bytes calldata _data, uint256 _index) external pure returns (uint16, uint256) {
     return _data.readUint16(_index);
+  }
+
+  function cReadUint16(bytes calldata _data, uint256 _index) external pure returns (uint16, uint256) {
+    return _data.cReadUint16(_index);
   }
 
   function readBytes(bytes calldata _data, uint256 _index, uint256 _size) external view returns (bytes memory, uint256) {

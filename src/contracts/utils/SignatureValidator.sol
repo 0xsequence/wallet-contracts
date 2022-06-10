@@ -47,15 +47,15 @@ contract SignatureValidator {
    */
   function recoverSigner(
     bytes32 _hash,
-    bytes memory _signature
+    bytes calldata _signature
   ) internal pure returns (address signer) {
     if (_signature.length != 66) revert InvalidSignatureLength(_signature);
-    uint256 signatureType = uint8(_signature[_signature.length - 1]);
+    uint256 signatureType = _signature.mcReadUint8(_signature.length - 1);
 
     // Variables are not scoped in Solidity.
-    uint8 v = uint8(_signature[64]);
-    bytes32 r = _signature.readBytes32(0);
-    bytes32 s = _signature.readBytes32(32);
+    uint8 v = _signature.mcReadUint8(64);
+    bytes32 r = _signature.mcReadBytes32(0);
+    bytes32 s = _signature.mcReadBytes32(32);
 
     // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
     // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
@@ -116,7 +116,7 @@ contract SignatureValidator {
   function isValidSignature(
     bytes32 _hash,
     address _signer,
-    bytes memory _signature
+    bytes calldata _signature
   ) internal view returns (bool valid) {
     uint256 signatureType = uint8(_signature[_signature.length - 1]);
 
@@ -126,9 +126,7 @@ contract SignatureValidator {
 
     } else if (signatureType == SIG_TYPE_WALLET_BYTES32) {
       // Remove signature type before calling ERC1271, restore after call
-      uint256 prevSize; assembly { prevSize := mload(_signature) mstore(_signature, sub(prevSize, 1)) }
-      valid = ERC1271_MAGICVALUE_BYTES32 == IERC1271Wallet(_signer).isValidSignature(_hash, _signature);
-      assembly { mstore(_signature, prevSize) }
+      valid = ERC1271_MAGICVALUE_BYTES32 == IERC1271Wallet(_signer).isValidSignature(_hash, _signature[0:_signature.length - 1]);
 
     } else {
       // Anything other signature types are illegal (We do not return false because

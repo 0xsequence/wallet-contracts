@@ -27,6 +27,6 @@ abstract contract IModuleAuth {
    */
   function _signatureValidation(
     bytes32 _digest,
-    bytes memory _signature
+    bytes calldata _signature
   ) internal virtual view returns (bool, bytes32);
 }

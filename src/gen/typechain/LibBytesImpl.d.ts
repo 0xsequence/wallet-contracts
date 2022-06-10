@@ -20,6 +20,9 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface LibBytesImplInterface extends ethers.utils.Interface {
   functions: {
+    "cReadAddress(bytes,uint256)": FunctionFragment;
+    "cReadUint16(bytes,uint256)": FunctionFragment;
+    "cReadUint8Uint8(bytes,uint256)": FunctionFragment;
     "readAddress(bytes,uint256)": FunctionFragment;
     "readBytes(bytes,uint256,uint256)": FunctionFragment;
     "readBytes32(bytes,uint256)": FunctionFragment;
@@ -29,6 +32,18 @@ interface LibBytesImplInterface extends ethers.utils.Interface {
     "readUint8Uint8(bytes,uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "cReadAddress",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "cReadUint16",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "cReadUint8Uint8",
+    values: [BytesLike, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "readAddress",
     values: [BytesLike, BigNumberish]
@@ -58,6 +73,18 @@ interface LibBytesImplInterface extends ethers.utils.Interface {
     values: [BytesLike, BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "cReadAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "cReadUint16",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "cReadUint8Uint8",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "readAddress",
     data: BytesLike
@@ -128,6 +155,24 @@ export class LibBytesImpl extends BaseContract {
   interface: LibBytesImplInterface;
 
   functions: {
+    cReadAddress(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
+
+    cReadUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, BigNumber]>;
+
+    cReadUint8Uint8(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, number, BigNumber]>;
+
     readAddress(
       _data: BytesLike,
       _index: BigNumberish,
@@ -170,6 +215,24 @@ export class LibBytesImpl extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[number, number, BigNumber]>;
   };
+
+  cReadAddress(
+    _data: BytesLike,
+    _index: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[string, BigNumber]>;
+
+  cReadUint16(
+    _data: BytesLike,
+    _index: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[number, BigNumber]>;
+
+  cReadUint8Uint8(
+    _data: BytesLike,
+    _index: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[number, number, BigNumber]>;
 
   readAddress(
     _data: BytesLike,
@@ -214,6 +277,24 @@ export class LibBytesImpl extends BaseContract {
   ): Promise<[number, number, BigNumber]>;
 
   callStatic: {
+    cReadAddress(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
+
+    cReadUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, BigNumber]>;
+
+    cReadUint8Uint8(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, number, BigNumber]>;
+
     readAddress(
       _data: BytesLike,
       _index: BigNumberish,
@@ -260,6 +341,24 @@ export class LibBytesImpl extends BaseContract {
   filters: {};
 
   estimateGas: {
+    cReadAddress(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    cReadUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    cReadUint8Uint8(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     readAddress(
       _data: BytesLike,
       _index: BigNumberish,
@@ -304,6 +403,24 @@ export class LibBytesImpl extends BaseContract {
   };
 
   populateTransaction: {
+    cReadAddress(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    cReadUint16(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    cReadUint8Uint8(
+      _data: BytesLike,
+      _index: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     readAddress(
       _data: BytesLike,
       _index: BigNumberish,

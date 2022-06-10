@@ -60,11 +60,11 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    */
   function _signatureValidation(
     bytes32 _digest,
-    bytes memory _signature
+    bytes calldata _signature
   ) internal override virtual view returns (bool isValid, bytes32 subDigest) {
     unchecked {
       // Get signature type
-      (uint8 signatureType, uint256 rindex) = _signature.readFirstUint8();
+      (uint8 signatureType, uint256 rindex) = _signature.cReadFirstUint8();
 
       // Get chainId for computing the subdigest
       // (do it now because a type may override it)
@@ -99,7 +99,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
 
   function _recoverSignature(
     bytes32 _msgSubDigest,
-    bytes memory _signature,
+    bytes calldata _signature,
     uint256 _rindex
   ) internal virtual view returns (
     bytes32 _imageHash,
@@ -108,7 +108,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
   ) {
     unchecked {
       uint256 rindex = _rindex;
-      (_thershold, rindex) = _signature.readUint16(rindex);
+      (_thershold, rindex) = _signature.cReadUint16(rindex);
 
       // Start image hash generation
       _imageHash = bytes32(uint256(_thershold));
@@ -117,31 +117,33 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
       while (rindex < _signature.length) {
         // Read next item type and addrWeight
         uint256 flag; uint256 addrWeight; address addr;
-        (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
+        (flag, addrWeight, rindex) = _signature.cReadUint8Uint8(rindex);
 
         if (flag == FLAG_ADDRESS) {
           // Read plain address
-          (addr, rindex) = _signature.readAddress(rindex);
+          (addr, rindex) = _signature.cReadAddress(rindex);
+
         } else if (flag == FLAG_SIGNATURE) {
           // Read single signature and recover signer
-          bytes memory signature;
-          (signature, rindex) = _signature.readBytes66(rindex);
-          addr = recoverSigner(_msgSubDigest, signature);
+          uint256 nrindex = rindex + 66;
+          addr = recoverSigner(_msgSubDigest, _signature[rindex:nrindex]);
+          rindex = nrindex;
 
           // Acumulate total weight of the signature
           _weight += addrWeight;
         } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
           // Read signer
-          (addr, rindex) = _signature.readAddress(rindex);
-
+          (addr, rindex) = _signature.cReadAddress(rindex);
           // Read signature size
           uint256 size;
-          (size, rindex) = _signature.readUint16(rindex);
+          (size, rindex) = _signature.cReadUint16(rindex);
 
           // Read dynamic size signature
-          bytes memory signature;
-          (signature, rindex) = _signature.readBytes(rindex, size);
-          if (!isValidSignature(_msgSubDigest, addr, signature)) revert InvalidNestedSignature(_msgSubDigest, addr, signature);
+          uint256 nrindex = rindex + size;
+          if (!isValidSignature(_msgSubDigest, addr, _signature[rindex:nrindex])) {
+            revert InvalidNestedSignature(_msgSubDigest, addr, _signature[rindex:nrindex]);
+          }
+          rindex = nrindex;
 
           // Acumulate total weight of the signature
           _weight += addrWeight;

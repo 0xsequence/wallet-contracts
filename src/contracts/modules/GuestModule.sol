@@ -38,7 +38,7 @@ contract GuestModule is
   function execute(
     Transaction[] memory _txs,
     uint256,
-    bytes memory
+    bytes calldata
   ) public override {
     // Hash transaction bundle
     bytes32 txHash = _subDigest(keccak256(abi.encode('guest:', _txs)), block.chainid);

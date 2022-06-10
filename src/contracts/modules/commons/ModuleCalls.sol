@@ -97,8 +97,8 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
   function execute(
     Transaction[] memory _txs,
     uint256 _nonce,
-    bytes memory _signature
-  ) public override virtual {
+    bytes calldata _signature
+  ) external override virtual {
     // Validate and update nonce
     _validateNonce(_nonce);
 
@@ -119,7 +119,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    */
   function selfExecute(
     Transaction[] memory _txs
-  ) public override virtual onlySelf {
+  ) external override virtual onlySelf {
     // Hash transaction bundle
     bytes32 txHash = _subDigest(keccak256(abi.encode('self:', _txs)), block.chainid);
 

@@ -126,14 +126,14 @@ contract RequireUtils is SignatureValidator {
     address _wallet,
     bytes32 _hash,
     uint256 _sizeMembers,
-    bytes memory _signature,
+    bytes calldata _signature,
     bool _index
   ) external {
     // Decode and index signature
     (
       uint16 threshold,  // required threshold signature
       uint256 rindex     // read index
-    ) = _signature.readFirstUint16();
+    ) = _signature.cReadFirstUint16();
 
     // Generate sub-digest
     bytes32 subDigest; {
@@ -157,32 +157,32 @@ contract RequireUtils is SignatureValidator {
     while (rindex < _signature.length) {
       // Read next item type and addrWeight
       uint256 flag; uint256 addrWeight; address addr;
-      (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
+      (flag, addrWeight, rindex) = _signature.cReadUint8Uint8(rindex);
 
       if (flag == FLAG_ADDRESS) {
         // Read plain address
-        (addr, rindex) = _signature.readAddress(rindex);
+        (addr, rindex) = _signature.cReadAddress(rindex);
       } else if (flag == FLAG_SIGNATURE) {
         // Read single signature and recover signer
-        bytes memory signature;
-        (signature, rindex) = _signature.readBytes66(rindex);
-        addr = recoverSigner(subDigest, signature);
+        // bytes memory signature;
+        addr = recoverSigner(subDigest, _signature[rindex:rindex+66]);
+        rindex += 66;
 
         // Publish signer
         _publishSigner(_wallet, addr, _index);
       } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
-        // Read signer
-        (addr, rindex) = _signature.readAddress(rindex);
-
         {
+          // Read signer
+          (addr, rindex) = _signature.cReadAddress(rindex);
+
           // Read signature size
           uint256 size;
-          (size, rindex) = _signature.readUint16(rindex);
+          (size, rindex) = _signature.cReadUint16(rindex);
 
           // Read dynamic size signature
-          bytes memory signature;
-          (signature, rindex) = _signature.readBytes(rindex, size);
-          require(isValidSignature(subDigest, addr, signature), "ModuleAuth#_signatureValidation: INVALID_SIGNATURE");
+          // bytes memory signature;
+          require(isValidSignature(subDigest, addr, _signature[rindex:rindex + size]), "ModuleAuth#_signatureValidation: INVALID_SIGNATURE");
+          rindex += size;
         }
 
         // Publish signer
