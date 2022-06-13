@@ -73,7 +73,7 @@
     "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb",
     "solhint": "^3.3.7",
     "solidity-coverage": "0.8.0-beta.1",
-    "ts-node": "^9.1.1",
+    "ts-node": "^10.8.1",
     "typechain": "^7.0.1",
     "typescript": "^4.2.3",
     "yesno": "^0.3.1"
