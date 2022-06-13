@@ -805,18 +805,18 @@ contract('MainModule', (accounts: string[]) => {
 
       it('Should reject a transaction of another network id', async () => {
         const tx = signAndExecuteMetaTx(wallet, owner, [transaction], ethers.BigNumber.from(networkId).sub(1))
-        await expect(tx).to.be.rejectedWith('InvalidSignature')
+        await expectToBeRejected(tx, 'InvalidSignature')
       })
       context('Universal network signatures', async () => {
         it('Should reject signature for another network id, even if encoded as universal', async () => {
-          const nid = ethers.BigNumber.from(networkId).sub(1)
+          const nid = ethers.BigNumber.from(networkId).sub(2)
           const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nid, undefined, undefined, undefined, SignatureType.NoChaindDynamic)
-          await expect(tx).to.be.rejectedWith('InvalidSignature')
+          await expectToBeRejected(tx, 'InvalidSignature')
         })
         it('Should reject signature with chainId zero if not using special encoding', async () => {
           const nid = ethers.BigNumber.from(0)
           const tx = signAndExecuteMetaTx(wallet, owner, [transaction], nid)
-          await expect(tx).to.be.rejectedWith('InvalidSignature')
+          await expectToBeRejected(tx, 'InvalidSignature')
         })
         it('Should accept transaction with chainId zero if encoded with no chaind type', async () => {
           const nid = ethers.BigNumber.from(0)
