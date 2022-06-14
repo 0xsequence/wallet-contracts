@@ -9,6 +9,10 @@ import "./interfaces/IModuleAuth.sol";
 
 import "./ModuleERC165.sol";
 
+import "./submodules/auth/SubModuleAuth.sol";
+import "./submodules/auth/SubModuleAuthLegacy.sol";
+import "./submodules/auth/SubModuleAuthDynamic.sol";
+
 /**
   Signature encoding:
 
@@ -38,7 +42,15 @@ import "./ModuleERC165.sol";
         uint8 01,  uint8 weight_5, address signer_5
       )
 */
-abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, IERC1271Wallet {
+abstract contract ModuleAuth is
+  IModuleAuth,
+  ModuleERC165,
+  SignatureValidator,
+  IERC1271Wallet,
+  SubModuleAuth,
+  SubModuleAuthLegacy,
+  SubModuleAuthDynamic
+{
   using LibBytes for bytes;
 
   uint256 private constant FLAG_SIGNATURE = 0;
@@ -47,10 +59,6 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
 
   bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
-
-  uint256 private constant LEGACY_TYPE = 0x00;
-  uint256 private constant DYNAMIC_LEGACY_TYPE = 0x01;
-  uint256 private constant DYNAMIC_NO_CHAIN_ID_TYPE = 0x02;
 
   /**
    * @notice Verify if signer is default wallet owner
@@ -66,103 +74,29 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
       // Get signature type
       (uint8 signatureType, uint256 rindex) = _signature.cReadFirstUint8();
 
-      // Get chainId for computing the subdigest
-      // (do it now because a type may override it)
-      {
-        uint256 chainId = block.chainid;
+      // Signature validation dispatcher
 
-        if (signatureType == LEGACY_TYPE) {
-          // Legacy signatures didn't have a type, so we need
-          // to reset the pointer back to zero, so it uses 0x00 as part
-          // of the threshold.
-          rindex = 0;
-        } else if (signatureType == DYNAMIC_LEGACY_TYPE) {
-          // DO NOTHING, for now
-        } else if (signatureType == DYNAMIC_NO_CHAIN_ID_TYPE) {
-          // Replace chainId with 0
-          // for universal signatures
-          chainId = 0;
-        } else {
-          revert InvalidSignatureType(signatureType);
-        }
-
-        // Compute subdigest
-        subDigest = _subDigest(_digest, chainId);
+      // Signature type 0x00 - Legacy
+      // SubModuleAuthLegacy.sol
+      if (signatureType == LEGACY_TYPE) {
+        return _recoverLegacySignature(_signature, _digest, rindex);
       }
 
-      // Decode signature
-      (bytes32 imageHash, uint256 weight, uint256 threshold) = _recoverSignature(subDigest, _signature, rindex);
-
-      isValid = weight >= threshold && _isValidImage(imageHash);
-    }
-  }
-
-  function _recoverSignature(
-    bytes32 _msgSubDigest,
-    bytes calldata _signature,
-    uint256 _rindex
-  ) internal virtual view returns (
-    bytes32 _imageHash,
-    uint256 _weight,
-    uint256 _thershold
-  ) {
-    unchecked {
-      uint256 rindex = _rindex;
-      (_thershold, rindex) = _signature.cReadUint16(rindex);
-
-      // Start image hash generation
-      _imageHash = bytes32(uint256(_thershold));
-
-      // Iterate until the image is completed
-      while (rindex < _signature.length) {
-        // Read next item type and addrWeight
-        uint256 flag; uint256 addrWeight; address addr;
-        (flag, addrWeight, rindex) = _signature.cReadUint8Uint8(rindex);
-
-        if (flag == FLAG_ADDRESS) {
-          // Read plain address
-          (addr, rindex) = _signature.cReadAddress(rindex);
-
-        } else if (flag == FLAG_SIGNATURE) {
-          // Read single signature and recover signer
-          uint256 nrindex = rindex + 66;
-          addr = recoverSigner(_msgSubDigest, _signature[rindex:nrindex]);
-          rindex = nrindex;
-
-          // Acumulate total weight of the signature
-          _weight += addrWeight;
-        } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
-          // Read signer
-          (addr, rindex) = _signature.cReadAddress(rindex);
-          // Read signature size
-          uint256 size;
-          (size, rindex) = _signature.cReadUint16(rindex);
-
-          // Read dynamic size signature
-          uint256 nrindex = rindex + size;
-          if (!isValidSignature(_msgSubDigest, addr, _signature[rindex:nrindex])) {
-            revert InvalidNestedSignature(_msgSubDigest, addr, _signature[rindex:nrindex]);
-          }
-          rindex = nrindex;
-
-          // Acumulate total weight of the signature
-          _weight += addrWeight;
-        } else {
-          revert InvalidSignatureFlag(flag);
-        }
-
-        // Write weight and address to image
-        _imageHash = keccak256(abi.encode(_imageHash, addrWeight, addr));
+      // Signature type 0x01 - Dynamic
+      // SubModuleAuthDynamic.sol
+      if (signatureType == DYNAMIC_TYPE) {
+        return _recoverDynamicSignature(_signature, _digest, rindex);
       }
+
+      // Signature type 0x02 - Dynamic v2 without chainId on subDigest
+      // SubModuleAuthDynamic.sol
+      if (signatureType == DYNAMIC_NO_CHAIN_ID_TYPE) {
+        return _recoverDynamicNoChainIdSignature(_signature, _digest, rindex);
+      }
+
+      revert InvalidSignatureType(signatureType);
     }
   }
-
-  /**
-   * @notice Validates the signature image
-   * @param _imageHash Hashed image of signature
-   * @return true if the signature image is valid
-   */
-  function _isValidImage(bytes32 _imageHash) internal virtual view returns (bool);
 
   /**
    * @notice Will hash _data to be signed (similar to EIP-712)

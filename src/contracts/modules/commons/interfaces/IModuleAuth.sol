@@ -29,4 +29,11 @@ abstract contract IModuleAuth {
     bytes32 _digest,
     bytes calldata _signature
   ) internal virtual view returns (bool, bytes32);
+
+  /**
+   * @notice Validates the signature image
+   * @param _imageHash Hashed image of signature
+   * @return true if the signature image is valid
+   */
+  function _isValidImage(bytes32 _imageHash) internal virtual view returns (bool);
 }
