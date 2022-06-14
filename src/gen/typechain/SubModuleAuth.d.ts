@@ -11,6 +11,8 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
+  CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
@@ -18,10 +20,30 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface SubModuleAuthInterface extends ethers.utils.Interface {
-  functions: {};
+  functions: {
+    "updateImageHash(bytes32)": FunctionFragment;
+  };
 
-  events: {};
+  encodeFunctionData(
+    functionFragment: "updateImageHash",
+    values: [BytesLike]
+  ): string;
+
+  decodeFunctionResult(
+    functionFragment: "updateImageHash",
+    data: BytesLike
+  ): Result;
+
+  events: {
+    "ImageHashUpdated(bytes32)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "ImageHashUpdated"): EventFragment;
 }
+
+export type ImageHashUpdatedEvent = TypedEvent<
+  [string] & { newImageHash: string }
+>;
 
 export class SubModuleAuth extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -66,13 +88,46 @@ export class SubModuleAuth extends BaseContract {
 
   interface: SubModuleAuthInterface;
 
-  functions: {};
+  functions: {
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+  };
 
-  callStatic: {};
+  updateImageHash(
+    _imageHash: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
-  filters: {};
+  callStatic: {
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
-  estimateGas: {};
+  filters: {
+    "ImageHashUpdated(bytes32)"(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
 
-  populateTransaction: {};
+    ImageHashUpdated(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+  };
+
+  estimateGas: {
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+  };
 }

@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -22,6 +23,7 @@ interface ModuleAuthInterface extends ethers.utils.Interface {
   functions: {
     "isValidSignature(bytes32,bytes)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
+    "updateImageHash(bytes32)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -30,6 +32,10 @@ interface ModuleAuthInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "updateImageHash",
     values: [BytesLike]
   ): string;
 
@@ -41,9 +47,21 @@ interface ModuleAuthInterface extends ethers.utils.Interface {
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateImageHash",
+    data: BytesLike
+  ): Result;
 
-  events: {};
+  events: {
+    "ImageHashUpdated(bytes32)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "ImageHashUpdated"): EventFragment;
 }
+
+export type ImageHashUpdatedEvent = TypedEvent<
+  [string] & { newImageHash: string }
+>;
 
 export class ModuleAuth extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -105,6 +123,11 @@ export class ModuleAuth extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   "isValidSignature(bytes32,bytes)"(
@@ -124,6 +147,11 @@ export class ModuleAuth extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  updateImageHash(
+    _imageHash: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
@@ -141,9 +169,22 @@ export class ModuleAuth extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
-  filters: {};
+  filters: {
+    "ImageHashUpdated(bytes32)"(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+
+    ImageHashUpdated(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+  };
 
   estimateGas: {
     "isValidSignature(bytes32,bytes)"(
@@ -161,6 +202,11 @@ export class ModuleAuth extends BaseContract {
     supportsInterface(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
 
@@ -180,6 +226,11 @@ export class ModuleAuth extends BaseContract {
     supportsInterface(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

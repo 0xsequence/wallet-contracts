@@ -12,11 +12,6 @@ import type {
 const _abi = [
   {
     inputs: [],
-    name: "ImageHashIsZero",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "imageHash",
     outputs: [
       {
@@ -26,19 +21,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "_imageHash",
-        type: "bytes32",
-      },
-    ],
-    name: "updateImageHash",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
 ];

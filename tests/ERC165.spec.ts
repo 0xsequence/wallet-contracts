@@ -39,8 +39,8 @@ contract('ERC165', () => {
     erc165CheckerMockFactory = await hethers.getContractFactory('ERC165CheckerMock') as ERC165CheckerMock__factory
   
     factory = await factoryFactory.deploy()
-    module = await mainModuleFactory.deploy(factory.address)
     moduleUpgradable = await mainModuleUpgradableFactory.deploy()
+    module = await mainModuleFactory.deploy(factory.address, moduleUpgradable.address)
     erc165checker = await erc165CheckerMockFactory.deploy()
 
     networkId = process.env.NET_ID ? process.env.NET_ID : hethers.provider.network.chainId

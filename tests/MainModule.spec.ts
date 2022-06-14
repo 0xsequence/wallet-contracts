@@ -88,8 +88,8 @@ contract('MainModule', (accounts: string[]) => {
     // Deploy wallet factory
     factory = await factoryFactory.deploy()
     // Deploy MainModule
-    module = await mainModuleFactory.deploy(factory.address)
     moduleUpgradable = await mainModuleUpgradableFactory.deploy()
+    module = await mainModuleFactory.deploy(factory.address, moduleUpgradable.address)
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : hethers.provider.network.chainId
     // Deploy RequireUtils
@@ -1208,7 +1208,6 @@ contract('MainModule', (accounts: string[]) => {
       await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
 
       const storageValue = await hethers.provider.getStorageAt(wallet.address, wallet.address)
-
       const paddedValue = ethers.utils.zeroPad(storageValue, 32)
       expect(ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], paddedValue)[0])).to.equal(newImplementation.address)
     })
@@ -2614,13 +2613,83 @@ contract('MainModule', (accounts: string[]) => {
     let newImageHash: string
     let migratedWallet: MainModuleUpgradable
 
+    beforeEach(async () => {
+      newOwnerA = new ethers.Wallet(ethers.utils.randomBytes(32))
+      newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
+
+      migratedWallet = mainModuleUpgradableFactory.attach(wallet.address)
+    })
+
+    context('Without a migration', async () => {
+      context('After updating', () => {
+        let receipt: ethers.ethers.ContractReceipt
+
+        beforeEach(async () => {
+          const tx = await signAndExecuteMetaTx(wallet, owner, [{
+            target: wallet.address,
+            delegateCall: false,
+            revertOnError: true,
+            gasLimit: 0,
+            value: 0,
+            data: wallet.interface.encodeFunctionData('updateImageHash', [newImageHash])
+          }], networkId)
+
+          receipt = await tx.wait()
+        })
+  
+        it('Should update implementation to mainModuleUpgradable', async () => {  
+          const storageValue = await hethers.provider.getStorageAt(wallet.address, wallet.address)
+          const paddedValue = ethers.utils.zeroPad(storageValue, 32)
+          expect(ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], paddedValue)[0])).to.equal(moduleUpgradable.address)
+        })
+  
+        it('Should define new imageHash', async () => {
+          const imageHasa = await migratedWallet.imageHash()
+          expect(imageHasa).to.equal(newImageHash)
+        })
+  
+        it('Should emit implementation and imageHash update events', async () => {
+          const implementationEvent = module.interface.encodeEventLog('ImplementationUpdated' as any, [moduleUpgradable.address])
+          const imageHashEvent = module.interface.encodeEventLog('ImageHashUpdated' as any, [newImageHash])
+          expect(receipt.logs.find((l) => l.topics[0] === implementationEvent.topics[0] && l.data === implementationEvent.data)).to.exist
+          expect(receipt.logs.find((l) => l.topics[0] === imageHashEvent.topics[0] && l.data === imageHashEvent.data)).to.exist
+        })
+
+
+        it('Should execute transaction with new configuration', async () => {
+          const callReceiver = await callReceiverMockFactory.deploy() as CallReceiverMock
+          await signAndExecuteMetaTx(migratedWallet, newOwnerA, [{
+            target: callReceiver.address,
+            delegateCall: false,
+            revertOnError: true,
+            gasLimit: 0,
+            value: 0,
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, []])
+          }], networkId)
+          expect(await callReceiver.lastValA()).to.equal(1)
+        })
+      })
+
+      it('Should fail to upgrade wallet if caller is not self', async () => {
+        const tx = wallet.updateImageHash(newImageHash)
+        await expectToBeRejected(tx, `OnlySelfAuth("${await wallet.signer.getAddress()}", "${wallet.address}")`)
+      })
+
+      it('Should fail to upgrade wallet to empty imageHash', async () => {
+        const tx = signAndExecuteMetaTx(wallet, owner, [{
+          target: wallet.address,
+          delegateCall: false,
+          revertOnError: true,
+          gasLimit: 0,
+          value: 0,
+          data: wallet.interface.encodeFunctionData('updateImageHash', ['0x0000000000000000000000000000000000000000000000000000000000000000'])
+        }], networkId)
+        await expectToBeRejected(tx, `ImageHashIsZero()`)
+      })
+    })
+
     context('After a migration', async () => {
       beforeEach(async () => {
-        newOwnerA = new ethers.Wallet(ethers.utils.randomBytes(32))
-        newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
-
-        migratedWallet = mainModuleUpgradableFactory.attach(wallet.address)
-
         const migrateBundle = [
           {
             delegateCall: false,

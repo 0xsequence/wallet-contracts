@@ -30,6 +30,7 @@ contract GuestModule is
   ModuleCreator
 {
   error DelegateCallNotAllowed();
+  error NotSupported();
 
   /**
    * @notice Allow any caller to execute an action
@@ -101,6 +102,13 @@ contract GuestModule is
    */
   function _isValidImage(bytes32) internal override view returns (bool) {
     return true;
+  }
+
+  /**
+   * Not supported.
+   */
+  function updateImageHash(bytes32) external override virtual onlySelf {
+    revert NotSupported();
   }
 
   /**

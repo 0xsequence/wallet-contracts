@@ -27,6 +27,7 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
     "readNonce(uint256)": FunctionFragment;
     "selfExecute((bool,bool,uint256,address,uint256,bytes)[])": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
+    "updateImageHash(bytes32)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -70,6 +71,10 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "updateImageHash",
+    values: [BytesLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "execute", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "nonce", data: BytesLike): Result;
@@ -86,9 +91,14 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateImageHash",
+    data: BytesLike
+  ): Result;
 
   events: {
     "GapNonceChange(uint256,uint256,uint256)": EventFragment;
+    "ImageHashUpdated(bytes32)": EventFragment;
     "NoNonceUsed()": EventFragment;
     "NonceChange(uint256,uint256)": EventFragment;
     "TxExecuted(bytes32)": EventFragment;
@@ -96,6 +106,7 @@ interface ModuleCallsInterface extends ethers.utils.Interface {
   };
 
   getEvent(nameOrSignatureOrTopic: "GapNonceChange"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "ImageHashUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NoNonceUsed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NonceChange"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TxExecuted"): EventFragment;
@@ -108,6 +119,10 @@ export type GapNonceChangeEvent = TypedEvent<
     _oldNonce: BigNumber;
     _newNonce: BigNumber;
   }
+>;
+
+export type ImageHashUpdatedEvent = TypedEvent<
+  [string] & { newImageHash: string }
 >;
 
 export type NoNonceUsedEvent = TypedEvent<[] & {}>;
@@ -208,6 +223,11 @@ export class ModuleCalls extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   execute(
@@ -253,6 +273,11 @@ export class ModuleCalls extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  updateImageHash(
+    _imageHash: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     execute(
       _txs: {
@@ -296,6 +321,11 @@ export class ModuleCalls extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
@@ -316,6 +346,14 @@ export class ModuleCalls extends BaseContract {
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
     >;
+
+    "ImageHashUpdated(bytes32)"(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+
+    ImageHashUpdated(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
 
     "NoNonceUsed()"(): TypedEventFilter<[], {}>;
 
@@ -397,6 +435,11 @@ export class ModuleCalls extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -441,6 +484,11 @@ export class ModuleCalls extends BaseContract {
     supportsInterface(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

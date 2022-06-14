@@ -2,7 +2,7 @@
 pragma solidity 0.8.14;
 
 
-interface IModuleUpdate {
+abstract contract IModuleUpdate {
   // Errors
   error InvalidImplementation(address _implementation);
 
@@ -11,5 +11,12 @@ interface IModuleUpdate {
    * @param _implementation New main module implementation
    * @dev WARNING Updating the implementation can brick the wallet
    */
-  function updateImplementation(address _implementation) external;
+  function updateImplementation(address _implementation) external virtual;
+
+  /**
+   * @notice Updates the implementation of the base wallet, used internally.
+   * @param _implementation New main module implementation
+   * @dev WARNING Updating the implementation can brick the wallet
+   */
+  function _updateImplementation(address _implementation) internal virtual;
 }

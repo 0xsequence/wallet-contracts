@@ -7,6 +7,11 @@ exports.IModuleAuth__factory = void 0;
 var ethers_1 = require("ethers");
 var _abi = [
     {
+        inputs: [],
+        name: "ImageHashIsZero",
+        type: "error"
+    },
+    {
         inputs: [
             {
                 internalType: "bytes32",
@@ -48,6 +53,32 @@ var _abi = [
         ],
         name: "InvalidSignatureType",
         type: "error"
+    },
+    {
+        anonymous: false,
+        inputs: [
+            {
+                indexed: false,
+                internalType: "bytes32",
+                name: "newImageHash",
+                type: "bytes32"
+            },
+        ],
+        name: "ImageHashUpdated",
+        type: "event"
+    },
+    {
+        inputs: [
+            {
+                internalType: "bytes32",
+                name: "_imageHash",
+                type: "bytes32"
+            },
+        ],
+        name: "updateImageHash",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function"
     },
 ];
 var IModuleAuth__factory = /** @class */ (function () {

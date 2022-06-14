@@ -2,7 +2,7 @@ import { expect, signAndExecuteMetaTx, encodeImageHash, addressOf, encodeNonce, 
 import * as ethers from 'ethers'
 import { ethers as hethers } from 'hardhat'
 
-import { MainModule, Factory, RequireUtils, RequireFreshSigner, Factory__factory, MainModule__factory, RequireUtils__factory, RequireFreshSigner__factory, CallReceiverMock__factory } from 'src/gen/typechain'
+import { MainModule, Factory, RequireUtils, RequireFreshSigner, Factory__factory, MainModule__factory, RequireUtils__factory, RequireFreshSigner__factory, CallReceiverMock__factory, MainModuleUpgradable__factory } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
@@ -37,10 +37,13 @@ contract('Require utils', (accounts: string[]) => {
     requireFreshSignerFactory = await hethers.getContractFactory('RequireFreshSigner') as RequireFreshSigner__factory
     callReceiverFactory = await hethers.getContractFactory('CallReceiverMock') as CallReceiverMock__factory
 
+    const mainModuleUpgradableFactory = await hethers.getContractFactory('MainModuleUpgradable') as MainModuleUpgradable__factory
+    const mainModuleUpgradable = await mainModuleUpgradableFactory.deploy()
+
     // Deploy wallet factory
     factory = await factoryFactory.deploy()
     // Deploy MainModule
-    module = await moduleFactory.deploy(factory.address)
+    module = await moduleFactory.deploy(factory.address, mainModuleUpgradable.address)
     // Get network ID
     networkId = process.env.NET_ID ? parseInt(process.env.NET_ID) : hethers.provider.network.chainId
     // Deploy expirable util

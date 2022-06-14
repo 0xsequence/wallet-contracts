@@ -69,6 +69,11 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "ImageHashIsZero",
+    type: "error",
+  },
+  {
     inputs: [
       {
         internalType: "bytes32",
@@ -193,6 +198,19 @@ const _abi = [
       },
     ],
     name: "GapNonceChange",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "newImageHash",
+        type: "bytes32",
+      },
+    ],
+    name: "ImageHashUpdated",
     type: "event",
   },
   {
@@ -420,6 +438,19 @@ const _abi = [
       },
     ],
     stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "_imageHash",
+        type: "bytes32",
+      },
+    ],
+    name: "updateImageHash",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
 ];

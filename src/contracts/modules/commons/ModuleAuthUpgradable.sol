@@ -9,11 +9,6 @@ import "./ModuleStorage.sol";
 
 
 abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, ModuleSelfAuth {
-  //                       IMAGE_HASH_KEY = keccak256("org.arcadeum.module.auth.upgradable.image.hash");
-  bytes32 private constant IMAGE_HASH_KEY = bytes32(0xea7157fa25e3aa17d0ae2d5280fa4e24d421c61842aa85e45194e1145aa72bf8);
-
-  event ImageHashUpdated(bytes32 newImageHash);
-
   /**
    * @notice Updates the signers configuration of the wallet
    * @param _imageHash New required image hash of the signature

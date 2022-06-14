@@ -2,6 +2,10 @@
 pragma solidity 0.8.14;
 
 import "./ModuleAuth.sol";
+import "./ModuleUpdate.sol";
+import "./ModuleSelfAuth.sol";
+import "./ModuleStorage.sol";
+
 import "../../Wallet.sol";
 
 /**
@@ -11,16 +15,35 @@ import "../../Wallet.sol";
  *  This module allows wallets to be deployed with a default configuration
  *  without using any aditional contract storage
  */
-abstract contract ModuleAuthFixed is ModuleAuth {
+abstract contract ModuleAuthFixed is ModuleAuth, ModuleSelfAuth, ModuleUpdate {
   bytes32 public immutable INIT_CODE_HASH;
   address public immutable FACTORY;
+  address public immutable UPGRADEABLE_IMPLEMENTATION;
 
-  constructor(address _factory) {
+  constructor(address _factory, address _mainModuleUpgradeable) {
     // Build init code hash of the deployed wallets using that module
     bytes32 initCodeHash = keccak256(abi.encodePacked(Wallet.creationCode, uint256(uint160(address(this)))));
 
     INIT_CODE_HASH = initCodeHash;
     FACTORY = _factory;
+    UPGRADEABLE_IMPLEMENTATION = _mainModuleUpgradeable;
+  }
+
+  /**
+   * @notice Updates the signers configuration of the wallet
+   * @param _imageHash New required image hash of the signature
+   * @dev It is recommended to not have more than 200 signers as opcode repricing
+   *      could make transactions impossible to execute as all the signers must be
+   *      passed for each transaction.
+   */
+  function updateImageHash(bytes32 _imageHash) external override virtual onlySelf {
+    // Update imageHash in storage
+    if (_imageHash == bytes32(0)) revert ImageHashIsZero();
+    ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
+    emit ImageHashUpdated(_imageHash);
+
+    // Update wallet implementation to mainModuleUpgradeable
+    _updateImplementation(UPGRADEABLE_IMPLEMENTATION);
   }
 
   /**
@@ -43,5 +66,14 @@ abstract contract ModuleAuthFixed is ModuleAuth {
         )
       )
     ) == address(this);
+  }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override(ModuleAuth, ModuleUpdate) virtual pure returns (bool) {
+    return super.supportsInterface(_interfaceID);
   }
 }

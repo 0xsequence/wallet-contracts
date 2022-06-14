@@ -26,14 +26,15 @@ import "../interfaces/IERC1271Wallet.sol";
 contract MainModule is
   ModuleAuthFixed,
   ModuleCalls,
-  ModuleUpdate,
   ModuleHooks,
   ModuleCreator
 {
   constructor(
-    address _factory
+    address _factory,
+    address _mainModuleUpgradable
   ) ModuleAuthFixed(
-    _factory
+    _factory,
+    _mainModuleUpgradable
   ) { }
 
   /**
@@ -44,9 +45,8 @@ contract MainModule is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
-    ModuleAuth,
+    ModuleAuthFixed,
     ModuleCalls,
-    ModuleUpdate,
     ModuleHooks,
     ModuleCreator
   ) pure returns (bool) {

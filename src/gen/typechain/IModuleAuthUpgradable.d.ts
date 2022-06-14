@@ -11,7 +11,6 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
-  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -22,20 +21,11 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface IModuleAuthUpgradableInterface extends ethers.utils.Interface {
   functions: {
     "imageHash()": FunctionFragment;
-    "updateImageHash(bytes32)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "imageHash", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "updateImageHash",
-    values: [BytesLike]
-  ): string;
 
   decodeFunctionResult(functionFragment: "imageHash", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "updateImageHash",
-    data: BytesLike
-  ): Result;
 
   events: {};
 }
@@ -85,46 +75,21 @@ export class IModuleAuthUpgradable extends BaseContract {
 
   functions: {
     imageHash(overrides?: CallOverrides): Promise<[string]>;
-
-    updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   imageHash(overrides?: CallOverrides): Promise<string>;
 
-  updateImageHash(
-    _imageHash: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     imageHash(overrides?: CallOverrides): Promise<string>;
-
-    updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {};
 
   estimateGas: {
     imageHash(overrides?: CallOverrides): Promise<BigNumber>;
-
-    updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     imageHash(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    updateImageHash(
-      _imageHash: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
   };
 }

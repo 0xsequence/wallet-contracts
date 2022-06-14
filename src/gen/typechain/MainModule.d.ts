@@ -24,6 +24,7 @@ interface MainModuleInterface extends ethers.utils.Interface {
   functions: {
     "FACTORY()": FunctionFragment;
     "INIT_CODE_HASH()": FunctionFragment;
+    "UPGRADEABLE_IMPLEMENTATION()": FunctionFragment;
     "addHook(bytes4,address)": FunctionFragment;
     "createContract(bytes)": FunctionFragment;
     "execute((bool,bool,uint256,address,uint256,bytes)[],uint256,bytes)": FunctionFragment;
@@ -38,12 +39,17 @@ interface MainModuleInterface extends ethers.utils.Interface {
     "removeHook(bytes4)": FunctionFragment;
     "selfExecute((bool,bool,uint256,address,uint256,bytes)[])": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
+    "updateImageHash(bytes32)": FunctionFragment;
     "updateImplementation(address)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "FACTORY", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "INIT_CODE_HASH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "UPGRADEABLE_IMPLEMENTATION",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -117,6 +123,10 @@ interface MainModuleInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "updateImageHash",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "updateImplementation",
     values: [string]
   ): string;
@@ -124,6 +134,10 @@ interface MainModuleInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "FACTORY", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "INIT_CODE_HASH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "UPGRADEABLE_IMPLEMENTATION",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "addHook", data: BytesLike): Result;
@@ -165,6 +179,10 @@ interface MainModuleInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "updateImageHash",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "updateImplementation",
     data: BytesLike
   ): Result;
@@ -172,6 +190,7 @@ interface MainModuleInterface extends ethers.utils.Interface {
   events: {
     "CreatedContract(address)": EventFragment;
     "GapNonceChange(uint256,uint256,uint256)": EventFragment;
+    "ImageHashUpdated(bytes32)": EventFragment;
     "ImplementationUpdated(address)": EventFragment;
     "NoNonceUsed()": EventFragment;
     "NonceChange(uint256,uint256)": EventFragment;
@@ -181,6 +200,7 @@ interface MainModuleInterface extends ethers.utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "CreatedContract"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "GapNonceChange"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "ImageHashUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ImplementationUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NoNonceUsed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NonceChange"): EventFragment;
@@ -196,6 +216,10 @@ export type GapNonceChangeEvent = TypedEvent<
     _oldNonce: BigNumber;
     _newNonce: BigNumber;
   }
+>;
+
+export type ImageHashUpdatedEvent = TypedEvent<
+  [string] & { newImageHash: string }
 >;
 
 export type ImplementationUpdatedEvent = TypedEvent<
@@ -261,6 +285,8 @@ export class MainModule extends BaseContract {
     FACTORY(overrides?: CallOverrides): Promise<[string]>;
 
     INIT_CODE_HASH(overrides?: CallOverrides): Promise<[string]>;
+
+    UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<[string]>;
 
     addHook(
       _signature: BytesLike,
@@ -364,6 +390,11 @@ export class MainModule extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     updateImplementation(
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -373,6 +404,8 @@ export class MainModule extends BaseContract {
   FACTORY(overrides?: CallOverrides): Promise<string>;
 
   INIT_CODE_HASH(overrides?: CallOverrides): Promise<string>;
+
+  UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<string>;
 
   addHook(
     _signature: BytesLike,
@@ -473,6 +506,11 @@ export class MainModule extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  updateImageHash(
+    _imageHash: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   updateImplementation(
     _implementation: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -482,6 +520,8 @@ export class MainModule extends BaseContract {
     FACTORY(overrides?: CallOverrides): Promise<string>;
 
     INIT_CODE_HASH(overrides?: CallOverrides): Promise<string>;
+
+    UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<string>;
 
     addHook(
       _signature: BytesLike,
@@ -579,6 +619,11 @@ export class MainModule extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     updateImplementation(
       _implementation: string,
       overrides?: CallOverrides
@@ -611,6 +656,14 @@ export class MainModule extends BaseContract {
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
     >;
+
+    "ImageHashUpdated(bytes32)"(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+
+    ImageHashUpdated(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
 
     "ImplementationUpdated(address)"(
       newImplementation?: null
@@ -661,6 +714,8 @@ export class MainModule extends BaseContract {
     FACTORY(overrides?: CallOverrides): Promise<BigNumber>;
 
     INIT_CODE_HASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<BigNumber>;
 
     addHook(
       _signature: BytesLike,
@@ -764,6 +819,11 @@ export class MainModule extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     updateImplementation(
       _implementation: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -774,6 +834,10 @@ export class MainModule extends BaseContract {
     FACTORY(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     INIT_CODE_HASH(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    UPGRADEABLE_IMPLEMENTATION(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     addHook(
       _signature: BytesLike,
@@ -875,6 +939,11 @@ export class MainModule extends BaseContract {
     supportsInterface(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    updateImageHash(
+      _imageHash: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     updateImplementation(

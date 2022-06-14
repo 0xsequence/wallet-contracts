@@ -30,6 +30,7 @@ interface GuestModuleInterface extends ethers.utils.Interface {
     "readNonce(uint256)": FunctionFragment;
     "selfExecute((bool,bool,uint256,address,uint256,bytes)[])": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
+    "updateImageHash(bytes32)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -81,6 +82,10 @@ interface GuestModuleInterface extends ethers.utils.Interface {
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "updateImageHash",
+    values: [BytesLike]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "createContract",
@@ -105,10 +110,15 @@ interface GuestModuleInterface extends ethers.utils.Interface {
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateImageHash",
+    data: BytesLike
+  ): Result;
 
   events: {
     "CreatedContract(address)": EventFragment;
     "GapNonceChange(uint256,uint256,uint256)": EventFragment;
+    "ImageHashUpdated(bytes32)": EventFragment;
     "NoNonceUsed()": EventFragment;
     "NonceChange(uint256,uint256)": EventFragment;
     "TxExecuted(bytes32)": EventFragment;
@@ -117,6 +127,7 @@ interface GuestModuleInterface extends ethers.utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "CreatedContract"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "GapNonceChange"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "ImageHashUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NoNonceUsed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NonceChange"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TxExecuted"): EventFragment;
@@ -131,6 +142,10 @@ export type GapNonceChangeEvent = TypedEvent<
     _oldNonce: BigNumber;
     _newNonce: BigNumber;
   }
+>;
+
+export type ImageHashUpdatedEvent = TypedEvent<
+  [string] & { newImageHash: string }
 >;
 
 export type NoNonceUsedEvent = TypedEvent<[] & {}>;
@@ -248,6 +263,11 @@ export class GuestModule extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    updateImageHash(
+      arg0: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   createContract(
@@ -310,6 +330,11 @@ export class GuestModule extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  updateImageHash(
+    arg0: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     createContract(
       _code: BytesLike,
@@ -370,6 +395,8 @@ export class GuestModule extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    updateImageHash(arg0: BytesLike, overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
@@ -398,6 +425,14 @@ export class GuestModule extends BaseContract {
       [BigNumber, BigNumber, BigNumber],
       { _space: BigNumber; _oldNonce: BigNumber; _newNonce: BigNumber }
     >;
+
+    "ImageHashUpdated(bytes32)"(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
+
+    ImageHashUpdated(
+      newImageHash?: null
+    ): TypedEventFilter<[string], { newImageHash: string }>;
 
     "NoNonceUsed()"(): TypedEventFilter<[], {}>;
 
@@ -496,6 +531,11 @@ export class GuestModule extends BaseContract {
       _interfaceID: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    updateImageHash(
+      arg0: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -557,6 +597,11 @@ export class GuestModule extends BaseContract {
     supportsInterface(
       _interfaceID: BytesLike,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    updateImageHash(
+      arg0: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

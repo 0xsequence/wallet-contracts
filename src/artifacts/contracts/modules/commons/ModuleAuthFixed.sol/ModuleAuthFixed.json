@@ -4,6 +4,22 @@
   "sourceName": "contracts/modules/commons/ModuleAuthFixed.sol",
   "abi": [
     {
+      "inputs": [],
+      "name": "ImageHashIsZero",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_implementation",
+          "type": "address"
+        }
+      ],
+      "name": "InvalidImplementation",
+      "type": "error"
+    },
+    {
       "inputs": [
         {
           "internalType": "bytes32",
@@ -92,6 +108,22 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "_sender",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_self",
+          "type": "address"
+        }
+      ],
+      "name": "OnlySelfAuth",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes",
           "name": "_data",
           "type": "bytes"
@@ -133,6 +165,32 @@
       "type": "error"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "newImageHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ImageHashUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newImplementation",
+          "type": "address"
+        }
+      ],
+      "name": "ImplementationUpdated",
+      "type": "event"
+    },
+    {
       "inputs": [],
       "name": "FACTORY",
       "outputs": [
@@ -153,6 +211,19 @@
           "internalType": "bytes32",
           "name": "",
           "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "UPGRADEABLE_IMPLEMENTATION",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -223,6 +294,32 @@
         }
       ],
       "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_imageHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "updateImageHash",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_implementation",
+          "type": "address"
+        }
+      ],
+      "name": "updateImplementation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     }
   ],

@@ -59,8 +59,8 @@ contract('Session utils', () => {
     // Deploy wallet factory
     factory = await factoryFactory.deploy()
     // Deploy MainModule
-    mainModule = await mainModuleFactory.deploy(factory.address)
     mainModuleUpgradable = await mainModuleUpgradableFactory.deploy()
+    mainModule = await mainModuleFactory.deploy(factory.address, mainModuleUpgradable.address)
     // Get network ID
     networkId = process.env.NET_ID ? parseInt(process.env.NET_ID) : hethers.provider.network.chainId
     // Deploy RequireUtils
