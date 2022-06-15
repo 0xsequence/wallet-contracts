@@ -35,10 +35,13 @@ contract('MainModule', () => {
     factoryFactory = await hethers.getContractFactory('Factory') // as Factory__factory
     moduleFactory = await hethers.getContractFactory('MainModule') // as MainModule__factory
 
+    const mainModuleUpgradableFactory = await hethers.getContractFactory('MainModuleUpgradable')
+    const moduleUpgradable = await mainModuleUpgradableFactory.deploy()
+
     // Deploy wallet factory
     factory = await factoryFactory.deploy()
     // Deploy MainModule
-    module = await moduleFactory.deploy(factory.address)
+    module = await moduleFactory.deploy(factory.address, moduleUpgradable.address)
     // Get network ID
     networkId = await web3.eth.net.getId()
   })
