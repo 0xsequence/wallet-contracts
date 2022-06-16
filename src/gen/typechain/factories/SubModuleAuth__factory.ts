@@ -147,6 +147,45 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
+        name: "_msgSubDigest",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes",
+        name: "_signature",
+        type: "bytes",
+      },
+      {
+        internalType: "uint256",
+        name: "_rindex",
+        type: "uint256",
+      },
+    ],
+    name: "_recoverSignature",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "_imageHash",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256",
+        name: "_weight",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_thershold",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
         name: "_imageHash",
         type: "bytes32",
       },

@@ -18,7 +18,7 @@ abstract contract SubModuleAuth is IModuleAuth, SignatureValidator {
     bytes32 _msgSubDigest,
     bytes calldata _signature,
     uint256 _rindex
-  ) internal virtual view returns (
+  ) public virtual view returns (
     bytes32 _imageHash,
     uint256 _weight,
     uint256 _thershold

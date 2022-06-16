@@ -9,6 +9,8 @@ import "./ModuleERC165.sol";
 import "./interfaces/IModuleCalls.sol";
 import "./interfaces/IModuleAuth.sol";
 
+import "./submodules/nonce/SubModuleNonce.sol";
+
 
 abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth {
   //                       NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
@@ -18,27 +20,6 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
   // 
   //                        GAP_NONCE_KEY = keccak256("org.sequence.module.gapnonce.nonce");
   bytes32 internal constant GAP_NONCE_KEY = bytes32(keccak256("org.sequence.module.gapnonce.nonce"));
-
-
-  // Nonce schema
-  //
-  // - @notice: Sequence v1 didn't use a "nonce type", the only type of nonce that
-  //            existed was the "NormalNonce", to maintain backwards compatibility
-  //            we use the type "0" for the normal type. v1 also had 96 bits allocated
-  //            to the nonce, but the high order bits were always 0, since it's highly
-  //            unlikely that a nonce would ever be larger than 2^32.
-  //
-  // space[160]:type[8]:nonce[88]
-  uint256 internal constant SPACE_SHIFT = 96;
-  uint256 internal constant TYPE_SHIFT = 88;
-  uint256 internal constant TYPE_MASK = 0xff;
-  bytes32 internal constant NONCE_MASK = bytes32((1 << TYPE_SHIFT) - 1);
-
-  uint256 internal constant TypeNormalNonce = 0;
-  uint256 internal constant TypeGapNonce = 1;
-  uint256 internal constant TypeNoNonce = 2;
-
-  uint256 internal constant HighestNonceType = TypeNoNonce;
 
   /**
    * @notice Returns the next nonce of the default nonce space
@@ -174,11 +155,11 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    */
   function _validateNonce(uint256 _rawNonce) internal virtual {
     // Retrieve current nonce for this wallet
-    (uint256 space, uint256 nonceType, uint256 providedNonce) = _decodeNonce(_rawNonce);
+    (uint256 space, uint256 nonceType, uint256 providedNonce) = SubModuleNonce.decodeNonce(_rawNonce);
 
     // Normal nonce type is an auto-incremental nonce
     // that increments by 1 each time it is used.
-    if (nonceType == TypeNormalNonce) {
+    if (nonceType == SubModuleNonce.TypeNormalNonce) {
       uint256 currentNonce = readNonce(space);
       if (currentNonce != providedNonce) {
         revert BadNonce(space, providedNonce, currentNonce);
@@ -194,7 +175,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
 
     // Gap nonce type is an incremental nonce
     // that may be used to skip an arbitrary number of transactions.
-    } else if (nonceType == TypeGapNonce) {
+    } else if (nonceType == SubModuleNonce.TypeGapNonce) {
       uint256 currentGapNonce = readGapNonce(space);
 
       if (providedNonce <= currentGapNonce) {
@@ -208,7 +189,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     // No nonce type is a transaction that doesn't contain a nonce
     // and can be executed repeatedly forever.
     // @notice: This is dangerous, use with care.
-    } else if (nonceType == TypeNoNonce) {
+    } else if (nonceType == SubModuleNonce.TypeNoNonce) {
       // Space and nonce must be 0 (for security reasons)
       if (space != 0 || providedNonce != 0) {
         revert ExpectedEmptyNonce(space, providedNonce);
@@ -238,32 +219,6 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
     } else {
       emit TxFailed(_txHash, _reason);
-    }
-  }
-
-  /**
-   * @notice Decodes a raw nonce
-   * @dev Schema: space[160]:type[8]:nonce[88]
-   * @param _rawNonce Nonce to be decoded
-   * @return _space The nonce space of the raw nonce
-   * @return _type The decoded nonce type
-   * @return _nonce The nonce of the raw nonce
-   */
-  function _decodeNonce(uint256 _rawNonce) internal virtual pure returns (
-    uint256 _space,
-    uint256 _type,
-    uint256 _nonce
-  ) {
-    unchecked {
-      // Decode nonce
-      _space = _rawNonce >> SPACE_SHIFT;
-      _type = (_rawNonce >> TYPE_SHIFT) & TYPE_MASK;
-      _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
-
-      // Verify nonce type
-      if (_type > HighestNonceType) {
-        revert InvalidNonceType(_type);
-      } 
     }
   }
 

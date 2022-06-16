@@ -25,6 +25,7 @@ interface MainModuleInterface extends ethers.utils.Interface {
     "FACTORY()": FunctionFragment;
     "INIT_CODE_HASH()": FunctionFragment;
     "UPGRADEABLE_IMPLEMENTATION()": FunctionFragment;
+    "_recoverSignature(bytes32,bytes,uint256)": FunctionFragment;
     "addHook(bytes4,address)": FunctionFragment;
     "createContract(bytes)": FunctionFragment;
     "execute((bool,bool,uint256,address,uint256,bytes)[],uint256,bytes)": FunctionFragment;
@@ -51,6 +52,10 @@ interface MainModuleInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "UPGRADEABLE_IMPLEMENTATION",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "_recoverSignature",
+    values: [BytesLike, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "addHook",
@@ -138,6 +143,10 @@ interface MainModuleInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "UPGRADEABLE_IMPLEMENTATION",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "_recoverSignature",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "addHook", data: BytesLike): Result;
@@ -288,6 +297,19 @@ export class MainModule extends BaseContract {
 
     UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<[string]>;
 
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     addHook(
       _signature: BytesLike,
       _implementation: string,
@@ -407,6 +429,19 @@ export class MainModule extends BaseContract {
 
   UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<string>;
 
+  _recoverSignature(
+    _msgSubDigest: BytesLike,
+    _signature: BytesLike,
+    _rindex: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [string, BigNumber, BigNumber] & {
+      _imageHash: string;
+      _weight: BigNumber;
+      _thershold: BigNumber;
+    }
+  >;
+
   addHook(
     _signature: BytesLike,
     _implementation: string,
@@ -522,6 +557,19 @@ export class MainModule extends BaseContract {
     INIT_CODE_HASH(overrides?: CallOverrides): Promise<string>;
 
     UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<string>;
+
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
 
     addHook(
       _signature: BytesLike,
@@ -717,6 +765,13 @@ export class MainModule extends BaseContract {
 
     UPGRADEABLE_IMPLEMENTATION(overrides?: CallOverrides): Promise<BigNumber>;
 
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     addHook(
       _signature: BytesLike,
       _implementation: string,
@@ -836,6 +891,13 @@ export class MainModule extends BaseContract {
     INIT_CODE_HASH(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     UPGRADEABLE_IMPLEMENTATION(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

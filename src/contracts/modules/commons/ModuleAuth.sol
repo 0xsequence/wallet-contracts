@@ -12,6 +12,7 @@ import "./ModuleERC165.sol";
 import "./submodules/auth/SubModuleAuth.sol";
 import "./submodules/auth/SubModuleAuthLegacy.sol";
 import "./submodules/auth/SubModuleAuthDynamic.sol";
+import "./submodules/auth/SubModuleAuthLazyOctopus.sol";
 
 /**
   Signature encoding:
@@ -49,7 +50,8 @@ abstract contract ModuleAuth is
   IERC1271Wallet,
   SubModuleAuth,
   SubModuleAuthLegacy,
-  SubModuleAuthDynamic
+  SubModuleAuthDynamic,
+  SubModuleAuthLazyOctopus
 {
   using LibBytes for bytes;
 
@@ -92,6 +94,12 @@ abstract contract ModuleAuth is
       // SubModuleAuthDynamic.sol
       if (signatureType == DYNAMIC_NO_CHAIN_ID_TYPE) {
         return _recoverDynamicNoChainIdSignature(_signature, _digest, rindex);
+      }
+
+      // Signature type 0x03 - Prefixed with LazyOctopus transactions
+      // SubModuleAuthLazyOctopus.sol
+      if (signatureType == LAZY_OCTOPUS_TYPE) {
+        return _recoverLazyOctopusSignature(_signature, _digest, rindex);
       }
 
       revert InvalidSignatureType(signatureType);

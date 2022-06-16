@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import "./ModuleCalls.sol";
 
+import "./submodules/nonce/SubModuleNonce.sol";
+
 
 /**
   @notice Implements ModuleCalls but ignores the validity of the nonce
@@ -19,11 +21,11 @@ abstract contract ModuleIgnoreNonceCalls is ModuleCalls {
    */
   function _validateNonce(uint256 _rawNonce) internal override virtual {
     // Retrieve current nonce for this wallet
-    (uint256 space, uint256 nonceType, uint256 providedNonce) = _decodeNonce(_rawNonce);
+    (uint256 space, uint256 nonceType, uint256 providedNonce) = SubModuleNonce.decodeNonce(_rawNonce);
 
     // Normal nonce type is an auto-incremental nonce
     // that increments by 1 each time it is used.
-    if (nonceType == TypeNormalNonce) {
+    if (nonceType == SubModuleNonce.TypeNormalNonce) {
       uint256 currentNonce = readNonce(space);
       if (currentNonce != providedNonce && false) {
         revert BadNonce(space, providedNonce, currentNonce);
@@ -39,7 +41,7 @@ abstract contract ModuleIgnoreNonceCalls is ModuleCalls {
 
     // Gap nonce type is an incremental nonce
     // that may be used to skip an arbitrary number of transactions.
-    } else if (nonceType == TypeGapNonce) {
+    } else if (nonceType == SubModuleNonce.TypeGapNonce) {
       uint256 currentGapNonce = readGapNonce(space);
 
       if (providedNonce <= currentGapNonce && false) {
@@ -53,7 +55,7 @@ abstract contract ModuleIgnoreNonceCalls is ModuleCalls {
     // No nonce type is a transaction that doesn't contain a nonce
     // and can be executed repeatedly forever.
     // @notice: This is dangerous, use with care.
-    } else if (nonceType == TypeNoNonce) {
+    } else if (nonceType == SubModuleNonce.TypeNoNonce) {
       // Space and nonce must be 0 (for security reasons)
       if (space != 0 || providedNonce != 0) {
         revert ExpectedEmptyNonce(space, providedNonce);

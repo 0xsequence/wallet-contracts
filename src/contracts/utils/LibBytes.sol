@@ -297,4 +297,18 @@ library LibBytes {
     assert(newIndex >= index);
     if (newIndex > data.length) revert ReadBytesOutOfBounds(data, index, size);
   }
+
+  function splitSigAndArgs(
+    bytes memory data
+  ) internal pure returns (
+    bytes4 sig,
+    bytes memory args
+  ) {
+    assembly {
+      // First 4 bytes are the signature
+      sig := and(0xffffffff, mload(add(data, 32)))
+    }
+
+    (args,) = readBytes(data, 4, data.length - 4);
+  }
 }

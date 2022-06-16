@@ -21,12 +21,17 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ModuleIgnoreAuthUpgradableInterface extends ethers.utils.Interface {
   functions: {
+    "_recoverSignature(bytes32,bytes,uint256)": FunctionFragment;
     "imageHash()": FunctionFragment;
     "isValidSignature(bytes32,bytes)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "updateImageHash(bytes32)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "_recoverSignature",
+    values: [BytesLike, BytesLike, BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "imageHash", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "isValidSignature",
@@ -41,6 +46,10 @@ interface ModuleIgnoreAuthUpgradableInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "_recoverSignature",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "imageHash", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isValidSignature",
@@ -110,6 +119,19 @@ export class ModuleIgnoreAuthUpgradable extends BaseContract {
   interface: ModuleIgnoreAuthUpgradableInterface;
 
   functions: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     imageHash(overrides?: CallOverrides): Promise<[string]>;
 
     "isValidSignature(bytes32,bytes)"(
@@ -134,6 +156,19 @@ export class ModuleIgnoreAuthUpgradable extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  _recoverSignature(
+    _msgSubDigest: BytesLike,
+    _signature: BytesLike,
+    _rindex: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [string, BigNumber, BigNumber] & {
+      _imageHash: string;
+      _weight: BigNumber;
+      _thershold: BigNumber;
+    }
+  >;
 
   imageHash(overrides?: CallOverrides): Promise<string>;
 
@@ -160,6 +195,19 @@ export class ModuleIgnoreAuthUpgradable extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     imageHash(overrides?: CallOverrides): Promise<string>;
 
     "isValidSignature(bytes32,bytes)"(
@@ -196,6 +244,13 @@ export class ModuleIgnoreAuthUpgradable extends BaseContract {
   };
 
   estimateGas: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     imageHash(overrides?: CallOverrides): Promise<BigNumber>;
 
     "isValidSignature(bytes32,bytes)"(
@@ -222,6 +277,13 @@ export class ModuleIgnoreAuthUpgradable extends BaseContract {
   };
 
   populateTransaction: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     imageHash(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "isValidSignature(bytes32,bytes)"(

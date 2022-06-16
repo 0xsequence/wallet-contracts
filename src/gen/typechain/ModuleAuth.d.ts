@@ -21,11 +21,16 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ModuleAuthInterface extends ethers.utils.Interface {
   functions: {
+    "_recoverSignature(bytes32,bytes,uint256)": FunctionFragment;
     "isValidSignature(bytes32,bytes)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "updateImageHash(bytes32)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "_recoverSignature",
+    values: [BytesLike, BytesLike, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "isValidSignature",
     values: [BytesLike, BytesLike]
@@ -39,6 +44,10 @@ interface ModuleAuthInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "_recoverSignature",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "isValidSignature",
     data: BytesLike
@@ -107,6 +116,19 @@ export class ModuleAuth extends BaseContract {
   interface: ModuleAuthInterface;
 
   functions: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -129,6 +151,19 @@ export class ModuleAuth extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  _recoverSignature(
+    _msgSubDigest: BytesLike,
+    _signature: BytesLike,
+    _rindex: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [string, BigNumber, BigNumber] & {
+      _imageHash: string;
+      _weight: BigNumber;
+      _thershold: BigNumber;
+    }
+  >;
 
   "isValidSignature(bytes32,bytes)"(
     _hash: BytesLike,
@@ -153,6 +188,19 @@ export class ModuleAuth extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -187,6 +235,13 @@ export class ModuleAuth extends BaseContract {
   };
 
   estimateGas: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,
@@ -211,6 +266,13 @@ export class ModuleAuth extends BaseContract {
   };
 
   populateTransaction: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     "isValidSignature(bytes32,bytes)"(
       _hash: BytesLike,
       _signatures: BytesLike,

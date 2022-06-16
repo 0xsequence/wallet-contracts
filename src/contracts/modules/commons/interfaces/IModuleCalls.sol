@@ -15,7 +15,6 @@ interface IModuleCalls {
   // Errors
   error NotEnoughGas(uint256 _requested, uint256 _available);
   error InvalidSignature(bytes32 _hash, bytes _signature);
-  error InvalidNonceType(uint256 _type);
   error BadNonce(uint256 _space, uint256 _provided, uint256 _current);
   error BadGapNonce(uint256 _space, uint256 _provided, uint256 _current);
   error ExpectedEmptyNonce(uint256 _space, uint256 _nonce);

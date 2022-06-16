@@ -68,17 +68,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_type",
-        type: "uint256",
-      },
-    ],
-    name: "InvalidNonceType",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
         internalType: "bytes32",
         name: "_hash",
         type: "bytes32",

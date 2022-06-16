@@ -36,6 +36,39 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "_space",
+        type: "uint256",
+      },
+    ],
+    name: "InvalidNonceSpace",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_type",
+        type: "uint256",
+      },
+    ],
+    name: "InvalidNonceType",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_type",
+        type: "uint256",
+      },
+    ],
+    name: "InvalidNonceType",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes",
         name: "_signature",
         type: "bytes",
@@ -85,6 +118,49 @@ const _abi = [
   {
     inputs: [
       {
+        components: [
+          {
+            internalType: "bool",
+            name: "delegateCall",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "revertOnError",
+            type: "bool",
+          },
+          {
+            internalType: "uint256",
+            name: "gasLimit",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "target",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "value",
+            type: "uint256",
+          },
+          {
+            internalType: "bytes",
+            name: "data",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct IModuleCalls.Transaction",
+        name: "_tx",
+        type: "tuple",
+      },
+    ],
+    name: "InvalidTransaction",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes",
         name: "_signature",
         type: "bytes",
@@ -96,6 +172,27 @@ const _abi = [
       },
     ],
     name: "InvalidVValue",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "_datam",
+        type: "bytes",
+      },
+      {
+        internalType: "uint256",
+        name: "_index",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_length",
+        type: "uint256",
+      },
+    ],
+    name: "ReadBytesOutOfBounds",
     type: "error",
   },
   {
@@ -153,6 +250,45 @@ const _abi = [
     ],
     name: "ImageHashUpdated",
     type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "_msgSubDigest",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes",
+        name: "_signature",
+        type: "bytes",
+      },
+      {
+        internalType: "uint256",
+        name: "_rindex",
+        type: "uint256",
+      },
+    ],
+    name: "_recoverSignature",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "_imageHash",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256",
+        name: "_weight",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_thershold",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [

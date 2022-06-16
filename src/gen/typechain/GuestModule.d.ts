@@ -22,6 +22,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface GuestModuleInterface extends ethers.utils.Interface {
   functions: {
+    "_recoverSignature(bytes32,bytes,uint256)": FunctionFragment;
     "createContract(bytes)": FunctionFragment;
     "execute((bool,bool,uint256,address,uint256,bytes)[],uint256,bytes)": FunctionFragment;
     "isValidSignature(bytes32,bytes)": FunctionFragment;
@@ -33,6 +34,10 @@ interface GuestModuleInterface extends ethers.utils.Interface {
     "updateImageHash(bytes32)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "_recoverSignature",
+    values: [BytesLike, BytesLike, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "createContract",
     values: [BytesLike]
@@ -87,6 +92,10 @@ interface GuestModuleInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "_recoverSignature",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "createContract",
     data: BytesLike
@@ -204,6 +213,19 @@ export class GuestModule extends BaseContract {
   interface: GuestModuleInterface;
 
   functions: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     createContract(
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -269,6 +291,19 @@ export class GuestModule extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  _recoverSignature(
+    _msgSubDigest: BytesLike,
+    _signature: BytesLike,
+    _rindex: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [string, BigNumber, BigNumber] & {
+      _imageHash: string;
+      _weight: BigNumber;
+      _thershold: BigNumber;
+    }
+  >;
 
   createContract(
     _code: BytesLike,
@@ -336,6 +371,19 @@ export class GuestModule extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     createContract(
       _code: BytesLike,
       overrides?: CallOverrides
@@ -472,6 +520,13 @@ export class GuestModule extends BaseContract {
   };
 
   estimateGas: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     createContract(
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -539,6 +594,13 @@ export class GuestModule extends BaseContract {
   };
 
   populateTransaction: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     createContract(
       _code: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }

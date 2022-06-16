@@ -21,14 +21,23 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface SubModuleAuthLegacyInterface extends ethers.utils.Interface {
   functions: {
+    "_recoverSignature(bytes32,bytes,uint256)": FunctionFragment;
     "updateImageHash(bytes32)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "_recoverSignature",
+    values: [BytesLike, BytesLike, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "updateImageHash",
     values: [BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "_recoverSignature",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "updateImageHash",
     data: BytesLike
@@ -89,11 +98,37 @@ export class SubModuleAuthLegacy extends BaseContract {
   interface: SubModuleAuthLegacyInterface;
 
   functions: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     updateImageHash(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  _recoverSignature(
+    _msgSubDigest: BytesLike,
+    _signature: BytesLike,
+    _rindex: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [string, BigNumber, BigNumber] & {
+      _imageHash: string;
+      _weight: BigNumber;
+      _thershold: BigNumber;
+    }
+  >;
 
   updateImageHash(
     _imageHash: BytesLike,
@@ -101,6 +136,19 @@ export class SubModuleAuthLegacy extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [string, BigNumber, BigNumber] & {
+        _imageHash: string;
+        _weight: BigNumber;
+        _thershold: BigNumber;
+      }
+    >;
+
     updateImageHash(
       _imageHash: BytesLike,
       overrides?: CallOverrides
@@ -118,6 +166,13 @@ export class SubModuleAuthLegacy extends BaseContract {
   };
 
   estimateGas: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     updateImageHash(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -125,6 +180,13 @@ export class SubModuleAuthLegacy extends BaseContract {
   };
 
   populateTransaction: {
+    _recoverSignature(
+      _msgSubDigest: BytesLike,
+      _signature: BytesLike,
+      _rindex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     updateImageHash(
       _imageHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
