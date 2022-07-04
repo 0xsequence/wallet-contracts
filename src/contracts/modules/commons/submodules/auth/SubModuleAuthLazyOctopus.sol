@@ -47,29 +47,29 @@ abstract contract SubModuleAuthLazyOctopus is SubModuleAuth {
         address(this)
       );
 
-      bytes memory txSignature = _txs[i].signature;
-
-      if (prevImageHash == bytes32(0) && nextGapNonce < prevGapNonce) {
+      if (nextGapNonce <= prevGapNonce) {
         // We may be in-between updates
         // so gap nonce may be below the previous one
         // if that's the case, we just ignore it
-        if (nextGapNonce <= prevGapNonce) {
+        if (prevImageHash == bytes32(0)) {
           continue;
+        } else {
+          return (false, bytes32(0));
         }
       }
+
+      // Lazy-octopus transactions use chainId = 0
+      // meaning their signatures are valid accross all chains
+      bytes32 digest = keccak256(abi.encode(_txs[i].transaction, _txs[i].nonce));
+      bytes32 subDigest = _subDigest(digest, 0);
 
       (
         bytes32 recoveredImageHash,
         uint256 weight,
         uint256 threshold
       ) = SubModuleAuth(address(this))._recoverSignature(
-        keccak256(
-          abi.encode(
-            _txs[i].transaction,
-            _txs[i].nonce
-          )
-        ),
-        txSignature,
+        subDigest,
+        _txs[i].signature,
         0
       );
 
@@ -84,7 +84,7 @@ abstract contract SubModuleAuthLazyOctopus is SubModuleAuth {
         }
 
         // The imageHash must be valid for the `current` state
-        if (!_isValidImage(nextImageHash)) {
+        if (!_isValidImage(recoveredImageHash)) {
           return (false, bytes32(0));
         }
       }

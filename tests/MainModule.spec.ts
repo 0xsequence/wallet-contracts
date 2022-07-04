@@ -1130,7 +1130,7 @@ contract('MainModule', (accounts: string[]) => {
       const tx = wallet.execute([transaction], 0, signature)
       await expectToBeRejected(tx, 'InvalidSignatureFlag(3)')
     })
-    it("Should reject signature with bad encoding type", async () => {
+    it('Should reject signature with bad encoding type', async () => {
       const signature = '0x2012'
 
       const transaction = {
