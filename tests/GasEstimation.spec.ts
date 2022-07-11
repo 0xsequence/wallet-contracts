@@ -1,38 +1,56 @@
-import { expect, encodeImageHash, signAndEncodeMetaTxn, addressOf, multiSignAndEncodeMetaTxn, multiSignAndExecuteMetaTx } from './utils'
-import { ethers as hethers } from 'hardhat'
 import * as ethers from 'ethers'
+import { expect } from './utils'
 
+import { CallReceiverMock, ContractType, deploySequenceContext, GasEstimator, GuestModule, ModuleMock, SequenceContext, MainModuleGasEstimation, MainModule } from './utils/contracts'
+import { applyTxDefaults, Transaction } from './utils/sequence'
+import { SequenceWallet } from './utils/wallet'
 
-import { GasEstimator, CallReceiverMock, MainModuleGasEstimation, Factory, GuestModule, GasEstimator__factory, CallReceiverMock__factory, GuestModule__factory, Factory__factory, MainModuleGasEstimation__factory, ModuleMock__factory } from 'src/gen/typechain'
-
-ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
 function txBaseCost(data: ethers.BytesLike): number {
   const bytes = ethers.utils.arrayify(data)
   return bytes.reduce((p, c) => c == 0 ? p.add(4) : p.add(16), ethers.constants.Zero).add(21000).toNumber()
 }
 
-contract('Estimate gas usage', (accounts: string[]) => {
-  let gasEstimatorFactory: GasEstimator__factory
-  let callReceiverMockFactory: CallReceiverMock__factory
-  let guestModuleFactory: GuestModule__factory
-  let factoryFactory: Factory__factory
-  let mainModuleGasEstimationFactory: MainModuleGasEstimation__factory
-  let moduleMockFactory: ModuleMock__factory
+contract('Estimate gas usage', () => {
+  let context: SequenceContext
 
-  let gasEstimator: GasEstimator
-  let callReceiver: CallReceiverMock
-  let mainModule: MainModuleGasEstimation
-  let guestModule: GuestModule
-  let factory: Factory
+  let gasEstimator: ContractType<typeof GasEstimator>
+  let callReceiver: ContractType< typeof CallReceiverMock>
+  let guestModule: ContractType<typeof GuestModule>
+  let moduleMock: ContractType<typeof ModuleMock>
 
-  let networkId: number | string
+  let wallet: SequenceWallet
 
-  let estimate: (address: string, data: ethers.BytesLike) => { call: () => Promise<{success: boolean, result: string, gas: ethers.BigNumber }> }
+  const bundleWithDeploy = (txData: string) => {
+    return applyTxDefaults([{
+      target: context.factory.address,
+      data: context.factory.interface.encodeFunctionData('deploy', [context.mainModule.address, wallet.imageHash]),
+    }, {
+      target: wallet.address,
+      data: txData
+    }])
+  }
 
-  let owner: ethers.Wallet
-  let salt: string
-  let address: string
+  const estimate = (address: string, data: ethers.BytesLike) => ({ call: async () =>  {
+    return gasEstimator.callStatic.estimate(address, data)
+  }})
+
+  const estimateGasUsage = async (txs: Partial<Transaction>[], wallet: SequenceWallet, deploy: boolean = false, nonce: ethers.BigNumberish = 0) => {
+    const stubSignature = await SequenceWallet.detailedWallet(context, {
+      threshold: wallet.config.threshold,
+      signers: wallet.config.signers.map(() => ethers.Wallet.createRandom())
+    }).signMessage(ethers.utils.randomBytes(32))
+
+    const txData = wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(txs), nonce, stubSignature])
+    if (!deploy) {
+      const res = await estimate(wallet.address, txData).call()
+      return res.gas.add(txBaseCost(txData)).toNumber()
+    }
+
+    const guestModuleData = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txData), 0, []])
+    const res = await estimate(guestModule.address, guestModuleData).call()
+    return res.gas.add(txBaseCost(txData)).toNumber()
+  }
 
   const gasUsedFor = async (tx: Promise<ethers.ContractTransaction> | ethers.ContractTransaction) => {
     const receipt = await (await tx).wait()
@@ -40,355 +58,211 @@ contract('Estimate gas usage', (accounts: string[]) => {
   }
 
   before(async () => {
-    gasEstimatorFactory = await hethers.getContractFactory('GasEstimator') as GasEstimator__factory
-    callReceiverMockFactory = await hethers.getContractFactory('CallReceiverMock') as CallReceiverMock__factory
-    guestModuleFactory = await hethers.getContractFactory('GuestModule') as GuestModule__factory
-    factoryFactory = await hethers.getContractFactory('Factory') as Factory__factory
-    mainModuleGasEstimationFactory = await hethers.getContractFactory('MainModuleGasEstimation') as MainModuleGasEstimation__factory
-    moduleMockFactory = await hethers.getContractFactory('ModuleMock') as ModuleMock__factory
+    context = await deploySequenceContext()
 
-    gasEstimator = await gasEstimatorFactory.deploy()
-    callReceiver = await callReceiverMockFactory.deploy()
-
-    // Deploy wallet factory
-    factory = (await factoryFactory.deploy()) as Factory
     // Deploy MainModuleGasEstimation (hardhat doesn't support overwrites, so we use this as the real module)
-    mainModule = await mainModuleGasEstimationFactory.deploy()
-    // Get network ID
-    networkId = process.env.NET_ID ? process.env.NET_ID : hethers.provider.network.chainId
+    context.mainModule = await MainModuleGasEstimation.deploy() as any as ContractType<typeof MainModule>
 
-    guestModule = await guestModuleFactory.deploy()
-
-    // estimate = gasEstimator.contract.methods.estimate
-    estimate = (address: string, data: ethers.BytesLike) => ({ call: async () =>  {
-      return gasEstimator.callStatic.estimate(address, data)
-    }})
+    gasEstimator = await GasEstimator.deploy()
+    guestModule = await GuestModule.deploy()
+    moduleMock = await ModuleMock.deploy()
   })
 
   beforeEach(async () => {
-    await callReceiver.setRevertFlag(false)
-    await callReceiver.testCall(0, [])
-
-    owner = ethers.Wallet.createRandom()
-
-    salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
-    address = addressOf(factory.address, mainModule.address, salt)
+    wallet = SequenceWallet.basicWallet(context)
+    callReceiver = await CallReceiverMock.deploy()
   })
 
   describe('Estimate gas of transactions', () => {
-    context('without wallet deployed', () => {
-      const bundleWithDeploy = (txData: string) => {
-        return [{
-          delegateCall: false,
-          revertOnError: true,
-          target: factory.address,
-          gasLimit: 0,
-          data: factory.interface.encodeFunctionData('deploy', [mainModule.address, salt]),
-          value: 0
-        }, {
-          delegateCall: false,
-          revertOnError: true,
-          target: address,
-          gasLimit: 0,
-          data: txData,
-          value: 0
-        }]
-      }
-
+    describe('without wallet deployed', () => {
       it('Should estimate wallet deployment', async () => {
-        const factoryData = factory.interface.encodeFunctionData('deploy', [mainModule.address, salt])
+        wallet = SequenceWallet.basicWallet(context)
+        const factoryData = context.factory.interface.encodeFunctionData('deploy', [context.mainModule.address, wallet.imageHash])
 
-        const estimated = ethers.BigNumber.from((await estimate(factory.address, factoryData).call()).gas).toNumber()
-        const realTx = await factory.deploy(mainModule.address, salt)
+        const estimated = ethers.BigNumber.from((await estimate(context.factory.address, factoryData).call()).gas).toNumber()
+        const realTx = await context.factory.deploy(context.mainModule.address, wallet.imageHash)
         expect(estimated + txBaseCost(factoryData)).to.approximately(await gasUsedFor(realTx), 5000)
       })
 
       it('Should estimate wallet deployment + upgrade', async () => {
-        const newImplementation = await moduleMockFactory.deploy()
+        const transactions = [{
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('updateImplementation', [moduleMock.address])
+        }]
 
-        const transaction = {
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: 0,
-          target: owner.address,
-          value: ethers.constants.Zero,
-          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
-        }
+        const estimated = await estimateGasUsage(transactions, wallet, true)
 
-        const txData = await signAndEncodeMetaTxn(mainModule as any, owner, [transaction], networkId)
-        const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), [transaction], networkId)
+        const signature = await wallet.signTransactions(transactions, 0)
+        const executeTxData = bundleWithDeploy(wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature]))
+        const realTx = await guestModule.execute(executeTxData, 0, [])
 
-        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
-
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
-        const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, [])
-        expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(await gasUsedFor(realTx), 5000)
+        expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
       })
-      it('Should estimate wallet deployment + upgrade + transaction', async () => {
-        const newImplementation = await moduleMockFactory.deploy()
 
-        const transaction = [{
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: 0,
-          target: owner.address,
-          value: ethers.constants.Zero,
-          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
+      it('Should estimate wallet deployment + upgrade + transaction', async () => {
+        const transactions = [{
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('updateImplementation', [moduleMock.address])
         }, {
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: 0,
           target: callReceiver.address,
-          value: ethers.constants.Zero,
           data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
         }]
 
-        const txData = await signAndEncodeMetaTxn(mainModule as any, owner, transaction, networkId)
-        const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), transaction, networkId)
+        const estimated = await estimateGasUsage(transactions, wallet, true)
 
-        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
+        const signature = await wallet.signTransactions(transactions, 0)
+        const executeTxData = bundleWithDeploy(wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature]))
+        const realTx = await guestModule.execute(executeTxData, 0, [])
 
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
-        const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, [])
-        expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(await gasUsedFor(realTx), 5000)
+        expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
+
+        expect(await callReceiver.lastValA()).to.equal(1)
       })
-      it('Should estimate wallet deployment + upgrade + failed transaction', async () => {
-        const newImplementation = await moduleMockFactory.deploy()
 
+      it('Should estimate wallet deployment + upgrade + failed transaction', async () => {
         await callReceiver.setRevertFlag(true)
 
-        const transaction = [{
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: 0,
-          target: owner.address,
-          value: ethers.constants.Zero,
-          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
+        const transactions = [{
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('updateImplementation', [moduleMock.address])
         }, {
-          delegateCall: false,
           revertOnError: false,
-          gasLimit: 0,
           target: callReceiver.address,
-          value: ethers.constants.Zero,
           data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
         }]
 
-        const txData = await signAndEncodeMetaTxn(mainModule as any, owner, transaction, networkId)
-        const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), transaction, networkId)
+        const estimated = await estimateGasUsage(transactions, wallet, true)
 
-        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
+        const signature = await wallet.signTransactions(transactions, 0)
+        const executeTxData = bundleWithDeploy(wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature]))
+        const realTx = await guestModule.execute(executeTxData, 0, [])
 
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
-        const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, [])
-        expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(await gasUsedFor(realTx), 5000)
+        expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
       })
-      it('Should estimate wallet deployment + upgrade + fixed gas transaction', async () => {
-        const newImplementation = await moduleMockFactory.deploy()
 
-        const transaction = [{
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: 0,
-          target: owner.address,
-          value: ethers.constants.Zero,
-          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
+      it('Should estimate wallet deployment + upgrade + fixed gas transaction', async () => {
+        const transactions = [{
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('updateImplementation', [moduleMock.address])
         }, {
-          delegateCall: false,
           revertOnError: false,
           gasLimit: 900000,
           target: callReceiver.address,
-          value: ethers.constants.Zero,
           data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
         }]
 
-        const txData = await signAndEncodeMetaTxn(mainModule as any, owner, transaction, networkId)
-        const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), transaction, networkId)
+        const estimated = await estimateGasUsage(transactions, wallet, true)
 
-        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
+        const signature = await wallet.signTransactions(transactions, 0)
+        const executeTxData = bundleWithDeploy(wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature]))
+        const realTx = await guestModule.execute(executeTxData, 0, [])
 
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
-        const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, [])
-        expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(await gasUsedFor(realTx), 5000)
+        expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
       })
     })
 
-    const options = [{
+    ;([{
       name: "single signer",
       signers: 1
     }, {
       name: "many signers",
       signers: 32
-    }]
-
-    options.map((o) => {
-      context(`with wallet deployed and ${o.name}`, () => {
-        let wallet: MainModuleGasEstimation
-
-        let owners: ethers.Wallet[]
-        let config: { weight: number, address: string }[]
-        let threshold: number
-
-        let accounts: { weight: number, owner: ethers.Wallet }[]
-        let fakeAccounts: { weight: number, owner: ethers.Wallet }[]
-  
+    }]).map((o) => {
+      describe(`with wallet deployed and ${o.name}`, () => {
         beforeEach(async () => {
-
-          threshold = o.signers
-
-          owners = new Array(o.signers).fill(0).map(() => ethers.Wallet.createRandom())
-          config = owners.map((o) => ({ weight: 1, address: o.address }))
-          salt = encodeImageHash(threshold, config)
-          address = addressOf(factory.address, mainModule.address, salt)
-
-          await factory.deploy(mainModule.address, salt)
-
-          wallet = mainModuleGasEstimationFactory.attach(address)
-
-          accounts = owners.map((c) => ({ weight: 1, owner: c }))
-          fakeAccounts = owners.map((c) => ({ weight: 1, owner: ethers.Wallet.createRandom() }))
+          wallet = SequenceWallet.basicWallet(context, { signing: o.signers })
+          await wallet.deploy()
         })
   
         it('Should estimate single transaction', async () => {
-          const transaction = [{
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
+          const transactions = [{
             target: callReceiver.address,
-            value: ethers.constants.Zero,
             data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }]
+    
+          const estimated = await estimateGasUsage(transactions, wallet)
+          const gasUsed = await wallet.sendTransactions(transactions).then((t) => t.wait()).then((r) => r.gasUsed.toNumber())
   
-          const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
-  
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
-          const gasUsed = await gasUsedFor(multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0))
-  
-          expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 5000)
+          expect(estimated).to.approximately(gasUsed, 5000)
         })
+
         it('Should estimate multiple transactions', async () => {
-          const transaction = [{
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
+          const transactions = [{
             target: callReceiver.address,
-            value: ethers.constants.Zero,
             data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }, {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
             target: callReceiver.address,
-            value: ethers.constants.Zero,
             data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
           }]
   
-          const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
+          const estimated = await estimateGasUsage(transactions, wallet)
+          const gasUsed = await wallet.sendTransactions(transactions).then((t) => t.wait()).then((r) => r.gasUsed.toNumber())  
   
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
-          const gasUsed = await gasUsedFor(multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0))
-  
-          // TODO: The estimator overEstimates the gas usage due to the gas refund
-          expect(gasUsed).to.be.below(estimated + txBaseCost(txDataNoSignature))
-          // expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 5000)
-        })
-        it('Should estimate multiple transactions with bad nonce', async () => {
-          const transaction = [{
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
-            target: callReceiver.address,
-            value: ethers.constants.Zero,
-            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
-          }, {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
-            target: callReceiver.address,
-            value: ethers.constants.Zero,
-            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
-          }]
-  
-          const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId, 999999999)
-  
-          const estimated = ((await estimate(address, txDataNoSignature).call()).gas).toNumber()
-          const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0)
-          const gasUsed = await gasUsedFor(tx)
-  
-          // TODO: The estimator overEstimates the gas usage due to the gas refund
-          expect(gasUsed).to.be.below(estimated + txBaseCost(txDataNoSignature))
-          // expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 4000)
-        })
-        it('Should estimate multiple transactions with failing transactions', async () => {
-          const altCallReceiver = await callReceiverMockFactory.deploy()
-          await altCallReceiver.setRevertFlag(true)
-  
-          const transaction = [{
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
-            target: callReceiver.address,
-            value: ethers.constants.Zero,
-            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
-          }, {
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
-            target: callReceiver.address,
-            value: ethers.constants.Zero,
-            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
-          }, {
-            delegateCall: false,
-            revertOnError: false,
-            gasLimit: 0,
-            target: altCallReceiver.address,
-            value: ethers.constants.Zero,
-            data: altCallReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(229))])
-          }]
-  
-          const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
-
-          const gasUsed = await gasUsedFor(multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0))
-
           // TODO: The estimator overEstimates the gas usage due to the gas refund
           expect(gasUsed).to.be.below(estimated)
-          // expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 8000)
         })
-        it('Should estimate multiple transactions with failing transactions and fixed gas limits', async () => {
-          const altCallReceiver = await callReceiverMockFactory.deploy()
-          await altCallReceiver.setRevertFlag(true)
-  
-          const transaction = [{
-            delegateCall: false,
-            revertOnError: true,
-            gasLimit: 0,
+
+        it('Should estimate multiple transactions with bad nonce', async () => {
+          const transactions = [{
             target: callReceiver.address,
-            value: ethers.constants.Zero,
             data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }, {
-            delegateCall: false,
-            revertOnError: false,
-            gasLimit: 90000,
             target: callReceiver.address,
-            value: ethers.constants.Zero,
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
+          }]
+  
+          const estimated = await estimateGasUsage(transactions, wallet, false, 999999999)
+          const gasUsed = await wallet.sendTransactions(transactions).then((t) => t.wait()).then((r) => r.gasUsed.toNumber())  
+  
+          // TODO: The estimator overEstimates the gas usage due to the gas refund
+          expect(gasUsed).to.be.below(estimated)
+        })
+
+        it('Should estimate multiple transactions with failing transactions', async () => {
+          const altCallReceiver = await CallReceiverMock.deploy()
+          await altCallReceiver.setRevertFlag(true)
+  
+          const transactions = [{
+            target: callReceiver.address,
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
+          }, {
+            target: callReceiver.address,
             data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
           }, {
-            delegateCall: false,
             revertOnError: false,
-            gasLimit: 0,
             target: altCallReceiver.address,
-            value: ethers.constants.Zero,
             data: altCallReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(229))])
           }]
   
-          const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
-  
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
-          const gasUsed = await gasUsedFor(multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0))
+          const estimated = await estimateGasUsage(transactions, wallet)
+          const gasUsed = await wallet.sendTransactions(transactions).then((t) => t.wait()).then((r) => r.gasUsed.toNumber())  
   
           // TODO: The estimator overEstimates the gas usage due to the gas refund
-          expect(gasUsed).to.be.below(estimated + txBaseCost(txDataNoSignature))
-          // expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 8000)
+          expect(gasUsed).to.be.below(estimated)
+        })
+
+        it('Should estimate multiple transactions with failing transactions and fixed gas limits', async () => {
+          const altCallReceiver = await CallReceiverMock.deploy()
+          await altCallReceiver.setRevertFlag(true)
+  
+          const transactions = [{
+            target: callReceiver.address,
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
+          }, {
+            gasLimit: 90000,
+            target: callReceiver.address,
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(12))])
+          }, {
+            revertOnError: false,
+            target: altCallReceiver.address,
+            data: altCallReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(229))])
+          }]
+  
+          const estimated = await estimateGasUsage(transactions, wallet)
+          const gasUsed = await wallet.sendTransactions(transactions).then((t) => t.wait()).then((r) => r.gasUsed.toNumber())  
+  
+          // TODO: The estimator overEstimates the gas usage due to the gas refund
+          expect(gasUsed).to.be.below(estimated)
         })
       })
     })

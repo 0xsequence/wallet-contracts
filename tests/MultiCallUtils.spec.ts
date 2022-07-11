@@ -1,22 +1,17 @@
 import * as ethers from 'ethers'
-import { expect, b, expectStaticToBeRejected, encodeError } from './utils'
+
 import { ethers as hethers } from 'hardhat'
-
-import { MultiCallUtils, CallReceiverMock, CallReceiverMock__factory } from 'src/gen/typechain'
-
-ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
+import { b, CHAIN_ID, encodeError, expect, expectStaticToBeRejected } from './utils'
+import { CallReceiverMock, ContractType, MultiCallUtils } from './utils/contracts'
+import { applyTxDefault, applyTxDefaults } from './utils/sequence'
 
 contract('Multi call utils', (accounts: string[]) => {
-  let callReceiverMockFactory: CallReceiverMock__factory
-
-  let multiCall: MultiCallUtils
-  let callReceiver: CallReceiverMock
+  let multiCall: ContractType<typeof MultiCallUtils>
+  let callReceiver: ContractType< typeof CallReceiverMock>
 
   before(async () => {
-    callReceiverMockFactory = await hethers.getContractFactory('CallReceiverMock') as CallReceiverMock__factory
-
-    multiCall = await (await hethers.getContractFactory('MultiCallUtils')).deploy() as MultiCallUtils
-    callReceiver = await callReceiverMockFactory.deploy()
+    multiCall = await MultiCallUtils.deploy()
+    callReceiver = await CallReceiverMock.deploy()
   })
 
   beforeEach(async () => {
@@ -32,16 +27,11 @@ contract('Multi call utils', (accounts: string[]) => {
     })
     it('Should execute single call', async () => {
       await callReceiver.testCall(5123, [])
-      const res = await multiCall.callStatic.multiCall([
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        }
-      ])
+      const res = await multiCall.callStatic.multiCall(applyTxDefaults([{
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValA')
+      }]))
 
       expect(res[0].length).to.equal(1)
       expect(res[1].length).to.equal(1)
@@ -52,24 +42,15 @@ contract('Multi call utils', (accounts: string[]) => {
       const bytes = ethers.utils.randomBytes(422)
 
       await callReceiver.testCall(55522, bytes)
-      const res = await multiCall.callStatic.multiCall([
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        },
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValB'),
-          gasLimit: 0,
-          value: 0
-        }
-      ])
+      const res = await multiCall.callStatic.multiCall(applyTxDefaults([{
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValA')
+      }, {
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValB')
+      }]))
 
       expect(res[0].length).to.equal(2)
       expect(res[1].length).to.equal(2)
@@ -79,38 +60,25 @@ contract('Multi call utils', (accounts: string[]) => {
       expect(ethers.utils.defaultAbiCoder.decode(['bytes'], res[1][1])[0]).to.be.equal(ethers.utils.hexlify(bytes))
     })
     it('Should execute calls to multiple contracts', async () => {
-      const callReceiver2 = await callReceiverMockFactory.deploy()
+      const callReceiver2 = await CallReceiverMock.deploy()
       const bytes = ethers.utils.hexlify(ethers.utils.randomBytes(21))
 
       await callReceiver.testCall(55522, bytes)
       await callReceiver2.testCall(66623, [])
 
-      const res = await multiCall.callStatic.multiCall([
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        },
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValB'),
-          gasLimit: 0,
-          value: 0
-        },
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver2.address,
-          data: callReceiver2.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        }
-      ])
+      const res = await multiCall.callStatic.multiCall(applyTxDefaults([{
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValA')
+      }, {
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValB')
+      }, {
+        revertOnError: false,
+        target: callReceiver2.address,
+        data: callReceiver2.interface.encodeFunctionData('lastValA')
+      }]))
 
       expect(res[0].length).to.equal(3)
       expect(res[1].length).to.equal(3)
@@ -127,24 +95,15 @@ contract('Multi call utils', (accounts: string[]) => {
       await callReceiver.testCall(55522, bytes)
       await callReceiver.setRevertFlag(true)
 
-      const res = await multiCall.callStatic.multiCall([
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        },
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes]),
-          gasLimit: 0,
-          value: 0
-        }
-      ])
+      const res = await multiCall.callStatic.multiCall(applyTxDefaults([{
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValA')
+      }, {
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes])
+      }]))
 
       expect(res[0].length).to.equal(2)
       expect(res[1].length).to.equal(2)
@@ -158,24 +117,15 @@ contract('Multi call utils', (accounts: string[]) => {
       await callReceiver.testCall(55522, bytes)
       await callReceiver.setRevertFlag(true)
 
-      const tx = multiCall.callStatic.multiCall([
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        },
-        {
-          delegateCall: false,
-          revertOnError: true,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes]),
-          gasLimit: 0,
-          value: 0
-        }
-      ])
+      const tx = multiCall.callStatic.multiCall(applyTxDefaults([{
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValA')
+      }, {
+        revertOnError: true,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes])
+      }]))
 
       await expectStaticToBeRejected(tx, `CallReverted(uint256,bytes)`, 1, encodeError("CallReceiverMock#testCall: REVERT_FLAG"))
     })
@@ -184,24 +134,16 @@ contract('Multi call utils', (accounts: string[]) => {
 
       await callReceiver.testCall(55522, bytes)
 
-      const tx = multiCall.callStatic.multiCall([
-        {
-          delegateCall: true,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        },
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes]),
-          gasLimit: 0,
-          value: 0
-        }
-      ])
+      const tx = multiCall.callStatic.multiCall(applyTxDefaults([{
+        delegateCall: true,
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValA')
+      }, {
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes])
+      }]))
 
       await expectStaticToBeRejected(tx, `DelegateCallNotAllowed(uint256)`, 0)
     })
@@ -210,26 +152,18 @@ contract('Multi call utils', (accounts: string[]) => {
 
       await callReceiver.testCall(55522, bytes)
 
-      const tx = multiCall.callStatic.multiCall([
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('lastValA'),
-          gasLimit: 0,
-          value: 0
-        },
-        {
-          delegateCall: false,
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes]),
-          gasLimit: b(2)
-            .pow(256)
-            .sub(b(1)),
-          value: 0
-        }
-      ])
+      const tx = multiCall.callStatic.multiCall(applyTxDefaults([{
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('lastValA')
+      }, {
+        revertOnError: false,
+        target: callReceiver.address,
+        data: callReceiver.interface.encodeFunctionData('testCall', [111, bytes]),
+        gasLimit: b(2)
+          .pow(256)
+          .sub(b(1))
+      }]))
 
       await expectStaticToBeRejected(tx, `NotEnoughGas(uint256,uint256)`, b(2).pow(256).sub(b(1)), '*')
     })
@@ -260,14 +194,11 @@ contract('Multi call utils', (accounts: string[]) => {
         i.encodeFunctionData('callCodeHash', [accounts[0]]),
         i.encodeFunctionData('callCodeHash', [callReceiver.address]),
         i.encodeFunctionData('callChainId')
-      ].map(data => ({
-        delegateCall: false,
+      ].map(data => (applyTxDefault({
         revertOnError: false,
         target: multiCall.address,
-        data,
-        value: 0,
-        gasLimit: 0
-      }))
+        data
+      })))
 
       const res = await multiCall.callStatic.multiCall(txs, { gasPrice: 1 })
 
@@ -308,8 +239,7 @@ contract('Multi call utils', (accounts: string[]) => {
       expect(res[1][15]).to.not.equal(emptyBytes32)
       expect(res[1][16]).to.not.equal(emptyBytes32)
 
-      const chainId = process.env.NET_ID ? parseInt(process.env.NET_ID) : hethers.provider.network.chainId
-      expect(ethers.utils.defaultAbiCoder.decode(['uint256'], res[1][17])[0].toNumber()).to.equal(chainId, 'return chain id')
+      expect(ethers.utils.defaultAbiCoder.decode(['uint256'], res[1][17])[0].toNumber()).to.equal(CHAIN_ID(), 'return chain id')
     })
   })
 })

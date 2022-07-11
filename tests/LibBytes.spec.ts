@@ -1,18 +1,13 @@
-import { ethers as hethers } from 'hardhat'
 import * as ethers from 'ethers'
+
 import { expect, expectStaticToBeRejected, randomHex } from './utils'
-
-import { LibBytesImpl, LibBytesImpl__factory } from 'src/gen/typechain'
-
-ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
-
+import { ContractType, LibBytesImpl } from './utils/contracts'
 
 contract('LibBytes', () => {
-  let libBytes: LibBytesImpl
+  let libBytes: ContractType<typeof LibBytesImpl>
 
   before(async () => {
-    const factory = await hethers.getContractFactory('LibBytesImpl') as LibBytesImpl__factory
-    libBytes = await factory.deploy()
+    libBytes = await LibBytesImpl.deploy()
   })
 
   describe('readFirstUint16', () => {
@@ -175,7 +170,7 @@ contract('LibBytes', () => {
   })
 
   describe('readBytes66', () => {
-    let bytes66
+    let bytes66: string
     beforeEach(async () => {
       bytes66 = randomHex(66)
     })
@@ -214,7 +209,7 @@ contract('LibBytes', () => {
   })
 
   describe('readBytes32', () => {
-    let bytes32
+    let bytes32: string
     beforeEach(async () => {
       bytes32 = randomHex(32)
     })
@@ -306,8 +301,8 @@ contract('LibBytes', () => {
   })
 
   describe('readBytes', () => {
-    let size
-    let bytes
+    let size: number
+    let bytes: string
 
     const modes = [{
       name: "Big bytes",

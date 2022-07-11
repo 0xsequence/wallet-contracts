@@ -1,9 +1,7 @@
-import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf, addressOf } from './utils'
-import { MainModule, MainModuleUpgradable, Factory, ERC165CheckerMock, Factory__factory, MainModule__factory, MainModuleUpgradable__factory, ERC165CheckerMock__factory } from 'src/gen/typechain'
-import { ethers as hethers } from 'hardhat'
 import * as ethers from 'ethers'
-
-ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
+import { ContractType, deploySequenceContext, ERC165CheckerMock, SequenceContext } from './utils/contracts'
+import { SequenceWallet } from './utils/wallet'
+import { expect, interfaceIdOf, randomHex } from './utils'
 
 const interfaceIds = [
   'IModuleHooks',
@@ -18,39 +16,18 @@ const interfaceIds = [
 ]
 
 contract('ERC165', () => {
-  let factoryFactory: Factory__factory
-  let mainModuleFactory: MainModule__factory
-  let mainModuleUpgradableFactory: MainModuleUpgradable__factory
-  let erc165CheckerMockFactory: ERC165CheckerMock__factory
-
-  let factory: Factory
-  let module: MainModule
-  let moduleUpgradable: MainModuleUpgradable
-  let erc165checker: ERC165CheckerMock
-
-  let owner: ethers.Wallet
-  let wallet: MainModule | MainModuleUpgradable
-  let networkId: ethers.BigNumberish
+  let context: SequenceContext
+  let erc165checker: ContractType<typeof ERC165CheckerMock>
+  let wallet: SequenceWallet
 
   before(async () => {
-    factoryFactory = await hethers.getContractFactory('Factory') as Factory__factory
-    mainModuleFactory = await hethers.getContractFactory('MainModule') as MainModule__factory
-    mainModuleUpgradableFactory = await hethers.getContractFactory('MainModuleUpgradable') as MainModuleUpgradable__factory
-    erc165CheckerMockFactory = await hethers.getContractFactory('ERC165CheckerMock') as ERC165CheckerMock__factory
-  
-    factory = await factoryFactory.deploy()
-    moduleUpgradable = await mainModuleUpgradableFactory.deploy()
-    module = await mainModuleFactory.deploy(factory.address, moduleUpgradable.address)
-    erc165checker = await erc165CheckerMockFactory.deploy()
-
-    networkId = process.env.NET_ID ? process.env.NET_ID : hethers.provider.network.chainId
+    context = await deploySequenceContext()
+    erc165checker = await ERC165CheckerMock.deploy()
   })
 
   beforeEach(async () => {
-    owner = new ethers.Wallet(ethers.utils.randomBytes(32))
-    const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
-    await factory.deploy(module.address, salt)
-    wallet = mainModuleFactory.attach(addressOf(factory.address, module.address, salt))
+    wallet = SequenceWallet.basicWallet(context)
+    await wallet.deploy()
   })
 
   describe('Implement all interfaces for ERC165 on MainModule', () => {
@@ -66,32 +43,7 @@ contract('ERC165', () => {
   })
   describe('Implement all interfaces for ERC165 on MainModuleUpgradable', () => {
     beforeEach(async () => {
-      const newOwner = new ethers.Wallet(ethers.utils.randomBytes(32))
-      const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwner.address }])
-
-      const newWallet = mainModuleUpgradableFactory.attach(wallet.address)
-
-      const migrateTransactions = [
-        {
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: ethers.constants.Two.pow(21),
-          target: wallet.address,
-          value: ethers.constants.Zero,
-          data: wallet.interface.encodeFunctionData('updateImplementation', [moduleUpgradable.address])
-        },
-        {
-          delegateCall: false,
-          revertOnError: true,
-          gasLimit: ethers.constants.Two.pow(21),
-          target: wallet.address,
-          value: ethers.constants.Zero,
-          data: newWallet.interface.encodeFunctionData('updateImageHash', [newImageHash])
-        }
-      ]
-
-      await signAndExecuteMetaTx(wallet, owner, migrateTransactions, networkId)
-      wallet = newWallet
+      await wallet.updateImageHash(randomHex(32))
     })
 
     interfaceIds.concat('IModuleAuthUpgradable').forEach(element => {
