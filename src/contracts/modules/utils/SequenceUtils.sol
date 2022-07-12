@@ -9,12 +9,4 @@ import "./RequireUtils.sol";
 contract SequenceUtils is 
   MultiCallUtils,
   RequireUtils
-{
-  constructor(
-    address _factory,
-    address _mainModule
-  ) RequireUtils(
-    _factory,
-    _mainModule
-  ) {}
-}
+{ }
