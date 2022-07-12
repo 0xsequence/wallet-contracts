@@ -1,22 +1,19 @@
 {
-  "name": "root",
+  "name": "@0xsequence/wallet-contracts",
+  "version": "2.0.0-alpha",
   "private": true,
-  "workspaces": [
-    "src"
-  ],
   "license": "Apache-2.0",
   "scripts": {
-    "build": "yarn clean && yarn compile && yarn adapter",
-    "clean": "rimraf src/artifacts && rimraf src/gen && rimraf cache",
+    "postinstall": "yarn build",
+    "build": "yarn compile && yarn adapter",
     "compile": "hardhat --max-memory 4096 compile",
-    "adapter": "yarn adapter:gen && yarn adapter:build",
-    "adapter:gen": "rimraf src/gen/typechain && typechain --target ethers-v5 --out-dir src/gen/typechain './src/artifacts/contracts/**/*[^dbg].json'",
-    "adapter:build": "rimraf src/gen/adapter && tsc ./src/gen/typechain/index.ts --outDir ./src/gen/adapter",
-    "test": "yarn build && hardhat test",
-    "quicktest": "hardhat test",
-    "precoverage": "yarn build",
-    "coverage": "COVERAGE=true NET_ID=1 hardhat coverage --network coverage",
+    "clean": "rimraf artifacts && rimraf cache",
+    "test": "hardhat test",
     "benchmark": "BENCHMARK=true yarn test",
+    "coverage": "COVERAGE=true NET_ID=1 hardhat coverage --network coverage",
+    "deploy": "hardhat run utils/deploy-contracts.ts --network",
+    "verify": "hardhat verify --network",
+    "release": "yarn publish src",
     "lint": "yarn lint:ts && yarn lint:sol",
     "lint:fix": "yarn lint:ts:fix && yarn lint:sol:fix",
     "lint:sol": "solhint './src/contracts/**/*.sol'",
@@ -24,14 +21,10 @@
     "lint:ts": "eslint -c .eslintrc.js './**/*.ts'",
     "lint:ts:fix": "eslint -c .eslintrc.js --fix './**/*.ts'",
     "format": "prettier --write ./**/*.ts",
-    "start:ganache": "ganache-cli --chainId ${npm_package_config_ganacheChainID} --networkId ${npm_package_config_ganacheChainID} --port ${npm_package_config_ganachePort} --gasLimit ${npm_package_config_ganacheGasLimit} --gasPrice ${npm_package_config_ganacheGasPrice} --defaultBalanceEther ${npm_package_config_etherBalance} --deterministic --mnemonic \"${npm_package_config_mnemonic}\" ${npm_package_config_extra}",
-    "start:ganache:verbose": "yarn run start:ganache --verbose",
-    "stop:ganache": "ps aux | grep ganache-cli | grep -v grep | awk '{print $2}' | xargs kill -9",
-    "deploy:ganache": "hardhat run --network ganache utils/deploy-contracts.ts",
-    "deploy": "hardhat run utils/deploy-contracts.ts --network",
-    "verify": "hardhat verify --network",
-    "release": "yarn publish src"
+    "adapter": "rimraf gen && typechain --target ethers-v5 --out-dir gen/typechain './artifacts/contracts/**/*[^dbg].json'"
   },
+  "main": "gen/adapter/index.js",
+  "types": "gen/typechain/index.ts",
   "husky": {
     "hooks": {
       "pre-commit": "yarn lint",

@@ -12,3 +12,7 @@ coverage
 coverage.json
 
 config/*.env
+
+artifacts
+cache
+gen

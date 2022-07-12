@@ -1,6 +1,6 @@
 import * as ethers from "ethers"
 import { ethers as hethers } from "hardhat"
-import * as t from "src/gen/typechain"
+import * as t from "gen/typechain"
 
 const cachedFactories: { [name: string]: ethers.ContractFactory } = {}
 

@@ -28,10 +28,6 @@ const config: HardhatUserConfig = {
       }
     }
   },
-  paths: {
-    root: 'src',
-    tests: '../tests'
-  },
   networks: {
     mainnet: networkConfig('mainnet'),
     ropsten: networkConfig('ropsten'),
