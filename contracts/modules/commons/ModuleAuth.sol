@@ -9,101 +9,79 @@ import "./interfaces/IModuleAuth.sol";
 
 import "./ModuleERC165.sol";
 
-import "./submodules/auth/SubModuleAuth.sol";
-import "./submodules/auth/SubModuleAuthLegacy.sol";
-import "./submodules/auth/SubModuleAuthDynamic.sol";
-import "./submodules/auth/SubModuleAuthLazyOctopus.sol";
+import "./submodules/auth/SequenceBaseSig.sol";
+import "./submodules/auth/SequenceDynamicSig.sol";
+import "./submodules/auth/SequenceNoChainIdSig.sol";
+import "./submodules/auth/SequenceChainedSig.sol";
 
-/**
-  Signature encoding:
 
-  First byte defines the type:
-
-  - 0x00 for v1 -(Legacy)
-  - 0x01 for v2 - Dynamic legacy (legacy with thershold above 255, it's legacy shifted by 8 bits)
-  - 0x02 for v3 - Dynamic v2 without chainId on subDigest (uses zero)
-
-  Type 0x00 and 0x01:
-  
-    The signature must be solidity packed and contain the total number of owners,
-    the threshold, the weight and either the address or a signature for each owner.
-    Each weight & (address or signature) pair is prefixed by a flag that signals if such pair
-    contains an address or a signature. The aggregated weight of the signatures must surpass the threshold.
-
-    Flag types:
-      0x00 - Signature
-      0x01 - Address
-
-    E.g:
-      abi.encodePacked(
-        uint16 threshold,
-        uint8 01,  uint8 weight_1, address signer_1,
-        uint8 00, uint8 weight_2, bytes signature_2,
-        ...
-        uint8 01,  uint8 weight_5, address signer_5
-      )
-*/
 abstract contract ModuleAuth is
   IModuleAuth,
   ModuleERC165,
-  SignatureValidator,
   IERC1271Wallet,
-  SubModuleAuth,
-  SubModuleAuthLegacy,
-  SubModuleAuthDynamic,
-  SubModuleAuthLazyOctopus
+  SequenceChainedSig
 {
   using LibBytes for bytes;
 
-  uint256 private constant FLAG_SIGNATURE = 0;
-  uint256 private constant FLAG_ADDRESS = 1;
-  uint256 private constant FLAG_DYNAMIC_SIGNATURE = 2;
+  bytes1 private constant LEGACY_TYPE = hex"00";
+  bytes1 private constant DYNAMIC_TYPE = hex"01";
+  bytes1 private constant NO_CHAIN_ID_TYPE = hex"02";
+  bytes1 private constant CHAINED_TYPE = hex"03";
 
   bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
 
-  /**
-   * @notice Verify if signer is default wallet owner
-   * @param _digest     Digest of the signed message
-   * @param _signature  Array of signatures with signers ordered
-   *                    like the the keys in the multisig configs
-   */
+  function signatureRecovery(
+    bytes32 _digest,
+    bytes calldata _signature
+  ) public override virtual view returns (
+    uint256 threshold,
+    uint256 weight,
+    bytes32 imageHash,
+    bytes32 subDigest
+  ) {
+    bytes1 signatureType = _signature[0];
+
+    if (signatureType == LEGACY_TYPE) {
+      // networkId digest + base recover
+      subDigest = SequenceBaseSig.subDigest(_digest);
+      (threshold, weight, imageHash) = SequenceBaseSig.recover(subDigest, _signature);
+      return (threshold, weight, imageHash, subDigest);
+    }
+
+    if (signatureType == DYNAMIC_TYPE) {
+      // noChainId digest + dynamic recovery
+      subDigest = SequenceBaseSig.subDigest(_digest);
+      (threshold, weight, imageHash) = SequenceDynamicSig.recover(subDigest, _signature);
+      return (threshold, weight, imageHash, subDigest);
+    }
+
+    if (signatureType == NO_CHAIN_ID_TYPE) {
+      // networkId digest + dynamic recover
+      subDigest = SequenceNoChainIdSig.subDigest(_digest);
+      (threshold, weight, imageHash) = SequenceDynamicSig.recover(subDigest, _signature);
+      return (threshold, weight, imageHash, subDigest);
+    }
+
+    if (signatureType == CHAINED_TYPE) {
+      // original digest + chained recover
+      // (subdigest will be computed in the chained recovery)
+      return chainedRecover(_digest, _signature);
+    }
+
+    revert InvalidSignatureType(signatureType);
+  }
+
   function _signatureValidation(
     bytes32 _digest,
     bytes calldata _signature
-  ) internal override virtual view returns (bool isValid, bytes32 subDigest) {
-    unchecked {
-      // Get signature type
-      (uint8 signatureType, uint256 rindex) = _signature.cReadFirstUint8();
-
-      // Signature validation dispatcher
-
-      // Signature type 0x00 - Legacy
-      // SubModuleAuthLegacy.sol
-      if (signatureType == LEGACY_TYPE) {
-        return _recoverLegacySignature(_signature, _digest, rindex);
-      }
-
-      // Signature type 0x01 - Dynamic
-      // SubModuleAuthDynamic.sol
-      if (signatureType == DYNAMIC_TYPE) {
-        return _recoverDynamicSignature(_signature, _digest, rindex);
-      }
-
-      // Signature type 0x02 - Dynamic v2 without chainId on subDigest
-      // SubModuleAuthDynamic.sol
-      if (signatureType == DYNAMIC_NO_CHAIN_ID_TYPE) {
-        return _recoverDynamicNoChainIdSignature(_signature, _digest, rindex);
-      }
-
-      // Signature type 0x03 - Prefixed with LazyOctopus transactions
-      // SubModuleAuthLazyOctopus.sol
-      if (signatureType == LAZY_OCTOPUS_TYPE) {
-        return _recoverLazyOctopusSignature(_signature, _digest, rindex);
-      }
-
-      revert InvalidSignatureType(signatureType);
-    }
+  ) internal override virtual view returns (
+    bool isValid,
+    bytes32 subDigest
+  ) {
+    uint256 threshold; uint256 weight; bytes32 imageHash;
+    (threshold, weight, imageHash, subDigest) = signatureRecovery(_digest, _signature);
+    isValid = weight >= threshold && _isValidImage(imageHash);
   }
 
   /**
@@ -111,11 +89,11 @@ abstract contract ModuleAuth is
    * @param _digest Pre-final digest
    * @return hashed data for this wallet
    */
-  function _subDigest(bytes32 _digest, uint256 _chanId) internal override virtual view returns (bytes32) {
+  function _subDigest(bytes32 _digest, uint256 _chainId) internal override virtual view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
-        _chanId,
+        _chainId,
         address(this),
         _digest
       )

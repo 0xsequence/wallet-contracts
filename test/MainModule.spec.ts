@@ -519,7 +519,8 @@ contract('MainModule', (accounts: string[]) => {
 
     it('Should reject signature with bad encoding type', async () => {
       const tx = wallet.relayTransactions([{}], '0x2012')
-      await expectToBeRejected(tx, 'InvalidSignatureType(32)')
+      const subDigest = subDigestOf(wallet.address, digestOf([{}], 0))
+      await expectToBeRejected(tx, `InvalidSignatureType("0x20")`)
     })
   })
 

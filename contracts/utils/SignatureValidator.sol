@@ -10,7 +10,7 @@ import "./LibBytes.sol";
  * Signatures from wallet contracts assume ERC-1271 support (https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1271.md)
  * Notes: Methods are strongly inspired by contracts in https://github.com/0xProject/0x-monorepo/blob/development/
  */
-contract SignatureValidator {
+library SignatureValidator {
   // Errors
   error InvalidSignatureLength(bytes _signature);
   error InvalidSValue(bytes _signature, bytes32 _s);

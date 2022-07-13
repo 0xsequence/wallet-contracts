@@ -9,10 +9,8 @@ abstract contract IModuleAuth {
   event ImageHashUpdated(bytes32 newImageHash);
 
   // Errors
-  error InvalidNestedSignature(bytes32 _hash, address _addr, bytes _signature);
-  error InvalidSignatureFlag(uint256 _flag);
-  error InvalidSignatureType(uint256 _type);
   error ImageHashIsZero();
+  error InvalidSignatureType(bytes1 _type);
 
   /**
    * @notice Hashed _data to be signed
@@ -25,16 +23,24 @@ abstract contract IModuleAuth {
     uint256 _chainId
   ) internal virtual view returns (bytes32);
 
-  /**
-   * @notice Verify if signer is default wallet owner
-   * @param _digest Digest of the signed message
-   * @param _signature Encoded signature
-   * @return True is the signature is valid
-   */
+
   function _signatureValidation(
     bytes32 _digest,
     bytes calldata _signature
-  ) internal virtual view returns (bool, bytes32);
+  ) internal virtual view returns (
+    bool isValid,
+    bytes32 subDigest
+  );
+
+  function signatureRecovery(
+    bytes32 _digest,
+    bytes calldata _signature
+  ) public virtual view returns (
+    uint256 threshold,
+    uint256 weight,
+    bytes32 imageHash,
+    bytes32 subDigest
+  );
 
   /**
    * @notice Validates the signature image

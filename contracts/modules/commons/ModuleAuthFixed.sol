@@ -15,7 +15,7 @@ import "../../Wallet.sol";
  *  This module allows wallets to be deployed with a default configuration
  *  without using any aditional contract storage
  */
-abstract contract ModuleAuthFixed is ModuleAuth, ModuleSelfAuth, ModuleUpdate {
+abstract contract ModuleAuthFixed is ModuleSelfAuth, ModuleAuth, ModuleUpdate {
   bytes32 public immutable INIT_CODE_HASH;
   address public immutable FACTORY;
   address public immutable UPGRADEABLE_IMPLEMENTATION;

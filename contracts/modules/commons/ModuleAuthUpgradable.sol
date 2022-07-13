@@ -8,7 +8,7 @@ import "./ModuleAuth.sol";
 import "./ModuleStorage.sol";
 
 
-abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, ModuleSelfAuth {
+abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleSelfAuth, ModuleAuth {
   /**
    * @notice Updates the signers configuration of the wallet
    * @param _imageHash New required image hash of the signature
