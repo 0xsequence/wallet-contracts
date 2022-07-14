@@ -51,13 +51,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
     bytes32 imageHash,
     bytes32 subDigest
   ) {
-
-    // first byte is signature type
     uint256 rindex = 1;
-
-    bytes32 nextDigest = _digest;
-
-    bytes32 thisSubDigest;
     uint256 sigSize;
 
     //
@@ -72,8 +66,11 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
       threshold,
       weight,
       imageHash,
-      thisSubDigest
-    ) = signatureRecovery(nextDigest, _signature[rindex:nrindex]);
+      subDigest
+    ) = signatureRecovery(
+      _digest,
+      _signature[rindex:nrindex]
+    );
 
     if (weight < threshold) {
       revert LowWeightChainedSignature(_signature[rindex:nrindex], threshold, weight);
@@ -81,23 +78,23 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
 
     rindex = nrindex;
 
+    uint256 prevCheckpoint = type(uint256).max;
+
     //
     // Afterward signatures are handled by this loop
     // this is done this way because the last signature does not have a
     // checkpoint
     //
     while (rindex < _signature.length) {
-      uint256 checkpoint;
-
       // Next uint64 is the checkpoint
       // (this won't exist on the last signature)
-      (checkpoint, rindex) = _signature.cReadUint64(rindex);
-
-      if (subDigest == bytes32(0)) {
-        subDigest = thisSubDigest;
+      uint256 checkpoint; (checkpoint, rindex) = _signature.cReadUint64(rindex);
+      if (checkpoint > prevCheckpoint) {
+        revert WrongChainedCheckpointOrder(checkpoint, prevCheckpoint);
       }
 
-      nextDigest = _hashSetImagehashStruct(imageHash, checkpoint);
+      prevCheckpoint = checkpoint;
+
 
       // First uint16 is the size of the signature
       (sigSize, rindex) = _signature.cReadUint16(rindex);
@@ -107,9 +104,14 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
         threshold,
         weight,
         imageHash,
-        thisSubDigest
-      ) = signatureRecovery(nextDigest, _signature[rindex:nrindex]);
+        // Don't change the subdigest
+        // it should remain the first signature
+      ) = signatureRecovery(
+        _hashSetImagehashStruct(imageHash, checkpoint),
+        _signature[rindex:nrindex]
+      );
 
+      // Validate signature
       if (weight < threshold) {
         revert LowWeightChainedSignature(_signature[rindex:nrindex], threshold, weight);
       }
