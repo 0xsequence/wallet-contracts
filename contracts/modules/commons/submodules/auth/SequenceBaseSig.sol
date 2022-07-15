@@ -1,11 +1,11 @@
 pragma solidity 0.8.14;
 
 import "../../../../utils/SignatureValidator.sol";
-import "../../../../utils/LibBytes.sol";
+import "../../../../utils/LibBytesPointer.sol";
 
 
 library SequenceBaseSig {
-  using LibBytes for bytes;
+  using LibBytesPointer for bytes;
   
   uint256 private constant FLAG_SIGNATURE = 0;
   uint256 private constant FLAG_ADDRESS = 1;
@@ -37,7 +37,7 @@ library SequenceBaseSig {
   ) {
     unchecked {
       uint256 rindex = 0;
-      (threshold, rindex) = _signature.cReadUint16(rindex);
+      (threshold, rindex) = _signature.readFirstUint16();
 
       // Start image hash generation
       imageHash = bytes32(uint256(threshold));
@@ -46,11 +46,11 @@ library SequenceBaseSig {
       while (rindex < _signature.length) {
         // Read next item type and addrWeight
         uint256 flag; uint256 addrWeight; address addr;
-        (flag, addrWeight, rindex) = _signature.cReadUint8Uint8(rindex);
+        (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
 
         if (flag == FLAG_ADDRESS) {
           // Read plain address
-          (addr, rindex) = _signature.cReadAddress(rindex);
+          (addr, rindex) = _signature.readAddress(rindex);
 
         } else if (flag == FLAG_SIGNATURE) {
           // Read single signature and recover signer
@@ -62,10 +62,10 @@ library SequenceBaseSig {
           weight += addrWeight;
         } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
           // Read signer
-          (addr, rindex) = _signature.cReadAddress(rindex);
+          (addr, rindex) = _signature.readAddress(rindex);
           // Read signature size
           uint256 size;
-          (size, rindex) = _signature.cReadUint16(rindex);
+          (size, rindex) = _signature.readUint16(rindex);
 
           // Read dynamic size signature
           uint256 nrindex = rindex + size;

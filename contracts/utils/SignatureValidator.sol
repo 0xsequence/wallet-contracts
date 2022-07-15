@@ -50,12 +50,12 @@ library SignatureValidator {
     bytes calldata _signature
   ) internal pure returns (address signer) {
     if (_signature.length != 66) revert InvalidSignatureLength(_signature);
-    uint256 signatureType = _signature.mcReadUint8(_signature.length - 1);
+    uint256 signatureType = _signature.readUint8(_signature.length - 1);
 
     // Variables are not scoped in Solidity.
-    uint8 v = _signature.mcReadUint8(64);
-    bytes32 r = _signature.mcReadBytes32(0);
-    bytes32 s = _signature.mcReadBytes32(32);
+    uint8 v = _signature.readUint8(64);
+    bytes32 r = _signature.readBytes32(0);
+    bytes32 s = _signature.readBytes32(32);
 
     // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
     // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines

@@ -1,6 +1,6 @@
 import * as ethers from "ethers"
 import { ethers as hethers } from "hardhat"
-import * as t from "gen/typechain"
+import * as t from "../../gen/typechain"
 
 const cachedFactories: { [name: string]: ethers.ContractFactory } = {}
 
@@ -33,6 +33,7 @@ function adapt<T extends ethers.Contract>(name: string): Adapter<T> {
 export type ContractType<T extends Adapter<any>> = T extends Adapter<infer U> ? U : never
 
 export const LibBytesImpl = adapt<t.LibBytesImpl>("LibBytesImpl")
+export const LibBytesPointerImpl = adapt<t.LibBytesPointerImpl>("LibBytesPointerImpl")
 export const Factory = adapt<t.Factory>("Factory")
 export const MainModule = adapt<t.MainModule>("MainModule")
 export const MainModuleUpgradable = adapt<t.MainModuleUpgradable>("MainModuleUpgradable")

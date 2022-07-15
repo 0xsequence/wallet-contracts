@@ -8,13 +8,13 @@ import "../../interfaces/IModuleAuth.sol";
 import "../../ModuleSelfAuth.sol";
 import "../../ModuleStorage.sol";
 
-import "../../../../utils/LibBytes.sol";
+import "../../../../utils/LibBytesPointer.sol";
 
 import "hardhat/console.sol";
 
 
 abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
-  using LibBytes for bytes;
+  using LibBytesPointer for bytes;
 
   bytes32 public constant SET_IMAGEHASH_TYPEHASH = keccak256("SetImagehash(bytes32 imageHash,uint256 checkpoint)");
   bytes32 internal constant LAST_AUTH_CHECKPOINT_KEY = keccak256("org.sequence.module.auth.submodule.prefixed.last.auth.checkpoint");
@@ -59,7 +59,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
     //
 
     // First uint16 is the size of the signature
-    (sigSize, rindex) = _signature.cReadUint16(rindex);
+    (sigSize, rindex) = _signature.readUint16(rindex);
     uint256 nrindex = sigSize + rindex;
 
     (
@@ -88,7 +88,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
     while (rindex < _signature.length) {
       // Next uint64 is the checkpoint
       // (this won't exist on the last signature)
-      uint256 checkpoint; (checkpoint, rindex) = _signature.cReadUint64(rindex);
+      uint256 checkpoint; (checkpoint, rindex) = _signature.readUint64(rindex);
       if (checkpoint > prevCheckpoint) {
         revert WrongChainedCheckpointOrder(checkpoint, prevCheckpoint);
       }
@@ -97,7 +97,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
 
 
       // First uint16 is the size of the signature
-      (sigSize, rindex) = _signature.cReadUint16(rindex);
+      (sigSize, rindex) = _signature.readUint16(rindex);
       uint256 nrindex = sigSize + rindex;
 
       (
