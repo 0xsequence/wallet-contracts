@@ -2,6 +2,7 @@ pragma solidity 0.8.14;
 
 import "../../../../utils/SignatureValidator.sol";
 import "../../../../utils/LibBytesPointer.sol";
+import "../../../../utils/LibBytes.sol";
 
 
 library SequenceBaseSig {
@@ -10,6 +11,8 @@ library SequenceBaseSig {
   uint256 private constant FLAG_SIGNATURE = 0;
   uint256 private constant FLAG_ADDRESS = 1;
   uint256 private constant FLAG_DYNAMIC_SIGNATURE = 2;
+  uint256 private constant FLAG_NODE = 3;
+  uint256 private constant FLAG_BRANCH = 4;
 
   error InvalidNestedSignature(bytes32 _hash, address _addr, bytes _signature);
   error InvalidSignatureFlag(uint256 _flag);
@@ -27,20 +30,22 @@ library SequenceBaseSig {
     );
   }
 
-  function recover(
+  function _joinAddrAndWeight(
+    address _addr,
+    uint256 _weight
+  ) internal view returns (bytes32) {
+    return bytes32(uint256(uint160(_addr))) | bytes32((uint256(_weight) << 160));
+  }
+
+  function recoverBranch(
     bytes32 _subDigest,
     bytes calldata _signature
   ) internal view returns (
-    uint256 threshold,
     uint256 weight,
-    bytes32 imageHash
+    bytes32 root
   ) {
     unchecked {
-      uint256 rindex = 0;
-      (threshold, rindex) = _signature.readFirstUint16();
-
-      // Start image hash generation
-      imageHash = bytes32(uint256(threshold));
+      uint256 rindex;
 
       // Iterate until the image is completed
       while (rindex < _signature.length) {
@@ -52,7 +57,13 @@ library SequenceBaseSig {
           // Read plain address
           (addr, rindex) = _signature.readAddress(rindex);
 
-        } else if (flag == FLAG_SIGNATURE) {
+          // Write weight and address to image
+          bytes32 node = _joinAddrAndWeight(addr, addrWeight);
+          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          continue;
+        }
+
+        if (flag == FLAG_SIGNATURE) {
           // Read single signature and recover signer
           uint256 nrindex = rindex + 66;
           addr = SignatureValidator.recoverSigner(_subDigest, _signature[rindex:nrindex]);
@@ -60,7 +71,14 @@ library SequenceBaseSig {
 
           // Acumulate total weight of the signature
           weight += addrWeight;
-        } else if (flag == FLAG_DYNAMIC_SIGNATURE) {
+
+          // Write weight and address to image
+          bytes32 node = _joinAddrAndWeight(addr, addrWeight);
+          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          continue;
+        }
+
+        if (flag == FLAG_DYNAMIC_SIGNATURE) {
           // Read signer
           (addr, rindex) = _signature.readAddress(rindex);
           // Read signature size
@@ -76,13 +94,61 @@ library SequenceBaseSig {
 
           // Acumulate total weight of the signature
           weight += addrWeight;
-        } else {
-          revert InvalidSignatureFlag(flag);
+
+          // Write weight and address to image
+          bytes32 node = _joinAddrAndWeight(addr, addrWeight);
+          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          continue;
         }
 
-        // Write weight and address to image
-        imageHash = keccak256(abi.encode(imageHash, addrWeight, addr));
+        if (flag == FLAG_NODE) {
+          // Nodes don't have weights, so we need to push the pointer
+          // back by 1 byte, and ignore the weight.
+          rindex--;
+
+          // Read node hash
+          bytes32 node;
+          (node, rindex) = _signature.readBytes32(rindex);
+          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          continue;
+        }
+
+        if (flag == FLAG_BRANCH) {
+          // Enter a branch of the signature merkle tree
+          // we use recursion for this
+          
+          // We don't use the weight either
+          // instead we read the size of the nested signature
+          rindex--;
+
+          uint256 size; bytes32 node;
+          (size, rindex) = _signature.readUint16(rindex);
+          uint256 nrindex = rindex + size;
+
+          (weight, node) = recoverBranch(_subDigest, _signature[rindex:nrindex]);
+          rindex = nrindex;
+          continue;
+        }
+
+        revert InvalidSignatureFlag(flag);
       }
+    }
+  }
+
+  function recover(
+    bytes32 _subDigest,
+    bytes calldata _signature
+  ) internal view returns (
+    uint256 threshold,
+    uint256 weight,
+    bytes32 imageHash
+  ) {
+    unchecked {
+      (weight, imageHash) = recoverBranch(_subDigest, _signature[2:]);
+
+      // Thershold is the top-most node (but first on the signature)
+      (threshold) = LibBytes.readFirstUint16(_signature);
+      imageHash = keccak256(abi.encode(imageHash, threshold));
     }
   }
 }

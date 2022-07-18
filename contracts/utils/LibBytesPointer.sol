@@ -86,4 +86,17 @@ library LibBytesPointer {
       newPointer := add(index, 8)
     }
   }
+
+  function readBytes32(
+    bytes calldata _data,
+    uint256 _pointer
+  ) internal pure returns (
+    bytes32 _a,
+    uint256 _newPointer
+  ) {
+    assembly {
+      _a := calldataload(add(_pointer, _data.offset))
+      _newPointer := add(_pointer, 32)
+    }
+  }
 }

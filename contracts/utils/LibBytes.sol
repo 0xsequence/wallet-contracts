@@ -24,4 +24,15 @@ library LibBytes {
       a := shr(248, word)
     }
   }
+
+  function readFirstUint16(
+    bytes calldata data
+  ) internal pure returns (
+    uint16 a
+  ) {
+    assembly {
+      let word := calldataload(data.offset)
+      a := shr(240, word)
+    }
+  }
 }

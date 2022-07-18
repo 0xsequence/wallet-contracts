@@ -72,6 +72,16 @@ export const MetaTransactionsSolidityType = `tuple(
   bytes data
 )[]`
 
+export type ImageHashLeaf = {
+  address: string,
+  weight: BigNumberish
+}
+
+export type ImageHashNode = {
+  left: ImageHashNode | ImageHashLeaf,
+  right: ImageHashNode | ImageHashLeaf
+}
+
 export function addressOf(factory: string, firstModule: string, imageHash: string): string {
   const codeHash = ethers.utils.keccak256(
     ethers.utils.solidityPack(
@@ -94,14 +104,31 @@ export function encodeNonce(space: BigNumberish, nonce: BigNumberish, type: ethe
   return ethers.BigNumber.from(ethers.utils.solidityPack(['uint160', 'uint8', 'uint88'], [space, type, nonce]))
 }
 
+export function joinAddrAndWeight(address: string, weight: ethers.BigNumberish) {
+  return ethers.utils.solidityPack(
+    ['uint96', 'address'],
+    [weight, address]
+  )
+}
+
 export function imageHash(config: WalletConfig): string {
-  const first = ethers.utils.solidityPack(['uint256'], [config.threshold])
-  return config.signers.reduce((p, c) => ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
-      ['bytes32', 'uint8', 'address'],
-      [p, c.weight, c.address]
+  const imageHash = config.signers.reduce((p, c) => {
+    const node = joinAddrAndWeight(c.address, c.weight)
+    if (p.length === 0) return node
+    return ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ['bytes32', 'bytes32'],
+        [p, node]
+      )
     )
-  ), first)
+  }, '')
+
+  return ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ['bytes32', 'uint256'],
+      [imageHash.length === 0 ? ethers.constants.HashZero : imageHash, config.threshold]
+    )
+  )
 }
 
 export function digestOf(txs: Partial<Transaction>[], nonce: ethers.BigNumberish) {
