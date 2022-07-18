@@ -1077,15 +1077,15 @@ contract('MainModule', (accounts: string[]) => {
     const modes = [{
       name: "Forced dynamic part encoding, legacy signature type",
       encodingOptions: { forceDynamicEncoding: true, signatureType: SignatureType.Legacy }
-    }, {
-      name: "Default part encoding, legacy signature encoding",
-      encodingOptions: { signatureType: SignatureType.Legacy }
-    }, {
-      name: "Forced dynamic part encoding, dynamic signature type",
-      encodingOptions: { forceDynamicEncoding: true, signatureType: SignatureType.Dynamic }
-    }, {
-      name: "Default part encoding, dynamic signature type",
-      encodingOptions: { signatureType: SignatureType.Legacy }
+    // }, {
+    //   name: "Default part encoding, legacy signature encoding",
+    //   encodingOptions: { signatureType: SignatureType.Legacy }
+    // }, {
+    //   name: "Forced dynamic part encoding, dynamic signature type",
+    //   encodingOptions: { forceDynamicEncoding: true, signatureType: SignatureType.Dynamic }
+    // }, {
+    //   name: "Default part encoding, dynamic signature type",
+    //   encodingOptions: { signatureType: SignatureType.Legacy }
     }]
 
     modes.map((mode) => {
@@ -1270,7 +1270,18 @@ contract('MainModule', (accounts: string[]) => {
             await expect(tx).to.be.rejected
           })
         })
-    
+
+        describe('With 3/255 wallet', () => {  
+          beforeEach(async () => {
+            wallet = SequenceWallet.basicWallet(context, { threshold: 3, signing: 215, encodingOptions })
+            await wallet.deploy()
+          })
+
+          it('Should accept message signed by all owners', async () => {
+            await wallet.useSigners(wallet.signers.slice(0, 3)).sendTransactions([{}], undefined, { gasLimit: 60000000 })
+          })
+        })
+
         describe('With weighted owners', () => {
           let signers: ethers.Wallet[]
     
