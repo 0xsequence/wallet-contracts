@@ -1,7 +1,7 @@
 import { ethers, Overrides } from "ethers"
 import { shuffle } from "."
 import { MainModule, MainModuleUpgradable, SequenceContext } from "./contracts"
-import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, SignaturePartType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
+import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, optimize2SignersTopology, SignaturePartType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
 
 export type StaticSigner = (ethers.Signer & { address: string })
 export type AnyStaticSigner = StaticSigner | SequenceWallet
@@ -49,7 +49,7 @@ export function isSequenceSigner(signer: ethers.Signer | SequenceWallet): signer
   return (signer as any).isSequence
 }
 
-const defaultTopology = merkleTopology
+const defaultTopology = optimize2SignersTopology
 
 export class SequenceWallet {
   public isSequence = true

@@ -152,6 +152,14 @@ export function merkleTopology(config: SimplifiedWalletConfig): ConfigTopology {
   return leaves[0]
 }
 
+export function optimize2SignersTopology(config: SimplifiedWalletConfig): ConfigTopology {
+  if (config.signers.length > 8) {
+    return merkleTopology(config)
+  }
+
+  return legacyTopology(config)
+}
+
 export function leavesOf(topology: ConfigTopology): ImageHashLeaf[] {
   if (isImageHashLeaf(topology)) {
     return [topology]
@@ -267,16 +275,6 @@ export function joinAddrAndWeight(address: string, weight: ethers.BigNumberish) 
 }
 
 export function imageHash(config: WalletConfig): string {
-  // const imageHash = config.signers.reduce((p, c) => {
-  //   const node = joinAddrAndWeight(c.address, c.weight)
-  //   if (p.length === 0) return node
-  //   return ethers.utils.keccak256(
-  //     ethers.utils.defaultAbiCoder.encode(
-  //       ['bytes32', 'bytes32'],
-  //       [p, node]
-  //     )
-  //   )
-  // }, '')
   const signersRoot = hashNode(config.topology)
 
   return ethers.utils.keccak256(
