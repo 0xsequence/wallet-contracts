@@ -125,7 +125,12 @@ library SequenceBaseSig {
           (size, rindex) = _signature.readUint16(rindex);
           uint256 nrindex = rindex + size;
 
-          (weight, node) = recoverBranch(_subDigest, _signature[rindex:nrindex]);
+          uint256 nweight;
+          (nweight, node) = recoverBranch(_subDigest, _signature[rindex:nrindex]);
+
+          weight += nweight;
+          root = keccak256(abi.encode(root, node));
+
           rindex = nrindex;
           continue;
         }

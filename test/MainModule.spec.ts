@@ -1236,6 +1236,17 @@ contract('MainModule', (accounts: string[]) => {
             await expect(tx).to.be.rejected
           })
         })
+
+        describe('With 3/10 wallet', () => {
+          beforeEach(async () => {
+            wallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 7 })
+            await wallet.deploy()
+          })
+  
+          it('Should accept message signed by 3/10 owners', async () => {
+            await wallet.sendTransactions([{}])
+          })
+        })
     
         describe('With 255/255 wallet', () => {  
           beforeEach(async () => {
@@ -1339,7 +1350,7 @@ contract('MainModule', (accounts: string[]) => {
             const signature = await wallet.signTransactions([{}])
             const badSignature = signature.slice(0, -2) + 'ff'
             const tx = wallet.relayTransactions([{}], badSignature)
-            await expectToBeRejected(tx, `UnsupportedSignatureType("0x${badSignature.slice(-132)}", 255, ${!mode.encodingOptions.forceDynamicEncoding})`)
+            await expect(tx).to.be.rejected
           })
 
           it("Should reject invalid s value", async () => {

@@ -1,7 +1,7 @@
 import { ethers, Overrides } from "ethers"
 import { shuffle } from "."
 import { MainModule, MainModuleUpgradable, SequenceContext } from "./contracts"
-import { addressOf, applyTxDefaults, digestOf, encodeSignature, EncodingOptions, imageHash, SignaturePartType, subDigestOf, Transaction, WalletConfig } from "./sequence"
+import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, SignaturePartType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
 
 export type StaticSigner = (ethers.Signer & { address: string })
 export type AnyStaticSigner = StaticSigner | SequenceWallet
@@ -24,7 +24,8 @@ export type BasicWalletOptions = {
   threshold?: number,
   signing: number | number[],
   iddle: number | number[],
-  encodingOptions?: EncodingOptions
+  encodingOptions?: EncodingOptions,
+  topologyConvertor: (simple: SimplifiedWalletConfig) => ConfigTopology
 }
 
 export type DetailedWalletOptions = {
@@ -48,6 +49,8 @@ export function isSequenceSigner(signer: ethers.Signer | SequenceWallet): signer
   return (signer as any).isSequence
 }
 
+const defaultTopology = merkleTopology
+
 export class SequenceWallet {
   public isSequence = true
   _isSigner: boolean = true
@@ -55,47 +58,57 @@ export class SequenceWallet {
   constructor(public options: WalletOptions) {}
 
   static basicWallet(context: SequenceContext, opts?: Partial<BasicWalletOptions>): SequenceWallet {
-    const options = { ...{ signing: 1, iddle: 0 }, ...opts }
+    const options = { ...{ signing: 1, iddle: 0, topologyConvertor: defaultTopology }, ...opts }
 
     const signersWeight = Array.isArray(options.signing) ? options.signing : new Array(options.signing).fill(0).map(() => 1)
     const iddleWeight = Array.isArray(options.iddle) ? options.iddle : new Array(options.iddle).fill(0).map(() => 1)
 
     const signers = signersWeight.map((s) => isAnyStaticSigner(s) ? s : ethers.Wallet.createRandom())
-    const iddle = iddleWeight.map(() => ethers.Wallet.createRandom())
+    const iddle = iddleWeight.map(() => ethers.utils.getAddress(ethers.utils.hexlify(ethers.utils.randomBytes(20))))
+
+    const simplifiedConfig = {
+      threshold: options.threshold ? options.threshold : signers.length,
+      signers: shuffle(
+        signers.map((s, i) => ({
+          address: s.address,
+          weight: signersWeight[i]
+        })).concat(
+          iddle.map((s, i) => ({
+            address: s,
+            weight: iddleWeight[i]
+          })
+        ))
+      )
+    }
 
     return new SequenceWallet({
       address: options.address,
       context,
       encodingOptions: options.encodingOptions,
       config: {
-        threshold: options.threshold ? options.threshold : signers.length,
-        signers: shuffle(
-          signers.map((s, i) => ({
-            address: s.address,
-            weight: signersWeight[i]
-          })).concat(
-            iddle.map((s, i) => ({
-              address: s.address,
-              weight: iddleWeight[i]
-            })
-          ))
-        )
+        threshold: simplifiedConfig.threshold,
+        topology: options.topologyConvertor(simplifiedConfig)
       },
       signers: signers
     })
   }
 
   static detailedWallet(context: SequenceContext, opts: DetailedWalletOptions): SequenceWallet {
+    const simplifiedConfig = {
+      threshold: opts.threshold,
+      signers: opts.signers.map((s) => ({
+        weight: isWeighted(s) ? s.weight : 1,
+        address: (() => { const v = weightedVal(s); return isAnyStaticSigner(v) ? v.address : v })()
+      }))
+    }
+
     return new SequenceWallet({
       context,
       encodingOptions: opts.encodingOptions,
       address: opts.address,
       config: {
-        threshold: opts.threshold,
-        signers: opts.signers.map((s) => ({
-          weight: isWeighted(s) ? s.weight : 1,
-          address: (() => { const v = weightedVal(s); return isAnyStaticSigner(v) ? v.address : v })()
-        }))
+        threshold: simplifiedConfig.threshold,
+        topology: defaultTopology(simplifiedConfig)
       },
       signers: opts.signers.map((s) => weightedVal(s)).filter((s) => isAnyStaticSigner(s)) as StaticSigner[]
     })
