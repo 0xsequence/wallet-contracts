@@ -3,6 +3,7 @@ pragma solidity 0.8.14;
 import "../../../../utils/SignatureValidator.sol";
 import "../../../../utils/LibBytesPointer.sol";
 import "../../../../utils/LibBytes.sol";
+import "../../../../utils/LibOptim.sol";
 
 
 library SequenceBaseSig {
@@ -59,7 +60,7 @@ library SequenceBaseSig {
 
           // Write weight and address to image
           bytes32 node = _joinAddrAndWeight(addr, addrWeight);
-          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
           continue;
         }
 
@@ -74,7 +75,7 @@ library SequenceBaseSig {
 
           // Write weight and address to image
           bytes32 node = _joinAddrAndWeight(addr, addrWeight);
-          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
           continue;
         }
 
@@ -97,7 +98,7 @@ library SequenceBaseSig {
 
           // Write weight and address to image
           bytes32 node = _joinAddrAndWeight(addr, addrWeight);
-          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
           continue;
         }
 
@@ -109,7 +110,7 @@ library SequenceBaseSig {
           // Read node hash
           bytes32 node;
           (node, rindex) = _signature.readBytes32(rindex);
-          root = root != bytes32(0) ? keccak256(abi.encode(root, node)) : node;
+          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
           continue;
         }
 
@@ -129,7 +130,7 @@ library SequenceBaseSig {
           (nweight, node) = recoverBranch(_subDigest, _signature[rindex:nrindex]);
 
           weight += nweight;
-          root = keccak256(abi.encode(root, node));
+          root = LibOptim.keccak256(root, node);
 
           rindex = nrindex;
           continue;
@@ -153,7 +154,7 @@ library SequenceBaseSig {
 
       // Thershold is the top-most node (but first on the signature)
       (threshold) = LibBytes.readFirstUint16(_signature);
-      imageHash = keccak256(abi.encode(imageHash, threshold));
+      imageHash = LibOptim.keccak256(imageHash, bytes32(threshold));
     }
   }
 }

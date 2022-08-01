@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.14;
 
+
 library LibBytes {
   function readBytes32(
     bytes calldata data,
