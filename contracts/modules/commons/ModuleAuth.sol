@@ -118,6 +118,8 @@ abstract contract ModuleAuth is
     if (isValid) {
       return SELECTOR_ERC1271_BYTES_BYTES;
     }
+
+    return bytes4(0);
   }
 
   /**
@@ -138,6 +140,8 @@ abstract contract ModuleAuth is
     if (isValid) {
       return SELECTOR_ERC1271_BYTES32_BYTES;
     }
+
+    return bytes4(0);
   }
 
   /**

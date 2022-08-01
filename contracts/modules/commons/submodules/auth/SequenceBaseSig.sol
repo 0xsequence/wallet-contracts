@@ -35,7 +35,7 @@ library SequenceBaseSig {
   function _joinAddrAndWeight(
     address _addr,
     uint256 _weight
-  ) internal view returns (bytes32) {
+  ) internal pure returns (bytes32) {
     return bytes32(uint256(uint160(_addr))) | bytes32((uint256(_weight) << 160));
   }
 
