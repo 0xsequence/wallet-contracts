@@ -6,6 +6,24 @@ import { task } from "hardhat/config"
 import { boolean, int } from "hardhat/internal/core/params/argumentTypes"
 import fs from "fs"
 
+class BufferSort {
+  buffer: { i: number, val: string }[] = []
+  next: number = 0
+
+  constructor(private onValue: (val: string) => void) {}
+
+  feed = (i: number, val: string) => {
+    this.buffer.push({ i, val })
+    this.buffer = this.buffer.sort((a, b) => a.i - b.i)
+
+    while (this.buffer.length > 0 && this.buffer[0].i === this.next) {
+      this.onValue(this.buffer[0].val)
+      this.buffer.shift()
+      this.next++
+    }
+  }
+}
+
 async function main(args: {
   csv: string,
   topology: string,
@@ -36,13 +54,17 @@ async function main(args: {
 
   const pool = Pool(() => spawn<BenchWorker>(new Worker("./workers/bench-worker")), { size: cpus })
 
+  const file = fs.createWriteStream(csv, { flags: "a" })
+  const fileSorter = new BufferSort((val: string) => file.write(val))
+  const consoleSorter = new BufferSort((val: string) => console.log(val))
+
   // Create CSV writter
   let batched = 0
-  const file = fs.createWriteStream(csv, { flags: "a" })
-  // fs.writeFileSync(csv, "topology,disableTrim,idle,signing,runs,min,max,avg,cmin,cmax,cavg\n")
   file.write("topology,disableTrim,signing,idle,runs,min,max,avg,cmin,cmax,cavg\n")
   for (let i = minsign; i < maxsign; i++) {
     for (let j = minidle; j < maxidle - 1; j++) {
+      const absi = ((i - minsign) * maxidle) + j
+
       if (batched > cpus * 250) {
         await pool.settled()
         batched = 0
@@ -52,9 +74,9 @@ async function main(args: {
       pool.queue(async worker => {
         await worker.setup(i, j, runs, topology as any, disableTrim)
         const r = await worker.run()
-        // fs.writeFileSync(csv, `${topology},${disableTrim},${r.idle},${r.signing},${runs},${r.min},${r.max},${r.avg},${r.data.min},${r.data.max},${r.data.avg}\n`, { flag: "a" })
-        file.write(`${topology},${disableTrim},${r.signing},${r.idle},${runs},${r.min},${r.max},${r.avg},${r.data.min},${r.data.max},${r.data.avg}\n`)
-        console.log(`${topology} (notrim ${disableTrim}): ${r.signing}/${r.signing + r.idle} (${runs}): min: ${r.min} max: ${r.max} avg: ${r.avg} cmin: ${r.data.min} cmax: ${r.data.max} cavg: ${r.data.avg}`)
+
+        fileSorter.feed(absi, `${topology},${disableTrim},${r.signing},${r.idle},${runs},${r.min},${r.max},${r.avg},${r.data.min},${r.data.max},${r.data.avg}\n`)
+        consoleSorter.feed(absi, `${absi}: ${topology} (notrim ${disableTrim}): ${r.signing}/${r.signing + r.idle} (${runs}): min: ${r.min} max: ${r.max} avg: ${r.avg} cmin: ${r.data.min} cmax: ${r.data.max} cavg: ${r.data.avg}`)
       })
     }
   }
