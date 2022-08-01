@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.14;
 
 import "./SequenceBaseSig.sol";
@@ -24,7 +25,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
   error LowWeightChainedSignature(bytes _signature, uint256 threshold, uint256 _weight);
   error WrongChainedCheckpointOrder(uint256 _current, uint256 _prev);
 
-  function _hashSetImagehashStruct(bytes32 _imageHash, uint256 _checkpoint) internal view returns (bytes32) {
+  function _hashSetImagehashStruct(bytes32 _imageHash, uint256 _checkpoint) internal pure returns (bytes32) {
     return keccak256(abi.encode(SET_IMAGEHASH_TYPEHASH, _imageHash, _checkpoint));
   }
 
@@ -98,7 +99,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
 
       // First uint16 is the size of the signature
       (sigSize, rindex) = _signature.readUint16(rindex);
-      uint256 nrindex = sigSize + rindex;
+      nrindex = sigSize + rindex;
 
       (
         threshold,

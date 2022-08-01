@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.14;
 
 import "../../../../utils/SignatureValidator.sol";
@@ -60,7 +61,7 @@ library SequenceBaseSig {
 
           // Write weight and address to image
           bytes32 node = _joinAddrAndWeight(addr, addrWeight);
-          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
+          root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
 
@@ -75,7 +76,7 @@ library SequenceBaseSig {
 
           // Write weight and address to image
           bytes32 node = _joinAddrAndWeight(addr, addrWeight);
-          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
+          root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
 
@@ -98,7 +99,7 @@ library SequenceBaseSig {
 
           // Write weight and address to image
           bytes32 node = _joinAddrAndWeight(addr, addrWeight);
-          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
+          root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
 
@@ -110,7 +111,7 @@ library SequenceBaseSig {
           // Read node hash
           bytes32 node;
           (node, rindex) = _signature.readBytes32(rindex);
-          root = root != bytes32(0) ? LibOptim.keccak256(root, node) : node;
+          root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
 
@@ -130,7 +131,7 @@ library SequenceBaseSig {
           (nweight, node) = recoverBranch(_subDigest, _signature[rindex:nrindex]);
 
           weight += nweight;
-          root = LibOptim.keccak256(root, node);
+          root = LibOptim.fkeccak256(root, node);
 
           rindex = nrindex;
           continue;
@@ -154,7 +155,7 @@ library SequenceBaseSig {
 
       // Thershold is the top-most node (but first on the signature)
       (threshold) = LibBytes.readFirstUint16(_signature);
-      imageHash = LibOptim.keccak256(imageHash, bytes32(threshold));
+      imageHash = LibOptim.fkeccak256(imageHash, bytes32(threshold));
     }
   }
 }

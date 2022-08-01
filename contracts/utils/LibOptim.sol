@@ -11,7 +11,7 @@ library LibOptim {
 
     @return c The keccak256 hash of the two 32-byte inputs.
   */
-  function keccak256(
+  function fkeccak256(
     bytes32 _a,
     bytes32 _b
   ) internal pure returns (bytes32 c) {
