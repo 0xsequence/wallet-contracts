@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import "../utils/SignatureValidator.sol";
 
+import "./commons/submodules/auth/SequenceBaseSig.sol";
+
 import "./commons/Implementation.sol";
 import "./commons/ModuleAuth.sol";
 import "./commons/ModuleHooks.sol";
@@ -42,7 +44,7 @@ contract GuestModule is
     bytes calldata
   ) public override {
     // Hash transaction bundle
-    bytes32 txHash = _subDigest(keccak256(abi.encode('guest:', _txs)), block.chainid);
+    bytes32 txHash = SequenceBaseSig.subDigest(keccak256(abi.encode('guest:', _txs)));
 
     // Execute the transactions
     _executeGuest(txHash, _txs);
@@ -56,7 +58,7 @@ contract GuestModule is
     Transaction[] memory _txs
   ) public override {
     // Hash transaction bundle
-    bytes32 txHash = _subDigest(keccak256(abi.encode('self:', _txs)), block.chainid);
+    bytes32 txHash = SequenceBaseSig.subDigest(keccak256(abi.encode('self:', _txs)));
 
     // Execute the transactions
     _executeGuest(txHash, _txs);

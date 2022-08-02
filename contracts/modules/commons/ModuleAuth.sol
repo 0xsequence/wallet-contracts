@@ -85,22 +85,6 @@ abstract contract ModuleAuth is
   }
 
   /**
-   * @notice Will hash _data to be signed (similar to EIP-712)
-   * @param _digest Pre-final digest
-   * @return hashed data for this wallet
-   */
-  function _subDigest(bytes32 _digest, uint256 _chainId) internal override virtual view returns (bytes32) {
-    return keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        _chainId,
-        address(this),
-        _digest
-      )
-    );
-  }
-
-  /**
    * @notice Verifies whether the provided signature is valid with respect to the provided data
    * @dev MUST return the correct magic value if the signature provided is valid for the provided data
    *   > The bytes4 magic value to return when signature is valid is 0x20c13b0b : bytes4(keccak256("isValidSignature(bytes,bytes)"))

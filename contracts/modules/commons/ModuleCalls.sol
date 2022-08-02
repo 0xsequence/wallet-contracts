@@ -10,6 +10,7 @@ import "./interfaces/IModuleCalls.sol";
 import "./interfaces/IModuleAuth.sol";
 
 import "./submodules/nonce/SubModuleNonce.sol";
+import "./submodules/auth/SequenceBaseSig.sol";
 
 
 abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth {
@@ -102,7 +103,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     Transaction[] memory _txs
   ) external override virtual onlySelf {
     // Hash transaction bundle
-    bytes32 txHash = _subDigest(keccak256(abi.encode('self:', _txs)), block.chainid);
+    bytes32 txHash = SequenceBaseSig.subDigest(keccak256(abi.encode('self:', _txs)));
 
     // Execute the transactions
     _execute(txHash, _txs);
