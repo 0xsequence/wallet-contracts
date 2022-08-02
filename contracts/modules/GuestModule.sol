@@ -100,7 +100,7 @@ contract GuestModule is
    * @notice Validates any signature image, because the wallet is public and has now owner.
    * @return true, all signatures are valid.
    */
-  function _isValidImage(bytes32) internal override view returns (bool) {
+  function _isValidImage(bytes32) internal override pure returns (bool) {
     return true;
   }
 

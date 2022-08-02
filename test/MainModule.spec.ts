@@ -159,7 +159,7 @@ contract('MainModule', (accounts: string[]) => {
             return ethers.Wallet.createRandom()
           }
 
-          const nchilds = numChilds || Math.floor(Math.random() * 5)
+          const nchilds = numChilds || (Math.floor(Math.random() * 5) + 1)
           const childs = await Promise.all(new Array(nchilds).fill(0).map(async () => genWallet(depth + 1, nchilds, max)))
           const wallet = SequenceWallet.detailedWallet(context, { threshold: childs.length, signers: childs })
           await wallet.deploy()
@@ -513,8 +513,8 @@ contract('MainModule', (accounts: string[]) => {
     })
 
     it('Should reject signature with invalid flag', async () => {
-      const tx = wallet.relayTransactions([{}], '0x00010301')
-      await expectToBeRejected(tx, 'InvalidSignatureFlag(3)')
+      const tx = wallet.relayTransactions([{}], '0x0001ff01')
+      await expectToBeRejected(tx, 'InvalidSignatureFlag(255)')
     })
 
     it('Should reject signature with bad encoding type', async () => {
@@ -1236,6 +1236,17 @@ contract('MainModule', (accounts: string[]) => {
             await expect(tx).to.be.rejected
           })
         })
+
+        describe('With 3/10 wallet', () => {
+          beforeEach(async () => {
+            wallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 7 })
+            await wallet.deploy()
+          })
+  
+          it('Should accept message signed by 3/10 owners', async () => {
+            await wallet.sendTransactions([{}])
+          })
+        })
     
         describe('With 255/255 wallet', () => {  
           beforeEach(async () => {
@@ -1339,7 +1350,7 @@ contract('MainModule', (accounts: string[]) => {
             const signature = await wallet.signTransactions([{}])
             const badSignature = signature.slice(0, -2) + 'ff'
             const tx = wallet.relayTransactions([{}], badSignature)
-            await expectToBeRejected(tx, `UnsupportedSignatureType("0x${badSignature.slice(-132)}", 255, ${!mode.encodingOptions.forceDynamicEncoding})`)
+            await expect(tx).to.be.rejected
           })
 
           it("Should reject invalid s value", async () => {

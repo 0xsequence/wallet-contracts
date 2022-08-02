@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.14;
 
+
 library LibBytes {
   function readBytes32(
     bytes calldata data,
@@ -22,6 +23,17 @@ library LibBytes {
     assembly {
       let word := calldataload(add(index, data.offset))
       a := shr(248, word)
+    }
+  }
+
+  function readFirstUint16(
+    bytes calldata data
+  ) internal pure returns (
+    uint16 a
+  ) {
+    assembly {
+      let word := calldataload(data.offset)
+      a := shr(240, word)
     }
   }
 }

@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike, ethers } from "ethers"
+import { BigNumberish, BytesLike, ethers, Wallet } from "ethers"
 import { CHAIN_ID } from "."
 
 export const WALLET_CODE = '0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3'
@@ -9,7 +9,14 @@ export enum SignatureType {
   NoChaindDynamic = 2,
 }
 
+export type ConfigTopology = ImageHashNode | ImageHashLeaf
+
 export type WalletConfig = {
+  threshold: ethers.BigNumberish,
+  topology: ConfigTopology
+}
+
+export type SimplifiedWalletConfig = {
   threshold: BigNumberish,
   signers: {
     weight: BigNumberish
@@ -30,6 +37,8 @@ export enum SignaturePartType {
   Signature = 0,
   Address = 1,
   Dynamic = 2,
+  Node = 3,
+  Branch = 4
 }
 
 export type SignaturePart = {
@@ -72,6 +81,170 @@ export const MetaTransactionsSolidityType = `tuple(
   bytes data
 )[]`
 
+export type ImageHashLeaf = {
+  address: string,
+  weight: BigNumberish
+}
+
+export type ImageHashNode = {
+  left: ImageHashNode | ImageHashLeaf,
+  right: ImageHashNode | ImageHashLeaf
+}
+
+export function isImageHashLeaf(node: ConfigTopology): node is ImageHashLeaf {
+  return 'address' in node && 'weight' in node
+}
+
+export function legacyTopology(config: SimplifiedWalletConfig): ConfigTopology {
+  if (config.signers.length === 1) {
+    return {
+      address: config.signers[0].address,
+      weight: config.signers[0].weight
+    }
+  }
+
+  let root: ImageHashNode = {
+    left: {
+      address: config.signers[0].address,
+      weight: config.signers[0].weight
+    },
+    right: {
+      address: config.signers[1].address,
+      weight: config.signers[1].weight
+    }
+  }
+
+  for (let i = 2; i < config.signers.length; i++) {
+    root = {
+      left: root,
+      right: {
+        address: config.signers[i].address,
+        weight: config.signers[i].weight
+      }
+    }
+  }
+
+  return root
+}
+
+export function merkleTopology(config: SimplifiedWalletConfig): ConfigTopology {
+  const leaves = config.signers.map(s => ({
+    address: s.address,
+    weight: s.weight
+  })) as ConfigTopology[]
+
+  for (let s = leaves.length; s > 1; s = s / 2) {
+    for (let i = 0; i < s / 2; i++) {
+      const j1 = i * 2
+      const j2 = j1 + 1
+
+      if (j2 >= s) {
+        leaves[i] = leaves[j1]
+      } else {
+        leaves[i] = {
+          left: leaves[j1],
+          right: leaves[j2]
+        }
+      }
+    }
+  }
+
+  return leaves[0]
+}
+
+export function optimize2SignersTopology(config: SimplifiedWalletConfig): ConfigTopology {
+  if (config.signers.length > 8) {
+    return merkleTopology(config)
+  }
+
+  return legacyTopology(config)
+}
+
+export function leavesOf(topology: ConfigTopology): ImageHashLeaf[] {
+  if (isImageHashLeaf(topology)) {
+    return [topology]
+  }
+
+  return [
+    ...leavesOf(topology.left),
+    ...leavesOf(topology.right)
+  ]
+}
+
+export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig {
+  let leaves = leavesOf(config.topology)
+
+  return {
+    threshold: config.threshold,
+    signers: leaves.map(l => ({
+      weight: l.weight,
+      address: l.address
+    }))
+  }
+}
+
+export function hashNode(node: ConfigTopology): string {
+  if (isImageHashLeaf(node)) {
+    return joinAddrAndWeight(node.address, node.weight)
+  }
+
+  return ethers.utils.solidityKeccak256(
+    ['bytes32', 'bytes32'],
+    [hashNode(node.left), hashNode(node.right)]
+  )
+}
+
+export function imageHash2(threshold: ethers.BigNumberish, topology: ConfigTopology): string {
+  const root = hashNode(topology)
+  return ethers.utils.keccak256(
+    ethers.utils.solidityPack(
+      ['bytes32', 'uint256'],
+      [root, threshold]
+    )
+  )
+}
+
+export function printTopology(topology: ConfigTopology, threshold?: ethers.BigNumberish, inverse = false): string[] {
+  if (threshold) {
+    const imageHash = imageHash2(threshold, topology)
+
+    const result: string[] = [`imageHash: ${imageHash}`]
+    const signers = printTopology(topology, undefined, inverse)
+    result.push(`  ├─ threshold: ${threshold}`)
+    for (let i = 0; i < signers.length; i++) {
+      const prefix = i === 0 ? '  └─ ' : '   '
+      result.push(`${prefix}${signers[i]}`)
+    }
+
+    return result
+  }
+
+  if (isImageHashLeaf(topology)) {
+    return [`weight: ${topology.weight} - address: ${topology.address}`]
+  }
+
+  const root = hashNode(topology)
+  let printLeft = printTopology(topology.left, undefined, inverse)
+  let printRight = printTopology(topology.right, undefined, inverse)
+
+  if (inverse) {
+    ([printLeft, printRight] = [printRight, printLeft])
+  }
+
+  const result = [`${root}`]
+  for (let i = 0; i < printLeft.length; i++) {
+    const prefix = i === 0 ? '  ├─ ' : '  │'
+    result.push(`${prefix}${printLeft[i]}`)
+  }
+
+  for (let i = 0; i < printRight.length; i++) {
+    const prefix = i === 0 ? '  └─ ' : '   '
+    result.push(`${prefix}${printRight[i]}`)
+  }
+
+  return result
+}
+
 export function addressOf(factory: string, firstModule: string, imageHash: string): string {
   const codeHash = ethers.utils.keccak256(
     ethers.utils.solidityPack(
@@ -94,14 +267,22 @@ export function encodeNonce(space: BigNumberish, nonce: BigNumberish, type: ethe
   return ethers.BigNumber.from(ethers.utils.solidityPack(['uint160', 'uint8', 'uint88'], [space, type, nonce]))
 }
 
+export function joinAddrAndWeight(address: string, weight: ethers.BigNumberish) {
+  return ethers.utils.solidityPack(
+    ['uint96', 'address'],
+    [weight, address]
+  )
+}
+
 export function imageHash(config: WalletConfig): string {
-  const first = ethers.utils.solidityPack(['uint256'], [config.threshold])
-  return config.signers.reduce((p, c) => ethers.utils.keccak256(
+  const signersRoot = hashNode(config.topology)
+
+  return ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
-      ['bytes32', 'uint8', 'address'],
-      [p, c.weight, c.address]
+      ['bytes32', 'uint256'],
+      [signersRoot, config.threshold]
     )
-  ), first)
+  )
 }
 
 export function digestOf(txs: Partial<Transaction>[], nonce: ethers.BigNumberish) {
@@ -138,61 +319,212 @@ export function computeStorageKey(key: string, subkey?: string): string {
 export type EncodingOptions = {
   forceDynamicEncoding?: boolean,
   signatureType?: SignatureType,
+  disableTrim?: boolean
+}
+
+function leftSlice(topology: ConfigTopology): ConfigTopology[] {
+  // Returns left side of the tree
+  let stack: ConfigTopology[] = []
+
+  let prev = topology
+  while (!isImageHashLeaf(prev)) {
+    stack.unshift(prev.right)
+    prev = prev.left
+  }
+
+  stack.unshift(prev)
+
+  return stack
+}
+
+type DecodedSignatureMember = {
+  weight?: ethers.BigNumberish,
+  address?: string,
+  type: SignaturePartType,
+  value?: string
+}
+
+export class SignatureConstructor {
+  private members: DecodedSignatureMember[] = []
+
+  constructor(public disableTrim = false) {}
+
+  tryTrim(): void {   
+    if (this.disableTrim) return
+
+    // Can only trim when we have two members
+    if (this.members.length !== 2) return
+
+    // There are 4 valid trim options:
+    // 1. Trim the first addr, second is node
+    // 2. Trim the first node, second is addr
+    // 3. Trim the first addr, second is addr
+    // 4. Trim the first node, second is node
+
+    const first = this.members[0]
+    const second = this.members[1]
+
+    if (first.type !== SignaturePartType.Address && first.type !== SignaturePartType.Node) return
+    if (second.type !== SignaturePartType.Address && second.type !== SignaturePartType.Node) return
+
+    const firstNode = first.type === SignaturePartType.Address ? joinAddrAndWeight(first.address!, first.weight!) : first.value
+    const secondNode = second.type === SignaturePartType.Address ? joinAddrAndWeight(second.address!, second.weight!) : second.value
+
+    const nextNode = ethers.utils.keccak256(
+      ethers.utils.solidityPack(
+        ['bytes32', 'bytes32'],
+        [firstNode, secondNode]
+      )
+    )
+
+    this.members = [{
+      type: SignaturePartType.Node,
+      value: nextNode
+    }]
+  }
+
+  appendPart(weight: ethers.BigNumberish, part: SignaturePart) {
+    switch (part.type) {
+      case SignaturePartType.Address:
+        this.members.push({ weight, address: part.address, type: SignaturePartType.Address })
+        break;
+
+      case SignaturePartType.Signature:
+        this.members.push({ weight, address: part.address, type: SignaturePartType.Signature, value: part.signature })
+        break;
+
+      case SignaturePartType.Dynamic:
+        this.members.push({ weight, address: part.address, type: SignaturePartType.Dynamic, value: part.signature })
+        break;
+
+      default:
+        throw new Error(`Unknown signature part type: ${part.type}`)
+    }
+
+    this.tryTrim()
+  }
+
+  appendNode(node: string) {
+    this.members.push({ type: SignaturePartType.Node, value: node })
+    this.tryTrim()
+  }
+
+  appendBranch(branch: string) {
+    this.members.push({ type: SignaturePartType.Branch, value: branch })
+  }
+
+  encode(): string {
+    let result = '0x'
+
+    for (const member of this.members) {
+      switch (member.type) {
+        case SignaturePartType.Address:
+          result = ethers.utils.solidityPack(
+            ['bytes', 'uint8', 'uint8', 'address'],
+            [result, SignaturePartType.Address, member.weight, member.address]
+          )
+          break;
+
+        case SignaturePartType.Signature:
+          result = ethers.utils.solidityPack(
+            ['bytes', 'uint8', 'uint8', 'bytes'],
+            [result, SignaturePartType.Signature, member.weight, member.value]
+          )
+          break;
+
+        case SignaturePartType.Dynamic:
+          const signature = ethers.utils.arrayify(member.value ?? [])
+          result = ethers.utils.solidityPack(
+            ['bytes', 'uint8', 'uint8', 'address', 'uint16', 'bytes'],
+            [result, SignaturePartType.Dynamic, member.weight, member.address, signature.length, signature]
+          )
+          break;
+
+        case SignaturePartType.Node:
+          result = ethers.utils.solidityPack(
+            ['bytes', 'uint8', 'bytes32'],
+            [result, SignaturePartType.Node, member.value]
+          )
+          break;
+
+        case SignaturePartType.Branch:
+          const branch = ethers.utils.arrayify(member.value ?? [])
+          result = ethers.utils.solidityPack(
+            ['bytes', 'uint8', 'uint16', 'bytes'],
+            [result, SignaturePartType.Branch, branch.length, branch]
+          )
+          break
+
+        default:
+          throw new Error(`Unknown signature part type: ${member.type}`)
+      }
+    }
+
+    return result
+  }
+}
+
+export function encodeSigners(
+  topology: ConfigTopology,
+  parts: SignaturePart[] | Map<string, SignaturePart>,
+  options?: EncodingOptions
+): { encoded: string, weight: ethers.BigNumber } {
+  // Map part to signers
+  if (Array.isArray(parts)) {
+    const partOfSigner = new Map<string, SignaturePart>()
+    for (const part of parts) {
+      partOfSigner.set(part.address, part)
+    }
+    return encodeSigners(topology, partOfSigner, options)
+  }
+
+  const slice = leftSlice(topology)
+  let weight = ethers.constants.Zero
+
+  const constructor = new SignatureConstructor(options?.disableTrim)
+  for (const node of slice) {
+    if (!isImageHashLeaf(node)) {
+      // If the node opens up to another branch
+      // we recurse the encoding, and if the result has any weight
+      // we have to embed the whole branch, otherwise we just add the node
+      const nested = encodeSigners(node, parts, options)
+      if (nested.weight.isZero() && !options?.disableTrim) {
+        constructor.appendNode(hashNode(node))
+      } else {
+        constructor.appendBranch(nested.encoded)
+        weight = weight.add(nested.weight)
+      }
+    } else {
+      // If the node is a leaf, we can just add the member
+      const part = parts.get(node.address) ?? { type: SignaturePartType.Address, address: node.address }
+      if (part.type !== SignaturePartType.Address) {
+        weight = weight.add(node.weight)
+      }
+
+      constructor.appendPart(node.weight, part)
+    }
+  }
+
+  return {
+    encoded: constructor.encode(),
+    weight
+  }
 }
 
 export function encodeSignature(
-    config: WalletConfig,
-    parts: SignaturePart[],
-    options?: EncodingOptions
-  ) {
-  let signature: string
+  config: WalletConfig,
+  parts: SignaturePart[] | Map<string, SignaturePart>,
+  options?: EncodingOptions
+) {
+  const encodedSigners = encodeSigners(config.topology, parts, options)
 
   switch (options?.signatureType || SignatureType.Legacy) {
     case SignatureType.Dynamic:
-      signature = ethers.utils.solidityPack(['uint8', 'uint16'], [SignatureType.Dynamic, config.threshold])
-      break
+      return ethers.utils.solidityPack(['uint8', 'uint16', 'bytes'], [SignatureType.Dynamic, config.threshold, encodedSigners.encoded])
     case SignatureType.NoChaindDynamic:
-      signature = ethers.utils.solidityPack(['uint8', 'uint16'], [SignatureType.NoChaindDynamic, config.threshold])
-      break
+      return ethers.utils.solidityPack(['uint8', 'uint16', 'bytes'], [SignatureType.NoChaindDynamic, config.threshold, encodedSigners.encoded])
     default:
     case SignatureType.Legacy:
-      signature = ethers.utils.solidityPack(['uint16'], [config.threshold])
-      break
+      return ethers.utils.solidityPack(['uint16', 'bytes'], [config.threshold, encodedSigners.encoded])
   }
-
-  for (const signer of config.signers) {
-    const found = parts.find((p) => p.address === signer.address)
-    if (!found || found.type === SignaturePartType.Address) {
-      signature = ethers.utils.solidityPack(
-        ['bytes', 'uint8', 'uint8', 'address'],
-        [signature, SignaturePartType.Address, signer.weight, signer.address]
-      )
-      continue
-    }
-
-    if (!found.signature || ethers.utils.arrayify(found.signature).length === 0) {
-      throw new Error(`Expected a signature for type ${found.type}`)
-    }
-
-    if (found.type === SignaturePartType.Dynamic || options?.forceDynamicEncoding) {
-      const sigArray = ethers.utils.arrayify(found.signature)
-      signature = ethers.utils.solidityPack(
-        ['bytes', 'uint8', 'uint8', 'address', 'uint16', 'bytes'],
-        [signature, SignaturePartType.Dynamic, signer.weight, signer.address, sigArray.length, found.signature]
-      )
-      continue
-    }
-
-    if (found.type === SignaturePartType.Signature) {
-      signature = ethers.utils.solidityPack(
-        ['bytes', 'uint8', 'uint8', 'bytes'],
-        [signature, SignaturePartType.Signature, signer.weight, found.signature]
-      )
-      continue
-    }
-
-    throw new Error(`Unsupported signature type ${found.type}`)
-  }
-
-  return signature
 }

@@ -2,7 +2,7 @@ import * as ethers from 'ethers'
 import { expect } from './utils'
 
 import { CallReceiverMock, ContractType, deploySequenceContext, GasEstimator, GuestModule, ModuleMock, SequenceContext, MainModuleGasEstimation, MainModule } from './utils/contracts'
-import { applyTxDefaults, Transaction } from './utils/sequence'
+import { applyTxDefaults, toSimplifiedConfig, Transaction } from './utils/sequence'
 import { SequenceWallet } from './utils/wallet'
 
 
@@ -38,7 +38,7 @@ contract('Estimate gas usage', () => {
   const estimateGasUsage = async (txs: Partial<Transaction>[], wallet: SequenceWallet, deploy: boolean = false, nonce: ethers.BigNumberish = 0) => {
     const stubSignature = await SequenceWallet.detailedWallet(context, {
       threshold: wallet.config.threshold,
-      signers: wallet.config.signers.map(() => ethers.Wallet.createRandom())
+      signers: toSimplifiedConfig(wallet.config).signers.map(() => ethers.Wallet.createRandom())
     }).signMessage(ethers.utils.randomBytes(32))
 
     const txData = wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(txs), nonce, stubSignature])

@@ -1,4 +1,4 @@
-import { HardhatUserConfig } from 'hardhat/config'
+import { HardhatUserConfig, task } from 'hardhat/config'
 import { networkConfig } from './utils/config-loader'
 
 import '@nomiclabs/hardhat-truffle5'
@@ -9,6 +9,8 @@ import "@tenderly/hardhat-tenderly"
 
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
+
+import './utils/benchmarker'
 
 const ganacheNetwork = {
   url: 'http://127.0.0.1:8545',
@@ -21,10 +23,7 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 999999,
-        details: {
-          yul: true
-        }
+        runs: 4294967295
       }
     }
   },
