@@ -52,12 +52,13 @@ library SequenceBaseSig {
       // Iterate until the image is completed
       while (rindex < _signature.length) {
         // Read next item type and addrWeight
-        uint256 flag; uint256 addrWeight; address addr;
-        (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
+        uint256 flag;
+        (flag, rindex) = _signature.readUint8(rindex);
 
         if (flag == FLAG_ADDRESS) {
           // Read plain address
-          (addr, rindex) = _signature.readAddress(rindex);
+          uint256 addrWeight; address addr;
+          (addrWeight, addr, rindex) = _signature.readUint8Address(rindex);
 
           // Write weight and address to image
           bytes32 node = _joinAddrAndWeight(addr, addrWeight);
@@ -66,9 +67,13 @@ library SequenceBaseSig {
         }
 
         if (flag == FLAG_SIGNATURE) {
+          // Read weight
+          uint256 addrWeight;
+          (addrWeight, rindex) = _signature.readUint8(rindex);
+
           // Read single signature and recover signer
           uint256 nrindex = rindex + 66;
-          addr = SignatureValidator.recoverSigner(_subDigest, _signature[rindex:nrindex]);
+          address addr = SignatureValidator.recoverSigner(_subDigest, _signature[rindex:nrindex]);
           rindex = nrindex;
 
           // Acumulate total weight of the signature
@@ -81,8 +86,10 @@ library SequenceBaseSig {
         }
 
         if (flag == FLAG_DYNAMIC_SIGNATURE) {
-          // Read signer
-          (addr, rindex) = _signature.readAddress(rindex);
+          // Read signer and wight
+          uint256 addrWeight; address addr;
+          (addrWeight, addr, rindex) = _signature.readUint8Address(rindex);
+
           // Read signature size
           uint256 size;
           (size, rindex) = _signature.readUint16(rindex);
@@ -104,10 +111,6 @@ library SequenceBaseSig {
         }
 
         if (flag == FLAG_NODE) {
-          // Nodes don't have weights, so we need to push the pointer
-          // back by 1 byte, and ignore the weight.
-          rindex--;
-
           // Read node hash
           bytes32 node;
           (node, rindex) = _signature.readBytes32(rindex);
@@ -117,17 +120,11 @@ library SequenceBaseSig {
 
         if (flag == FLAG_BRANCH) {
           // Enter a branch of the signature merkle tree
-          // we use recursion for this
-          
-          // We don't use the weight either
-          // instead we read the size of the nested signature
-          rindex--;
-
-          uint256 size; bytes32 node;
+          uint256 size;
           (size, rindex) = _signature.readUint16(rindex);
           uint256 nrindex = rindex + size;
 
-          uint256 nweight;
+          uint256 nweight; bytes32 node;
           (nweight, node) = recoverBranch(_subDigest, _signature[rindex:nrindex]);
 
           weight += nweight;
