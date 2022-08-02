@@ -11,8 +11,6 @@ import "../../ModuleStorage.sol";
 
 import "../../../../utils/LibBytesPointer.sol";
 
-import "hardhat/console.sol";
-
 
 abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
   using LibBytesPointer for bytes;

@@ -14,5 +14,7 @@ coverage.json
 config/*.env
 
 artifacts
+foundry_artifacts
+
 cache
 gen
