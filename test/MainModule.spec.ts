@@ -159,7 +159,7 @@ contract('MainModule', (accounts: string[]) => {
             return ethers.Wallet.createRandom()
           }
 
-          const nchilds = numChilds || Math.floor(Math.random() * 5)
+          const nchilds = numChilds || (Math.floor(Math.random() * 5) + 1)
           const childs = await Promise.all(new Array(nchilds).fill(0).map(async () => genWallet(depth + 1, nchilds, max)))
           const wallet = SequenceWallet.detailedWallet(context, { threshold: childs.length, signers: childs })
           await wallet.deploy()
