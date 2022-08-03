@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.14;
 
-import "../contracts/utils/LibBytes.sol";
-import "../contracts/utils/LibBytesPointer.sol";
+import "contracts/utils/LibBytes.sol";
+import "contracts/utils/LibBytesPointer.sol";
 
-import "./base/AdvTest.sol";
+import "foundry_test/base/AdvTest.sol";
 
 
 contract LibBytesPointerImp {
