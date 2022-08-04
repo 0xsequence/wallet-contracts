@@ -5,7 +5,8 @@ import "contracts/modules/commons/submodules/auth/SequenceBaseSig.sol";
 
 import "foundry_test/base/AdvTest.sol";
 
-contract SequenceBaseSigImp is AdvTest {
+
+contract SequenceBaseSigImp {
   function subDigest(bytes32 _digest) external view returns (bytes32) {
     return SequenceBaseSig.subDigest(_digest);
   }

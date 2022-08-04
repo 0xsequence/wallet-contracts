@@ -132,4 +132,20 @@ jobs:
           version: nightly
 
       - name: Run tests
-        run: FOUNDRY_FUZZ_RUNS=65536 forge test -vvv
+        run: FOUNDRY_FUZZ_RUNS=65536 MAX_ARRAY_LEN=32 forge test -vvv
+
+  foundry-tests-long-arrays:
+    name: Foundry tests (long arrays)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run tests
+        run: forge test -vvv
