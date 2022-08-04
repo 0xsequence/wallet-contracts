@@ -5,6 +5,24 @@ import "forge-std/Test.sol";
 
 
 contract AdvTest is Test {
+  function signAndPack(uint256 _pk, bytes32 _hash) internal returns (bytes memory) {
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(_pk, _hash);
+    return abi.encodePacked(r, s, v);
+  }
+
+  function signAndPack(uint256 _pk, bytes32 _hash, uint8 _sufix) internal returns (bytes memory) {
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(_pk, _hash);
+    return abi.encodePacked(r, s, v, _sufix);
+  }
+
+  function mayBoundArr(uint256 _size) internal returns (uint256) {
+    try vm.envUint('MAX_ARRAY_LEN') returns (uint256 b) {
+      return b == 0 ? _size : bound(_size, 0, b);
+    } catch {
+      return _size;
+    }
+  }
+
   function boundNoSys(address _a) internal view returns (address) {
     address c2 = address(0x007109709ecfa91a80626ff3989d68f67f5b1dd12d);
     address vm = address(0x004e59b44847b379578588920ca78fbf26c0b4956c);
@@ -52,36 +70,58 @@ contract AdvTest is Test {
   }
 
   function boundDiff(uint256 _a, uint256 _b, uint256 _c) internal pure returns (uint256) {
-    if (_a != _b && _a != _c) return _a;
-
-    unchecked {
-      uint256 res = _a + 1;
-
-      if (res == _b || res == _c) {
-        res++;
-      }
-
-      return res;
-    }
+    uint256[] memory arr = new uint256[](2);
+    arr[0] = _b;
+    arr[1] = _c;
+    return boundDiff(_a, arr);
   }
 
   function boundDiff(uint256 _a, uint256 _b, uint256 _c, uint256 _d) internal pure returns (uint256) {
-    if (_a != _b && _a != _c && _a != _d) return _a;
+    uint256[] memory _arr = new uint256[](3);
+    _arr[0] = _b;
+    _arr[1] = _c;
+    _arr[2] = _d;
+    return boundDiff(_a, _arr);
+  }
 
+  function boundDiff(uint256 _a, uint256 _b, uint256 _c, uint256 _d, uint256 _e) internal pure returns (uint256) {
+    uint256[] memory _arr = new uint256[](4);
+    _arr[0] = _b;
+    _arr[1] = _c;
+    _arr[2] = _d;
+    _arr[3] = _e;
+    return boundDiff(_a, _arr);
+  }
+
+  function boundDiff(uint256 _a, uint256 _b, uint256 _c, uint256 _d, uint256 _e, uint256 _f) internal pure returns (uint256) {
+    uint256[] memory _arr = new uint256[](5);
+    _arr[0] = _b;
+    _arr[1] = _c;
+    _arr[2] = _d;
+    _arr[3] = _e;
+    _arr[4] = _f;
+    return boundDiff(_a, _arr);
+  }
+
+  function boundDiff(uint256 _a, uint256[] memory _b) internal pure returns (uint256) {
     unchecked {
-      uint256 res = _a + 1;
-
-      if (res == _b || res == _c || res == _d) {
-        res++;
-      } else {
-        return res;
+      while (inSet(_a, _b)) {
+        _a++;
       }
 
-      if (res == _b || res == _c || res == _d) {
-        res++;
+      return _a;
+    }
+  }
+
+  function inSet(uint256 _a, uint256[] memory _b) internal pure returns (bool) {
+    unchecked {
+      for (uint256 i = 0; i < _b.length; i++) {
+        if (_a == _b[i]) {
+          return true;
+        }
       }
 
-      return res;
+      return false;
     }
   }
 }
