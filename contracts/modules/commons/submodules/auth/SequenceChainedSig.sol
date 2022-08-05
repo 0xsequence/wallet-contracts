@@ -22,6 +22,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
 
   error LowWeightChainedSignature(bytes _signature, uint256 threshold, uint256 _weight);
   error WrongChainedCheckpointOrder(uint256 _current, uint256 _prev);
+  error WrongFinalCheckpoint(uint256 _checkpoint, uint256 _current);
 
   function _hashSetImagehashStruct(bytes32 _imageHash, uint256 _checkpoint) internal pure returns (bytes32) {
     return keccak256(abi.encode(SET_IMAGEHASH_TYPEHASH, _imageHash, _checkpoint));
@@ -88,12 +89,11 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
       // Next uint64 is the checkpoint
       // (this won't exist on the last signature)
       uint256 checkpoint; (checkpoint, rindex) = _signature.readUint64(rindex);
-      if (checkpoint > prevCheckpoint) {
+      if (checkpoint >= prevCheckpoint) {
         revert WrongChainedCheckpointOrder(checkpoint, prevCheckpoint);
       }
 
       prevCheckpoint = checkpoint;
-
 
       // First uint16 is the size of the signature
       (sigSize, rindex) = _signature.readUint16(rindex);
@@ -116,6 +116,10 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
       }
 
       rindex = nrindex;
+    }
+
+    if (prevCheckpoint <= getLastAuthCheckpoint()) {
+      revert WrongFinalCheckpoint(prevCheckpoint, getLastAuthCheckpoint());
     }
   }
 }

@@ -148,4 +148,4 @@ jobs:
           version: nightly
 
       - name: Run tests
-        run: forge test -vvv
+        run: FOUNDRY_FUZZ_RUNS=2048 forge test -vvv

@@ -100,4 +100,24 @@ contract('Chained signatures', (accounts: string[]) => {
     const sig = await wallet.signTransactions([{}])
     await wallet.relayTransactions([{}], chain(chain(sig)))
   })
+
+  it("Should reject signature if current checkpoint is below signed checkpoints", async () => {
+    const wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address })
+
+    const checkpoint = Math.floor(Date.now())
+
+    await wallet.sendTransactions([{
+      target: wallet.address,
+      data: wallet.mainModule.interface.encodeFunctionData(
+        'setLastAuthCheckpoint', [checkpoint]
+      )
+    }])
+
+    const hsih = hashSetImagehash(wallet_b.imageHash, checkpoint)
+    const sig = await wallet.signDigest(hsih)
+    const topsig = await wallet_b.signTransactions([{}])
+    const bundled = chain(topsig, { sig: sig, checkpoint })
+
+    await expectToBeRejected(wallet_b.relayTransactions([{}], bundled), `WrongFinalCheckpoint(${checkpoint}, ${checkpoint})`)
+  })
 })
