@@ -124,4 +124,17 @@ contract AdvTest is Test {
       return false;
     }
   }
+
+  function replicate(bytes memory _data) internal {
+    (bool suc, bytes memory res) = address(this).call(_data);
+    if (!suc) {
+      assembly {
+        revert(add(res, 32), mload(res))
+      }
+    }
+  }
+
+  function addrToBytes32(address _addr) internal pure returns (bytes32) {
+    return bytes32(uint256(uint160(_addr)));
+  }
 }
