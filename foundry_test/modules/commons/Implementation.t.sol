@@ -45,6 +45,7 @@ contract ImplementationTest is AdvTest {
     Factory factory = new Factory();
 
     _imp = boundNoSys(_imp);
+    _imp2 = boundNoSys(_imp2);
 
     vm.etch(_imp, address(new ImplementationImp()).code);
     address wallet = factory.deploy(_imp, _salt);
