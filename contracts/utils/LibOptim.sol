@@ -37,15 +37,18 @@ library LibOptim {
     address _to,
     uint256 _val,
     uint256 _gas,
-    bytes memory _data
+    bytes calldata _data
   ) internal returns (bool r) {
     assembly {
+      let tmp := mload(0x40)
+      calldatacopy(tmp, _data.offset, _data.length)
+
       r := call(
         _gas,
         _to,
         _val,
-        add(_data, 32),
-        mload(_data),
+        tmp,
+        _data.length,
         0,
         0
       )
@@ -55,14 +58,17 @@ library LibOptim {
   function delegatecall(
     address _to,
     uint256 _gas,
-    bytes memory _data
+    bytes calldata _data
   ) internal returns (bool r) {
     assembly {
+      let tmp := mload(0x40)
+      calldatacopy(tmp, _data.offset, _data.length)
+
       r := delegatecall(
         _gas,
         _to,
-        add(_data, 32),
-        mload(_data),
+        tmp,
+        _data.length,
         0,
         0
       )

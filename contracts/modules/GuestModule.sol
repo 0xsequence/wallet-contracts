@@ -3,6 +3,7 @@ pragma solidity 0.8.14;
 pragma experimental ABIEncoderV2;
 
 import "../utils/SignatureValidator.sol";
+import "../utils/LibOptim.sol";
 
 import "./commons/submodules/auth/SequenceBaseSig.sol";
 
@@ -39,7 +40,7 @@ contract GuestModule is
    * @param _txs Transactions to process
    */
   function execute(
-    Transaction[] memory _txs,
+    Transaction[] calldata _txs,
     uint256,
     bytes calldata
   ) public override {
@@ -55,7 +56,7 @@ contract GuestModule is
    * @param _txs Transactions to process
    */
   function selfExecute(
-    Transaction[] memory _txs
+    Transaction[] calldata _txs
   ) public override {
     // Hash transaction bundle
     bytes32 txHash = SequenceBaseSig.subDigest(keccak256(abi.encode('self:', _txs)));
@@ -71,29 +72,28 @@ contract GuestModule is
    */
   function _executeGuest(
     bytes32 _txHash,
-    Transaction[] memory _txs
+    Transaction[] calldata _txs
   ) private {
     // Execute transaction
-    for (uint256 i = 0; i < _txs.length; i++) {
-      Transaction memory transaction = _txs[i];
-
-      bool success;
-      bytes memory result;
+    uint256 size = _txs.length;
+    for (uint256 i = 0; i < size; i++) {
+      Transaction calldata transaction = _txs[i];
+      uint256 gasLimit = transaction.gasLimit;
 
       if (transaction.delegateCall) revert DelegateCallNotAllowed();
-      if (gasleft() < transaction.gasLimit) revert NotEnoughGas(transaction.gasLimit, gasleft());
+      if (gasleft() < gasLimit) revert NotEnoughGas(gasLimit, gasleft());
 
-      // solhint-disable
-      (success, result) = transaction.target.call{
-        value: transaction.value,
-        gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
-      }(transaction.data);
-      // solhint-enable
+      bool success = LibOptim.call(
+        transaction.target,
+        transaction.value,
+        gasLimit == 0 ? gasleft() : gasLimit,
+        transaction.data
+      );
 
       if (success) {
         emit TxExecuted(_txHash);
       } else {
-        _revertBytes(transaction, _txHash, result);
+        _revertBytes(transaction.revertOnError, _txHash, LibOptim.returnData());
       }
     }
   }
