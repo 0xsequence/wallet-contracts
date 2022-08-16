@@ -21,4 +21,51 @@ library LibOptim {
       c := keccak256(0, 64)
     }
   }
-}
+
+  function returnData() internal pure returns (bytes memory r) {
+    assembly {
+      let size := returndatasize()
+      r := mload(0x40)
+      let start := add(r, 32)
+      mstore(0x40, add(start, size))
+      mstore(r, size)
+      returndatacopy(start, 0, size)
+    }
+  }
+
+  function call(
+    address _to,
+    uint256 _val,
+    uint256 _gas,
+    bytes memory _data
+  ) internal returns (bool r) {
+    assembly {
+      r := call(
+        _gas,
+        _to,
+        _val,
+        add(_data, 32),
+        mload(_data),
+        0,
+        0
+      )
+    }
+  }
+
+  function delegatecall(
+    address _to,
+    uint256 _gas,
+    bytes memory _data
+  ) internal returns (bool r) {
+    assembly {
+      r := delegatecall(
+        _gas,
+        _to,
+        add(_data, 32),
+        mload(_data),
+        0,
+        0
+      )
+    }
+  }
+} 

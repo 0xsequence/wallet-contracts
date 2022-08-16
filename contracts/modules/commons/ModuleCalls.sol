@@ -12,6 +12,8 @@ import "./interfaces/IModuleAuth.sol";
 import "./submodules/nonce/SubModuleNonce.sol";
 import "./submodules/auth/SequenceBaseSig.sol";
 
+import "../../utils/LibOptim.sol";
+
 
 abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth {
   //                       NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
@@ -120,29 +122,34 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
   ) private {
     unchecked {
       // Execute transaction
-      for (uint256 i = 0; i < _txs.length; i++) {
+      uint256 size = _txs.length;
+      for (uint256 i = 0; i < size; i++) {
         Transaction memory transaction = _txs[i];
+        uint256 gasLimit = transaction.gasLimit;
+
+        if (gasleft() < gasLimit) revert NotEnoughGas(gasLimit, gasleft());
 
         bool success;
-        bytes memory result;
-
-        if (gasleft() < transaction.gasLimit) revert NotEnoughGas(transaction.gasLimit, gasleft());
-
         if (transaction.delegateCall) {
-          (success, result) = transaction.target.delegatecall{
-            gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
-          }(transaction.data);
+          success = LibOptim.delegatecall(
+            transaction.target,
+            gasLimit == 0 ? gasleft() : gasLimit,
+            transaction.data
+          );
         } else {
-          (success, result) = transaction.target.call{
-            value: transaction.value,
-            gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
-          }(transaction.data);
+          success = LibOptim.call(
+            transaction.target,
+            transaction.value,
+            gasLimit == 0 ? gasleft() : gasLimit,
+            transaction.data
+          );
         }
 
         if (success) {
           emit TxExecuted(_txHash);
         } else {
-          _revertBytes(transaction, _txHash, result);
+          // Avoid copy of return data until neccesary
+          _revertBytes(transaction, _txHash, LibOptim.returnData());
         }
       } 
     }
