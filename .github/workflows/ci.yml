@@ -132,7 +132,7 @@ jobs:
           version: nightly
 
       - name: Run tests
-        run: FOUNDRY_FUZZ_RUNS=65536 MAX_ARRAY_LEN=32 forge test -vvv
+        run: FOUNDRY_FUZZ_RUNS=2048 MAX_ARRAY_LEN=32 forge test -vvv
 
   foundry-tests-long-arrays:
     name: Foundry tests (long arrays)
@@ -148,4 +148,4 @@ jobs:
           version: nightly
 
       - name: Run tests
-        run: FOUNDRY_FUZZ_RUNS=4096 forge test -vvv
+        run: FOUNDRY_FUZZ_RUNS=1024 forge test -vvv
