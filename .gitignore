@@ -1,4 +1,5 @@
 .vscode
+.devcontainer
 node_modules/
 
 npm-debug.log*
@@ -14,5 +15,7 @@ coverage.json
 config/*.env
 
 artifacts
+foundry_artifacts
+
 cache
 gen

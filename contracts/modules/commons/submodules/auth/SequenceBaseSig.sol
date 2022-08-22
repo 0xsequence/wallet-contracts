@@ -34,9 +34,11 @@ library SequenceBaseSig {
 
   function _joinAddrAndWeight(
     address _addr,
-    uint256 _weight
+    uint96 _weight
   ) internal pure returns (bytes32) {
-    return bytes32(uint256(uint160(_addr))) | bytes32((uint256(_weight) << 160));
+    unchecked {
+      return bytes32(uint256(_weight) << 160 | uint256(uint160(_addr)));
+    }
   }
 
   function recoverBranch(
@@ -57,7 +59,7 @@ library SequenceBaseSig {
 
         if (flag == FLAG_ADDRESS) {
           // Read plain address
-          uint256 addrWeight; address addr;
+          uint8 addrWeight; address addr;
           (addrWeight, addr, rindex) = _signature.readUint8Address(rindex);
 
           // Write weight and address to image
@@ -68,7 +70,7 @@ library SequenceBaseSig {
 
         if (flag == FLAG_SIGNATURE) {
           // Read weight
-          uint256 addrWeight;
+          uint8 addrWeight;
           (addrWeight, rindex) = _signature.readUint8(rindex);
 
           // Read single signature and recover signer
@@ -87,7 +89,7 @@ library SequenceBaseSig {
 
         if (flag == FLAG_DYNAMIC_SIGNATURE) {
           // Read signer and wight
-          uint256 addrWeight; address addr;
+          uint8 addrWeight; address addr;
           (addrWeight, addr, rindex) = _signature.readUint8Address(rindex);
 
           // Read signature size
@@ -151,7 +153,7 @@ library SequenceBaseSig {
       (weight, imageHash) = recoverBranch(_subDigest, _signature[2:]);
 
       // Thershold is the top-most node (but first on the signature)
-      (threshold) = LibBytes.readFirstUint16(_signature);
+      threshold = LibBytes.readFirstUint16(_signature);
       imageHash = LibOptim.fkeccak256(imageHash, bytes32(threshold));
     }
   }

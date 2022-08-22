@@ -72,7 +72,7 @@ contract('MainModule', () => {
             gasLimit: optimalGasLimit,
             target: ethers.constants.AddressZero,
             value: ethers.constants.Zero,
-            data: []
+            data: "0x0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12e0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12e"
           }))
 
           for (let i = 0; i < runs; i++) {

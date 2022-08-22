@@ -10,6 +10,9 @@ import "./interfaces/IModuleCalls.sol";
 import "./interfaces/IModuleAuth.sol";
 
 import "./submodules/nonce/SubModuleNonce.sol";
+import "./submodules/auth/SequenceBaseSig.sol";
+
+import "../../utils/LibOptim.sol";
 
 
 abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth {
@@ -76,7 +79,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @param _signature  Encoded signature
    */
   function execute(
-    Transaction[] memory _txs,
+    Transaction[] calldata _txs,
     uint256 _nonce,
     bytes calldata _signature
   ) external override virtual {
@@ -84,7 +87,16 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     _validateNonce(_nonce);
 
     // Hash and verify transaction bundle
-    (bool isValid, bytes32 txHash) = _signatureValidation(keccak256(abi.encode(_nonce, _txs)), _signature);
+    (bool isValid, bytes32 txHash) = _signatureValidation(
+      keccak256(
+        abi.encode(
+          _nonce,
+          _txs
+        )
+      ),
+      _signature
+    );
+
     if (!isValid) {
       revert InvalidSignature(txHash, _signature);
     }
@@ -99,10 +111,14 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @param _txs  Transactions to execute
    */
   function selfExecute(
-    Transaction[] memory _txs
+    Transaction[] calldata _txs
   ) external override virtual onlySelf {
     // Hash transaction bundle
-    bytes32 txHash = _subDigest(keccak256(abi.encode('self:', _txs)), block.chainid);
+    bytes32 txHash = SequenceBaseSig.subDigest(
+      keccak256(
+        abi.encode('self:', _txs)
+      )
+    );
 
     // Execute the transactions
     _execute(txHash, _txs);
@@ -115,33 +131,42 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    */
   function _execute(
     bytes32 _txHash,
-    Transaction[] memory _txs
+    Transaction[] calldata _txs
   ) private {
     unchecked {
       // Execute transaction
-      for (uint256 i = 0; i < _txs.length; i++) {
-        Transaction memory transaction = _txs[i];
+      uint256 size = _txs.length;
+      for (uint256 i = 0; i < size; i++) {
+        Transaction calldata transaction = _txs[i];
+        uint256 gasLimit = transaction.gasLimit;
+
+        if (gasleft() < gasLimit) revert NotEnoughGas(gasLimit, gasleft());
 
         bool success;
-        bytes memory result;
-
-        if (gasleft() < transaction.gasLimit) revert NotEnoughGas(transaction.gasLimit, gasleft());
-
         if (transaction.delegateCall) {
-          (success, result) = transaction.target.delegatecall{
-            gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
-          }(transaction.data);
+          success = LibOptim.delegatecall(
+            transaction.target,
+            gasLimit == 0 ? gasleft() : gasLimit,
+            transaction.data
+          );
         } else {
-          (success, result) = transaction.target.call{
-            value: transaction.value,
-            gas: transaction.gasLimit == 0 ? gasleft() : transaction.gasLimit
-          }(transaction.data);
+          success = LibOptim.call(
+            transaction.target,
+            transaction.value,
+            gasLimit == 0 ? gasleft() : gasLimit,
+            transaction.data
+          );
         }
 
         if (success) {
           emit TxExecuted(_txHash);
         } else {
-          _revertBytes(transaction, _txHash, result);
+          // Avoid copy of return data until neccesary
+          _revertBytes(
+            transaction.revertOnError,
+            _txHash,
+            LibOptim.returnData()
+          );
         }
       } 
     }
@@ -206,16 +231,16 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
 
   /**
    * @notice Logs a failed transaction, reverts if the transaction is not optional
-   * @param _tx      Transaction that is reverting
-   * @param _txHash  Hash of the transaction
-   * @param _reason  Encoded revert message
+   * @param _revertOnError  Signals if it should revert or just log
+   * @param _txHash         Hash of the transaction
+   * @param _reason         Encoded revert message
    */
   function _revertBytes(
-    Transaction memory _tx,
+    bool _revertOnError,
     bytes32 _txHash,
     bytes memory _reason
   ) internal {
-    if (_tx.revertOnError) {
+    if (_revertOnError) {
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
     } else {
       emit TxFailed(_txHash, _reason);
