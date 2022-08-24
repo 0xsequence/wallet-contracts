@@ -39,7 +39,8 @@ abstract contract ModuleExtraAuth is ModuleSelfAuth, ModuleAuth {
   function setExtraImageHash(bytes32 _imageHash, uint256 _expiration) external onlySelf {
     _writeExpirationForImageHash(_imageHash, _expiration);
 
-    if (_expiration != 0) {
+    // solhint-disable-next-line not-rely-on-time
+    if (_expiration > block.timestamp) {
       emit AddedExtraImageHash(_imageHash, _expiration);
     } else {
       emit RemovedExtraImageHash(_imageHash);
