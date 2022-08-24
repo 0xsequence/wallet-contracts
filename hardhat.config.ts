@@ -43,6 +43,9 @@ const config: HardhatUserConfig = {
     arbitrum: networkConfig('arbitrum'),
     arbitrumTestnet: networkConfig('arbitrum-testnet'),
     optimism: networkConfig('optimism'),
+    metis: networkConfig('metis'),
+    nova: networkConfig('nova'),
+    avalanche: networkConfig('avalanche'),
     ganache: ganacheNetwork,
     coverage: {
       url: 'http://localhost:8555'

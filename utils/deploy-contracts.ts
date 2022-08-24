@@ -1,4 +1,4 @@
-import { network, run, config, tenderly } from 'hardhat'
+import { network, run, tenderly } from 'hardhat'
 import * as _ from 'lodash'
 import ora from 'ora'
 
@@ -47,7 +47,7 @@ const attempVerify = async <T extends ContractFactory>(name: string, _: new () =
   try {
     await tenderly.verify({
       name: name,
-      address: address,
+      address: address
     })
   } catch {}
 }

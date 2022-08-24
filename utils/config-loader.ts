@@ -3,7 +3,7 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum' | 'arbitrum-testnet' | 'optimism'
+type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum' | 'arbitrum-testnet' | 'optimism' | 'metis' | 'nova' | 'avalanche'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -47,6 +47,15 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
     case 'optimism':
       return 'https://mainnet.optimism.io'
 
+    case 'metis':
+      return 'https://andromeda.metis.io/?owner=1088'
+
+    case 'nova':
+      return 'https://nova.arbitrum.io/rpc'
+
+    case 'avalanche':
+      return 'https://nodes.sequence.app/avalanche'
+
     default:
       return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
   }
@@ -85,6 +94,25 @@ export const networkChainId = (network: EthereumNetworksTypes): number => {
 
     case 'optimism':
       return 10
+
+    case 'metis':
+      return 1088
+
+    case 'nova':
+      return 42170
+
+    case 'avalanche':
+      return 43114
+  }
+}
+
+export const etherscanKey = (network: EthereumNetworksTypes): string => {
+  const config = getEnvConfig('PROD')
+
+  if (network === 'mainnet') {
+    return config['ETHERSCAN']
+  } else {
+    return config[`ETHERSCAN_${network.toUpperCase()}`]
   }
 }
 
@@ -104,6 +132,6 @@ export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig
     gasMultiplier: networkGasMultiplier(network),
     timeout: 20000,
     httpHeaders: {},
-    etherscan: config['ETHERSCAN']
+    etherscan: etherscanKey(network)
   }
 }
