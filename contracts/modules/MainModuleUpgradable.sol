@@ -7,6 +7,7 @@ import "./commons/ModuleHooks.sol";
 import "./commons/ModuleCalls.sol";
 import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
+import "./commons/ModuleExtraAuth.sol";
 
 
 /**
@@ -18,11 +19,20 @@ import "./commons/ModuleCreator.sol";
  */
 contract MainModuleUpgradable is
   ModuleAuthUpgradable,
+  ModuleExtraAuth,
   ModuleCalls,
   ModuleUpdate,
   ModuleHooks,
   ModuleCreator
 {
+  function _isValidImage(bytes32 _imageHash) internal override(
+    IModuleAuth,
+    ModuleAuthUpgradable,
+    ModuleExtraAuth
+  ) view returns (bool) {
+    return super._isValidImage(_imageHash);
+  }
+
   /**
    * @notice Query if a contract implements an interface
    * @param _interfaceID The interface identifier, as specified in ERC-165
@@ -34,6 +44,7 @@ contract MainModuleUpgradable is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
+    ModuleAuth,
     ModuleAuthUpgradable,
     ModuleCalls,
     ModuleUpdate,

@@ -96,7 +96,7 @@ abstract contract ModuleAuth is
   function isValidSignature(
     bytes calldata _data,
     bytes calldata _signatures
-  ) external override virtual view returns (bytes4) {
+  ) public override virtual view returns (bytes4) {
     // Validate signatures
     (bool isValid,) = _signatureValidation(keccak256(_data), _signatures);
     if (isValid) {
@@ -118,7 +118,7 @@ abstract contract ModuleAuth is
   function isValidSignature(
     bytes32 _hash,
     bytes calldata _signatures
-  ) external override virtual view returns (bytes4) {
+  ) public override virtual view returns (bytes4) {
     // Validate signatures
     (bool isValid,) = _signatureValidation(_hash, _signatures);
     if (isValid) {

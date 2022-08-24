@@ -5,7 +5,7 @@ import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } fro
 
 import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock } from './utils/contracts'
 import { Imposter } from './utils/imposter'
-import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, SignatureType, subDigestOf } from './utils/sequence'
+import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, imageHash, SignatureType, subDigestOf } from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
 
 contract('MainModule', (accounts: string[]) => {
@@ -224,7 +224,7 @@ contract('MainModule', (accounts: string[]) => {
       const subDigest = subDigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
 
       const tx = wallet.relayTransactions([{}], signauture)
-      await expectToBeRejected(tx, `InvalidSignature("${subDigest}", "${signauture}")`)
+      await expect(tx).to.be.rejected
     })
 
     it('Should read weight of nested wallets', async () => {
@@ -569,6 +569,98 @@ contract('MainModule', (accounts: string[]) => {
 
       const storageValue = await hethers.provider.getStorageAt(wallet.address, wallet.address)
       expect(bytes32toAddress(storageValue)).to.equal(context.mainModuleUpgradable.address)
+    })
+  })
+
+  describe('Extra image hashes', () => {
+    ([{
+      name: 'using MainModule',
+      beforeEach: () => {},
+    }, {
+      name: 'using MainModuleUpgradable',
+      beforeEach: async () => {
+        const newConfig = SequenceWallet.basicWallet(context)
+        await wallet.updateImageHash(newConfig.imageHash)
+        wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+      }
+    }]).map((c) => {
+      describe(c.name, () => {
+        beforeEach(c.beforeEach)
+
+        it('Should accept signatures from multiple imageHashes', async () => {
+          const altWallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
+    
+          await wallet.deploy()
+          await wallet.addExtraImageHash(altWallet.imageHash)
+    
+          wallet.sendTransactions([{}], encodeNonce(1, 0))
+    
+          expect(await wallet.mainModule.extraImageHash(altWallet.imageHash)).to.not.equal(0)
+    
+          wallet = wallet
+            .useAddress()
+            .useConfig({ ...altWallet.config, address: undefined })
+            .useSigners(altWallet.signers)
+    
+          await wallet.sendTransactions([{}])
+        })
+
+        it('Should reject expired extra imgeHash', async () => {
+          const altWallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
+          await wallet.deploy()
+          await wallet.addExtraImageHash(altWallet.imageHash, 100)
+
+          const badWallet1 = wallet
+            .useAddress()
+            .useConfig({ ...altWallet.config, address: undefined })
+            .useSigners(altWallet.signers)
+
+          const tx = badWallet1.sendTransactions([{}])
+          await expect(tx).to.be.rejected
+        })
+
+        it('Should clear multiple extra imageHashes', async () => {
+          const altWallet1 = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
+          const altWallet2 = SequenceWallet.basicWallet(context)
+    
+          await wallet.deploy()
+          await wallet.addExtraImageHash(altWallet1.imageHash)
+          await wallet.addExtraImageHash(altWallet2.imageHash)
+    
+          expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.not.equal(0)
+          expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.not.equal(0)
+    
+          await wallet.clearExtraImageHashes([altWallet1.imageHash, altWallet2.imageHash])
+    
+          const badWallet1 = wallet
+            .useAddress()
+            .useConfig({ ...altWallet1.config, address: undefined })
+            .useSigners(altWallet1.signers)
+    
+          const badWallet2 = wallet
+            .useAddress()
+            .useConfig({ ...altWallet1.config, address: undefined })
+            .useSigners(altWallet1.signers)
+      
+          expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.equal(0)
+          expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.equal(0)
+    
+          await expect(badWallet1.sendTransactions([{}])).to.be.rejected
+          await expect(badWallet2.sendTransactions([{}])).to.be.rejected
+          await expect(wallet.sendTransactions([{}])).to.be.fulfilled
+        })
+    
+        it('Should fail to set extra imageHashes if not from self', async () => {
+          const altWallet = SequenceWallet.basicWallet(context)
+          const tx = wallet.mainModule.setExtraImageHash(altWallet.imageHash, Math.floor(Date.now() / 1000) + 1000)
+          await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${wallet.address}")`)
+        })
+    
+        it('Should fail to clear extra imageHashes if not from self', async () => {
+          const tx = wallet.mainModule.clearExtraImageHashes([])
+          await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${wallet.address}")`)
+        })
+      })
     })
   })
 

@@ -114,6 +114,10 @@ export class SequenceWallet {
     })
   }
 
+  useAddress(address?: string) {
+    return new SequenceWallet({ ...this.options, address: address ? address : this.address })
+  }
+
   useConfig(of: SequenceWallet | WalletConfig) {
     const config = (of as any).address !== undefined ? (of as any).config : of
     return new SequenceWallet({ ...this.options, config })
@@ -175,6 +179,28 @@ export class SequenceWallet {
       target: this.address,
       data: this.options.context.mainModule.interface.encodeFunctionData(
         'updateImageHash', [input]
+      )
+    }])
+  }
+
+  async addExtraImageHash(input: ethers.BytesLike | WalletConfig, expiration: ethers.BigNumberish = ethers.BigNumber.from(2).pow(248)) {
+    if (!ethers.utils.isBytesLike(input)) return this.addExtraImageHash(imageHash(input))
+
+    return this.sendTransactions([{
+      target: this.address,
+      data: this.options.context.mainModule.interface.encodeFunctionData(
+        'setExtraImageHash', [input, expiration]
+      )
+    }])
+  }
+
+  async clearExtraImageHashes(imageHashes: (ethers.BytesLike | WalletConfig)[]) {
+    return this.sendTransactions([{
+      target: this.address,
+      data: this.options.context.mainModule.interface.encodeFunctionData(
+        'clearExtraImageHashes', [
+          imageHashes.map((h) => ethers.utils.isBytesLike(h) ? h : imageHash(h))
+        ]
       )
     }])
   }

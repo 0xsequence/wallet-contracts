@@ -10,6 +10,7 @@ import "./commons/ModuleHooks.sol";
 import "./commons/ModuleCalls.sol";
 import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
+import "./commons/ModuleExtraAuth.sol";
 
 import "../interfaces/receivers/IERC1155Receiver.sol";
 import "../interfaces/receivers/IERC721Receiver.sol";
@@ -25,6 +26,7 @@ import "../interfaces/IERC1271Wallet.sol";
  */
 contract MainModule is
   ModuleAuthFixed,
+  ModuleExtraAuth,
   ModuleCalls,
   ModuleHooks,
   ModuleCreator
@@ -37,6 +39,14 @@ contract MainModule is
     _mainModuleUpgradable
   ) { }
 
+  function _isValidImage(bytes32 _imageHash) internal override(
+    IModuleAuth,
+    ModuleAuthFixed,
+    ModuleExtraAuth
+  ) view returns (bool) {
+    return super._isValidImage(_imageHash);
+  }
+
   /**
    * @notice Query if a contract implements an interface
    * @param _interfaceID The interface identifier, as specified in ERC-165
@@ -45,6 +55,7 @@ contract MainModule is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
+    ModuleAuth,
     ModuleAuthFixed,
     ModuleCalls,
     ModuleHooks,
