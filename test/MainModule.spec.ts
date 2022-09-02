@@ -664,6 +664,121 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
 
+  describe('Static signed digests', () => {
+    ([{
+      name: 'using MainModule',
+      beforeEach: () => {},
+    }, {
+      name: 'using MainModuleUpgradable',
+      beforeEach: async () => {
+        const newConfig = SequenceWallet.basicWallet(context)
+        await wallet.updateImageHash(newConfig.imageHash)
+        wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+      }
+    }]).map((c) => {
+      describe(c.name, () => {
+        it('Should accept static digest for sending a transaction', async () => {
+          const tx = applyTxDefaults([{}])
+          const txDigest = digestOf(tx, encodeNonce(1, 0))
+
+          const expiration = Math.floor(Date.now() / 1000) + 1000
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'setStaticDigest',
+              [txDigest, expiration])
+          }])
+
+          expect(await wallet.mainModule.staticDigest(txDigest)).to.equal(expiration)
+          await wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')
+
+          const relay2 = wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')
+          await expectToBeRejected(relay2, `BadNonce(1, 0, 1)`)
+        })
+
+        it('Should accept static digest for EIP-1271', async () => {
+          const message = ethers.utils.randomBytes(99)
+          const digest1 = ethers.utils.keccak256(message)
+          const digest2 = ethers.utils.keccak256([])
+
+          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](digest1, '0x0000')).to.equal('0x00000000')
+          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](digest2, '0x0000')).to.equal('0x00000000')
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'addStaticDigests',
+              [[digest1, digest2]]
+            )
+          }])
+
+          expect(await wallet.mainModule.staticDigest(digest1)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
+          expect(await wallet.mainModule.staticDigest(digest2)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
+
+          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x0000')).to.equal('0x20c13b0b')
+          expect(await wallet.mainModule['isValidSignature(bytes32,bytes)'](digest2, '0x0000')).to.equal('0x1626ba7e')
+        })
+
+        it('Should remove static digest', async () => {
+          const tx = applyTxDefaults([{}])
+          const txDigest = digestOf(tx, encodeNonce(1, 0))
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'setStaticDigest',
+              [txDigest, ethers.BigNumber.from(2).pow(256).sub(1)])
+          }])
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'setStaticDigest',
+              [txDigest, 0])
+          }])
+
+          await expect(wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')).to.be.rejected
+        })
+
+        it('Should fail to set static signer if not self', async () => {
+          const tx = wallet.mainModule.setStaticDigest(digestOf([{}], encodeNonce(1, 0)), 1)
+          await expect(tx).to.be.rejected
+        })
+
+        it('Should fail to add static signers if not self', async () => {
+          const digests = [digestOf([{}], encodeNonce(1, 0)), digestOf([{}], encodeNonce(2, 0))]
+          const tx = wallet.mainModule.addStaticDigests(digests)
+          await expect(tx).to.be.rejected
+        })
+
+        it('Should add many static digests for transactions at the same time', async () => {
+          const tx = applyTxDefaults([{}])
+  
+          const txDigest1 = digestOf(tx, encodeNonce(1, 0))
+          const txDigest2 = digestOf(tx, encodeNonce(2, 0))
+          const txDigest3 = digestOf(tx, encodeNonce(3, 0))
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'addStaticDigests',
+              [[txDigest1, txDigest2, txDigest3]])
+          }])
+
+
+          expect(await wallet.mainModule.staticDigest(txDigest1)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
+          expect(await wallet.mainModule.staticDigest(txDigest2)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
+          expect(await wallet.mainModule.staticDigest(txDigest3)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
+
+          await wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')
+          await wallet.mainModule.execute(tx, encodeNonce(2, 0), '0x00ff')
+          await wallet.mainModule.execute(tx, encodeNonce(3, 0), '0x0000')
+        })
+      })
+    })
+  })
+
   describe('External calls', () => {
     let { valA, valB } = { valA: Math.floor(Date.now()), valB: randomHex(120) }
 
