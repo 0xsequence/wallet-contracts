@@ -8,17 +8,11 @@ import "./ModuleStorage.sol";
 
 import "../../Wallet.sol";
 
-import "hardhat/console.sol";
-
 
 abstract contract ModuleStaticAuth is ModuleSelfAuth, ModuleAuth {
   //                       STATIC_DIGEST_HASH_KEY = keccak256("org.sequence.module.static.auth.digest");
   bytes32 private constant STATIC_DIGEST_HASH_KEY = bytes32(0x7f25a23abc421d10864063e9a8ae5fd3fbd5116e156f148428b6a3a02ffd9454);
 
-  bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
-  bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
-
-  event RemovedStaticDigest(bytes32 indexed _digest);
   event SetStaticDigest(bytes32 indexed _digest, uint256 _expiration);
 
   function _writeExpirationForStaticDigest(bytes32 _digest, uint256 _expiration) internal {
@@ -45,12 +39,7 @@ abstract contract ModuleStaticAuth is ModuleSelfAuth, ModuleAuth {
   function setStaticDigest(bytes32 _digest, uint256 _expiration) external onlySelf {
     _writeExpirationForStaticDigest(_digest, _expiration);
 
-    // solhint-disable-next-line not-rely-on-time
-    if (_expiration > block.timestamp) {
-      emit SetStaticDigest(_digest, _expiration);
-    } else {
-      emit RemovedStaticDigest(_digest);
-    }
+    emit SetStaticDigest(_digest, _expiration);
   }
 
   function addStaticDigests(bytes32[] calldata _digests) external onlySelf {

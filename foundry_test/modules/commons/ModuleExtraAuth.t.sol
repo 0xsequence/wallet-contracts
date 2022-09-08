@@ -133,7 +133,12 @@ contract ModuleExtraAuthTest is AdvTest {
       imp.setExtraImageHash(_set[i].imageHash, expiration);
     }
 
-    imp.clearExtraImageHashes(_clear);
+    bytes32[] memory toClear = new bytes32[](sizeClear);
+    for (uint256 i = 0; i < sizeClear; i++) {
+      toClear[i] = _clear[i];
+    }
+
+    imp.clearExtraImageHashes(toClear);
 
     for (uint256 i = 0; i < sizeClear; i++) {
       assertEq(imp.isValidImage(_clear[i]), _clear[i] == _base);
