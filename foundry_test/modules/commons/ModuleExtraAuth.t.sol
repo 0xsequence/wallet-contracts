@@ -42,8 +42,7 @@ contract ModuleExtraAuthTest is AdvTest {
     imp = new ModuleExtraAuthImp2();
   }
 
-  event RemovedExtraImageHash(bytes32 indexed _imageHash);
-  event AddedExtraImageHash(bytes32 indexed _imageHash, uint256 _expiration);
+  event SetExtraImageHash(bytes32 indexed _imageHash, uint256 _expiration);
 
   function test_shouldAcceptExtraImageHashes(
     bytes32 _imageHashb,
@@ -66,7 +65,7 @@ contract ModuleExtraAuthTest is AdvTest {
 
     vm.prank(address(imp));
     vm.expectEmit(true, true, true, true, address(imp));
-    emit AddedExtraImageHash(_imageHash1, _expiration1);
+    emit SetExtraImageHash(_imageHash1, _expiration1);
     imp.setExtraImageHash(_imageHash1, _expiration1);
 
     assertTrue(imp.isValidImage(_imageHash1));
@@ -75,7 +74,7 @@ contract ModuleExtraAuthTest is AdvTest {
 
     vm.prank(address(imp));
     vm.expectEmit(true, true, true, true, address(imp));
-    emit AddedExtraImageHash(_imageHash2, _expiration2);
+    emit SetExtraImageHash(_imageHash2, _expiration2);
     imp.setExtraImageHash(_imageHash2, _expiration2);
 
     assertTrue(imp.isValidImage(_imageHashb));
@@ -97,12 +96,12 @@ contract ModuleExtraAuthTest is AdvTest {
 
     vm.prank(address(imp));
     vm.expectEmit(true, true, true, true, address(imp));
-    emit AddedExtraImageHash(_imageHash1, _expiration1);
+    emit SetExtraImageHash(_imageHash1, _expiration1);
     imp.setExtraImageHash(_imageHash1, _expiration1);
 
     vm.prank(address(imp));
     vm.expectEmit(true, true, true, true, address(imp));
-    emit RemovedExtraImageHash(_imageHash2);
+    emit SetExtraImageHash(_imageHash2, _expiration2);
     imp.setExtraImageHash(_imageHash2, _expiration2);
 
     assertTrue(imp.isValidImage(_imageHashb));

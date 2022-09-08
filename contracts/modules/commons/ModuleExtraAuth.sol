@@ -10,8 +10,7 @@ abstract contract ModuleExtraAuth is ModuleSelfAuth, ModuleAuth {
   //                       EXTRA_IMAGE_HASH_KEY = keccak256("org.sequence.module.static.auth.extra.image.hash");
   bytes32 private constant EXTRA_IMAGE_HASH_KEY = bytes32(0x849e7bdc245db17e50b9f43086f1914d70eb4dab6dd89af4d541d53353ad97de);
 
-  event RemovedExtraImageHash(bytes32 indexed _imageHash);
-  event AddedExtraImageHash(bytes32 indexed _imageHash, uint256 _expiration);
+  event SetExtraImageHash(bytes32 indexed _imageHash, uint256 _expiration);
 
   function _writeExpirationForImageHash(bytes32 _imageHash, uint256 _expiration) internal {
     ModuleStorage.writeBytes32Map(EXTRA_IMAGE_HASH_KEY, _imageHash, bytes32(_expiration));
@@ -39,12 +38,7 @@ abstract contract ModuleExtraAuth is ModuleSelfAuth, ModuleAuth {
   function setExtraImageHash(bytes32 _imageHash, uint256 _expiration) external onlySelf {
     _writeExpirationForImageHash(_imageHash, _expiration);
 
-    // solhint-disable-next-line not-rely-on-time
-    if (_expiration > block.timestamp) {
-      emit AddedExtraImageHash(_imageHash, _expiration);
-    } else {
-      emit RemovedExtraImageHash(_imageHash);
-    }
+    emit SetExtraImageHash(_imageHash, _expiration);
   }
 
   function clearExtraImageHashes(bytes32[] calldata _imageHashes) external onlySelf {
@@ -53,7 +47,8 @@ abstract contract ModuleExtraAuth is ModuleSelfAuth, ModuleAuth {
       for (uint256 i = 0; i < imageHashesLength; i++) {
         bytes32 imageHash = _imageHashes[i];
         _writeExpirationForImageHash(imageHash, 0);
-        emit RemovedExtraImageHash(imageHash);
+
+       emit SetExtraImageHash(imageHash, 0);
       }
     }
   }
