@@ -108,6 +108,7 @@ contract ModuleStaticAuthTest is AdvTest {
     bytes32[] calldata _signatureWitnesses
   ) external {
     uint256 digestsSize = mayBoundArr(_digests.length);
+    digestsSize = bound(digestsSize, 0, 16);
 
     for (uint i = 0; i < digestsSize; i++) {
       vm.expectEmit(true, true, true, true, address(imp));
@@ -225,5 +226,5 @@ contract ModuleStaticAuthTest is AdvTest {
     vm.expectRevert(abi.encodeWithSignature('OnlySelfAuth(address,address)', _notself, address(imp)));
     vm.prank(_notself);
     imp.addStaticDigests(_digests);
-  }   
+  }
 }

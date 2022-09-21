@@ -39,6 +39,9 @@ contract SequenceNoChainIdSigTest is AdvTest {
   }
 
   function test_subDigest_DiffChainId(bytes32 _digest, uint256 _chainId1, uint256 _chainId2) external {
+    _chainId1 = bound(_chainId1, 0, type(uint64).max);
+    _chainId2 = bound(_chainId2, 0, type(uint64).max);
+
     vm.chainId(_chainId1);
     bytes32 res1 = lib.subDigest(_digest);
     vm.chainId(_chainId2);
