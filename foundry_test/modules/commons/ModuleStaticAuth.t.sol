@@ -64,6 +64,8 @@ contract ModuleStaticAuthTest is AdvTest {
     bytes memory sig = abi.encodePacked(_prefix);
 
     uint256 witnessesLength = mayBoundArr(_witnesses.length);
+    witnessesLength = bound(witnessesLength, 0, 64);
+
     for (uint i = 0; i < witnessesLength; i++) {
       sig = abi.encodePacked(sig, uint8(3), _witnesses[i]);
     }
@@ -108,18 +110,22 @@ contract ModuleStaticAuthTest is AdvTest {
     bytes32[] calldata _signatureWitnesses
   ) external {
     uint256 digestsSize = mayBoundArr(_digests.length);
-    digestsSize = bound(digestsSize, 0, 16);
+
+    digestsSize = bound(digestsSize, 0, 64);
+
+    bytes32[] memory digests = new bytes32[](digestsSize);
 
     for (uint i = 0; i < digestsSize; i++) {
+      digests[i] = _digests[i];
       vm.expectEmit(true, true, true, true, address(imp));
       emit SetStaticDigest(_digests[i], type(uint256).max);
     }
 
     vm.prank(address(imp));
-    imp.addStaticDigests(_digests);
+    imp.addStaticDigests(digests);
 
     for (uint i = 0; i < digestsSize; i++) {
-      bytes32 digest = _digests[i];
+      bytes32 digest = digests[i];
 
       assertEq(imp.staticDigest(digest), type(uint256).max);
 
