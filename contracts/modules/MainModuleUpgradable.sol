@@ -9,6 +9,7 @@ import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
 import "./commons/ModuleStaticAuth.sol";
+import "./commons/ModuleStaticMerkleAuth.sol";
 
 
 /**
@@ -22,6 +23,7 @@ contract MainModuleUpgradable is
   ModuleAuthUpgradable,
   ModuleExtraAuth,
   ModuleStaticAuth,
+  ModuleStaticMerkleAuth,
   ModuleCalls,
   ModuleUpdate,
   ModuleHooks,
@@ -43,6 +45,7 @@ contract MainModuleUpgradable is
   ) internal view override(
     IModuleAuth,
     ModuleAuth,
+    ModuleStaticMerkleAuth,
     ModuleStaticAuth
   ) returns (bool, bytes32) {
     return super._signatureValidation(_digest, _signature);

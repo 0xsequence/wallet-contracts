@@ -1,11 +1,12 @@
 import * as ethers from 'ethers'
 import { ethers as hethers } from 'hardhat'
+import MerkleTree from 'merkletreejs'
 
 import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } from './utils'
 
 import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock } from './utils/contracts'
 import { Imposter } from './utils/imposter'
-import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, imageHash, SignatureType, subDigestOf } from './utils/sequence'
+import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, SignatureType, subDigestOf } from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
 
 contract('MainModule', (accounts: string[]) => {
@@ -664,7 +665,7 @@ contract('MainModule', (accounts: string[]) => {
     })
   })
 
-  describe('Static signed digests', () => {
+  describe('Static digests', () => {
     ([{
       name: 'using MainModule',
       beforeEach: () => {},
@@ -766,7 +767,6 @@ contract('MainModule', (accounts: string[]) => {
               [[txDigest1, txDigest2, txDigest3]])
           }])
 
-
           expect(await wallet.mainModule.staticDigest(txDigest1)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
           expect(await wallet.mainModule.staticDigest(txDigest2)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
           expect(await wallet.mainModule.staticDigest(txDigest3)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
@@ -774,6 +774,128 @@ contract('MainModule', (accounts: string[]) => {
           await wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')
           await wallet.mainModule.execute(tx, encodeNonce(2, 0), '0x00ff')
           await wallet.mainModule.execute(tx, encodeNonce(3, 0), '0x0000')
+        })
+      })
+    })
+  })
+
+  describe('Static merkle digests', () => {
+    ([{
+      name: 'using MainModule',
+      beforeEach: () => {},
+    }, {
+      name: 'using MainModuleUpgradable',
+      beforeEach: async () => {
+        const newConfig = SequenceWallet.basicWallet(context)
+        await wallet.updateImageHash(newConfig.imageHash)
+        wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+      }
+    }]).map((c) => {
+      describe(c.name, () => {
+        it('Should accept proof if digest == root', async () => {
+          const message = ethers.utils.randomBytes(99)
+          const digest = ethers.utils.keccak256(message)
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'setStaticMerkleRoot',
+              [digest]
+            )
+          }])
+
+          const res1 = await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x0400')
+          expect(res1).to.equal('0x20c13b0b')
+
+          const res2 = await wallet.mainModule['isValidSignature(bytes32,bytes)'](digest, '0x0400')
+          expect(res2).to.equal('0x1626ba7e')
+        })
+
+        it('Should reject proof with wrong type, subtype or size', async () => {
+          const message = ethers.utils.randomBytes(99)
+          const digest = ethers.utils.keccak256(message)
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'setStaticMerkleRoot',
+              [digest]
+            )
+          }])
+
+          const res1 = await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x0000034f7de970d1431306b4f04370ed2e0fe35c926dc1ef9781b0ca4644f4e7e90012')
+          expect(res1).to.equal('0x00000000')
+
+          const res2 = await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x0401')
+          expect(res2).to.equal('0x00000000')
+
+          const res3 = await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x040001')
+          expect(res3).to.equal('0x00000000')
+        })
+
+        it('Should reject bad proof', async () => {
+          const message = ethers.utils.randomBytes(99)
+          const digest = ethers.utils.keccak256(message)
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'setStaticMerkleRoot',
+              [digest]
+            )
+          }])
+
+          const res1 = await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x04004f7de970d1431306b4f04370ed2e0fe35c926dc1ef9781b0ca4644f4e7e90012')
+          expect(res1).to.equal('0x00000000')
+
+          const res2 = await wallet.mainModule['isValidSignature(bytes32,bytes)'](digest, '0x04004f7de970d1431306b4f04370ed2e0fe35c926dc1ef9781b0ca4644f4e7e90012')
+          expect(res2).to.equal('0x00000000')
+        })
+
+        it('Should accept merkle proof of odd list of digests', async () => {
+          const digests = new Array(33).fill(0).map(() => ethers.utils.hexlify(ethers.utils.randomBytes(32)))
+
+          const merkle = new MerkleTree(digests, require('keccak256'), { sort: true })
+          const root = merkle.getHexRoot()
+
+          for (let i = 0; i < digests.length; i++) {
+            const proof = merkle.getHexProof(digests[i])
+
+            await wallet.sendTransactions([{
+              target: wallet.address,
+              data: wallet.mainModule.interface.encodeFunctionData(
+                'setStaticMerkleRoot',
+                [root]
+              )
+            }])
+
+            const contProof = '0x0400' + proof.map((p) => p.slice(2)).join('')
+            const res = await wallet.mainModule['isValidSignature(bytes32,bytes)'](digests[i], contProof)
+            expect(res).to.equal('0x1626ba7e')
+          }
+        })
+
+        it('Should accept merkle proof of even list of digests', async () => {
+          const digests = new Array(24).fill(0).map(() => ethers.utils.hexlify(ethers.utils.randomBytes(32)))
+
+          const merkle = new MerkleTree(digests, require('keccak256'), { sort: true })
+          const root = merkle.getHexRoot()
+
+          for (let i = 0; i < digests.length; i++) {
+            const proof = merkle.getHexProof(digests[i])
+
+            await wallet.sendTransactions([{
+              target: wallet.address,
+              data: wallet.mainModule.interface.encodeFunctionData(
+                'setStaticMerkleRoot',
+                [root]
+              )
+            }])
+
+            const contProof = '0x0400' + proof.map((p) => p.slice(2)).join('')
+            const res = await wallet.mainModule['isValidSignature(bytes32,bytes)'](digests[i], contProof)
+            expect(res).to.equal('0x1626ba7e')
+          }
         })
       })
     })

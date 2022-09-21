@@ -197,11 +197,11 @@ contract ModuleStaticAuthTest is AdvTest {
 
     (isValid, resSubdigest) = imp.signatureValidation(_set2, signature);
     assertEq(isValid, _set1 != _set2);
-    assertEq(resSubdigest, staticSubdigest2);
+    assertEq(resSubdigest, _set1 != _set2 ? staticSubdigest2 : subDigest1);
 
     (isValid, resSubdigest) = imp.signatureValidation(_set2, belowThersholdSignature);
     assertEq(isValid, _set1 != _set2);
-    assertEq(resSubdigest, staticSubdigest2);
+    assertEq(resSubdigest, _set1 != _set2 ? staticSubdigest2 : subDigest1);
   }
 
   function test_fail_setStaticDigest_NotSelf(
@@ -225,5 +225,5 @@ contract ModuleStaticAuthTest is AdvTest {
     vm.expectRevert(abi.encodeWithSignature('OnlySelfAuth(address,address)', _notself, address(imp)));
     vm.prank(_notself);
     imp.addStaticDigests(_digests);
-  }
+  }   
 }
