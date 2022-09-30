@@ -9,7 +9,23 @@ export enum SignatureType {
   NoChaindDynamic = 2,
 }
 
-export type ConfigTopology = ImageHashNode | ImageHashLeaf
+export type SignerLeaf = {
+  address: string,
+  weight: BigNumberish
+}
+
+export type SubdigestLeaf = {
+  subDigest: string
+}
+
+export type ConfigLeaf = SubdigestLeaf | SignerLeaf
+
+export type ImageHashNode = {
+  left: ImageHashNode | ConfigLeaf,
+  right: ImageHashNode | ConfigLeaf
+}
+
+export type ConfigTopology = ImageHashNode | ConfigLeaf
 
 export type WalletConfig = {
   threshold: ethers.BigNumberish,
@@ -38,7 +54,8 @@ export enum SignaturePartType {
   Address = 1,
   Dynamic = 2,
   Node = 3,
-  Branch = 4
+  Branch = 4,
+  SubDigest = 5
 }
 
 export type SignaturePart = {
@@ -46,7 +63,6 @@ export type SignaturePart = {
   type: SignaturePartType; 
   signature?: string;
 }
-
 
 export function applyTxDefault(
   tx: Partial<Transaction>,
@@ -81,18 +97,16 @@ export const MetaTransactionsSolidityType = `tuple(
   bytes data
 )[]`
 
-export type ImageHashLeaf = {
-  address: string,
-  weight: BigNumberish
+export function isConfigLeaf(node: ConfigTopology): node is ConfigLeaf {
+  return !('left' in node || 'right' in node)
 }
 
-export type ImageHashNode = {
-  left: ImageHashNode | ImageHashLeaf,
-  right: ImageHashNode | ImageHashLeaf
+export function isSignerLeaf(node: ConfigTopology): node is SignerLeaf {
+  return isConfigLeaf(node) && 'weight' in node
 }
 
-export function isImageHashLeaf(node: ConfigTopology): node is ImageHashLeaf {
-  return 'address' in node && 'weight' in node
+export function isSubdigestLeaf(node: ConfigTopology): node is SubdigestLeaf {
+  return isConfigLeaf(node) && 'subDigest' in node
 }
 
 export function legacyTopology(config: SimplifiedWalletConfig): ConfigTopology {
@@ -127,12 +141,19 @@ export function legacyTopology(config: SimplifiedWalletConfig): ConfigTopology {
   return root
 }
 
-export function merkleTopology(config: SimplifiedWalletConfig): ConfigTopology {
-  const leaves = config.signers.map(s => ({
+export function toTopology(config: SimplifiedWalletConfig): ConfigTopology[] {
+  return config.signers.map(s => ({
     address: s.address,
     weight: s.weight
   })) as ConfigTopology[]
+}
 
+export function merkleTopology(leavesOrConfig: SimplifiedWalletConfig | ConfigTopology[]): ConfigTopology {
+  if (!Array.isArray(leavesOrConfig)) {
+    return merkleTopology(toTopology(leavesOrConfig))
+  }
+
+  const leaves = leavesOrConfig
   for (let s = leaves.length; s > 1; s = s / 2) {
     for (let i = 0; i < s / 2; i++) {
       const j1 = i * 2
@@ -160,8 +181,8 @@ export function optimize2SignersTopology(config: SimplifiedWalletConfig): Config
   return legacyTopology(config)
 }
 
-export function leavesOf(topology: ConfigTopology): ImageHashLeaf[] {
-  if (isImageHashLeaf(topology)) {
+export function leavesOf(topology: ConfigTopology): ConfigLeaf[] {
+  if (isConfigLeaf(topology)) {
     return [topology]
   }
 
@@ -171,8 +192,12 @@ export function leavesOf(topology: ConfigTopology): ImageHashLeaf[] {
   ]
 }
 
+export function subdigestLeaves(topology: ConfigTopology): string[] {
+  return leavesOf(topology).filter((l) => isSubdigestLeaf(l)).map((l: SubdigestLeaf) => l.subDigest)
+}
+
 export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig {
-  let leaves = leavesOf(config.topology)
+  let leaves = leavesOf(config.topology).filter((l) => isSignerLeaf(l)) as SignerLeaf[]
 
   return {
     threshold: config.threshold,
@@ -184,8 +209,15 @@ export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig
 }
 
 export function hashNode(node: ConfigTopology): string {
-  if (isImageHashLeaf(node)) {
+  if (isSignerLeaf(node)) {
     return joinAddrAndWeight(node.address, node.weight)
+  }
+
+  if (isSubdigestLeaf(node)) {
+    return ethers.utils.solidityKeccak256(
+      ['string', 'bytes32'],
+      ['Sequence static digest:\n', node.subDigest]
+    )
   }
 
   return ethers.utils.solidityKeccak256(
@@ -219,8 +251,12 @@ export function printTopology(topology: ConfigTopology, threshold?: ethers.BigNu
     return result
   }
 
-  if (isImageHashLeaf(topology)) {
+  if (isSignerLeaf(topology)) {
     return [`weight: ${topology.weight} - address: ${topology.address}`]
+  }
+
+  if (isSubdigestLeaf(topology)) {
+    return [`subDigest: ${topology.subDigest}`]
   }
 
   const root = hashNode(topology)
@@ -327,7 +363,7 @@ function leftSlice(topology: ConfigTopology): ConfigTopology[] {
   let stack: ConfigTopology[] = []
 
   let prev = topology
-  while (!isImageHashLeaf(prev)) {
+  while (!isConfigLeaf(prev)) {
     stack.unshift(prev.right)
     prev = prev.left
   }
@@ -413,6 +449,10 @@ export class SignatureConstructor {
     this.members.push({ type: SignaturePartType.Branch, value: branch })
   }
 
+  appendSubdigest(subDigest: string) {
+    this.members.push({ type: SignaturePartType.SubDigest, value: subDigest})
+  }
+
   encode(): string {
     let result = '0x'
 
@@ -455,6 +495,13 @@ export class SignatureConstructor {
           )
           break
 
+        case SignaturePartType.SubDigest:
+          result = ethers.utils.solidityPack(
+            ['bytes', 'uint8', 'bytes32'],
+            [result, SignaturePartType.SubDigest, member.value]
+          )
+          break
+
         default:
           throw new Error(`Unknown signature part type: ${member.type}`)
       }
@@ -467,6 +514,7 @@ export class SignatureConstructor {
 export function encodeSigners(
   topology: ConfigTopology,
   parts: SignaturePart[] | Map<string, SignaturePart>,
+  subDigests: string[],
   options?: EncodingOptions
 ): { encoded: string, weight: ethers.BigNumber } {
   // Map part to signers
@@ -475,7 +523,7 @@ export function encodeSigners(
     for (const part of parts) {
       partOfSigner.set(part.address, part)
     }
-    return encodeSigners(topology, partOfSigner, options)
+    return encodeSigners(topology, partOfSigner, subDigests, options)
   }
 
   const slice = leftSlice(topology)
@@ -483,11 +531,11 @@ export function encodeSigners(
 
   const constructor = new SignatureConstructor(options?.disableTrim)
   for (const node of slice) {
-    if (!isImageHashLeaf(node)) {
+    if (!isConfigLeaf(node)) {
       // If the node opens up to another branch
       // we recurse the encoding, and if the result has any weight
       // we have to embed the whole branch, otherwise we just add the node
-      const nested = encodeSigners(node, parts, options)
+      const nested = encodeSigners(node, parts, subDigests, options)
       if (nested.weight.isZero() && !options?.disableTrim) {
         constructor.appendNode(hashNode(node))
       } else {
@@ -495,13 +543,23 @@ export function encodeSigners(
         weight = weight.add(nested.weight)
       }
     } else {
-      // If the node is a leaf, we can just add the member
-      const part = parts.get(node.address) ?? { type: SignaturePartType.Address, address: node.address }
-      if (part.type !== SignaturePartType.Address) {
-        weight = weight.add(node.weight)
+      if (isSignerLeaf(node)) {
+        // If the node is a signer leaf, we can just add the member
+        const part = parts.get(node.address) ?? { type: SignaturePartType.Address, address: node.address }
+        if (part.type !== SignaturePartType.Address) {
+          weight = weight.add(node.weight)
+        }
+  
+        constructor.appendPart(node.weight, part)
+      } else {
+        // If the node is a subdigest add the node (unless it's an static subdigest signature)
+        if (subDigests.includes(node.subDigest)) {
+          weight = weight.add(ethers.BigNumber.from(2).pow(256).sub(1))
+          constructor.appendSubdigest(node.subDigest)
+        } else {
+          constructor.appendNode(hashNode(node))
+        }
       }
-
-      constructor.appendPart(node.weight, part)
     }
   }
 
@@ -514,9 +572,10 @@ export function encodeSigners(
 export function encodeSignature(
   config: WalletConfig,
   parts: SignaturePart[] | Map<string, SignaturePart>,
+  subDigests: string[],
   options?: EncodingOptions
 ) {
-  const encodedSigners = encodeSigners(config.topology, parts, options)
+  const encodedSigners = encodeSigners(config.topology, parts, subDigests, options)
 
   switch (options?.signatureType || SignatureType.Legacy) {
     case SignatureType.Dynamic:

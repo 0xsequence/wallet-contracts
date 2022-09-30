@@ -27,7 +27,6 @@ abstract contract ModuleAuth is
   bytes1 internal constant DYNAMIC_TYPE = hex"01";
   bytes1 internal constant NO_CHAIN_ID_TYPE = hex"02";
   bytes1 internal constant CHAINED_TYPE = hex"03";
-  bytes1 internal constant STUB_TYPE = hex"04";
 
   bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
@@ -68,13 +67,6 @@ abstract contract ModuleAuth is
       // original digest + chained recover
       // (subdigest will be computed in the chained recovery)
       return chainedRecover(_digest, _signature);
-    }
-
-    if (signatureType == STUB_TYPE) {
-      // signature is *always* invalid
-      // used when a different module is responsible
-      // for validating the message
-      return (1, 0, bytes32(0), bytes32(0));
     }
 
     revert InvalidSignatureType(signatureType);

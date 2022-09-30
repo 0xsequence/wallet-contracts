@@ -32,6 +32,7 @@ contract SequenceBaseSigTest is AdvTest {
   uint8 private constant FLAG_DYNAMIC_SIGNATURE = 2;
   uint8 private constant FLAG_NODE = 3;
   uint8 private constant FLAG_BRANCH = 4;
+  uint8 private constant FLAG_SUBDIGEST = 5;
 
   function setUp() public {
     lib = new SequenceBaseSigImp();
@@ -220,7 +221,7 @@ contract SequenceBaseSigTest is AdvTest {
   }
 
   function test_recoverBranch_Fail_InvalidFlag(uint8 _flag, bytes23 _hash, bytes calldata _sufix) external {
-    _flag = uint8(boundDiff(_flag, FLAG_SIGNATURE, FLAG_ADDRESS, FLAG_DYNAMIC_SIGNATURE, FLAG_NODE, FLAG_BRANCH));
+    _flag = uint8(boundDiff(_flag, FLAG_SIGNATURE, FLAG_ADDRESS, FLAG_DYNAMIC_SIGNATURE, FLAG_NODE, FLAG_BRANCH, FLAG_SUBDIGEST));
 
     vm.expectRevert(abi.encodeWithSignature('InvalidSignatureFlag(uint256)', _flag));
     lib.recoverBranch(_hash, abi.encodePacked(_flag, _sufix));

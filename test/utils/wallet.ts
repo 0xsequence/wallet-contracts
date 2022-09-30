@@ -1,7 +1,7 @@
 import { ethers, Overrides } from "ethers"
 import { shuffle } from "."
 import { MainModule, MainModuleUpgradable, SequenceContext } from "./contracts"
-import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, optimize2SignersTopology, SignaturePartType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
+import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, optimize2SignersTopology, SignaturePartType, SignatureType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
 
 export type StaticSigner = (ethers.Signer & { address: string })
 export type AnyStaticSigner = StaticSigner | SequenceWallet
@@ -214,6 +214,16 @@ export class SequenceWallet {
     return this.signSubDigest(subDigest)
   }
 
+  staticSubdigestSign(subDigest: ethers.BytesLike, useNoChainId = true): string {
+    const signatureType = useNoChainId ? SignatureType.NoChaindDynamic : this.options.encodingOptions?.signatureType
+    return encodeSignature(
+      this.config,
+      [],
+      [ ethers.utils.hexlify(subDigest) ],
+      { ...this.options.encodingOptions, signatureType }
+    )
+  }
+
   async signSubDigest(subDigest: ethers.BytesLike): Promise<string> {
     const sigParts = await Promise.all(this.signers.map(async (s) => {
       if (isSequenceSigner(s)) {
@@ -231,7 +241,7 @@ export class SequenceWallet {
       }
     }))
 
-    return encodeSignature(this.config, sigParts, this.options.encodingOptions)
+    return encodeSignature(this.config, sigParts, [], this.options.encodingOptions)
   }
 
   async signTransactions(ptxs: Partial<Transaction>[], nonce?: ethers.BigNumberish): Promise<string> {

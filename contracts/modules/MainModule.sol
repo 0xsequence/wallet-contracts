@@ -12,7 +12,6 @@ import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
 import "./commons/ModuleStaticAuth.sol";
-import "./commons/ModuleStaticMerkleAuth.sol";
 
 import "../interfaces/receivers/IERC1155Receiver.sol";
 import "../interfaces/receivers/IERC721Receiver.sol";
@@ -30,7 +29,6 @@ contract MainModule is
   ModuleAuthFixed,
   ModuleExtraAuth,
   ModuleStaticAuth,
-  ModuleStaticMerkleAuth,
   ModuleCalls,
   ModuleHooks,
   ModuleCreator
@@ -59,7 +57,6 @@ contract MainModule is
   ) internal view override(
     IModuleAuth,
     ModuleAuth,
-    ModuleStaticMerkleAuth,
     ModuleStaticAuth
   ) returns (bool, bytes32) {
     return super._signatureValidation(_digest, _signature);
