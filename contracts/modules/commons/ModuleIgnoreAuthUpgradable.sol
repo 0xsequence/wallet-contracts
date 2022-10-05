@@ -14,7 +14,7 @@ abstract contract ModuleIgnoreAuthUpgradable is ModuleAuthUpgradable {
    * @param _imageHash Hash image of signature
    * @return true always
    */
-  function _isValidImage(bytes32 _imageHash) internal override(ModuleAuthUpgradable) view returns (bool) {
+  function _isValidImage(bytes32 _imageHash) internal override(ModuleAuthUpgradable) virtual view returns (bool) {
     // Still validates the imageHash using the original mechanism for a more acurate estimation
     return super._isValidImage(_imageHash) || true;
   }

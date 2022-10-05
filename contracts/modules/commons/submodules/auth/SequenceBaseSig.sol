@@ -15,6 +15,7 @@ library SequenceBaseSig {
   uint256 private constant FLAG_DYNAMIC_SIGNATURE = 2;
   uint256 private constant FLAG_NODE = 3;
   uint256 private constant FLAG_BRANCH = 4;
+  uint256 private constant FLAG_SUBDIGEST = 5;
 
   error InvalidNestedSignature(bytes32 _hash, address _addr, bytes _signature);
   error InvalidSignatureFlag(uint256 _flag);
@@ -39,6 +40,12 @@ library SequenceBaseSig {
     unchecked {
       return bytes32(uint256(_weight) << 160 | uint256(uint160(_addr)));
     }
+  }
+
+  function _leafForHardcodedSubdigest(
+    bytes32 _subDigest
+  ) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked('Sequence static digest:\n', _subDigest));
   }
 
   function recoverBranch(
@@ -133,6 +140,20 @@ library SequenceBaseSig {
           root = LibOptim.fkeccak256(root, node);
 
           rindex = nrindex;
+          continue;
+        }
+
+        if (flag == FLAG_SUBDIGEST) {
+          // A hardcoded always accepted digest
+          // it pushes the weight to 100%
+          bytes32 hardcoded;
+          (hardcoded, rindex) = _signature.readBytes32(rindex);
+          if (hardcoded == _subDigest) {
+            weight = type(uint256).max;
+          }
+
+          bytes32 leaf = _leafForHardcodedSubdigest(hardcoded);
+          root = root != bytes32(0) ? LibOptim.fkeccak256(root, leaf) : leaf;
           continue;
         }
 

@@ -23,10 +23,10 @@ abstract contract ModuleAuth is
 {
   using LibBytes for bytes;
 
-  bytes1 private constant LEGACY_TYPE = hex"00";
-  bytes1 private constant DYNAMIC_TYPE = hex"01";
-  bytes1 private constant NO_CHAIN_ID_TYPE = hex"02";
-  bytes1 private constant CHAINED_TYPE = hex"03";
+  bytes1 internal constant LEGACY_TYPE = hex"00";
+  bytes1 internal constant DYNAMIC_TYPE = hex"01";
+  bytes1 internal constant NO_CHAIN_ID_TYPE = hex"02";
+  bytes1 internal constant CHAINED_TYPE = hex"03";
 
   bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
@@ -96,7 +96,7 @@ abstract contract ModuleAuth is
   function isValidSignature(
     bytes calldata _data,
     bytes calldata _signatures
-  ) external override virtual view returns (bytes4) {
+  ) public override virtual view returns (bytes4) {
     // Validate signatures
     (bool isValid,) = _signatureValidation(keccak256(_data), _signatures);
     if (isValid) {
@@ -118,7 +118,7 @@ abstract contract ModuleAuth is
   function isValidSignature(
     bytes32 _hash,
     bytes calldata _signatures
-  ) external override virtual view returns (bytes4) {
+  ) public override virtual view returns (bytes4) {
     // Validate signatures
     (bool isValid,) = _signatureValidation(_hash, _signatures);
     if (isValid) {

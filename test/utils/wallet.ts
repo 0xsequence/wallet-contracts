@@ -1,7 +1,7 @@
 import { ethers, Overrides } from "ethers"
 import { shuffle } from "."
 import { MainModule, MainModuleUpgradable, SequenceContext } from "./contracts"
-import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, optimize2SignersTopology, SignaturePartType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
+import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, optimize2SignersTopology, SignaturePartType, SignatureType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
 
 export type StaticSigner = (ethers.Signer & { address: string })
 export type AnyStaticSigner = StaticSigner | SequenceWallet
@@ -114,6 +114,10 @@ export class SequenceWallet {
     })
   }
 
+  useAddress(address?: string) {
+    return new SequenceWallet({ ...this.options, address: address ? address : this.address })
+  }
+
   useConfig(of: SequenceWallet | WalletConfig) {
     const config = (of as any).address !== undefined ? (of as any).config : of
     return new SequenceWallet({ ...this.options, config })
@@ -179,6 +183,28 @@ export class SequenceWallet {
     }])
   }
 
+  async addExtraImageHash(input: ethers.BytesLike | WalletConfig, expiration: ethers.BigNumberish = ethers.BigNumber.from(2).pow(248)) {
+    if (!ethers.utils.isBytesLike(input)) return this.addExtraImageHash(imageHash(input))
+
+    return this.sendTransactions([{
+      target: this.address,
+      data: this.options.context.mainModule.interface.encodeFunctionData(
+        'setExtraImageHash', [input, expiration]
+      )
+    }])
+  }
+
+  async clearExtraImageHashes(imageHashes: (ethers.BytesLike | WalletConfig)[]) {
+    return this.sendTransactions([{
+      target: this.address,
+      data: this.options.context.mainModule.interface.encodeFunctionData(
+        'clearExtraImageHashes', [
+          imageHashes.map((h) => ethers.utils.isBytesLike(h) ? h : imageHash(h))
+        ]
+      )
+    }])
+  }
+
   async signMessage(message: ethers.BytesLike): Promise<string> {
     return this.signDigest(ethers.utils.keccak256(ethers.utils.arrayify(message)))
   }
@@ -186,6 +212,16 @@ export class SequenceWallet {
   async signDigest(digest: ethers.BytesLike): Promise<string> {
     const subDigest = ethers.utils.arrayify(subDigestOf(this.address, digest, this.options.chainId))
     return this.signSubDigest(subDigest)
+  }
+
+  staticSubdigestSign(subDigest: ethers.BytesLike, useNoChainId = true): string {
+    const signatureType = useNoChainId ? SignatureType.NoChaindDynamic : this.options.encodingOptions?.signatureType
+    return encodeSignature(
+      this.config,
+      [],
+      [ ethers.utils.hexlify(subDigest) ],
+      { ...this.options.encodingOptions, signatureType }
+    )
   }
 
   async signSubDigest(subDigest: ethers.BytesLike): Promise<string> {
@@ -205,7 +241,7 @@ export class SequenceWallet {
       }
     }))
 
-    return encodeSignature(this.config, sigParts, this.options.encodingOptions)
+    return encodeSignature(this.config, sigParts, [], this.options.encodingOptions)
   }
 
   async signTransactions(ptxs: Partial<Transaction>[], nonce?: ethers.BigNumberish): Promise<string> {

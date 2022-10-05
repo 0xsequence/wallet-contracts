@@ -22,6 +22,12 @@ contract MainModuleGasEstimation is
   ModuleHooks,
   ModuleCreator
 {
+  function _isValidImage(bytes32 _imageHash) internal override(
+    IModuleAuth,
+    ModuleIgnoreAuthUpgradable
+  ) view returns (bool) {
+    return super._isValidImage(_imageHash);
+  }
 
   /**
    * @notice Query if a contract implements an interface

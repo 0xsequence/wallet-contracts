@@ -103,6 +103,17 @@ contract AdvTest is Test {
     return boundDiff(_a, _arr);
   }
 
+  function boundDiff(uint256 _a, uint256 _b, uint256 _c, uint256 _d, uint256 _e, uint256 _f, uint256 _g) internal pure returns (uint256) {
+    uint256[] memory _arr = new uint256[](6);
+    _arr[0] = _b;
+    _arr[1] = _c;
+    _arr[2] = _d;
+    _arr[3] = _e;
+    _arr[4] = _f;
+    _arr[5] = _g;
+    return boundDiff(_a, _arr);
+  }
+
   function boundDiff(uint256 _a, uint256[] memory _b) internal pure returns (uint256) {
     unchecked {
       while (inSet(_a, _b)) {

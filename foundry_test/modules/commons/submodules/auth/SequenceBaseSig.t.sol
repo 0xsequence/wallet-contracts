@@ -32,12 +32,15 @@ contract SequenceBaseSigTest is AdvTest {
   uint8 private constant FLAG_DYNAMIC_SIGNATURE = 2;
   uint8 private constant FLAG_NODE = 3;
   uint8 private constant FLAG_BRANCH = 4;
+  uint8 private constant FLAG_SUBDIGEST = 5;
 
   function setUp() public {
     lib = new SequenceBaseSigImp();
   }
 
   function test_subDigest(bytes32 _digest, uint256 _chainId) external {
+    _chainId = bound(_chainId, 0, type(uint64).max);
+
     bytes32 expected = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -53,6 +56,9 @@ contract SequenceBaseSigTest is AdvTest {
   }
 
   function test_subDigest_Fuzz_ChainId(bytes32 _digest, uint256 _chainId1, uint256 _chainId2) external {
+    _chainId1 = bound(_chainId1, 0, type(uint64).max);
+    _chainId2 = bound(_chainId2, 0, type(uint64).max);
+
     vm.chainId(_chainId1);
     bytes32 subDigest1 = lib.subDigest(_digest);
 
@@ -215,7 +221,7 @@ contract SequenceBaseSigTest is AdvTest {
   }
 
   function test_recoverBranch_Fail_InvalidFlag(uint8 _flag, bytes23 _hash, bytes calldata _sufix) external {
-    _flag = uint8(boundDiff(_flag, FLAG_SIGNATURE, FLAG_ADDRESS, FLAG_DYNAMIC_SIGNATURE, FLAG_NODE, FLAG_BRANCH));
+    _flag = uint8(boundDiff(_flag, FLAG_SIGNATURE, FLAG_ADDRESS, FLAG_DYNAMIC_SIGNATURE, FLAG_NODE, FLAG_BRANCH, FLAG_SUBDIGEST));
 
     vm.expectRevert(abi.encodeWithSignature('InvalidSignatureFlag(uint256)', _flag));
     lib.recoverBranch(_hash, abi.encodePacked(_flag, _sufix));

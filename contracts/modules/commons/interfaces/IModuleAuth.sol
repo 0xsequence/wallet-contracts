@@ -32,10 +32,11 @@ abstract contract IModuleAuth {
 
   /**
    * @notice Validates the signature image
-   * @param _imageHash Hashed image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes32 _imageHash) internal virtual view returns (bool);
+  function _isValidImage(bytes32) internal virtual view returns (bool) {
+    return false;
+  }
 
   /**
    * @notice Updates the signers configuration of the wallet
