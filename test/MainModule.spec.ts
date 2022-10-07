@@ -3,9 +3,9 @@ import { ethers as hethers } from 'hardhat'
 
 import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } from './utils'
 
-import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock } from './utils/contracts'
+import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock, deploySequenceAutoUpdate } from './utils/contracts'
 import { Imposter } from './utils/imposter'
-import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, merkleTopology, SignatureType, subDigestOf } from './utils/sequence'
+import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, imageHash, leavesOf, merkleTopology, SignatureType, subDigestOf } from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
 
 contract('MainModule', (accounts: string[]) => {
@@ -1338,6 +1338,70 @@ contract('MainModule', (accounts: string[]) => {
           expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(walletc.imageHash)
         })
       })
+    })
+  })
+
+  describe('Auto upgradeable modules', async () => {
+    let autoContext: Awaited<ReturnType<typeof deploySequenceAutoUpdate>>
+
+    beforeEach(async () => {
+      autoContext = await deploySequenceAutoUpdate(context)
+      wallet = SequenceWallet.basicWallet(autoContext, { signing: 2 })
+      await wallet.deploy()
+    })
+
+    it('Should send a transaction', async () => {
+      await wallet.sendTransactions([{}])
+    })
+
+    it('Should update configuration', async () => {
+      const newConfig = SequenceWallet.basicWallet(autoContext, { signing: 2 }).config
+      await wallet.updateImageHash(newConfig)
+      expect(await wallet.mainModuleUpgradable.imageHash()).to.equal(imageHash(newConfig))
+    })
+
+    it('Should update mainModule template', async () => {
+      await autoContext.repository.setModule(
+        autoContext.moduleKeys.keyMainModule,
+        callReceiver.address
+      )
+
+      const converted = CallReceiverMock.attach(wallet.address)
+      await converted.testCall(11, [])
+      expect(await converted.lastValA()).to.equal(11)
+
+      const tx = wallet.sendTransactions([{}])
+      await expect(tx).to.be.rejected
+    })
+
+    it('Should update mainModuleUpgradeable template', async () => {
+      await autoContext.repository.setModule(
+        autoContext.moduleKeys.keyMainModuleUpgradable,
+        callReceiver.address
+      )
+
+      await wallet.sendTransactions([{}])
+
+      const newConfig = SequenceWallet.basicWallet(autoContext, { signing: 2 }).config
+      await wallet.updateImageHash(newConfig)
+      wallet = wallet.useAddress(wallet.address).useConfig(newConfig)
+      
+      const converted = CallReceiverMock.attach(wallet.address)
+      await converted.testCall(11, [])
+      expect(await converted.lastValA()).to.equal(11)
+
+      const tx = wallet.sendTransactions([{}])
+      await expect(tx).to.be.rejected
+    })
+
+    it('Should fail to update repository if not owner', async () => {
+      const notOwner = hethers.provider.getSigner(1)
+      const tx = autoContext.repository.connect(notOwner).setModule(
+        autoContext.moduleKeys.keyMainModule,
+        callReceiver.address
+      )
+
+      await expect(tx).to.be.rejected
     })
   })
 

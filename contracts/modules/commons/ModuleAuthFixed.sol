@@ -20,9 +20,24 @@ abstract contract ModuleAuthFixed is ModuleSelfAuth, ModuleAuth, ModuleUpdate {
   address public immutable FACTORY;
   address public immutable UPGRADEABLE_IMPLEMENTATION;
 
-  constructor(address _factory, address _mainModuleUpgradeable) {
+  constructor(
+    address _factory,
+    address _mainModuleUpgradeable,
+    address _self
+  ) {
     // Build init code hash of the deployed wallets using that module
-    bytes32 initCodeHash = keccak256(abi.encodePacked(Wallet.creationCode, uint256(uint160(address(this)))));
+    bytes32 initCodeHash = keccak256(
+      abi.encodePacked(
+        Wallet.creationCode,
+        uint256(
+          uint160(
+            address(
+              _self == address(0) ? address(this) : _self
+            )
+          )
+        )
+      )
+    );
 
     INIT_CODE_HASH = initCodeHash;
     FACTORY = _factory;

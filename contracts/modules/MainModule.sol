@@ -35,10 +35,12 @@ contract MainModule is
 {
   constructor(
     address _factory,
-    address _mainModuleUpgradable
+    address _mainModuleUpgradable,
+    address _self
   ) ModuleAuthFixed(
     _factory,
-    _mainModuleUpgradable
+    _mainModuleUpgradable,
+    _self
   ) { }
 
   function _isValidImage(
