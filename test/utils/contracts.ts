@@ -49,6 +49,7 @@ export const DelegateCallMock = adapt<t.DelegateCallMock>("DelegateCallMock")
 export const GasBurnerMock = adapt<t.GasBurnerMock>("GasBurnerMock")
 export const GasEstimator = adapt<t.GasEstimator>("GasEstimator")
 export const MainModuleGasEstimation = adapt<t.MainModuleGasEstimation>("MainModuleGasEstimation")
+export const LibStringImp = adapt<t.LibStringImp>("LibStringImp")
 
 ;[
   LibBytesImpl,
@@ -64,7 +65,8 @@ export const MainModuleGasEstimation = adapt<t.MainModuleGasEstimation>("MainMod
   HookCallerMock,
   RequireUtils,
   DelegateCallMock,
-  GasEstimator
+  GasEstimator,
+  LibStringImp
 ].map((c) => c.cache())
 
 export const deploySequenceContext = async () => {
