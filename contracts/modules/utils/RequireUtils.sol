@@ -2,7 +2,7 @@
 pragma solidity 0.8.16;
 pragma experimental ABIEncoderV2;
 
-import "../commons/interfaces/IModuleCalls.sol";
+import "../commons/ModuleNonce.sol";
 
 
 contract RequireUtils {
@@ -28,7 +28,7 @@ contract RequireUtils {
    */
   function requireMinNonce(address _wallet, uint256 _nonce) external view {
     (uint256 space, uint256 nonce) = _decodeNonce(_nonce);
-    uint256 currentNonce = IModuleCalls(_wallet).readNonce(space);
+    uint256 currentNonce = ModuleNonce(_wallet).readNonce(space);
     require(currentNonce >= nonce, "RequireUtils#requireMinNonce: NONCE_BELOW_REQUIRED");
   }
 

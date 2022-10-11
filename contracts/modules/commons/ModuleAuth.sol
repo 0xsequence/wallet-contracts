@@ -28,8 +28,8 @@ abstract contract ModuleAuth is
   bytes1 internal constant NO_CHAIN_ID_TYPE = hex"02";
   bytes1 internal constant CHAINED_TYPE = hex"03";
 
-  bytes4 private constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
-  bytes4 private constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
+  bytes4 internal constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
+  bytes4 internal constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
 
   function signatureRecovery(
     bytes32 _digest,
