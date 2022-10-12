@@ -9,6 +9,7 @@ import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
 import "./commons/ModuleStaticAuth.sol";
+import "./commons/ModuleEIP4337.sol";
 
 
 /**
@@ -19,6 +20,7 @@ import "./commons/ModuleStaticAuth.sol";
  *      supported by the supportsInterface method.
  */
 contract MainModuleUpgradable is
+  ModuleEIP4337,
   ModuleAuthUpgradable,
   ModuleExtraAuth,
   ModuleStaticAuth,
@@ -27,6 +29,19 @@ contract MainModuleUpgradable is
   ModuleHooks,
   ModuleCreator
 {
+  constructor(
+    address _eip4337Entrypoint
+  ) ModuleEIP4337(
+    _eip4337Entrypoint
+  ) { }
+
+  function isSelfAuth() internal override(
+    ModuleSelfAuth,
+    ModuleEIP4337
+  ) view returns (bool) {
+    return super.isSelfAuth();
+  }
+
   function _isValidImage(
     bytes32 _imageHash
   ) internal override(
