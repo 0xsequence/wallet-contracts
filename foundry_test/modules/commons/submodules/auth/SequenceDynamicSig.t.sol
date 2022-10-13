@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import "contracts/modules/commons/submodules/auth/SequenceBaseSig.sol";
 import "contracts/modules/commons/submodules/auth/SequenceDynamicSig.sol";
