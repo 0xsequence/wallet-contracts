@@ -77,10 +77,6 @@ contract ModuleCallsImp is ModuleCalls {
     _writeNonce(_space, _nonce);
   }
 
-  function writeGapNonce(uint256 _space, uint256 _nonce) external {
-    _writeGapNonce(_space, _nonce);
-  }
-
   // Module Auth imp
   mapping(bytes32 => mapping(bytes => bytes32)) public sigToSubdigest;
   mapping(bytes32 => mapping(bytes => bool)) public sigToIsValid;
@@ -348,115 +344,6 @@ contract ModuleCallsTest is AdvTest {
     imp.writeNonce(_space, _badprev);
 
     vm.expectRevert(abi.encodeWithSignature('BadNonce(uint256,uint256,uint256)', _space, _nonce, _badprev));
-    imp.validateNonce(encoded);
-  }
-
-  function test_validateNonce_Gap(
-    uint160 _space,
-    uint88 _nonce,
-    uint88 _prev
-  ) external {
-    _prev = uint88(bound(_prev, 0, type(uint88).max - 1));
-    _nonce = uint88(bound(_nonce, _prev + 1, type(uint88).max));
-
-    uint256 encoded = uint256(
-      abi.decode(
-        abi.encodePacked(
-          _space,
-          uint8(1),
-          _nonce
-        ),
-        (bytes32))
-    );
-
-    imp.writeGapNonce(_space, _prev);
-
-    vm.expectEmit(true, true, true, true, address(imp));
-    emit GapNonceChange(_space, _prev, _nonce);
-    imp.validateNonce(encoded);
-    assertEq(imp.readGapNonce(_space), _nonce);
-  }
-
-  function test_fail_validateNonce_Gap_Bad(
-    uint160 _space,
-    uint88 _nonce,
-    uint88 _prev
-  ) external {
-    _prev = uint88(bound(_prev, 0, type(uint88).max));
-    _nonce = uint88(bound(_nonce, 0, _prev));
-
-    uint256 encoded = uint256(
-      abi.decode(
-        abi.encodePacked(
-          _space,
-          uint8(1),
-          _nonce
-        ),
-        (bytes32))
-    );
-
-    imp.writeGapNonce(_space, _prev);
-
-    vm.expectRevert(abi.encodeWithSignature('BadGapNonce(uint256,uint256,uint256)', _space, _nonce, _prev));
-    imp.validateNonce(encoded);
-  }
-
-  function test_validateNonce_NoNonce() external {
-    uint256 encoded = uint256(
-      abi.decode(
-        abi.encodePacked(
-          uint160(0),
-          uint8(2),
-          uint88(0)
-        ),
-        (bytes32))
-    );
-
-    vm.record();
-    imp.validateNonce(encoded);
-    (bytes32[] memory reads, bytes32[] memory writes) = vm.accesses(address(imp));
-    assertEq(reads.length, 0);
-    assertEq(writes.length, 0);
-  }
-
-  function test_fail_validateNonce_NoNonce_SpaceOrNonce(
-    uint160 _space,
-    uint88 _nonce
-  ) external {
-    vm.assume(_space != 0 || _nonce != 0);
-
-    uint256 encoded = uint256(
-      abi.decode(
-        abi.encodePacked(
-          _space,
-          uint8(2),
-          _nonce
-        ),
-        (bytes32))
-    );
-
-    vm.expectRevert(abi.encodeWithSignature('ExpectedEmptyNonce(uint256,uint256)', _space, _nonce));
-    imp.validateNonce(encoded);
-  }
-
-  function test_fail_validateNonce_WrongType(
-    uint160 _space,
-    uint8 _type,
-    uint88 _nonce
-  ) external {
-    _type = uint8(boundDiff(_type, 0, 1, 2));
-
-    uint256 encoded = uint256(
-      abi.decode(
-        abi.encodePacked(
-          _space,
-          _type,
-          _nonce
-        ),
-        (bytes32))
-    );
-
-    vm.expectRevert(abi.encodeWithSignature('InvalidNonceType(uint256)', _type));
     imp.validateNonce(encoded);
   }
 }

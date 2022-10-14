@@ -299,8 +299,8 @@ export function addressOf(factory: string, firstModule: string, imageHash: strin
   return ethers.utils.getAddress(ethers.utils.hexDataSlice(hash, 12))
 }
 
-export function encodeNonce(space: BigNumberish, nonce: BigNumberish, type: ethers.BigNumberish = 0) {
-  return ethers.BigNumber.from(ethers.utils.solidityPack(['uint160', 'uint8', 'uint88'], [space, type, nonce]))
+export function encodeNonce(space: BigNumberish, nonce: BigNumberish) {
+  return ethers.BigNumber.from(ethers.utils.solidityPack(['uint160', 'uint96'], [space, nonce]))
 }
 
 export function joinAddrAndWeight(address: string, weight: ethers.BigNumberish) {
