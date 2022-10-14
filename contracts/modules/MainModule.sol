@@ -12,7 +12,6 @@ import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
 import "./commons/ModuleStaticAuth.sol";
-import "./commons/ModuleEIP4337.sol";
 
 import "../interfaces/receivers/IERC1155Receiver.sol";
 import "../interfaces/receivers/IERC721Receiver.sol";
@@ -27,7 +26,6 @@ import "../interfaces/IERC1271Wallet.sol";
  *      supported by the supportsInterface method.
  */
 contract MainModule is
-  ModuleEIP4337,
   ModuleAuthFixed,
   ModuleExtraAuth,
   ModuleStaticAuth,
@@ -37,21 +35,11 @@ contract MainModule is
 {
   constructor(
     address _factory,
-    address _mainModuleUpgradable,
-    address _eip4337Entrypoint
+    address _mainModuleUpgradable
   ) ModuleAuthFixed(
     _factory,
     _mainModuleUpgradable
-  ) ModuleEIP4337(
-    _eip4337Entrypoint
   ) { }
-
-  function isSelfAuth() internal override(
-    ModuleSelfAuth,
-    ModuleEIP4337
-  ) view returns (bool) {
-    return super.isSelfAuth();
-  }
 
   function _isValidImage(
     bytes32 _imageHash

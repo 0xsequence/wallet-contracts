@@ -50,7 +50,6 @@ export const GasBurnerMock = adapt<t.GasBurnerMock>("GasBurnerMock")
 export const GasEstimator = adapt<t.GasEstimator>("GasEstimator")
 export const MainModuleGasEstimation = adapt<t.MainModuleGasEstimation>("MainModuleGasEstimation")
 export const LibStringImp = adapt<t.LibStringImp>("LibStringImp")
-export const EntryPointMock = adapt<t.EntryPointMock>("EntryPointMock")
 
 ;[
   LibBytesImpl,
@@ -66,31 +65,24 @@ export const EntryPointMock = adapt<t.EntryPointMock>("EntryPointMock")
   HookCallerMock,
   RequireUtils,
   DelegateCallMock,
-  GasEstimator,
-  EntryPointMock
+  GasEstimator
 ].map((c) => c.cache())
 
 export const deploySequenceContext = async (owner?: string) => {
-  const entryPointMock = await EntryPointMock.deploy()
-
   const factory = await Factory.deploy()
 
-  const mainModuleUpgradable = await MainModuleUpgradable.deploy(
-    entryPointMock.address
-  )
+  const mainModuleUpgradable = await MainModuleUpgradable.deploy()
 
   const mainModule = await MainModule.deploy(
     factory.address,
-    mainModuleUpgradable.address,
-    entryPointMock.address
+    mainModuleUpgradable.address
   )
 
-  return { factory, mainModule, mainModuleUpgradable, entryPointMock }
+  return { factory, mainModule, mainModuleUpgradable }
 }
 
 export type SequenceContext = {
   factory: ContractType<typeof Factory>,
   mainModule: ContractType<typeof MainModule>,
   mainModuleUpgradable: ContractType<typeof MainModuleUpgradable>
-  entryPointMock: ContractType<typeof EntryPointMock>
 }
