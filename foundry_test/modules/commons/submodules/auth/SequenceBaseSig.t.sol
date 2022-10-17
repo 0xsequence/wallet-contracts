@@ -152,7 +152,7 @@ contract SequenceBaseSigTest is AdvTest {
         if (op == 1) {
           signature = abi.encodePacked(signature, FLAG_SIGNATURE, randomWeight, sigpart);
         } else {
-          signature = abi.encodePacked(signature, FLAG_DYNAMIC_SIGNATURE, randomWeight, addr, uint16(sigpart.length), sigpart);
+          signature = abi.encodePacked(signature, FLAG_DYNAMIC_SIGNATURE, randomWeight, addr, uint24(sigpart.length), sigpart);
         }
       }
 
@@ -196,7 +196,7 @@ contract SequenceBaseSigTest is AdvTest {
         if (op == 1) {
           signature = abi.encodePacked(FLAG_SIGNATURE, randomWeight, sigpart, signature);
         } else {
-          signature = abi.encodePacked(FLAG_DYNAMIC_SIGNATURE, randomWeight, addr, uint16(sigpart.length), sigpart, signature);
+          signature = abi.encodePacked(FLAG_DYNAMIC_SIGNATURE, randomWeight, addr, uint24(sigpart.length), sigpart, signature);
         }
       }
 
