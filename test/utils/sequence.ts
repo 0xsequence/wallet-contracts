@@ -490,7 +490,7 @@ export class SignatureConstructor {
         case SignaturePartType.Branch:
           const branch = ethers.utils.arrayify(member.value ?? [])
           result = ethers.utils.solidityPack(
-            ['bytes', 'uint8', 'uint16', 'bytes'],
+            ['bytes', 'uint8', 'uint24', 'bytes'],
             [result, SignaturePartType.Branch, branch.length, branch]
           )
           break

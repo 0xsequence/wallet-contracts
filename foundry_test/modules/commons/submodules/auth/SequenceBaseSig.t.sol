@@ -175,7 +175,7 @@ contract SequenceBaseSigTest is AdvTest {
 
     for (uint256 i = 0; i < size; i++) {
       if (i != 0) {
-        signature = abi.encodePacked(FLAG_BRANCH, uint16(signature.length), signature);
+        signature = abi.encodePacked(FLAG_BRANCH, uint24(signature.length), signature);
       }
 
       _pks[i] = boundPk(_pks[i]);
