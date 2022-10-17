@@ -6,13 +6,9 @@ contract ModuleSelfAuth {
   error OnlySelfAuth(address _sender, address _self);
 
   modifier onlySelf() {
-    if (!isSelfAuth()) {
+    if (msg.sender != address(this)) {
       revert OnlySelfAuth(msg.sender, address(this));
     }
     _;
   }
-
-    function isSelfAuth() internal virtual view returns (bool) {
-      return msg.sender == address(this);
-    }
 }
