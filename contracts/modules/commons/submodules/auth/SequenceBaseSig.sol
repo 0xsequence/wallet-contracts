@@ -101,7 +101,7 @@ library SequenceBaseSig {
 
           // Read signature size
           uint256 size;
-          (size, rindex) = _signature.readUint16(rindex);
+          (size, rindex) = _signature.readUint24(rindex);
 
           // Read dynamic size signature
           uint256 nrindex = rindex + size;
@@ -130,7 +130,7 @@ library SequenceBaseSig {
         if (flag == FLAG_BRANCH) {
           // Enter a branch of the signature merkle tree
           uint256 size;
-          (size, rindex) = _signature.readUint16(rindex);
+          (size, rindex) = _signature.readUint24(rindex);
           uint256 nrindex = rindex + size;
 
           uint256 nweight; bytes32 node;

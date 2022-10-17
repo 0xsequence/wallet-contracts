@@ -58,8 +58,8 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
     // First signature out of the loop
     //
 
-    // First uint16 is the size of the signature
-    (sigSize, rindex) = _signature.readUint16(rindex);
+    // First uint24 is the size of the signature
+    (sigSize, rindex) = _signature.readUint24(rindex);
     uint256 nrindex = sigSize + rindex;
 
     (
@@ -95,8 +95,8 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
 
       prevCheckpoint = checkpoint;
 
-      // First uint16 is the size of the signature
-      (sigSize, rindex) = _signature.readUint16(rindex);
+      // First uint24 is the size of the signature
+      (sigSize, rindex) = _signature.readUint24(rindex);
       nrindex = sigSize + rindex;
 
       (

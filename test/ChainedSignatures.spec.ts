@@ -22,12 +22,12 @@ contract('Chained signatures', (accounts: string[]) => {
 
   const chain = (top: string, ...rest: { sig: string, checkpoint: ethers.BigNumberish }[]) => {
     const encodedRest = ethers.utils.solidityPack(
-      rest.map(() => ['uint64', 'uint16', 'bytes']).flat(),
+      rest.map(() => ['uint64', 'uint24', 'bytes']).flat(),
       rest.map((r) => [r.checkpoint, ethers.utils.arrayify(r.sig).length, r.sig]).flat()
     )
 
     return ethers.utils.solidityPack(
-      ['uint8', 'uint16', 'bytes', 'bytes'],
+      ['uint8', 'uint24', 'bytes', 'bytes'],
       [3, ethers.utils.arrayify(top).length, top, encodedRest]
     )
   }

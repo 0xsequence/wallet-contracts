@@ -163,7 +163,7 @@ contract SequenceChainedSigTest is AdvTest {
       );
 
       nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash, checkpoint);
-      signature = abi.encodePacked(signature, uint16(_steps[i].signature.length), _steps[i].signature);
+      signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
     vm.prank(address(lib));
@@ -215,7 +215,7 @@ contract SequenceChainedSigTest is AdvTest {
       );
 
       nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash, checkpoint);
-      signature = abi.encodePacked(signature, uint16(_steps[i].signature.length), _steps[i].signature);
+      signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
     vm.expectRevert(abi.encodeWithSignature('LowWeightChainedSignature(bytes,uint256,uint256)', _steps[_badi].signature, _steps[_badi].threshold, _steps[_badi].weight));
@@ -265,7 +265,7 @@ contract SequenceChainedSigTest is AdvTest {
       );
 
       nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash, checkpoint);
-      signature = abi.encodePacked(signature, uint16(_steps[i].signature.length), _steps[i].signature);
+      signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
     vm.prank(address(lib));

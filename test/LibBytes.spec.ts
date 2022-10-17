@@ -99,6 +99,36 @@ contract('LibBytes', () => {
     })
   })
 
+  describe('readUint24', () => {
+    it('Should read uint24 at index zero', async () => {
+      const res = await libBytesPointer.readUint24('0x5202fa', 0)
+      expect(res[0]).to.equal(5374714)
+      expect(res[1]).to.equal(3)
+    })
+    it('Should read uint24 at given index', async () => {
+      const res = await libBytesPointer.readUint24('0x5202f7220c', 2)
+      expect(res[0]).to.equal(16196108)
+      expect(res[1]).to.equal(5)
+    })
+    it('Should read uint24 at last index', async () => {
+      const res = await libBytesPointer.readUint24('0x021f2b00', 1)
+      expect(res[0]).to.equal(2042624)
+      expect(res[1]).to.equal(4)
+    })
+    it('Should read zeros uint24 out of bounds', async () => {
+      const res1 = await libBytesPointer.readUint24('0xf598', 0)
+      const res2 = await libBytesPointer.readUint24('0xf59800', 0)
+      expect(res1[0]).to.equal(16095232)
+      expect(res1[0]).to.equal(res2[0])
+      expect(res1[1]).to.equal(3)
+    })
+    it('Should read zeros uint24 fully out of bounds', async () => {
+      const res = await libBytesPointer.readUint24('0x5a9ca221', 12)
+      expect(res[0]).to.equal(0)
+      expect(res[1]).to.equal(15)
+    })
+  })
+
   describe('readUint64', () => {
     it('Should read uint64 at index zero', async () => {
       const res = await libBytesPointer.readUint64('0xc1725050681dcb2a', 0)
