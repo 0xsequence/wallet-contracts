@@ -16,12 +16,12 @@ library LibString {
 
   function bytesToHexadecimal(bytes memory _bytes) internal pure returns (string memory) {
     uint256 bytesLength = _bytes.length;
-    bytes memory bytesArray = new bytes(bytesLength * 2);
+    bytes memory bytesArray = new bytes(bytesLength << 1);
 
     unchecked {
       for (uint256 i = 0; i < bytesLength; i++) {
         uint256 word = uint8(_bytes[i]);
-        uint256 ib = i * 2;
+        uint256 ib = i << 1;
         bytesArray[ib] = bytes1(ALPHABET_HEX_16[word >> 4]);
         bytesArray[ib + 1] = bytes1(ALPHABET_HEX_16[word & 0xf]);
       }
@@ -33,13 +33,11 @@ library LibString {
   function bytesToBase32(bytes memory _bytes) internal pure returns (string memory) {
     uint256 bytesLength = _bytes.length;
 
-    uint256 t1 = bytesLength * 8;
+    uint256 t1 = bytesLength << 3;
 
     unchecked {
-      uint256 newSize = t1 / 5;
-      if (t1 % 5 != 0) newSize++;
-
-      bytes memory bytesArray = new bytes(newSize);
+      // base32-encoded length = ceil(# of bits / 5)
+      bytes memory bytesArray = new bytes((t1 + 4) / 5);
 
       uint256 bits = 0;
       uint256 buffer = 0;
