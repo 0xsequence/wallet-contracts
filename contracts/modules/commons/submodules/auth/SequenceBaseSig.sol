@@ -9,7 +9,7 @@ import "../../../../utils/LibOptim.sol";
 
 library SequenceBaseSig {
   using LibBytesPointer for bytes;
-  
+
   uint256 private constant FLAG_SIGNATURE = 0;
   uint256 private constant FLAG_ADDRESS = 1;
   uint256 private constant FLAG_DYNAMIC_SIGNATURE = 2;
