@@ -8,7 +8,6 @@ import "./commons/Implementation.sol";
 import "./commons/ModuleAuthFixed.sol";
 import "./commons/ModuleHooks.sol";
 import "./commons/ModuleCalls.sol";
-import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
 import "./commons/ModuleStaticAuth.sol";
