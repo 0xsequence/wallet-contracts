@@ -78,9 +78,10 @@ contract GuestModule is
     uint256 size = _txs.length;
     for (uint256 i = 0; i < size; i++) {
       Transaction calldata transaction = _txs[i];
-      uint256 gasLimit = transaction.gasLimit;
 
       if (transaction.delegateCall) revert DelegateCallNotAllowed();
+
+      uint256 gasLimit = transaction.gasLimit;
       if (gasleft() < gasLimit) revert NotEnoughGas(gasLimit, gasleft());
 
       bool success = LibOptim.call(
@@ -99,7 +100,7 @@ contract GuestModule is
   }
 
   /**
-   * @notice Validates any signature image, because the wallet is public and has now owner.
+   * @notice Validates any signature image, because the wallet is public and has no owner.
    * @return true, all signatures are valid.
    */
   function _isValidImage(bytes32) internal override pure returns (bool) {
