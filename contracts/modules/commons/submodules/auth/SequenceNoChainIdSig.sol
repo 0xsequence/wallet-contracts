@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.17;
 
-import "./SequenceBaseSig.sol";
-
 
 library SequenceNoChainIdSig {
   function subDigest(bytes32 _digest) internal view returns (bytes32) {
