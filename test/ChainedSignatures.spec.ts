@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { ethers } from 'ethers'
 import { expectToBeRejected } from './utils'
 import { deploySequenceContext, SequenceContext } from './utils/contracts'
-import { getCheckpoint, SequenceWallet } from './utils/wallet'
+import { SequenceWallet } from './utils/wallet'
 
 contract('Chained signatures', (accounts: string[]) => {
   let context: SequenceContext
@@ -55,8 +55,8 @@ contract('Chained signatures', (accounts: string[]) => {
     let wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address, signing: 2, iddle: 1 })
     let wallet_c = SequenceWallet.basicWallet(context, { address: wallet_b.address, signing: 3, iddle: 7 })
 
-    const checkpoint1 = getCheckpoint()
-    const checkpoint2 = checkpoint1 + 1
+    const checkpoint1 = ethers.BigNumber.from(wallet.config.checkpoint).add(1)
+    const checkpoint2 = checkpoint1.add(1)
 
     wallet_b = wallet_b.useConfig({ ...wallet_b.config, checkpoint: checkpoint1 })
     wallet_c = wallet_c.useConfig({ ...wallet_c.config, checkpoint: checkpoint2 })
@@ -77,8 +77,8 @@ contract('Chained signatures', (accounts: string[]) => {
     let wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address, signing: 2, iddle: 1 })
     let wallet_c = SequenceWallet.basicWallet(context, { address: wallet_b.address, signing: 3, iddle: 7 })
 
-    const checkpoint1 = getCheckpoint()
-    const checkpoint2 = checkpoint1 - 1
+    const checkpoint1 = ethers.BigNumber.from(wallet.config.checkpoint).add(1)
+    const checkpoint2 = checkpoint1.sub(1)
 
     wallet_b = wallet_b.useConfig({ ...wallet_b.config, checkpoint: checkpoint1 })
     wallet_c = wallet_c.useConfig({ ...wallet_c.config, checkpoint: checkpoint2 })
