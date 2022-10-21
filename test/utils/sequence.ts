@@ -18,7 +18,13 @@ export type SubdigestLeaf = {
   subDigest: string
 }
 
-export type ConfigLeaf = SubdigestLeaf | SignerLeaf
+export type NestedLeaf = {
+  tree: ConfigTopology,
+  internalThreshold: BigNumberish,
+  externalWeight: BigNumberish,
+}
+
+export type ConfigLeaf = SubdigestLeaf | SignerLeaf | NestedLeaf
 
 export type ImageHashNode = {
   left: ImageHashNode | ConfigLeaf,
@@ -57,7 +63,8 @@ export enum SignaturePartType {
   Dynamic = 2,
   Node = 3,
   Branch = 4,
-  SubDigest = 5
+  SubDigest = 5,
+  Nested = 6
 }
 
 export type SignaturePart = {
@@ -109,6 +116,10 @@ export function isSignerLeaf(node: ConfigTopology): node is SignerLeaf {
 
 export function isSubdigestLeaf(node: ConfigTopology): node is SubdigestLeaf {
   return isConfigLeaf(node) && 'subDigest' in node
+}
+
+export function isNestedLeaf(node: ConfigTopology): node is NestedLeaf {
+  return isConfigLeaf(node) && 'tree' in node
 }
 
 export function legacyTopology(config: SimplifiedWalletConfig): ConfigTopology {
@@ -223,6 +234,13 @@ export function hashNode(node: ConfigTopology): string {
     )
   }
 
+  if (isNestedLeaf(node)) {
+    return ethers.utils.solidityKeccak256(
+      ['string', 'bytes32', 'uint256', 'uint256'],
+      ['Sequence nested config:\n', hashNode(node.tree), node.internalThreshold, node.externalWeight]
+    )
+  }
+
   return ethers.utils.solidityKeccak256(
     ['bytes32', 'bytes32'],
     [hashNode(node.left), hashNode(node.right)]
@@ -260,6 +278,17 @@ export function printTopology(topology: ConfigTopology, threshold?: ethers.BigNu
 
   if (isSubdigestLeaf(topology)) {
     return [`subDigest: ${topology.subDigest}`]
+  }
+
+  if (isNestedLeaf(topology)) {
+    const result: string[] = [`internalThreshold: ${topology.internalThreshold} - externalWeight: ${topology.externalWeight}`]
+    const signers = printTopology(topology.tree, undefined, inverse)
+    for (let i = 0; i < signers.length; i++) {
+      const prefix = i === 0 ? '└─ ' : '  '
+      result.push(`${prefix}${signers[i]}`)
+    }
+
+    return result
   }
 
   const root = hashNode(topology)
@@ -387,7 +416,8 @@ type DecodedSignatureMember = {
   weight?: ethers.BigNumberish,
   address?: string,
   type: SignaturePartType,
-  value?: string
+  value?: string,
+  innerThreshold?: ethers.BigNumberish,
 }
 
 export class SignatureConstructor {
@@ -463,6 +493,10 @@ export class SignatureConstructor {
     this.members.push({ type: SignaturePartType.SubDigest, value: subDigest})
   }
 
+  appendNested(branch: string, weight: ethers.BigNumberish, innerThreshold: ethers.BigNumberish) {
+    this.members.push({ type: SignaturePartType.Nested, value: branch, innerThreshold, weight })
+  }
+
   encode(): string {
     let result = '0x'
 
@@ -512,6 +546,14 @@ export class SignatureConstructor {
           )
           break
 
+        case SignaturePartType.Nested:
+          const nestedBranch = ethers.utils.arrayify(member.value ?? [])
+          result = ethers.utils.solidityPack(
+            ['bytes', 'uint8', 'uint8', 'uint16', 'uint24', 'bytes'],
+            [result, SignaturePartType.Nested, member.weight, member.innerThreshold, nestedBranch.length, nestedBranch]
+          )
+          break
+
         default:
           throw new Error(`Unknown signature part type: ${member.type}`)
       }
@@ -541,7 +583,7 @@ export function encodeSigners(
 
   const constructor = new SignatureConstructor(options?.disableTrim)
   for (const node of slice) {
-    if (!isConfigLeaf(node)) {
+    if (!isConfigLeaf(node) || isNestedLeaf(node)) {
       // If the node opens up to another branch
       // we recurse the encoding, and if the result has any weight
       // we have to embed the whole branch, otherwise we just add the node
@@ -549,8 +591,18 @@ export function encodeSigners(
       if (nested.weight.isZero() && !options?.disableTrim) {
         constructor.appendNode(hashNode(node))
       } else {
-        constructor.appendBranch(nested.encoded)
-        weight = weight.add(nested.weight)
+        if (isNestedLeaf(node)) {
+          // Nested configs only have weight if the inner threshold is met
+          // and the weight is always the external weight
+          if (nested.weight.gte(node.internalThreshold)) {
+            weight = weight.add(node.externalWeight)
+          }
+
+          constructor.appendNested(nested.encoded, node.externalWeight, node.internalThreshold)
+        } else {
+          constructor.appendBranch(nested.encoded)
+          weight = weight.add(nested.weight)
+        }
       }
     } else {
       if (isSignerLeaf(node)) {
