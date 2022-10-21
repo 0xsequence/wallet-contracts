@@ -103,7 +103,7 @@ contract ModuleCallsImp is ModuleCalls {
   }
 
   function signatureRecovery(bytes32, bytes calldata) public override view returns (
-    uint256, uint256, bytes32, bytes32
+    uint256, uint256, bytes32, bytes32, uint256
   ) {
   }
 

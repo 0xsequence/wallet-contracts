@@ -11,7 +11,8 @@ library SequenceDynamicSig {
   ) internal view returns (
     uint256 threshold,
     uint256 weight,
-    bytes32 imageHash
+    bytes32 imageHash,
+    uint256 checkpoint
   ) {
     return SequenceBaseSig.recover(_subDigest, _signature[1:]);
   }

@@ -10,6 +10,19 @@ export function isAnyStaticSigner(s: any): s is AnyStaticSigner {
   return s.address !== undefined
 }
 
+let LAST_CHECKPOINT = 0
+
+export function getCheckpoint() {
+  let cand = Math.floor(Date.now() / 1000)
+
+  if (cand === LAST_CHECKPOINT) {
+    cand++
+  }
+
+  LAST_CHECKPOINT = cand
+  return cand
+}
+
 export type WalletOptions = {
   context: SequenceContext
   config: WalletConfig
@@ -65,8 +78,10 @@ export class SequenceWallet {
 
     const signers = signersWeight.map((s) => isAnyStaticSigner(s) ? s : ethers.Wallet.createRandom())
     const iddle = iddleWeight.map(() => ethers.utils.getAddress(ethers.utils.hexlify(ethers.utils.randomBytes(20))))
+    const checkpoint = getCheckpoint()
 
     const simplifiedConfig = {
+      checkpoint,
       threshold: options.threshold ? options.threshold : signers.length,
       signers: shuffle(
         signers.map((s, i) => ({
@@ -86,7 +101,7 @@ export class SequenceWallet {
       context,
       encodingOptions: options.encodingOptions,
       config: {
-        threshold: simplifiedConfig.threshold,
+        ...simplifiedConfig,
         topology: options.topologyConvertor(simplifiedConfig)
       },
       signers: signers
@@ -96,6 +111,7 @@ export class SequenceWallet {
   static detailedWallet(context: SequenceContext, opts: DetailedWalletOptions): SequenceWallet {
     const simplifiedConfig = {
       threshold: opts.threshold,
+      checkpoint: getCheckpoint(),
       signers: opts.signers.map((s) => ({
         weight: isWeighted(s) ? s.weight : 1,
         address: (() => { const v = weightedVal(s); return isAnyStaticSigner(v) ? v.address : v })()
@@ -107,7 +123,7 @@ export class SequenceWallet {
       encodingOptions: opts.encodingOptions,
       address: opts.address,
       config: {
-        threshold: simplifiedConfig.threshold,
+        ...simplifiedConfig,
         topology: defaultTopology(simplifiedConfig)
       },
       signers: opts.signers.map((s) => weightedVal(s)).filter((s) => isAnyStaticSigner(s)) as StaticSigner[]

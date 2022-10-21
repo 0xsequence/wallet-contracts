@@ -168,14 +168,18 @@ library SequenceBaseSig {
   ) internal view returns (
     uint256 threshold,
     uint256 weight,
-    bytes32 imageHash
+    bytes32 imageHash,
+    uint256 checkpoint
   ) {
     unchecked {
-      (weight, imageHash) = recoverBranch(_subDigest, _signature[2:]);
+      (weight, imageHash) = recoverBranch(_subDigest, _signature[6:]);
 
       // Threshold is the top-most node (but first on the signature)
       threshold = LibBytes.readFirstUint16(_signature);
+      checkpoint = LibBytes.readUint32(_signature, 2);
+
       imageHash = LibOptim.fkeccak256(imageHash, bytes32(threshold));
+      imageHash = LibOptim.fkeccak256(imageHash, bytes32(checkpoint));
     }
   }
 }

@@ -10,36 +10,19 @@ import "../../ModuleSelfAuth.sol";
 import "../../ModuleStorage.sol";
 
 import "../../../../utils/LibBytesPointer.sol";
+import "../../../../utils/LibOptim.sol";
 
 
 abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
   using LibBytesPointer for bytes;
 
-  bytes32 public constant SET_IMAGEHASH_TYPEHASH = keccak256("SetImagehash(bytes32 imageHash,uint256 checkpoint)");
-  bytes32 internal constant LAST_AUTH_CHECKPOINT_KEY = keccak256("org.sequence.module.auth.submodule.prefixed.last.auth.checkpoint");
-
-  event SetLastCheckpoint(uint256 _checkpoint);
+  bytes32 public constant SET_IMAGEHASH_TYPEHASH = keccak256("SetImagehash(bytes32 imageHash)");
 
   error LowWeightChainedSignature(bytes _signature, uint256 threshold, uint256 _weight);
   error WrongChainedCheckpointOrder(uint256 _current, uint256 _prev);
-  error WrongFinalCheckpoint(uint256 _checkpoint, uint256 _current);
 
-  function _hashSetImagehashStruct(bytes32 _imageHash, uint256 _checkpoint) internal pure returns (bytes32) {
-    return keccak256(abi.encode(SET_IMAGEHASH_TYPEHASH, _imageHash, _checkpoint));
-  }
-
-  function setLastAuthCheckpoint(uint256 _checkpoint) external onlySelf {
-    ModuleStorage.writeBytes32(LAST_AUTH_CHECKPOINT_KEY, bytes32(_checkpoint));
-    emit SetLastCheckpoint(_checkpoint);
-  }
-
-  function getLastAuthCheckpoint() public view returns (uint256) {
-    return uint256(ModuleStorage.readBytes32(LAST_AUTH_CHECKPOINT_KEY));
-  }
-
-  struct SetImagehashStruct {
-    uint256 checkpoint;
-    bytes signature;
+  function _hashSetImagehashStruct(bytes32 _imageHash) internal pure returns (bytes32) {
+    return LibOptim.fkeccak256(SET_IMAGEHASH_TYPEHASH, _imageHash);
   }
 
   function chainedRecover(
@@ -49,7 +32,8 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest
+    bytes32 subDigest,
+    uint256 checkpoint
   ) {
     uint256 rindex = 1;
     uint256 sigSize;
@@ -66,7 +50,8 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
       threshold,
       weight,
       imageHash,
-      subDigest
+      subDigest,
+      checkpoint
     ) = signatureRecovery(
       _digest,
       _signature[rindex:nrindex]
@@ -78,35 +63,27 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
 
     rindex = nrindex;
 
-    uint256 prevCheckpoint = type(uint256).max;
-
     //
     // Afterward signatures are handled by this loop
     // this is done this way because the last signature does not have a
     // checkpoint
     //
     while (rindex < _signature.length) {
-      // Next uint64 is the checkpoint
-      // (this won't exist on the last signature)
-      uint256 checkpoint; (checkpoint, rindex) = _signature.readUint64(rindex);
-      if (checkpoint >= prevCheckpoint) {
-        revert WrongChainedCheckpointOrder(checkpoint, prevCheckpoint);
-      }
-
-      prevCheckpoint = checkpoint;
-
       // First uint24 is the size of the signature
       (sigSize, rindex) = _signature.readUint24(rindex);
       nrindex = sigSize + rindex;
 
+      uint256 nextCheckpoint;
+
       (
         threshold,
         weight,
-        imageHash,
+        imageHash,,
         // Don't change the subdigest
         // it should remain the first signature
+        nextCheckpoint
       ) = signatureRecovery(
-        _hashSetImagehashStruct(imageHash, checkpoint),
+        _hashSetImagehashStruct(imageHash),
         _signature[rindex:nrindex]
       );
 
@@ -115,11 +92,12 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
         revert LowWeightChainedSignature(_signature[rindex:nrindex], threshold, weight);
       }
 
-      rindex = nrindex;
-    }
+      if (nextCheckpoint >= checkpoint) {
+        revert WrongChainedCheckpointOrder(nextCheckpoint, checkpoint);
+      }
 
-    if (prevCheckpoint <= getLastAuthCheckpoint()) {
-      revert WrongFinalCheckpoint(prevCheckpoint, getLastAuthCheckpoint());
+      checkpoint = nextCheckpoint;
+      rindex = nrindex;
     }
   }
 }

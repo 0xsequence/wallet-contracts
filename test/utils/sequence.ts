@@ -29,11 +29,13 @@ export type ConfigTopology = ImageHashNode | ConfigLeaf
 
 export type WalletConfig = {
   threshold: ethers.BigNumberish,
+  checkpoint: ethers.BigNumberish,
   topology: ConfigTopology
 }
 
 export type SimplifiedWalletConfig = {
   threshold: BigNumberish,
+  checkpoint: BigNumberish,
   signers: {
     weight: BigNumberish
     address: string
@@ -201,6 +203,7 @@ export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig
 
   return {
     threshold: config.threshold,
+    checkpoint: config.checkpoint,
     signers: leaves.map(l => ({
       weight: l.weight,
       address: l.address
@@ -313,10 +316,17 @@ export function joinAddrAndWeight(address: string, weight: ethers.BigNumberish) 
 export function imageHash(config: WalletConfig): string {
   const signersRoot = hashNode(config.topology)
 
-  return ethers.utils.keccak256(
+  const preImageHash = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
       ['bytes32', 'uint256'],
       [signersRoot, config.threshold]
+    )
+  )
+
+  return ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ['bytes32', 'uint256'],
+      [preImageHash, config.checkpoint]
     )
   )
 }
@@ -579,11 +589,20 @@ export function encodeSignature(
 
   switch (options?.signatureType || SignatureType.Legacy) {
     case SignatureType.Dynamic:
-      return ethers.utils.solidityPack(['uint8', 'uint16', 'bytes'], [SignatureType.Dynamic, config.threshold, encodedSigners.encoded])
+      return ethers.utils.solidityPack(
+        ['uint8', 'uint16', 'uint32', 'bytes'],
+        [SignatureType.Dynamic, config.threshold, config.checkpoint, encodedSigners.encoded]
+      )
     case SignatureType.NoChaindDynamic:
-      return ethers.utils.solidityPack(['uint8', 'uint16', 'bytes'], [SignatureType.NoChaindDynamic, config.threshold, encodedSigners.encoded])
+      return ethers.utils.solidityPack(
+        ['uint8', 'uint16', 'uint32', 'bytes'],
+        [SignatureType.NoChaindDynamic, config.threshold, config.checkpoint, encodedSigners.encoded]
+      )
     default:
     case SignatureType.Legacy:
-      return ethers.utils.solidityPack(['uint16', 'bytes'], [config.threshold, encodedSigners.encoded])
+      return ethers.utils.solidityPack(
+        ['uint8', 'uint8', 'uint32', 'bytes'],
+        [SignatureType.Legacy, config.threshold, config.checkpoint, encodedSigners.encoded]
+      )
   }
 }

@@ -38,29 +38,30 @@ abstract contract ModuleAuth is
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest
+    bytes32 subDigest,
+    uint256 checkpoint
   ) {
     bytes1 signatureType = _signature[0];
 
     if (signatureType == LEGACY_TYPE) {
       // networkId digest + base recover
       subDigest = SequenceBaseSig.subDigest(_digest);
-      (threshold, weight, imageHash) = SequenceBaseSig.recover(subDigest, _signature);
-      return (threshold, weight, imageHash, subDigest);
+      (threshold, weight, imageHash, checkpoint) = SequenceBaseSig.recover(subDigest, _signature);
+      return (threshold, weight, imageHash, subDigest, checkpoint);
     }
 
     if (signatureType == DYNAMIC_TYPE) {
       // noChainId digest + dynamic recovery
       subDigest = SequenceBaseSig.subDigest(_digest);
-      (threshold, weight, imageHash) = SequenceDynamicSig.recover(subDigest, _signature);
-      return (threshold, weight, imageHash, subDigest);
+      (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subDigest, _signature);
+      return (threshold, weight, imageHash, subDigest, checkpoint);
     }
 
     if (signatureType == NO_CHAIN_ID_TYPE) {
       // networkId digest + dynamic recover
       subDigest = SequenceNoChainIdSig.subDigest(_digest);
-      (threshold, weight, imageHash) = SequenceDynamicSig.recover(subDigest, _signature);
-      return (threshold, weight, imageHash, subDigest);
+      (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subDigest, _signature);
+      return (threshold, weight, imageHash, subDigest, checkpoint);
     }
 
     if (signatureType == CHAINED_TYPE) {
@@ -80,7 +81,7 @@ abstract contract ModuleAuth is
     bytes32 subDigest
   ) {
     uint256 threshold; uint256 weight; bytes32 imageHash;
-    (threshold, weight, imageHash, subDigest) = signatureRecovery(_digest, _signature);
+    (threshold, weight, imageHash, subDigest,) = signatureRecovery(_digest, _signature);
     isValid = weight >= threshold && _isValidImage(imageHash);
   }
 

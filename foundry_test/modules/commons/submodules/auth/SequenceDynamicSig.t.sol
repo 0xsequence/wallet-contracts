@@ -8,11 +8,11 @@ import "foundry_test/base/AdvTest.sol";
 
 
 contract SequenceDynamicSigImp {
-  function recover(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256, uint256, bytes32) {
+  function recover(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256, uint256, bytes32, uint256) {
     return SequenceDynamicSig.recover(_subDigest, _signature);
   }
 
-  function recoverBase(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash) {
+  function recoverBase(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash, uint256) {
     return SequenceBaseSig.recover(_subDigest, _signature);
   }
 }
@@ -24,17 +24,17 @@ contract SequenceDynamicSigTest is AdvTest {
     lib = new SequenceDynamicSigImp();
   }
 
-  function test_recover_ignoreFirstByte(uint8 _first, bytes32 _subdigest, uint256 _pk, uint16 _threshold, uint8 _weight) external {
+  function test_recover_ignoreFirstByte(uint8 _first, bytes32 _subdigest, uint256 _pk, uint16 _threshold, uint32 _checkpoint, uint8 _weight) external {
     _pk = boundPk(_pk);
 
-    bytes memory signature = signAndPack(_pk, _subdigest, 1);
-    bytes memory encoded = abi.encodePacked(_threshold, uint8(0), _weight, signature);
+    bytes memory encoded = abi.encodePacked(_threshold, _checkpoint, uint8(0), _weight, signAndPack(_pk, _subdigest, 1));
 
-    (uint256 threshold1, uint256 weight1, bytes32 imageHash1) = lib.recover(_subdigest, abi.encodePacked(_first, encoded));
-    (uint256 threshold2, uint256 weight2, bytes32 imageHash2) = lib.recoverBase(_subdigest, encoded);
+    (uint256 threshold1, uint256 weight1, bytes32 imageHash1, uint256 checkpoint1) = lib.recover(_subdigest, abi.encodePacked(_first, encoded));
+    (uint256 threshold2, uint256 weight2, bytes32 imageHash2, uint256 checkpoint2) = lib.recoverBase(_subdigest, encoded);
 
     assertEq(threshold1, threshold2);
     assertEq(weight1, weight2);
     assertEq(imageHash1, imageHash2);
+    assertEq(checkpoint1, checkpoint2);
   }
 }
