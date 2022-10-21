@@ -16,6 +16,7 @@ library SequenceBaseSig {
   uint256 private constant FLAG_NODE = 3;
   uint256 private constant FLAG_BRANCH = 4;
   uint256 private constant FLAG_SUBDIGEST = 5;
+  uint256 private constant FLAG_NESTED = 6;
 
   error InvalidNestedSignature(bytes32 _hash, address _addr, bytes _signature);
   error InvalidSignatureFlag(uint256 _flag);
@@ -33,7 +34,7 @@ library SequenceBaseSig {
     );
   }
 
-  function _joinAddrAndWeight(
+  function _leafForAddressAndWeight(
     address _addr,
     uint96 _weight
   ) internal pure returns (bytes32) {
@@ -46,6 +47,14 @@ library SequenceBaseSig {
     bytes32 _subdigest
   ) internal pure returns (bytes32) {
     return keccak256(abi.encodePacked('Sequence static digest:\n', _subdigest));
+  }
+
+  function _leafForNested(
+    bytes32 _node,
+    uint256 _threshold,
+    uint256 _weight
+  ) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked('Sequence nested config:\n', _node, _threshold, _weight));
   }
 
   function recoverBranch(
@@ -70,7 +79,7 @@ library SequenceBaseSig {
           (addrWeight, addr, rindex) = _signature.readUint8Address(rindex);
 
           // Write weight and address to image
-          bytes32 node = _joinAddrAndWeight(addr, addrWeight);
+          bytes32 node = _leafForAddressAndWeight(addr, addrWeight);
           root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
@@ -89,7 +98,7 @@ library SequenceBaseSig {
           weight += addrWeight;
 
           // Write weight and address to image
-          bytes32 node = _joinAddrAndWeight(addr, addrWeight);
+          bytes32 node = _leafForAddressAndWeight(addr, addrWeight);
           root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
@@ -114,7 +123,7 @@ library SequenceBaseSig {
           weight += addrWeight;
 
           // Write weight and address to image
-          bytes32 node = _joinAddrAndWeight(addr, addrWeight);
+          bytes32 node = _leafForAddressAndWeight(addr, addrWeight);
           root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
@@ -140,6 +149,33 @@ library SequenceBaseSig {
           root = LibOptim.fkeccak256(root, node);
 
           rindex = nrindex;
+          continue;
+        }
+
+        if (flag == FLAG_NESTED) {
+          // Enter a branch of the signature merkle tree
+          // but with an internal threshold and an external fixed weight
+          uint256 externalWeight;
+          (externalWeight, rindex) = _signature.readUint8(rindex);
+
+          uint256 internalThreshold;
+          (internalThreshold, rindex) = _signature.readUint16(rindex);
+
+          uint256 size;
+          (size, rindex) = _signature.readUint24(rindex);
+          uint256 nrindex = rindex + size;
+
+          uint256 internalWeight; bytes32 internalRoot;
+          (internalWeight, internalRoot) = recoverBranch(_subdigest, _signature[rindex:nrindex]);
+          rindex = nrindex;
+
+          if (internalWeight >= internalThreshold) {
+            weight += externalWeight;
+          }
+
+          bytes32 node = _leafForNested(internalRoot, internalThreshold, externalWeight);
+          root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
+
           continue;
         }
 
