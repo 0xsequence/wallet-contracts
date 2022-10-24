@@ -173,7 +173,7 @@ library SequenceBaseSig {
     unchecked {
       (weight, imageHash) = recoverBranch(_subDigest, _signature[2:]);
 
-      // Thershold is the top-most node (but first on the signature)
+      // Threshold is the top-most node (but first on the signature)
       threshold = LibBytes.readFirstUint16(_signature);
       imageHash = LibOptim.fkeccak256(imageHash, bytes32(threshold));
     }
