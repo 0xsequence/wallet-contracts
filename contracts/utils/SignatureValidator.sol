@@ -92,11 +92,7 @@ library SignatureValidator {
       );
 
     } else {
-      // Anything other signature types are illegal (We do not return false because
-      // the signature may actually be valid, just not in a format
-      // that we currently support. In this case returning false
-      // may lead the caller to incorrectly believe that the
-      // signature was invalid.)
+      // We cannot recover the signer for any other signature type.
       revert UnsupportedSignatureType(_signature, signatureType, true);
     }
 
@@ -129,11 +125,8 @@ library SignatureValidator {
       valid = ERC1271_MAGICVALUE_BYTES32 == IERC1271Wallet(_signer).isValidSignature(_hash, _signature[0:_signature.length - 1]);
 
     } else {
-      // Anything other signature types are illegal (We do not return false because
-      // the signature may actually be valid, just not in a format
-      // that we currently support. In this case returning false
-      // may lead the caller to incorrectly believe that the
-      // signature was invalid.)
+      // We cannot validate any other signature type.
+      // We revert because we can say nothing about its validity.
       revert UnsupportedSignatureType(_signature, signatureType, false);
     }
   }
