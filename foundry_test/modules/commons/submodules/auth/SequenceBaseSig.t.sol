@@ -95,6 +95,60 @@ contract SequenceBaseSigTest is AdvTest {
     assertEq(expected, actual);
   }
 
+  function test_leafForWeightAndAddress_fuzz(address _addr1, uint96 _weight1, address _addr2, uint96 _weight2) external {
+    bytes32 encoded1 = lib.leafForWeightAndAddress(_addr1, _weight1);
+    bytes32 encoded2 = lib.leafForWeightAndAddress(_addr2, _weight2);
+    assertEq(encoded1 == encoded2, _addr1 == _addr2 && _weight1 == _weight2);
+  }
+
+  function test_leafForHardcodedSubdigest_fuzz(bytes32 _subDigest1, bytes32 _subDigest2) external {
+    bytes32 encoded1 = SequenceBaseSig._leafForHardcodedSubdigest(_subDigest1);
+    bytes32 encoded2 = SequenceBaseSig._leafForHardcodedSubdigest(_subDigest2);
+    assertEq(encoded1 == encoded2, _subDigest1 == _subDigest2);
+  }
+
+  function test_leafForHardcodedSubdigest_fuzz_addr(address _addr, uint96 _weight, bytes32 _subDigest) external {
+    bytes32 encoded1 = SequenceBaseSig._leafForHardcodedSubdigest(_subDigest);
+    bytes32 encoded2 = SequenceBaseSig._leafForWeightAndAddress(_addr, _weight);
+    assertTrue(encoded1 != encoded2);
+  }
+
+  function test_leafForNested_fuzz(
+    bytes32 _node1,
+    uint256 _threshold1,
+    uint256 _weight1,
+    bytes32 _node2,
+    uint256 _threshold2,
+    uint256 _weight2
+  ) external {
+    bytes32 encoded1 = SequenceBaseSig._leafForNested(_node1, _threshold1, _weight1);
+    bytes32 encoded2 = SequenceBaseSig._leafForNested(_node2, _threshold2, _weight2);
+    assertEq(encoded1 == encoded2, _node1 == _node2 && _threshold1 == _threshold2 && _weight1 == _weight2);
+  }
+
+  function test_leafForNested_fuzz_addr(
+    address _addr,
+    uint96 _weight,
+    bytes32 _node,
+    uint256 _threshold,
+    uint256 _nodeWeight
+  ) external {
+    bytes32 encoded1 = SequenceBaseSig._leafForNested(_node, _threshold, _nodeWeight);
+    bytes32 encoded2 = SequenceBaseSig._leafForWeightAndAddress(_addr, _weight);
+    assertTrue(encoded1 != encoded2);
+  }
+
+  function test_leafForNested_fuzz_subdigest(
+    bytes32 _subDigest,
+    bytes32 _node,
+    uint256 _threshold,
+    uint256 _weight
+  ) external {
+    bytes32 encoded1 = SequenceBaseSig._leafForNested(_node, _threshold, _weight);
+    bytes32 encoded2 = SequenceBaseSig._leafForHardcodedSubdigest(_subDigest);
+    assertTrue(encoded1 != encoded2);
+  }
+
   function test_recoverBranch_Addresses(bytes32 _subdigest, bytes32 _seed, address[] calldata _addresses) external {
     bytes memory signature;
     bytes32 root;
