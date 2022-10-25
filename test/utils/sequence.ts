@@ -39,14 +39,20 @@ export type WalletConfig = {
   topology: ConfigTopology
 }
 
+export type SimplifiedNestedWalletConfig = {
+  threshold: ethers.BigNumberish,
+  weight: ethers.BigNumberish,
+  signers: SimplifiedConfigMember[]
+}
+
 export type SimplifiedWalletConfig = {
   threshold: BigNumberish,
   checkpoint: BigNumberish,
-  signers: {
-    weight: BigNumberish
-    address: string
-  }[]
+  signers: SimplifiedConfigMember[]
 }
+
+
+export type SimplifiedConfigMember = SignerLeaf | SimplifiedNestedWalletConfig
 
 export type Transaction = {
   delegateCall: boolean;
@@ -110,8 +116,8 @@ export function isConfigLeaf(node: ConfigTopology): node is ConfigLeaf {
   return !('left' in node || 'right' in node)
 }
 
-export function isSignerLeaf(node: ConfigTopology): node is SignerLeaf {
-  return isConfigLeaf(node) && 'weight' in node
+export function isSignerLeaf(node: any): node is SignerLeaf {
+  return isConfigLeaf(node) && 'weight' in node && 'address' in node
 }
 
 export function isSubdigestLeaf(node: ConfigTopology): node is SubdigestLeaf {
@@ -122,43 +128,34 @@ export function isNestedLeaf(node: ConfigTopology): node is NestedLeaf {
   return isConfigLeaf(node) && 'tree' in node
 }
 
-export function legacyTopology(config: SimplifiedWalletConfig): ConfigTopology {
-  if (config.signers.length === 1) {
+export function legacyTopology(leavesOrConfig: SimplifiedWalletConfig | ConfigTopology[]): ConfigTopology {
+  if (!Array.isArray(leavesOrConfig)) {
+    return legacyTopology(toTopology(leavesOrConfig))
+  }
+
+  return leavesOrConfig.reduce((acc, leaf) => {
     return {
-      address: config.signers[0].address,
-      weight: config.signers[0].weight
+      left: acc,
+      right: leaf
     }
-  }
-
-  let root: ImageHashNode = {
-    left: {
-      address: config.signers[0].address,
-      weight: config.signers[0].weight
-    },
-    right: {
-      address: config.signers[1].address,
-      weight: config.signers[1].weight
-    }
-  }
-
-  for (let i = 2; i < config.signers.length; i++) {
-    root = {
-      left: root,
-      right: {
-        address: config.signers[i].address,
-        weight: config.signers[i].weight
-      }
-    }
-  }
-
-  return root
+  })
 }
 
-export function toTopology(config: SimplifiedWalletConfig): ConfigTopology[] {
-  return config.signers.map(s => ({
-    address: s.address,
-    weight: s.weight
-  })) as ConfigTopology[]
+export function toTopology(config: SimplifiedWalletConfig | SimplifiedNestedWalletConfig): ConfigTopology[] {
+  return config.signers.map(s => {
+    if (isSignerLeaf(s)) {
+      return {
+        address: s.address,
+        weight: s.weight
+      }
+    }
+
+    return {
+      tree: merkleTopology(toTopology(s)),
+      internalThreshold: s.threshold,
+      externalWeight: s.weight
+    }
+  }) as ConfigTopology[]
 }
 
 export function merkleTopology(leavesOrConfig: SimplifiedWalletConfig | ConfigTopology[]): ConfigTopology {
@@ -583,7 +580,7 @@ export function encodeSigners(
 
   const constructor = new SignatureConstructor(options?.disableTrim)
   for (const node of slice) {
-    if (!isConfigLeaf(node) || isNestedLeaf(node)) {
+    if (!isConfigLeaf(node)) {
       // If the node opens up to another branch
       // we recurse the encoding, and if the result has any weight
       // we have to embed the whole branch, otherwise we just add the node
@@ -591,18 +588,8 @@ export function encodeSigners(
       if (nested.weight.isZero() && !options?.disableTrim) {
         constructor.appendNode(hashNode(node))
       } else {
-        if (isNestedLeaf(node)) {
-          // Nested configs only have weight if the inner threshold is met
-          // and the weight is always the external weight
-          if (nested.weight.gte(node.internalThreshold)) {
-            weight = weight.add(node.externalWeight)
-          }
-
-          constructor.appendNested(nested.encoded, node.externalWeight, node.internalThreshold)
-        } else {
-          constructor.appendBranch(nested.encoded)
-          weight = weight.add(nested.weight)
-        }
+        constructor.appendBranch(nested.encoded)
+        weight = weight.add(nested.weight)
       }
     } else {
       if (isSignerLeaf(node)) {
@@ -613,6 +600,22 @@ export function encodeSigners(
         }
   
         constructor.appendPart(node.weight, part)
+      } else if (isNestedLeaf(node)) {
+        // If the node opens up to another branch
+        // we recurse the encoding, and if the result has any weight
+        // we have to embed the whole branch, otherwise we just add the node
+        const nested = encodeSigners(node.tree, parts, subDigests, options)
+        if (nested.weight.isZero() && !options?.disableTrim) {
+          constructor.appendNode(hashNode(node))
+        } else {
+          // Nested configs only have weight if the inner threshold is met
+          // and the weight is always the external weight
+          if (nested.weight.gte(node.internalThreshold)) {
+            weight = weight.add(node.externalWeight)
+          }
+
+          constructor.appendNested(nested.encoded, node.externalWeight, node.internalThreshold)
+        }
       } else {
         // If the node is a subdigest add the node (unless it's an static subdigest signature)
         if (subDigests.includes(node.subDigest)) {

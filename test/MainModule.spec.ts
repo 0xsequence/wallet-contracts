@@ -5,7 +5,7 @@ import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } fro
 
 import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock } from './utils/contracts'
 import { Imposter } from './utils/imposter'
-import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, merkleTopology, SignatureType, subDigestOf } from './utils/sequence'
+import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, legacyTopology, merkleTopology, optimize2SignersTopology, printTopology, SignatureType, SimplifiedWalletConfig, subDigestOf, toSimplifiedConfig, WalletConfig } from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
 
 contract('MainModule', (accounts: string[]) => {
@@ -764,6 +764,109 @@ contract('MainModule', (accounts: string[]) => {
           }
         })
       })
+    })
+  })
+
+  describe('Nested configurations', async () => {
+    it('Should use nested configuration as a regular branch', async () => {
+      const nested = SequenceWallet.basicWallet(context, { signing: 1, iddle: 11 })
+      const simplifiedConfig = {
+        threshold: 1,
+        checkpoint: 2,
+        signers: [{
+          address: ethers.Wallet.createRandom().address,
+          weight: 1
+        }, {
+          ...toSimplifiedConfig(nested.config),
+          weight: 1
+        }]
+      }
+
+      const config = {
+        ...simplifiedConfig,
+        topology: legacyTopology(simplifiedConfig)
+      }
+
+      const wallet = new SequenceWallet({ context, config, signers: nested.signers })
+      await wallet.deploy()
+
+      await wallet.sendTransactions([])
+    })
+    it('Should use nested configuration with independent weight and threshold', async () => {
+      const nested = SequenceWallet.basicWallet(context, { signing: 2, iddle: 11 })
+      const simplifiedConfig = {
+        threshold: 5,
+        checkpoint: 2,
+        signers: [{
+          ...toSimplifiedConfig(nested.config),
+          weight: 5
+        }, {
+          address: ethers.Wallet.createRandom().address,
+          weight: 1
+        }]
+      }
+
+      const config = {
+        ...simplifiedConfig,
+        topology: merkleTopology(simplifiedConfig)
+      }
+
+      const wallet = new SequenceWallet({ context, config, signers: nested.signers })
+      await wallet.deploy()
+
+      await wallet.sendTransactions([])
+    })
+    it('Should reject nested configuration if not enough internal signing power', async () => {
+      const nested = SequenceWallet.basicWallet(context, { signing: 2, iddle: 11 })
+
+      const simplifiedConfig = {
+        threshold: 1,
+        checkpoint: 2,
+        signers: [{
+          ...toSimplifiedConfig(nested.config),
+          weight: 5
+        }, {
+          address: ethers.Wallet.createRandom().address,
+          weight: 1
+        }]
+      }
+
+      const config = {
+        ...simplifiedConfig,
+        topology: merkleTopology(simplifiedConfig)
+      }
+
+      const wallet = new SequenceWallet({ context, config, signers: [nested.signers[0]] })
+      await wallet.deploy()
+
+      const tx = wallet.sendTransactions([])
+      await expectToBeRejected(tx, 'InvalidSignature')
+    })
+    it('Should limit nested signing power', async () => {
+      const nested = SequenceWallet.basicWallet(context, { signing: 10 })
+
+      const simplifiedConfig = {
+        threshold: 2,
+        checkpoint: 2,
+        signers: [{
+          ...toSimplifiedConfig(nested.config),
+          weight: 1
+        }, {
+          address: ethers.Wallet.createRandom().address,
+          weight: 1
+        }]
+      }
+
+      const config = {
+        ...simplifiedConfig,
+        topology: merkleTopology(simplifiedConfig)
+      }
+
+      const wallet = new SequenceWallet({ context, config, signers: nested.signers })
+      await wallet.deploy()
+
+      const tx = wallet.sendTransactions([])
+      await expectToBeRejected(tx, 'InvalidSignature')
     })
   })
 
