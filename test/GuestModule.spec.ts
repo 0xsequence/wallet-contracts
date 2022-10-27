@@ -66,7 +66,7 @@ contract('GuestModule', () => {
       }])
 
       const tx = guestModule.selfExecute(transactions)
-      await expectToBeRejected(tx, 'DelegateCallNotAllowed()')
+      await expectToBeRejected(tx, 'DelegateCallNotAllowed(0)')
     })
     it('Should not accept ETH', async () => {
       const tx = hethers.provider.getSigner().sendTransaction({ value: 1, to: guestModule.address })
