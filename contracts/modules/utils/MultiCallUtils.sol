@@ -23,7 +23,7 @@ contract MultiCallUtils {
       IModuleCalls.Transaction memory transaction = _txs[i];
 
       if (transaction.delegateCall) revert DelegateCallNotAllowed(i);
-      if (gasleft() < transaction.gasLimit) revert IModuleCalls.NotEnoughGas(transaction.gasLimit, gasleft());
+      if (gasleft() < transaction.gasLimit) revert IModuleCalls.NotEnoughGas(i, transaction.gasLimit, gasleft());
 
       // solhint-disable
       (_successes[i], _results[i]) = transaction.target.call{

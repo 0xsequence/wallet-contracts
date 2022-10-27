@@ -82,7 +82,7 @@ contract GuestModule is
       if (transaction.delegateCall) revert DelegateCallNotAllowed(i);
 
       uint256 gasLimit = transaction.gasLimit;
-      if (gasleft() < gasLimit) revert NotEnoughGas(gasLimit, gasleft());
+      if (gasleft() < gasLimit) revert NotEnoughGas(i, gasLimit, gasleft());
 
       bool success = LibOptim.call(
         transaction.target,
