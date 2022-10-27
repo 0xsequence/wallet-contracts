@@ -5,7 +5,7 @@ import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } fro
 
 import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock } from './utils/contracts'
 import { Imposter } from './utils/imposter'
-import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, merkleTopology, SignatureType, subDigestOf } from './utils/sequence'
+import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, merkleTopology, printTopology, SignatureType, subDigestOf } from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
 
 contract('MainModule', (accounts: string[]) => {
@@ -1890,6 +1890,29 @@ contract('MainModule', (accounts: string[]) => {
       expect(await callReceiver.lastValB()).to.equal("0x")
       expect(await callReceiver2.lastValB()).to.equal("0x")
       expect(await callReceiver3.lastValB()).to.equal(expected3)
+    })
+  })
+
+  describe('Config tree', () => {
+    it('Should be able to sign with all leaves of a configuration', async () => {
+      const signers = new Array(16).fill(0).map(() => ethers.Wallet.createRandom())
+      const config = {
+        threshold: 1,
+        topology: merkleTopology(signers.map(s => ({
+          address: s.address,
+          weight: 1
+        })))
+      }
+      wallet = new SequenceWallet({ config, context, signers: [] })
+      await wallet.deploy()
+
+      const subDigest = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test'))
+      for (const signer of signers) {
+        wallet = wallet.useSigners([signer])
+        const signatureFor = await wallet.signSubDigest(subDigest)
+        console.log(`signer ${signer.address}: ${signatureFor}`)
+        await wallet.sendTransactions([])
+      }
     })
   })
 })
