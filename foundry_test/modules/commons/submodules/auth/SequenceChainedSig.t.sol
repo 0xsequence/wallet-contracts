@@ -76,8 +76,8 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     }
   }
 
-  function hashSetImagehashStruct(bytes32 _imageHash) external pure returns (bytes32) {
-    return _hashSetImagehashStruct(_imageHash);
+  function hashSetImageHashStruct(bytes32 _imageHash) external pure returns (bytes32) {
+    return _hashSetImageHashStruct(_imageHash);
   }
 
   function _signatureValidation(
@@ -144,7 +144,7 @@ contract SequenceChainedSigTest is AdvTest {
         checkpoint
       );
 
-      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash);
+      nextDigest = lib.hashSetImageHashStruct(_steps[i].imageHash);
       signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
@@ -194,7 +194,7 @@ contract SequenceChainedSigTest is AdvTest {
         checkpoint
       );
 
-      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash);
+      nextDigest = lib.hashSetImageHashStruct(_steps[i].imageHash);
       signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
@@ -243,7 +243,7 @@ contract SequenceChainedSigTest is AdvTest {
         checkpoint
       );
 
-      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash);
+      nextDigest = lib.hashSetImageHashStruct(_steps[i].imageHash);
       signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 

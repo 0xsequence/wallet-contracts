@@ -17,7 +17,7 @@ contract('Chained signatures', (accounts: string[]) => {
   beforeEach(async () => {
     wallet = SequenceWallet.basicWallet(context)
     await wallet.deploy()
-    typehash = await wallet.mainModule.SET_IMAGEHASH_TYPEHASH() 
+    typehash = await wallet.mainModule.SET_IMAGE_HASH_TYPEHASH() 
   })
 
   const chain = (top: string, ...rest: { sig: string }[]) => {
@@ -32,17 +32,17 @@ contract('Chained signatures', (accounts: string[]) => {
     )
   }
 
-  const hashSetImagehash = (imagehash: string) => {
+  const hashSetImageHash = (imageHash: string) => {
     return ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(
       ['bytes32', 'bytes32'],
-      [typehash, imagehash]
+      [typehash, imageHash]
     ))
   }
 
   it("Should accept a single chained signature", async () => {
     const wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address })
 
-    const hsih = hashSetImagehash(wallet_b.imageHash)
+    const hsih = hashSetImageHash(wallet_b.imageHash)
 
     const sig = await wallet.signDigest(hsih)
     const topsig = await wallet_b.signTransactions([{}])
@@ -61,8 +61,8 @@ contract('Chained signatures', (accounts: string[]) => {
     wallet_b = wallet_b.useConfig({ ...wallet_b.config, checkpoint: checkpoint1 })
     wallet_c = wallet_c.useConfig({ ...wallet_c.config, checkpoint: checkpoint2 })
 
-    const hsih1 = hashSetImagehash(wallet_b.imageHash)
-    const hsih2 = hashSetImagehash(wallet_c.imageHash)
+    const hsih1 = hashSetImageHash(wallet_b.imageHash)
+    const hsih2 = hashSetImageHash(wallet_c.imageHash)
 
     const sig1 = await wallet.signDigest(hsih1)
     const sig2 = await wallet_b.signDigest(hsih2)
@@ -83,8 +83,8 @@ contract('Chained signatures', (accounts: string[]) => {
     wallet_b = wallet_b.useConfig({ ...wallet_b.config, checkpoint: checkpoint1 })
     wallet_c = wallet_c.useConfig({ ...wallet_c.config, checkpoint: checkpoint2 })
 
-    const hsih1 = hashSetImagehash(wallet_b.imageHash)
-    const hsih2 = hashSetImagehash(wallet_c.imageHash)
+    const hsih1 = hashSetImageHash(wallet_b.imageHash)
+    const hsih2 = hashSetImageHash(wallet_c.imageHash)
 
     const sig1 = await wallet.signDigest(hsih1)
     const sig2 = await wallet_b.signDigest(hsih2)
@@ -112,7 +112,7 @@ contract('Chained signatures', (accounts: string[]) => {
     const checkpoint = ethers.BigNumber.from(wallet.config.checkpoint)
     wallet_b = wallet_b.useConfig({ ...wallet_b.config, checkpoint: checkpoint })
 
-    const hsih = hashSetImagehash(wallet_b.imageHash)
+    const hsih = hashSetImageHash(wallet_b.imageHash)
     const sig = await wallet.signDigest(hsih)
     const topsig = await wallet_b.signTransactions([{}])
     const bundled = chain(topsig, { sig: sig })
@@ -126,7 +126,7 @@ contract('Chained signatures', (accounts: string[]) => {
     const checkpoint = ethers.BigNumber.from(wallet.config.checkpoint).sub(1)
     wallet_b = wallet_b.useConfig({ ...wallet_b.config, checkpoint: checkpoint })
 
-    const hsih = hashSetImagehash(wallet_b.imageHash)
+    const hsih = hashSetImageHash(wallet_b.imageHash)
     const sig = await wallet.signDigest(hsih)
     const topsig = await wallet_b.signTransactions([{}])
     const bundled = chain(topsig, { sig: sig })
