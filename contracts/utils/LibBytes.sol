@@ -36,4 +36,16 @@ library LibBytes {
       a := shr(240, word)
     }
   }
+
+  function readUint32(
+    bytes calldata data,
+    uint256 index
+  ) internal pure returns (
+    uint32 a
+  ) {
+    assembly {
+      let word := calldataload(add(index, data.offset))
+      a := shr(224, word)
+    }
+  }
 }

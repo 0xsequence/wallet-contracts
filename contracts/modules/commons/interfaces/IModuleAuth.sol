@@ -27,7 +27,8 @@ abstract contract IModuleAuth {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest
+    bytes32 subDigest,
+    uint256 checkpoint
   );
 
   /**

@@ -440,7 +440,7 @@ contract('MainModule', (accounts: string[]) => {
     })
 
     it('Should reject signature with invalid flag', async () => {
-      const tx = wallet.relayTransactions([{}], '0x0001ff01')
+      const tx = wallet.relayTransactions([{}], '0x000193812833ff01')
       await expectToBeRejected(tx, 'InvalidSignatureFlag(255)')
     })
 
@@ -618,9 +618,9 @@ contract('MainModule', (accounts: string[]) => {
           }])
 
           expect(await wallet.mainModule.staticDigest(txDigest)).to.equal(expiration)
-          await wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')
+          await wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x000000000000')
 
-          const relay2 = wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')
+          const relay2 = wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x000000000000')
           await expectToBeRejected(relay2, `BadNonce(1, 0, 1)`)
         })
 
@@ -629,8 +629,8 @@ contract('MainModule', (accounts: string[]) => {
           const digest1 = ethers.utils.keccak256(message)
           const digest2 = ethers.utils.keccak256([])
 
-          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](digest1, '0x0000')).to.equal('0x00000000')
-          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](digest2, '0x0000')).to.equal('0x00000000')
+          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](digest1, '0x000000000000')).to.equal('0x00000000')
+          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](digest2, '0x000000000000')).to.equal('0x00000000')
 
           await wallet.sendTransactions([{
             target: wallet.address,
@@ -643,8 +643,8 @@ contract('MainModule', (accounts: string[]) => {
           expect(await wallet.mainModule.staticDigest(digest1)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
           expect(await wallet.mainModule.staticDigest(digest2)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
 
-          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x0000')).to.equal('0x20c13b0b')
-          expect(await wallet.mainModule['isValidSignature(bytes32,bytes)'](digest2, '0x0000')).to.equal('0x1626ba7e')
+          expect(await wallet.mainModule['isValidSignature(bytes,bytes)'](message, '0x000000000000')).to.equal('0x20c13b0b')
+          expect(await wallet.mainModule['isValidSignature(bytes32,bytes)'](digest2, '0x000000000000')).to.equal('0x1626ba7e')
         })
 
         it('Should remove static digest', async () => {
@@ -697,9 +697,9 @@ contract('MainModule', (accounts: string[]) => {
           expect(await wallet.mainModule.staticDigest(txDigest2)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
           expect(await wallet.mainModule.staticDigest(txDigest3)).to.equal(ethers.BigNumber.from(2).pow(256).sub(1))
 
-          await wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x0000')
-          await wallet.mainModule.execute(tx, encodeNonce(2, 0), '0x00ff')
-          await wallet.mainModule.execute(tx, encodeNonce(3, 0), '0x0000')
+          await wallet.mainModule.execute(tx, encodeNonce(1, 0), '0x000000000000')
+          await wallet.mainModule.execute(tx, encodeNonce(2, 0), '0x00ff00000001')
+          await wallet.mainModule.execute(tx, encodeNonce(3, 0), '0x0000ffffffff')
         })
       })
     })
@@ -725,7 +725,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const prevLeaves = leavesOf(wallet.config.topology)
           const newMerkle = merkleTopology([subDigestsMerkle, ...prevLeaves])
-          const newConfig = { threshold: wallet.config.threshold, topology: newMerkle }
+          const newConfig = { threshold: wallet.config.threshold, topology: newMerkle, checkpoint: Math.floor(Date.now() / 1000) }
 
           await wallet.deploy()
           await wallet.updateImageHash(newConfig)
@@ -748,7 +748,7 @@ contract('MainModule', (accounts: string[]) => {
 
           const prevLeaves = leavesOf(wallet.config.topology)
           const newMerkle = merkleTopology([subDigestsMerkle, ...prevLeaves])
-          const newConfig = { threshold: wallet.config.threshold, topology: newMerkle }
+          const newConfig = { threshold: wallet.config.threshold, topology: newMerkle, checkpoint: Math.floor(Date.now() / 1000) }
 
           await wallet.deploy()
           await wallet.updateImageHash(newConfig)

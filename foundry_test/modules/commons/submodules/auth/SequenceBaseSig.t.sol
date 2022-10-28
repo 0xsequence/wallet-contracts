@@ -19,7 +19,7 @@ contract SequenceBaseSigImp {
     return SequenceBaseSig.recoverBranch(_digest, _signature);
   }
 
-  function recover(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash) {
+  function recover(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash, uint256 checkpoint) {
     return SequenceBaseSig.recover(_subDigest, _signature);
   }
 }
@@ -227,21 +227,23 @@ contract SequenceBaseSigTest is AdvTest {
     lib.recoverBranch(_hash, abi.encodePacked(_flag, _sufix));
   }
 
-  function test_recover(bytes32 _subdigest, uint256 _pk, uint16 _threshold, uint8 _weight) external {
+  function test_recover(bytes32 _subdigest, uint256 _pk, uint32 _checkpoint, uint16 _threshold, uint8 _weight) external {
     _pk = boundPk(_pk);
 
     bytes memory signature = signAndPack(_pk, _subdigest, 1);
     address addr = vm.addr(_pk);
 
     bytes32 expectImageHash = abi.decode(abi.encodePacked(uint96(_weight), addr), (bytes32));
-    expectImageHash = keccak256(abi.encodePacked(expectImageHash, bytes32(uint256(_threshold))));
+    expectImageHash = keccak256(abi.encodePacked(expectImageHash, uint256(_threshold)));
+    expectImageHash = keccak256(abi.encodePacked(expectImageHash, uint256(_checkpoint)));
 
-    bytes memory encoded = abi.encodePacked(_threshold, FLAG_SIGNATURE, _weight, signature);
-    (uint256 threshold, uint256 weight, bytes32 imageHash) = lib.recover(_subdigest, encoded);
+    bytes memory encoded = abi.encodePacked(_threshold, _checkpoint, FLAG_SIGNATURE, _weight, signature);
+    (uint256 threshold, uint256 weight, bytes32 imageHash, uint256 checkpoint) = lib.recover(_subdigest, encoded);
 
     assertEq(weight, _weight);
     assertEq(threshold, _threshold);
     assertEq(imageHash, expectImageHash);
+    assertEq(checkpoint, _checkpoint);
   }
 
   function test_recover_Fail_EmptySignature(bytes32 _subdigest) external {

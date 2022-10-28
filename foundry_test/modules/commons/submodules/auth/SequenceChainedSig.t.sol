@@ -11,7 +11,8 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest
+    bytes32 subDigest,
+    uint256 checkpoint
   ) {
     return chainedRecover(_digest, _signature);
   }
@@ -22,6 +23,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 weight;
     bytes32 imageHash;
     bytes32 subDigest;
+    uint256 checkpoint;
   }
 
   mapping(bytes32 => mapping(bytes => MockedSignature)) public mockedSignatures;
@@ -36,7 +38,8 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 _threshold,
     uint256 _weight,
     bytes32 _imageHash,
-    bytes32 _subDigest
+    bytes32 _subDigest,
+    uint256 _checkpoint
   ) external {
     MockedSignature memory sig;
 
@@ -45,6 +48,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     sig.weight = _weight;
     sig.imageHash = _imageHash;
     sig.subDigest = _subDigest;
+    sig.checkpoint = _checkpoint;
 
     mockedSignatures[_digest][_signature] = sig;
   }
@@ -56,22 +60,24 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest
+    bytes32 subDigest,
+    uint256 checkpoint
   ) {
     if (mockedSignatures[_digest][_signature].exists) {
       return (
         mockedSignatures[_digest][_signature].threshold,
         mockedSignatures[_digest][_signature].weight,
         mockedSignatures[_digest][_signature].imageHash,
-        mockedSignatures[_digest][_signature].subDigest
+        mockedSignatures[_digest][_signature].subDigest,
+        mockedSignatures[_digest][_signature].checkpoint
       );
     } else {
-      revert('invalid signature');
+      revert('invalid mocked signature');
     }
   }
 
-  function hashSetImagehashStruct(bytes32 _imageHash, uint256 _checkpoint) external pure returns (bytes32) {
-    return _hashSetImagehashStruct(_imageHash, _checkpoint);
+  function hashSetImagehashStruct(bytes32 _imageHash) external pure returns (bytes32) {
+    return _hashSetImagehashStruct(_imageHash);
   }
 
   function _signatureValidation(
@@ -99,30 +105,6 @@ contract SequenceChainedSigTest is AdvTest {
     lib = new SequenceChainedSigImp();
   }
 
-  event SetLastCheckpoint(uint256 _checkpoint);
-
-  function test_setLastAuthCheckpoint(uint256 _newCheckpoint1, uint256 _newCheckpoint2) external {
-    vm.startPrank(address(lib));
-
-    vm.expectEmit(true, true, true, true, address(lib));
-    emit SetLastCheckpoint(_newCheckpoint1);
-    lib.setLastAuthCheckpoint(_newCheckpoint1);
-    assertEq(lib.getLastAuthCheckpoint(), _newCheckpoint1);
-
-    vm.expectEmit(true, true, true, true, address(lib));
-    emit SetLastCheckpoint(_newCheckpoint2);
-    lib.setLastAuthCheckpoint(_newCheckpoint2);
-    assertEq(lib.getLastAuthCheckpoint(), _newCheckpoint2);
-  }
-
-  function test_setLastAuthCheckpoint_Fail_NotSelf(address _from, uint256 _checkpoint) external {
-    _from = boundDiff(_from, address(lib));
-
-    vm.prank(_from);
-    vm.expectRevert(abi.encodeWithSignature("OnlySelfAuth(address,address)", _from, address(lib)));
-    lib.setLastAuthCheckpoint(_checkpoint);
-  }
-
   struct HashAndSignature {
     bytes32 imageHash;
     uint256 threshold;
@@ -139,14 +121,13 @@ contract SequenceChainedSigTest is AdvTest {
     uint256 size = boundDiff(mayBoundArr(_steps.length), 0);
 
     bytes32 nextDigest = _digest;
-    uint64 checkpoint = type(uint64).max;
+    uint32 checkpoint = type(uint32).max;
 
     for (uint256 i = 0; i < size; i++) {
       _steps[i].weight = bound(_steps[i].weight, _steps[i].threshold, type(uint256).max);
 
       if (i != 0) {
-        signature = abi.encodePacked(signature, checkpoint);
-        checkpoint -= uint64(bound(_steps[i].checkpointDelta, 1, type(uint56).max));
+        checkpoint -= uint32(bound(_steps[i].checkpointDelta, 1, type(uint24).max));
       }
 
       if (lib.isMocked(nextDigest, _steps[i].signature)) {
@@ -159,22 +140,21 @@ contract SequenceChainedSigTest is AdvTest {
         _steps[i].threshold,
         _steps[i].weight,
         _steps[i].imageHash,
-        i == 0 ? _digest : nextDigest
+        i == 0 ? _digest : nextDigest,
+        checkpoint
       );
 
-      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash, checkpoint);
+      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash);
       signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
-    vm.prank(address(lib));
-    lib.setLastAuthCheckpoint(checkpoint);
-
-    (uint256 threshold, uint256 weight, bytes32 imageHash, bytes32 subDigest) = lib.pchainedRecover(_digest, signature);
+    (uint256 threshold, uint256 weight, bytes32 imageHash, bytes32 subDigest, uint256 rcheckpoint) = lib.pchainedRecover(_digest, signature);
 
     assertEq(imageHash, _steps[size - 1].imageHash);
     assertEq(threshold, _steps[size - 1].threshold);
     assertEq(weight, _steps[size - 1].weight);
     assertEq(subDigest, _digest);
+    assertEq(rcheckpoint, checkpoint);
   }
 
   function test_chainedRecover_Fail_LowWeight(uint8 _prefix, uint256 _badi, bytes32 _digest, HashAndSignature[] memory _steps) external {
@@ -197,7 +177,6 @@ contract SequenceChainedSigTest is AdvTest {
       }
 
       if (i != 0) {
-        signature = abi.encodePacked(signature, checkpoint);
         checkpoint -= uint64(bound(_steps[i].checkpointDelta, 1, type(uint56).max));
       }
 
@@ -211,10 +190,11 @@ contract SequenceChainedSigTest is AdvTest {
         _steps[i].threshold,
         _steps[i].weight,
         _steps[i].imageHash,
-        i == 0 ? _digest : nextDigest
+        i == 0 ? _digest : nextDigest,
+        checkpoint
       );
 
-      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash, checkpoint);
+      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash);
       signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
@@ -240,8 +220,6 @@ contract SequenceChainedSigTest is AdvTest {
       _steps[i].weight = bound(_steps[i].weight, _steps[i].threshold, type(uint256).max);
 
       if (i != 0) {
-        signature = abi.encodePacked(signature, checkpoint);
-
         if (_badi == i) {
           prevToBadCheckpoint = checkpoint;
           checkpoint = uint64(bound(uint256(checkpoint) + _steps[i].checkpointDelta, checkpoint, type(uint64).max));
@@ -261,22 +239,16 @@ contract SequenceChainedSigTest is AdvTest {
         _steps[i].threshold,
         _steps[i].weight,
         _steps[i].imageHash,
-        i == 0 ? _digest : nextDigest
+        i == 0 ? _digest : nextDigest,
+        checkpoint
       );
 
-      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash, checkpoint);
+      nextDigest = lib.hashSetImagehashStruct(_steps[i].imageHash);
       signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
-    vm.prank(address(lib));
-    lib.setLastAuthCheckpoint(checkpoint);
-
     if (_badi != 0) {
-      if (_badi == size - 1) {
-        vm.expectRevert(abi.encodeWithSignature('WrongFinalCheckpoint(uint256,uint256)', prevToBadCheckpoint, checkpoint));
-      } else {
-        vm.expectRevert(abi.encodeWithSignature('WrongChainedCheckpointOrder(uint256,uint256)', badCheckpoint, prevToBadCheckpoint));
-      }
+      vm.expectRevert(abi.encodeWithSignature('WrongChainedCheckpointOrder(uint256,uint256)', badCheckpoint, prevToBadCheckpoint));
     }
 
     lib.pchainedRecover(_digest, signature);

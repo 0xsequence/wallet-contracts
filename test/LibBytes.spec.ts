@@ -69,6 +69,31 @@ contract('LibBytes', () => {
     })
   })
 
+  describe('readUint32', () => {
+    it('Should read uint32 at index zero', async () => {
+      const res = await libBytes.readUint32('0x837fc8a10d', 0)
+      expect(res).to.equal(2206189729)
+    })
+    it('Should read uint32 at given index', async () => {
+      const res = await libBytes.readUint32('0x5a9c2a992a8c22199af0', 3)
+      expect(res).to.equal(2569702434)
+    })
+    it('Should read uint32 at last index', async () => {
+      const res = await libBytes.readUint32('0x029183af982299dfa001', 6)
+      expect(res).to.equal(2581569537)
+    })
+    it('Should read zeros uint32 out of bounds', async () => {
+      const res1 = await libBytes.readUint32('0x2293', 1)
+      const res2 = await libBytes.readUint32('0x2193000000', 1)
+      expect(res1).to.equal(2466250752)
+      expect(res1).to.equal(res2)
+    })
+    it('Should read all zeros uint32 fully out of bounds', async () => {
+      const res = await libBytes.readUint32('0xff92a09f339922', 15)
+      expect(res).to.equal(0)
+    })
+  })
+
   describe('readUint16', () => {
     it('Should read uint16 at index zero', async () => {
       const res = await libBytesPointer.readUint16('0x5202', 0)
