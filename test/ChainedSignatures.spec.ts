@@ -8,7 +8,7 @@ contract('Chained signatures', (accounts: string[]) => {
   let context: SequenceContext
 
   let wallet: SequenceWallet
-  let typehash: string
+  let typeHash: string
 
   before(async () => {
     context = await deploySequenceContext()
@@ -17,7 +17,7 @@ contract('Chained signatures', (accounts: string[]) => {
   beforeEach(async () => {
     wallet = SequenceWallet.basicWallet(context)
     await wallet.deploy()
-    typehash = await wallet.mainModule.SET_IMAGE_HASH_TYPEHASH() 
+    typeHash = await wallet.mainModule.SET_IMAGE_HASH_TYPE_HASH() 
   })
 
   const chain = (top: string, ...rest: { sig: string }[]) => {
@@ -35,7 +35,7 @@ contract('Chained signatures', (accounts: string[]) => {
   const hashSetImageHash = (imageHash: string) => {
     return ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(
       ['bytes32', 'bytes32'],
-      [typehash, imageHash]
+      [typeHash, imageHash]
     ))
   }
 

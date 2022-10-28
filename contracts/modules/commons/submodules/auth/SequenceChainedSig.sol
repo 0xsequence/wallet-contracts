@@ -16,13 +16,13 @@ import "../../../../utils/LibOptim.sol";
 abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
   using LibBytesPointer for bytes;
 
-  bytes32 public constant SET_IMAGE_HASH_TYPEHASH = keccak256("SetImageHash(bytes32 imageHash)");
+  bytes32 public constant SET_IMAGE_HASH_TYPE_HASH = keccak256("SetImageHash(bytes32 imageHash)");
 
   error LowWeightChainedSignature(bytes _signature, uint256 threshold, uint256 _weight);
   error WrongChainedCheckpointOrder(uint256 _current, uint256 _prev);
 
   function _hashSetImageHashStruct(bytes32 _imageHash) internal pure returns (bytes32) {
-    return LibOptim.fkeccak256(SET_IMAGE_HASH_TYPEHASH, _imageHash);
+    return LibOptim.fkeccak256(SET_IMAGE_HASH_TYPE_HASH, _imageHash);
   }
 
   function chainedRecover(
