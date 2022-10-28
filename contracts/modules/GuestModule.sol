@@ -110,7 +110,7 @@ contract GuestModule is
   /**
    * Not supported.
    */
-  function updateImageHash(bytes32) external override virtual onlySelf {
+  function _updateImageHash(bytes32) internal override virtual {
     revert NotSupported();
   }
 

@@ -17,10 +17,6 @@ abstract contract ModuleAuthImp is IModuleAuth {
     return imageHashToIsValid[_imageHash];
   }
 
-  function updateImageHash(bytes32) external override virtual {
-    revert('not implemented');
-  }
-
   function signatureValidation(
     bytes32 _digest,
     bytes calldata _signature
@@ -38,6 +34,10 @@ contract ModuleStaticAuthImp is ModuleAuthImp, ModuleStaticAuth {
     ModuleAuthImp
   ) view returns (bool) {
     return super._isValidImage(_imageHash);
+  }
+
+  function _updateImageHash(bytes32) internal override virtual {
+    revert('not implemented');
   }
 }
 

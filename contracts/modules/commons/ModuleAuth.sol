@@ -144,4 +144,12 @@ abstract contract ModuleAuth is
 
     return super.supportsInterface(_interfaceID);
   }
+
+  /**
+   * @notice Updates the signers configuration of the wallet
+   * @param _imageHash New required image hash of the signature
+   */
+  function updateImageHash(bytes32 _imageHash) external override virtual onlySelf {
+    _updateImageHash(_imageHash);
+  }
 }

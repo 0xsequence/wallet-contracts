@@ -112,6 +112,9 @@ contract ModuleCallsImp is ModuleCalls {
 
   function updateImageHash(bytes32) external override {
   }
+
+  function _updateImageHash(bytes32) internal override {
+  }
 }
 
 contract ModuleCallsTest is AdvTest {

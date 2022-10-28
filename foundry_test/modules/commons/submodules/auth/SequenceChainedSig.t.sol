@@ -96,6 +96,10 @@ contract SequenceChainedSigImp is SequenceChainedSig {
   function updateImageHash(bytes32) external pure override {
     revert('not implemented');
   }
+
+  function _updateImageHash(bytes32) internal pure override {
+    revert('not implemented');
+  }
 }
 
 contract SequenceChainedSigTest is AdvTest {
