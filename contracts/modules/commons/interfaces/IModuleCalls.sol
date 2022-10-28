@@ -9,7 +9,7 @@ interface IModuleCalls {
   event TxExecuted(bytes32 _tx) anonymous;
 
   // Errors
-  error NotEnoughGas(uint256 _requested, uint256 _available);
+  error NotEnoughGas(uint256 _index, uint256 _requested, uint256 _available);
   error InvalidSignature(bytes32 _hash, bytes _signature);
 
   // Transaction structure

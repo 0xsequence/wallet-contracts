@@ -165,7 +165,7 @@ contract('Multi call utils', (accounts: string[]) => {
           .sub(b(1))
       }]))
 
-      await expectStaticToBeRejected(tx, `NotEnoughGas(uint256,uint256)`, b(2).pow(256).sub(b(1)), '*')
+      await expectStaticToBeRejected(tx, `NotEnoughGas(uint256,uint256,uint256)`, 1, b(2).pow(256).sub(b(1)), '*')
     })
     it('Should call globals', async () => {
       const i = multiCall.interface

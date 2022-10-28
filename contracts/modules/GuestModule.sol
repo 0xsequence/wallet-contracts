@@ -32,7 +32,7 @@ contract GuestModule is
   ModuleCalls,
   ModuleCreator
 {
-  error DelegateCallNotAllowed();
+  error DelegateCallNotAllowed(uint256 _index);
   error NotSupported();
 
   /**
@@ -79,10 +79,10 @@ contract GuestModule is
     for (uint256 i = 0; i < size; i++) {
       Transaction calldata transaction = _txs[i];
 
-      if (transaction.delegateCall) revert DelegateCallNotAllowed();
+      if (transaction.delegateCall) revert DelegateCallNotAllowed(i);
 
       uint256 gasLimit = transaction.gasLimit;
-      if (gasleft() < gasLimit) revert NotEnoughGas(gasLimit, gasleft());
+      if (gasleft() < gasLimit) revert NotEnoughGas(i, gasLimit, gasleft());
 
       bool success = LibOptim.call(
         transaction.target,

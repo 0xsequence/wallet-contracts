@@ -3,12 +3,10 @@ pragma solidity 0.8.17;
 pragma experimental ABIEncoderV2;
 
 import "../commons/ModuleNonce.sol";
+import "../commons/submodules/nonce/SubModuleNonce.sol";
 
 
 contract RequireUtils {
-  uint256 private constant NONCE_BITS = 96;
-  bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
-
   /**
    * @notice Validates that a given expiration hasn't expired
    * @dev Used as an optional transaction on a Sequence batch, to create expirable transactions.
@@ -41,7 +39,7 @@ contract RequireUtils {
    * @return _nonce The nonce of the raw nonce
    */
   function _decodeNonce(uint256 _rawNonce) private pure returns (uint256 _space, uint256 _nonce) {
-    _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
-    _space = _rawNonce >> NONCE_BITS;
+    _nonce = uint256(bytes32(_rawNonce) & SubModuleNonce.NONCE_MASK);
+    _space = _rawNonce >> SubModuleNonce.NONCE_BITS;
   }
 }

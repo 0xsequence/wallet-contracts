@@ -88,7 +88,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
         Transaction calldata transaction = _txs[i];
         uint256 gasLimit = transaction.gasLimit;
 
-        if (gasleft() < gasLimit) revert NotEnoughGas(gasLimit, gasleft());
+        if (gasleft() < gasLimit) revert NotEnoughGas(i, gasLimit, gasleft());
 
         bool success;
         if (transaction.delegateCall) {
