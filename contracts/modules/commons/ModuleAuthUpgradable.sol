@@ -16,7 +16,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleSelfAuth,
    *      could make transactions impossible to execute as all the signers must be
    *      passed for each transaction.
    */
-  function updateImageHash(bytes32 _imageHash) external override virtual onlySelf {
+  function _updateImageHash(bytes32 _imageHash) internal override virtual {
     if (_imageHash == bytes32(0)) revert ImageHashIsZero();
     ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
     emit ImageHashUpdated(_imageHash);
