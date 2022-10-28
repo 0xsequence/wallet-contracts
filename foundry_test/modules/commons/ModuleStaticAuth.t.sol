@@ -99,8 +99,8 @@ contract ModuleStaticAuthTest is AdvTest {
     assertTrue(isValid);
     assertEq(resSubdigest, staticSubdigest);
 
-    bytes memory belowThersholdSignature = _buildSignatureWithPrefix(hex'00ff703708f3', _signatureWitnesses);
-    (isValid, resSubdigest) = imp.signatureValidation(_digest, belowThersholdSignature);
+    bytes memory belowThresholdSignature = _buildSignatureWithPrefix(hex'00ff703708f3', _signatureWitnesses);
+    (isValid, resSubdigest) = imp.signatureValidation(_digest, belowThresholdSignature);
 
     assertTrue(isValid);
     assertEq(resSubdigest, staticSubdigest);
