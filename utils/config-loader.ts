@@ -32,11 +32,14 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
   const config = getEnvConfig('PROD')
 
   switch (network) {
+    case 'rinkeby':
+      return 'https://rpc.ankr.com/eth_rinkeby'
+
     case 'mumbai':
       return 'https://rpc-mumbai.matic.today/'
 
     case 'matic':
-      return 'https://nodes.sequence.app/matic'
+      return 'https://polygon-rpc.com'
 
     case 'arbitrum-testnet':
       return 'https://rinkeby.arbitrum.io/rpc'

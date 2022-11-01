@@ -32,7 +32,6 @@
     }
   },
   "devDependencies": {
-    "@0xsequence/deployer": "^0.21.5",
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@nomiclabs/hardhat-etherscan": "^2.1.4",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
@@ -57,11 +56,11 @@
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-prettier": "^3.3.1",
     "ethereum-waffle": "^3.4.4",
-    "ethers": "^5.6.9",
     "ganache-cli": "6.12.2",
-    "hardhat": "2.9.9",
+    "hardhat": "2.12.1",
     "hardhat-gas-reporter": "1.0.4",
     "husky": "^4.2.3",
+    "ora": "^5.4.1",
     "rimraf": "^3.0.2",
     "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb",
     "solhint": "^3.3.7",
@@ -81,6 +80,7 @@
     "extra": ""
   },
   "dependencies": {
+    "ethers": "^5.7.2",
     "keccak256": "^1.0.6",
     "threads": "^1.7.0"
   }
