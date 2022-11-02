@@ -32,7 +32,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest,
+    bytes32 subdigest,
     uint256 checkpoint
   ) {
     uint256 rindex = 1;
@@ -50,7 +50,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
       threshold,
       weight,
       imageHash,
-      subDigest,
+      subdigest,
       checkpoint
     ) = signatureRecovery(
       _digest,

@@ -6,7 +6,7 @@ import "./SequenceBaseSig.sol";
 
 library SequenceDynamicSig {
   function recover(
-    bytes32 _subDigest,
+    bytes32 _subdigest,
     bytes calldata _signature
   ) internal view returns (
     uint256 threshold,
@@ -14,6 +14,6 @@ library SequenceDynamicSig {
     bytes32 imageHash,
     uint256 checkpoint
   ) {
-    return SequenceBaseSig.recover(_subDigest, _signature[1:]);
+    return SequenceBaseSig.recover(_subdigest, _signature[1:]);
   }
 }

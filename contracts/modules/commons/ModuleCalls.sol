@@ -62,7 +62,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     Transaction[] calldata _txs
   ) external override virtual onlySelf {
     // Hash transaction bundle
-    bytes32 txHash = SequenceBaseSig.subDigest(
+    bytes32 txHash = SequenceBaseSig.subdigest(
       keccak256(
         abi.encode('self:', _txs)
       )

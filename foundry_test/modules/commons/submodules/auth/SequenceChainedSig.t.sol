@@ -11,7 +11,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest,
+    bytes32 subdigest,
     uint256 checkpoint
   ) {
     return chainedRecover(_digest, _signature);
@@ -22,7 +22,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 threshold;
     uint256 weight;
     bytes32 imageHash;
-    bytes32 subDigest;
+    bytes32 subdigest;
     uint256 checkpoint;
   }
 
@@ -38,7 +38,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 _threshold,
     uint256 _weight,
     bytes32 _imageHash,
-    bytes32 _subDigest,
+    bytes32 _subdigest,
     uint256 _checkpoint
   ) external {
     MockedSignature memory sig;
@@ -47,7 +47,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     sig.threshold = _threshold;
     sig.weight = _weight;
     sig.imageHash = _imageHash;
-    sig.subDigest = _subDigest;
+    sig.subdigest = _subdigest;
     sig.checkpoint = _checkpoint;
 
     mockedSignatures[_digest][_signature] = sig;
@@ -60,7 +60,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest,
+    bytes32 subdigest,
     uint256 checkpoint
   ) {
     if (mockedSignatures[_digest][_signature].exists) {
@@ -68,7 +68,7 @@ contract SequenceChainedSigImp is SequenceChainedSig {
         mockedSignatures[_digest][_signature].threshold,
         mockedSignatures[_digest][_signature].weight,
         mockedSignatures[_digest][_signature].imageHash,
-        mockedSignatures[_digest][_signature].subDigest,
+        mockedSignatures[_digest][_signature].subdigest,
         mockedSignatures[_digest][_signature].checkpoint
       );
     } else {
@@ -148,12 +148,12 @@ contract SequenceChainedSigTest is AdvTest {
       signature = abi.encodePacked(signature, uint24(_steps[i].signature.length), _steps[i].signature);
     }
 
-    (uint256 threshold, uint256 weight, bytes32 imageHash, bytes32 subDigest, uint256 rcheckpoint) = lib.pchainedRecover(_digest, signature);
+    (uint256 threshold, uint256 weight, bytes32 imageHash, bytes32 subdigest, uint256 rcheckpoint) = lib.pchainedRecover(_digest, signature);
 
     assertEq(imageHash, _steps[size - 1].imageHash);
     assertEq(threshold, _steps[size - 1].threshold);
     assertEq(weight, _steps[size - 1].weight);
-    assertEq(subDigest, _digest);
+    assertEq(subdigest, _digest);
     assertEq(rcheckpoint, checkpoint);
   }
 

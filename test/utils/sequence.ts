@@ -15,7 +15,7 @@ export type SignerLeaf = {
 }
 
 export type SubdigestLeaf = {
-  subDigest: string
+  subdigest: string
 }
 
 export type ConfigLeaf = SubdigestLeaf | SignerLeaf
@@ -57,7 +57,7 @@ export enum SignaturePartType {
   Dynamic = 2,
   Node = 3,
   Branch = 4,
-  SubDigest = 5
+  Subdigest = 5
 }
 
 export type SignaturePart = {
@@ -108,7 +108,7 @@ export function isSignerLeaf(node: ConfigTopology): node is SignerLeaf {
 }
 
 export function isSubdigestLeaf(node: ConfigTopology): node is SubdigestLeaf {
-  return isConfigLeaf(node) && 'subDigest' in node
+  return isConfigLeaf(node) && 'subdigest' in node
 }
 
 export function legacyTopology(config: SimplifiedWalletConfig): ConfigTopology {
@@ -195,7 +195,7 @@ export function leavesOf(topology: ConfigTopology): ConfigLeaf[] {
 }
 
 export function subdigestLeaves(topology: ConfigTopology): string[] {
-  return leavesOf(topology).filter((l) => isSubdigestLeaf(l)).map((l: SubdigestLeaf) => l.subDigest)
+  return leavesOf(topology).filter((l) => isSubdigestLeaf(l)).map((l: SubdigestLeaf) => l.subdigest)
 }
 
 export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig {
@@ -219,7 +219,7 @@ export function hashNode(node: ConfigTopology): string {
   if (isSubdigestLeaf(node)) {
     return ethers.utils.solidityKeccak256(
       ['string', 'bytes32'],
-      ['Sequence static digest:\n', node.subDigest]
+      ['Sequence static digest:\n', node.subdigest]
     )
   }
 
@@ -259,7 +259,7 @@ export function printTopology(topology: ConfigTopology, threshold?: ethers.BigNu
   }
 
   if (isSubdigestLeaf(topology)) {
-    return [`subDigest: ${topology.subDigest}`]
+    return [`subdigest: ${topology.subdigest}`]
   }
 
   const root = hashNode(topology)
@@ -340,7 +340,7 @@ export function digestOf(txs: Partial<Transaction>[], nonce: ethers.BigNumberish
   )
 }
 
-export function subDigestOf(wallet: string, digest: ethers.BytesLike, chainId: ethers.BigNumberish = CHAIN_ID()) {
+export function subdigestOf(wallet: string, digest: ethers.BytesLike, chainId: ethers.BigNumberish = CHAIN_ID()) {
   return ethers.utils.keccak256(
     ethers.utils.solidityPack(
       ['string', 'uint256', 'address', 'bytes32'],
@@ -459,8 +459,8 @@ export class SignatureConstructor {
     this.members.push({ type: SignaturePartType.Branch, value: branch })
   }
 
-  appendSubdigest(subDigest: string) {
-    this.members.push({ type: SignaturePartType.SubDigest, value: subDigest})
+  appendSubdigest(subdigest: string) {
+    this.members.push({ type: SignaturePartType.Subdigest, value: subdigest})
   }
 
   encode(): string {
@@ -505,10 +505,10 @@ export class SignatureConstructor {
           )
           break
 
-        case SignaturePartType.SubDigest:
+        case SignaturePartType.Subdigest:
           result = ethers.utils.solidityPack(
             ['bytes', 'uint8', 'bytes32'],
-            [result, SignaturePartType.SubDigest, member.value]
+            [result, SignaturePartType.Subdigest, member.value]
           )
           break
 
@@ -524,7 +524,7 @@ export class SignatureConstructor {
 export function encodeSigners(
   topology: ConfigTopology,
   parts: SignaturePart[] | Map<string, SignaturePart>,
-  subDigests: string[],
+  subdigests: string[],
   options?: EncodingOptions
 ): { encoded: string, weight: ethers.BigNumber } {
   // Map part to signers
@@ -533,7 +533,7 @@ export function encodeSigners(
     for (const part of parts) {
       partOfSigner.set(part.address, part)
     }
-    return encodeSigners(topology, partOfSigner, subDigests, options)
+    return encodeSigners(topology, partOfSigner, subdigests, options)
   }
 
   const slice = leftSlice(topology)
@@ -545,7 +545,7 @@ export function encodeSigners(
       // If the node opens up to another branch
       // we recurse the encoding, and if the result has any weight
       // we have to embed the whole branch, otherwise we just add the node
-      const nested = encodeSigners(node, parts, subDigests, options)
+      const nested = encodeSigners(node, parts, subdigests, options)
       if (nested.weight.isZero() && !options?.disableTrim) {
         constructor.appendNode(hashNode(node))
       } else {
@@ -563,9 +563,9 @@ export function encodeSigners(
         constructor.appendPart(node.weight, part)
       } else {
         // If the node is a subdigest add the node (unless it's an static subdigest signature)
-        if (subDigests.includes(node.subDigest)) {
+        if (subdigests.includes(node.subdigest)) {
           weight = weight.add(ethers.BigNumber.from(2).pow(256).sub(1))
-          constructor.appendSubdigest(node.subDigest)
+          constructor.appendSubdigest(node.subdigest)
         } else {
           constructor.appendNode(hashNode(node))
         }
@@ -582,10 +582,10 @@ export function encodeSigners(
 export function encodeSignature(
   config: WalletConfig,
   parts: SignaturePart[] | Map<string, SignaturePart>,
-  subDigests: string[],
+  subdigests: string[],
   options?: EncodingOptions
 ) {
-  const encodedSigners = encodeSigners(config.topology, parts, subDigests, options)
+  const encodedSigners = encodeSigners(config.topology, parts, subdigests, options)
 
   switch (options?.signatureType || SignatureType.Legacy) {
     case SignatureType.Dynamic:

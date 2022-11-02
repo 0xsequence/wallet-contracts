@@ -20,7 +20,7 @@ library SequenceBaseSig {
   error InvalidNestedSignature(bytes32 _hash, address _addr, bytes _signature);
   error InvalidSignatureFlag(uint256 _flag);
 
-  function subDigest(
+  function subdigest(
     bytes32 _digest
   ) internal view returns (bytes32) {
     return keccak256(
@@ -43,13 +43,13 @@ library SequenceBaseSig {
   }
 
   function _leafForHardcodedSubdigest(
-    bytes32 _subDigest
+    bytes32 _subdigest
   ) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked('Sequence static digest:\n', _subDigest));
+    return keccak256(abi.encodePacked('Sequence static digest:\n', _subdigest));
   }
 
   function recoverBranch(
-    bytes32 _subDigest,
+    bytes32 _subdigest,
     bytes calldata _signature
   ) internal view returns (
     uint256 weight,
@@ -82,7 +82,7 @@ library SequenceBaseSig {
 
           // Read single signature and recover signer
           uint256 nrindex = rindex + 66;
-          address addr = SignatureValidator.recoverSigner(_subDigest, _signature[rindex:nrindex]);
+          address addr = SignatureValidator.recoverSigner(_subdigest, _signature[rindex:nrindex]);
           rindex = nrindex;
 
           // Acumulate total weight of the signature
@@ -105,8 +105,8 @@ library SequenceBaseSig {
 
           // Read dynamic size signature
           uint256 nrindex = rindex + size;
-          if (!SignatureValidator.isValidSignature(_subDigest, addr, _signature[rindex:nrindex])) {
-            revert InvalidNestedSignature(_subDigest, addr, _signature[rindex:nrindex]);
+          if (!SignatureValidator.isValidSignature(_subdigest, addr, _signature[rindex:nrindex])) {
+            revert InvalidNestedSignature(_subdigest, addr, _signature[rindex:nrindex]);
           }
           rindex = nrindex;
 
@@ -134,7 +134,7 @@ library SequenceBaseSig {
           uint256 nrindex = rindex + size;
 
           uint256 nweight; bytes32 node;
-          (nweight, node) = recoverBranch(_subDigest, _signature[rindex:nrindex]);
+          (nweight, node) = recoverBranch(_subdigest, _signature[rindex:nrindex]);
 
           weight += nweight;
           root = LibOptim.fkeccak256(root, node);
@@ -148,7 +148,7 @@ library SequenceBaseSig {
           // it pushes the weight to 100%
           bytes32 hardcoded;
           (hardcoded, rindex) = _signature.readBytes32(rindex);
-          if (hardcoded == _subDigest) {
+          if (hardcoded == _subdigest) {
             weight = type(uint256).max;
           }
 
@@ -163,7 +163,7 @@ library SequenceBaseSig {
   }
 
   function recover(
-    bytes32 _subDigest,
+    bytes32 _subdigest,
     bytes calldata _signature
   ) internal view returns (
     uint256 threshold,
@@ -172,7 +172,7 @@ library SequenceBaseSig {
     uint256 checkpoint
   ) {
     unchecked {
-      (weight, imageHash) = recoverBranch(_subDigest, _signature[6:]);
+      (weight, imageHash) = recoverBranch(_subdigest, _signature[6:]);
 
       // Threshold is the top-most node (but first on the signature)
       threshold = LibBytes.readFirstUint16(_signature);

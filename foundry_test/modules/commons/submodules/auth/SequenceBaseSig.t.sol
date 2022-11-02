@@ -7,8 +7,8 @@ import "foundry_test/base/AdvTest.sol";
 
 
 contract SequenceBaseSigImp {
-  function subDigest(bytes32 _digest) external view returns (bytes32) {
-    return SequenceBaseSig.subDigest(_digest);
+  function subdigest(bytes32 _digest) external view returns (bytes32) {
+    return SequenceBaseSig.subdigest(_digest);
   }
 
   function joinAddrAndWeight(address _addr, uint96 _weight) external pure returns (bytes32) {
@@ -19,8 +19,8 @@ contract SequenceBaseSigImp {
     return SequenceBaseSig.recoverBranch(_digest, _signature);
   }
 
-  function recover(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash, uint256 checkpoint) {
-    return SequenceBaseSig.recover(_subDigest, _signature);
+  function recover(bytes32 _subdigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash, uint256 checkpoint) {
+    return SequenceBaseSig.recover(_subdigest, _signature);
   }
 }
 
@@ -38,7 +38,7 @@ contract SequenceBaseSigTest is AdvTest {
     lib = new SequenceBaseSigImp();
   }
 
-  function test_subDigest(bytes32 _digest, uint256 _chainId) external {
+  function test_subdigest(bytes32 _digest, uint256 _chainId) external {
     _chainId = bound(_chainId, 0, type(uint64).max);
 
     bytes32 expected = keccak256(
@@ -51,41 +51,41 @@ contract SequenceBaseSigTest is AdvTest {
     );
 
     vm.chainId(_chainId);
-    bytes32 actual = lib.subDigest(_digest);
+    bytes32 actual = lib.subdigest(_digest);
     assertEq(actual, expected);
   }
 
-  function test_subDigest_Fuzz_ChainId(bytes32 _digest, uint256 _chainId1, uint256 _chainId2) external {
+  function test_subdigest_Fuzz_ChainId(bytes32 _digest, uint256 _chainId1, uint256 _chainId2) external {
     _chainId1 = bound(_chainId1, 0, type(uint64).max);
     _chainId2 = bound(_chainId2, 0, type(uint64).max);
 
     vm.chainId(_chainId1);
-    bytes32 subDigest1 = lib.subDigest(_digest);
+    bytes32 subdigest1 = lib.subdigest(_digest);
 
     vm.chainId(_chainId2);
-    bytes32 subDigest2 = lib.subDigest(_digest);
+    bytes32 subdigest2 = lib.subdigest(_digest);
 
-    assertTrue(subDigest1 != subDigest2 || _chainId1 == _chainId2);
+    assertTrue(subdigest1 != subdigest2 || _chainId1 == _chainId2);
   }
 
-  function test_subDigest_Fuzz_Digest(bytes32 _digest1, bytes32 _digest2) external {
-    bytes32 subDigest1 = lib.subDigest(_digest1);
-    bytes32 subDigest2 = lib.subDigest(_digest2);
+  function test_subdigest_Fuzz_Digest(bytes32 _digest1, bytes32 _digest2) external {
+    bytes32 subdigest1 = lib.subdigest(_digest1);
+    bytes32 subdigest2 = lib.subdigest(_digest2);
 
-    assertTrue(subDigest1 != subDigest2 || _digest1 == _digest2);
+    assertTrue(subdigest1 != subdigest2 || _digest1 == _digest2);
   }
 
-  function test_subDigest_Fuzz_Address(bytes32 _digest, address _addr1, address _addr2) external {
+  function test_subdigest_Fuzz_Address(bytes32 _digest, address _addr1, address _addr2) external {
     _addr1 = boundNoSys(_addr1);
     _addr2 = boundNoSys(_addr2);
 
     vm.etch(_addr1, address(lib).code);
     vm.etch(_addr2, address(lib).code);
 
-    bytes32 subDigest1 = SequenceBaseSigImp(_addr1).subDigest(_digest);
-    bytes32 subDigest2 = SequenceBaseSigImp(_addr2).subDigest(_digest);
+    bytes32 subdigest1 = SequenceBaseSigImp(_addr1).subdigest(_digest);
+    bytes32 subdigest2 = SequenceBaseSigImp(_addr2).subdigest(_digest);
 
-    assertTrue(subDigest1 != subDigest2 || _addr1 == _addr2);
+    assertTrue(subdigest1 != subdigest2 || _addr1 == _addr2);
   }
 
   function test_joinAddrAndWeight(address _addr, uint96 _weight) external {

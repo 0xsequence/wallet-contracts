@@ -45,7 +45,7 @@ contract GuestModule is
     bytes calldata
   ) public override {
     // Hash transaction bundle
-    bytes32 txHash = SequenceBaseSig.subDigest(keccak256(abi.encode('guest:', _txs)));
+    bytes32 txHash = SequenceBaseSig.subdigest(keccak256(abi.encode('guest:', _txs)));
 
     // Execute the transactions
     _executeGuest(txHash, _txs);
@@ -59,7 +59,7 @@ contract GuestModule is
     Transaction[] calldata _txs
   ) public override {
     // Hash transaction bundle
-    bytes32 txHash = SequenceBaseSig.subDigest(keccak256(abi.encode('self:', _txs)));
+    bytes32 txHash = SequenceBaseSig.subdigest(keccak256(abi.encode('self:', _txs)));
 
     // Execute the transactions
     _executeGuest(txHash, _txs);

@@ -86,19 +86,19 @@ contract ModuleCallsImp is ModuleCalls {
     bytes calldata _signature
   ) internal override view returns (
     bool isValid,
-    bytes32 subDigest
+    bytes32 subdigest
   ) {
-    subDigest = sigToSubdigest[_digest][_signature];
+    subdigest = sigToSubdigest[_digest][_signature];
     isValid = sigToIsValid[_digest][_signature];
   }
 
   function mockSignature(
     bytes32 _digest,
     bytes calldata _signature,
-    bytes32 _subDigest,
+    bytes32 _subdigest,
     bool _isValid
   ) external  {
-    sigToSubdigest[_digest][_signature] = _subDigest;
+    sigToSubdigest[_digest][_signature] = _subdigest;
     sigToIsValid[_digest][_signature] = _isValid;
   }
 

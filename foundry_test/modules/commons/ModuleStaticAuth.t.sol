@@ -26,7 +26,7 @@ abstract contract ModuleAuthImp is IModuleAuth {
     bytes calldata _signature
   ) external view returns (
     bool isValid,
-    bytes32 subDigest
+    bytes32 subdigest
   ) {
     return _signatureValidation(_digest, _signature);
   }
@@ -178,7 +178,7 @@ contract ModuleStaticAuthTest is AdvTest {
     assertEq(imp.staticDigest(_set1), _clearTimestamp1);
     assertEq(imp.staticDigest(_set2), _set1 != _set2 ? _firstTimestamp2 : _clearTimestamp1);
 
-    bytes32 subDigest1 = keccak256(
+    bytes32 subdigest1 = keccak256(
       abi.encodePacked(
         "\x19\x01",
         block.chainid,
@@ -197,20 +197,20 @@ contract ModuleStaticAuthTest is AdvTest {
     bytes memory signature = _buildSignature(_signatureWitnesses);
     (bool isValid, bytes32 resSubdigest) = imp.signatureValidation(_set1, signature);
     assertFalse(isValid);
-    assertEq(resSubdigest, subDigest1);
+    assertEq(resSubdigest, subdigest1);
 
     bytes memory belowThresholdSignature = _buildSignatureWithPrefix(hex'00ff703708f3', _signatureWitnesses);
     (isValid, resSubdigest) = imp.signatureValidation(_set1, belowThresholdSignature);
     assertFalse(isValid);
-    assertEq(resSubdigest, subDigest1);
+    assertEq(resSubdigest, subdigest1);
 
     (isValid, resSubdigest) = imp.signatureValidation(_set2, signature);
     assertEq(isValid, _set1 != _set2);
-    assertEq(resSubdigest, _set1 != _set2 ? staticSubdigest2 : subDigest1);
+    assertEq(resSubdigest, _set1 != _set2 ? staticSubdigest2 : subdigest1);
 
     (isValid, resSubdigest) = imp.signatureValidation(_set2, belowThresholdSignature);
     assertEq(isValid, _set1 != _set2);
-    assertEq(resSubdigest, _set1 != _set2 ? staticSubdigest2 : subDigest1);
+    assertEq(resSubdigest, _set1 != _set2 ? staticSubdigest2 : subdigest1);
   }
 
   function test_fail_setStaticDigest_NotSelf(

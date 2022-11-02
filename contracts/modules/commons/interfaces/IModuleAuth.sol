@@ -17,7 +17,7 @@ abstract contract IModuleAuth {
     bytes calldata _signature
   ) internal virtual view returns (
     bool isValid,
-    bytes32 subDigest
+    bytes32 subdigest
   );
 
   function signatureRecovery(
@@ -27,7 +27,7 @@ abstract contract IModuleAuth {
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest,
+    bytes32 subdigest,
     uint256 checkpoint
   );
 

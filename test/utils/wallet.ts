@@ -1,7 +1,7 @@
 import { ethers, Overrides } from "ethers"
 import { shuffle } from "."
 import { MainModule, MainModuleUpgradable, SequenceContext } from "./contracts"
-import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, optimize2SignersTopology, SignaturePartType, SignatureType, SimplifiedWalletConfig, subDigestOf, Transaction, WalletConfig } from "./sequence"
+import { addressOf, applyTxDefaults, ConfigTopology, digestOf, encodeSignature, EncodingOptions, imageHash, merkleTopology, optimize2SignersTopology, SignaturePartType, SignatureType, SimplifiedWalletConfig, subdigestOf, Transaction, WalletConfig } from "./sequence"
 
 export type StaticSigner = (ethers.Signer & { address: string })
 export type AnyStaticSigner = StaticSigner | SequenceWallet
@@ -226,33 +226,33 @@ export class SequenceWallet {
   }
 
   async signDigest(digest: ethers.BytesLike): Promise<string> {
-    const subDigest = ethers.utils.arrayify(subDigestOf(this.address, digest, this.options.chainId))
-    return this.signSubDigest(subDigest)
+    const subdigest = ethers.utils.arrayify(subdigestOf(this.address, digest, this.options.chainId))
+    return this.signSubdigest(subdigest)
   }
 
-  staticSubdigestSign(subDigest: ethers.BytesLike, useNoChainId = true): string {
+  staticSubdigestSign(subdigest: ethers.BytesLike, useNoChainId = true): string {
     const signatureType = useNoChainId ? SignatureType.NoChaindDynamic : this.options.encodingOptions?.signatureType
     return encodeSignature(
       this.config,
       [],
-      [ ethers.utils.hexlify(subDigest) ],
+      [ ethers.utils.hexlify(subdigest) ],
       { ...this.options.encodingOptions, signatureType }
     )
   }
 
-  async signSubDigest(subDigest: ethers.BytesLike): Promise<string> {
+  async signSubdigest(subdigest: ethers.BytesLike): Promise<string> {
     const sigParts = await Promise.all(this.signers.map(async (s) => {
       if (isSequenceSigner(s)) {
         return {
           address: s.address,
-          signature: await s.signDigest(subDigest).then((s) => s + '03'),
+          signature: await s.signDigest(subdigest).then((s) => s + '03'),
           type: SignaturePartType.Dynamic
         }
       }
 
       return {
         address: await s.getAddress(),
-        signature: await s.signMessage(subDigest).then((s) => s + '02'),
+        signature: await s.signMessage(subdigest).then((s) => s + '02'),
         type: SignaturePartType.Signature
       }
     }))

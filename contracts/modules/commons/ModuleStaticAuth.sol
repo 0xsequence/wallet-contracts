@@ -58,7 +58,7 @@ abstract contract ModuleStaticAuth is ModuleSelfAuth, ModuleAuth {
     bytes calldata _signature
   ) internal override virtual view returns (
     bool isValid,
-    bytes32 subDigest
+    bytes32 subdigest
   ) {
     // solhint-disable-next-line not-rely-on-time
     isValid = _readExpirationForStaticDigest(_digest) > block.timestamp;

@@ -8,12 +8,12 @@ import "foundry_test/base/AdvTest.sol";
 
 
 contract SequenceDynamicSigImp {
-  function recover(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256, uint256, bytes32, uint256) {
-    return SequenceDynamicSig.recover(_subDigest, _signature);
+  function recover(bytes32 _subdigest, bytes calldata _signature) external view returns (uint256, uint256, bytes32, uint256) {
+    return SequenceDynamicSig.recover(_subdigest, _signature);
   }
 
-  function recoverBase(bytes32 _subDigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash, uint256) {
-    return SequenceBaseSig.recover(_subDigest, _signature);
+  function recoverBase(bytes32 _subdigest, bytes calldata _signature) external view returns (uint256 threshold, uint256 weight, bytes32 imageHash, uint256) {
+    return SequenceBaseSig.recover(_subdigest, _signature);
   }
 }
 

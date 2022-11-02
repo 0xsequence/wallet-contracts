@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 
 library SequenceNoChainIdSig {
-  function subDigest(bytes32 _digest) internal view returns (bytes32) {
+  function subdigest(bytes32 _digest) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",

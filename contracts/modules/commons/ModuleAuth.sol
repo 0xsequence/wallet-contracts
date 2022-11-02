@@ -38,30 +38,30 @@ abstract contract ModuleAuth is
     uint256 threshold,
     uint256 weight,
     bytes32 imageHash,
-    bytes32 subDigest,
+    bytes32 subdigest,
     uint256 checkpoint
   ) {
     bytes1 signatureType = _signature[0];
 
     if (signatureType == LEGACY_TYPE) {
       // networkId digest + base recover
-      subDigest = SequenceBaseSig.subDigest(_digest);
-      (threshold, weight, imageHash, checkpoint) = SequenceBaseSig.recover(subDigest, _signature);
-      return (threshold, weight, imageHash, subDigest, checkpoint);
+      subdigest = SequenceBaseSig.subdigest(_digest);
+      (threshold, weight, imageHash, checkpoint) = SequenceBaseSig.recover(subdigest, _signature);
+      return (threshold, weight, imageHash, subdigest, checkpoint);
     }
 
     if (signatureType == DYNAMIC_TYPE) {
       // noChainId digest + dynamic recovery
-      subDigest = SequenceBaseSig.subDigest(_digest);
-      (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subDigest, _signature);
-      return (threshold, weight, imageHash, subDigest, checkpoint);
+      subdigest = SequenceBaseSig.subdigest(_digest);
+      (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subdigest, _signature);
+      return (threshold, weight, imageHash, subdigest, checkpoint);
     }
 
     if (signatureType == NO_CHAIN_ID_TYPE) {
       // networkId digest + dynamic recover
-      subDigest = SequenceNoChainIdSig.subDigest(_digest);
-      (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subDigest, _signature);
-      return (threshold, weight, imageHash, subDigest, checkpoint);
+      subdigest = SequenceNoChainIdSig.subdigest(_digest);
+      (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subdigest, _signature);
+      return (threshold, weight, imageHash, subdigest, checkpoint);
     }
 
     if (signatureType == CHAINED_TYPE) {
@@ -78,10 +78,10 @@ abstract contract ModuleAuth is
     bytes calldata _signature
   ) internal override virtual view returns (
     bool isValid,
-    bytes32 subDigest
+    bytes32 subdigest
   ) {
     uint256 threshold; uint256 weight; bytes32 imageHash;
-    (threshold, weight, imageHash, subDigest,) = signatureRecovery(_digest, _signature);
+    (threshold, weight, imageHash, subdigest,) = signatureRecovery(_digest, _signature);
     isValid = weight >= threshold && _isValidImage(imageHash);
   }
 
