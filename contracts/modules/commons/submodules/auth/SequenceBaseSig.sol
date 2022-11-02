@@ -152,8 +152,8 @@ library SequenceBaseSig {
             weight = type(uint256).max;
           }
 
-          bytes32 leaf = _leafForHardcodedSubdigest(hardcoded);
-          root = root != bytes32(0) ? LibOptim.fkeccak256(root, leaf) : leaf;
+          bytes32 node = _leafForHardcodedSubdigest(hardcoded);
+          root = root != bytes32(0) ? LibOptim.fkeccak256(root, node) : node;
           continue;
         }
 
