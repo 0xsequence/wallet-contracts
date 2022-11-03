@@ -213,7 +213,7 @@ export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig
 
 export function hashNode(node: ConfigTopology): string {
   if (isSignerLeaf(node)) {
-    return joinAddrAndWeight(node.address, node.weight)
+    return leafForAddressAndWeight(node.address, node.weight)
   }
 
   if (isSubdigestLeaf(node)) {
@@ -306,7 +306,7 @@ export function encodeNonce(space: BigNumberish, nonce: BigNumberish) {
   return ethers.BigNumber.from(ethers.utils.solidityPack(['uint160', 'uint96'], [space, nonce]))
 }
 
-export function joinAddrAndWeight(address: string, weight: ethers.BigNumberish) {
+export function leafForAddressAndWeight(address: string, weight: ethers.BigNumberish) {
   return ethers.utils.solidityPack(
     ['uint96', 'address'],
     [weight, address]
@@ -413,8 +413,8 @@ export class SignatureConstructor {
     if (first.type !== SignaturePartType.Address && first.type !== SignaturePartType.Node) return
     if (second.type !== SignaturePartType.Address && second.type !== SignaturePartType.Node) return
 
-    const firstNode = first.type === SignaturePartType.Address ? joinAddrAndWeight(first.address!, first.weight!) : first.value
-    const secondNode = second.type === SignaturePartType.Address ? joinAddrAndWeight(second.address!, second.weight!) : second.value
+    const firstNode = first.type === SignaturePartType.Address ? leafForAddressAndWeight(first.address!, first.weight!) : first.value
+    const secondNode = second.type === SignaturePartType.Address ? leafForAddressAndWeight(second.address!, second.weight!) : second.value
 
     const nextNode = ethers.utils.keccak256(
       ethers.utils.solidityPack(
