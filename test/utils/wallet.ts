@@ -142,7 +142,7 @@ export class SequenceWallet {
   useSigners(signers: (ethers.Signer | SequenceWallet)[] | ethers.Signer | SequenceWallet) {
     return new SequenceWallet({ ...this.options, signers: Array.isArray(signers) ? signers : [signers] })
   }
-  
+
   useEncodingOptions(encodingOptions?: EncodingOptions) {
     return new SequenceWallet({ ...this.options, encodingOptions })
   }
@@ -165,7 +165,7 @@ export class SequenceWallet {
   }
 
   getAddress() {
-    return this.address  
+    return this.address
   }
 
   get imageHash() {

@@ -17,7 +17,7 @@ contract('Chained signatures', (accounts: string[]) => {
   beforeEach(async () => {
     wallet = SequenceWallet.basicWallet(context)
     await wallet.deploy()
-    typeHash = await wallet.mainModule.SET_IMAGE_HASH_TYPE_HASH() 
+    typeHash = await wallet.mainModule.SET_IMAGE_HASH_TYPE_HASH()
   })
 
   const chain = (top: string, ...rest: { sig: string }[]) => {

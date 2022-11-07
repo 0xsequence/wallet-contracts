@@ -62,7 +62,7 @@ export enum SignaturePartType {
 
 export type SignaturePart = {
   address: string;
-  type: SignaturePartType; 
+  type: SignaturePartType;
   signature?: string;
 }
 
@@ -395,7 +395,7 @@ export class SignatureConstructor {
 
   constructor(public disableTrim = false) {}
 
-  tryTrim(): void {   
+  tryTrim(): void {
     if (this.disableTrim) return
 
     // Can only trim when we have two members
@@ -559,7 +559,7 @@ export function encodeSigners(
         if (part.type !== SignaturePartType.Address) {
           weight = weight.add(node.weight)
         }
-  
+
         constructor.appendPart(node.weight, part)
       } else {
         // If the node is a subdigest add the node (unless it's an static subdigest signature)

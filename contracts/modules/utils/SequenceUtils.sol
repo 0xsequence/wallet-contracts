@@ -6,7 +6,7 @@ import "./MultiCallUtils.sol";
 import "./RequireUtils.sol";
 
 
-contract SequenceUtils is 
+contract SequenceUtils is
   MultiCallUtils,
   RequireUtils
 { }

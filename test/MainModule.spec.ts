@@ -171,7 +171,7 @@ contract('MainModule', (accounts: string[]) => {
 
         const valA = 5423
         const valB = randomHex(120)
-  
+
         const transaction = {
           target: callReceiver.address,
           data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
@@ -306,7 +306,7 @@ contract('MainModule', (accounts: string[]) => {
           await wallet.sendTransactions([{}])
           expect(await wallet.mainModule.nonce()).to.equal(1)
         })
-  
+
         it('Should work with zero as initial nonce', async () => {
           await wallet.sendTransactions([{}])
           expect(await wallet.mainModule.readNonce(0)).to.equal(1)
@@ -326,7 +326,7 @@ contract('MainModule', (accounts: string[]) => {
           expect(ev1!.args!._space).to.equal(0)
           expect(ev2!.args!._newNonce).to.equal(2)
         })
-  
+
         it('Should fail if nonce did not change', async () => {
           await wallet.sendTransactions([{}], 0)
           const tx = wallet.sendTransactions([{}], 0)
@@ -516,19 +516,19 @@ contract('MainModule', (accounts: string[]) => {
 
         it('Should accept signatures from multiple imageHashes', async () => {
           const altWallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
-    
+
           await wallet.deploy()
           await wallet.addExtraImageHash(altWallet.imageHash)
-    
+
           wallet.sendTransactions([{}], encodeNonce(1, 0))
-    
+
           expect(await wallet.mainModule.extraImageHash(altWallet.imageHash)).to.not.equal(0)
-    
+
           wallet = wallet
             .useAddress()
             .useConfig({ ...altWallet.config, address: undefined })
             .useSigners(altWallet.signers)
-    
+
           await wallet.sendTransactions([{}])
         })
 
@@ -549,40 +549,40 @@ contract('MainModule', (accounts: string[]) => {
         it('Should clear multiple extra imageHashes', async () => {
           const altWallet1 = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
           const altWallet2 = SequenceWallet.basicWallet(context)
-    
+
           await wallet.deploy()
           await wallet.addExtraImageHash(altWallet1.imageHash)
           await wallet.addExtraImageHash(altWallet2.imageHash)
-    
+
           expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.not.equal(0)
           expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.not.equal(0)
-    
+
           await wallet.clearExtraImageHashes([altWallet1.imageHash, altWallet2.imageHash])
-    
+
           const badWallet1 = wallet
             .useAddress()
             .useConfig({ ...altWallet1.config, address: undefined })
             .useSigners(altWallet1.signers)
-    
+
           const badWallet2 = wallet
             .useAddress()
             .useConfig({ ...altWallet1.config, address: undefined })
             .useSigners(altWallet1.signers)
-      
+
           expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.equal(0)
           expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.equal(0)
-    
+
           await expect(badWallet1.sendTransactions([{}])).to.be.rejected
           await expect(badWallet2.sendTransactions([{}])).to.be.rejected
           await expect(wallet.sendTransactions([{}])).to.be.fulfilled
         })
-    
+
         it('Should fail to set extra imageHashes if not from self', async () => {
           const altWallet = SequenceWallet.basicWallet(context)
           const tx = wallet.mainModule.setExtraImageHash(altWallet.imageHash, Math.floor(Date.now() / 1000) + 1000)
           await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${wallet.address}")`)
         })
-    
+
         it('Should fail to clear extra imageHashes if not from self', async () => {
           const tx = wallet.mainModule.clearExtraImageHashes([])
           await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${wallet.address}")`)
@@ -681,7 +681,7 @@ contract('MainModule', (accounts: string[]) => {
 
         it('Should add many static digests for transactions at the same time', async () => {
           const tx = applyTxDefaults([{}])
-  
+
           const txDigest1 = digestOf(tx, encodeNonce(1, 0))
           const txDigest2 = digestOf(tx, encodeNonce(2, 0))
           const txDigest3 = digestOf(tx, encodeNonce(3, 0))
@@ -798,7 +798,7 @@ contract('MainModule', (accounts: string[]) => {
       beforeEach(async () => {
         callReceiver2 = await CallReceiverMock.deploy()
       })
-  
+
       it('Should perform multiple calls to contracts in one tx', async () => {
         const transactions = [{
           target: callReceiver.address,
@@ -978,9 +978,9 @@ contract('MainModule', (accounts: string[]) => {
         callReceiver2 = await CallReceiverMock.deploy()
       })
 
-      it('Should skip failing transaction within batch', async () => {  
+      it('Should skip failing transaction within batch', async () => {
         await callReceiver.setRevertFlag(true)
-  
+
         const transactions = [{
           revertOnError: false,
           target: callReceiver.address,
@@ -993,17 +993,17 @@ contract('MainModule', (accounts: string[]) => {
 
         const receipt = await wallet.sendTransactions(transactions).then((r) => r.wait())
         const event = receipt.events!.find(l => l.event === 'TxFailed')
-  
+
         const reason = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event!.args!._reason.slice(10))[0]
         expect(reason).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
-  
+
         expect(await callReceiver2.lastValA()).to.equal(valA)
         expect(await callReceiver2.lastValB()).to.equal(valB)
       })
 
       it('Should skip multiple failing transactions within batch', async () => {
         await callReceiver.setRevertFlag(true)
-  
+
         const transactions = [{
           revertOnError: false,
           target: callReceiver.address,
@@ -1016,29 +1016,29 @@ contract('MainModule', (accounts: string[]) => {
           target: callReceiver2.address,
           data: callReceiver2.interface.encodeFunctionData('testCall', [valA, valB])
         }]
-  
+
         const txHash = subdigestOf(wallet.address, digestOf(transactions, await wallet.getNonce()))
         const receipt = await wallet.sendTransactions(transactions).then((r) => r.wait())
-  
+
         const event1 = receipt.events![1]
         const event2 = receipt.events![2]
-  
+
         const reason1 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event1.args!._reason.slice(10))[0]
         const reason2 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event2.args!._reason.slice(10))[0]
-  
+
         expect(reason1).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
         expect(reason2).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
-  
+
         expect(event1.args!._tx).to.equal(txHash)
         expect(event2.args!._tx).to.equal(txHash)
-  
+
         expect(await callReceiver2.lastValA()).to.equal(valA)
         expect(await callReceiver2.lastValB()).to.equal(valB)
       })
 
-      it('Should skip all failing transactions within a batch', async () => {  
+      it('Should skip all failing transactions within a batch', async () => {
         await callReceiver.setRevertFlag(true)
-    
+
         const transactions = [{
           revertOnError: false,
           target: callReceiver.address,
@@ -1048,14 +1048,14 @@ contract('MainModule', (accounts: string[]) => {
           target: callReceiver.address,
           data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
         }]
-  
+
         const receipt = await wallet.sendTransactions(transactions).then((r) => r.wait())
         const event1 = receipt.events!.pop()
         const event2 = receipt.events!.pop()
-  
+
         const reason1 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event1!.args!._reason.slice(10))[0]
         const reason2 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event2!.args!._reason.slice(10))[0]
-  
+
         expect(reason1).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
         expect(reason2).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
       })
@@ -1132,7 +1132,7 @@ contract('MainModule', (accounts: string[]) => {
             target: wallet.address,
             data: wallet.mainModule.interface.encodeFunctionData('addHook', [hookSelector, hookMock.address])
           }
-  
+
           await wallet.sendTransactions([transaction])
         })
 
@@ -1150,9 +1150,9 @@ contract('MainModule', (accounts: string[]) => {
             target: wallet.address,
             data: wallet.mainModule.interface.encodeFunctionData('removeHook', [hookSelector])
           }
-  
+
           await wallet.sendTransactions([transaction])
-  
+
           const tx2 = HookMock.attach(wallet.address).onHookMockCall(21)
           await expect(tx2).to.be.rejected
         })
@@ -1160,9 +1160,9 @@ contract('MainModule', (accounts: string[]) => {
         it('Should use hooks storage key', async () => {
           const subkey = ethers.utils.defaultAbiCoder.encode(['bytes4'], [hookSelector])
           const storageKey = computeStorageKey('org.arcadeum.module.hooks.hooks', subkey)
-  
+
           const storageValue = await hethers.provider.getStorageAt(wallet.address, storageKey)
-  
+
           const addr = (() => {
             try {
               return ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], storageValue)[0])
@@ -1170,7 +1170,7 @@ contract('MainModule', (accounts: string[]) => {
               return ethers.utils.getAddress(storageValue)
             }
           })()
-  
+
           expect(addr).to.equal(hookMock.address)
         })
       })
@@ -1369,12 +1369,12 @@ contract('MainModule', (accounts: string[]) => {
           let signer1 = ethers.Wallet.createRandom()
           let signer2 = ethers.Wallet.createRandom()
           let signer3 = ethers.Wallet.createRandom()
-    
+
           beforeEach(async () => {
             wallet = SequenceWallet.detailedWallet(context, { threshold: 2, signers: [signer1, signer2, signer3], encodingOptions })
             await wallet.deploy()
           })
-    
+
           it('Should accept signed message by first and second owner', async () => {
             await wallet.useSigners([signer1, signer2]).sendTransactions([{}])
           })
@@ -1437,18 +1437,18 @@ contract('MainModule', (accounts: string[]) => {
             wallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 7 })
             await wallet.deploy()
           })
-  
+
           it('Should accept message signed by 3/10 owners', async () => {
             await wallet.sendTransactions([{}])
           })
         })
-    
-        describe('With 255/255 wallet', () => {  
+
+        describe('With 255/255 wallet', () => {
           beforeEach(async () => {
             wallet = SequenceWallet.basicWallet(context, { signing: 215, encodingOptions })
             await wallet.deploy()
           })
-  
+
           it('Should accept message signed by all owners', async () => {
             await wallet.sendTransactions([{}], undefined, { gasLimit: 60000000 })
           })
@@ -1476,10 +1476,10 @@ contract('MainModule', (accounts: string[]) => {
             await expect(tx).to.be.rejected
           })
         })
-    
+
         describe('With weighted owners', () => {
           let signers: ethers.Wallet[]
-    
+
           beforeEach(async () => {
             signers = new Array(5).fill(null).map(() => ethers.Wallet.createRandom())
             wallet = SequenceWallet.detailedWallet(context, {
@@ -1488,7 +1488,7 @@ contract('MainModule', (accounts: string[]) => {
             })
             await wallet.deploy()
           })
-    
+
           it('Should accept signed message with (3+1)/4 weight', async () => {
             await wallet.useSigners([signers[0], signers[3]]).sendTransactions([{}])
           })
