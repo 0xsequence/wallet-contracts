@@ -32,7 +32,7 @@ contract MainModuleGasEstimation is
   /**
    * @notice Query if a contract implements an interface
    * @param _interfaceID The interface identifier, as specified in ERC-165
-   * @dev If using a new main module, developpers must ensure that all inherited
+   * @dev If using a new main module, developers must ensure that all inherited
    *      contracts by the mainmodule don't conflict and are accounted for to be
    *      supported by the supportsInterface method.
    * @return `true` if the contract implements `_interfaceID`
