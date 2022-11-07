@@ -21,8 +21,8 @@ export type SubdigestLeaf = {
 export type ConfigLeaf = SubdigestLeaf | SignerLeaf
 
 export type ImageHashNode = {
-  left: ImageHashNode | ConfigLeaf,
-  right: ImageHashNode | ConfigLeaf
+  left: ConfigTopology,
+  right: ConfigTopology
 }
 
 export type ConfigTopology = ImageHashNode | ConfigLeaf
