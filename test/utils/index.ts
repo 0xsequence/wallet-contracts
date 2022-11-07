@@ -21,8 +21,8 @@ export function bytes32toAddress(bytes32: ethers.BytesLike): string {
 
 export function shuffle<T>(a: T[]): T[] {
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)) as number
-    [a[i], a[j]] = [a[j], a[i]]
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
   }
 
   return a

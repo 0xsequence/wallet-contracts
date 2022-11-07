@@ -59,7 +59,7 @@ export function weightedVal<T>(w: Weighted<T> | T): T {
 }
 
 export function isSequenceSigner(signer: ethers.Signer | SequenceWallet): signer is SequenceWallet {
-  return (signer as any).isSequence
+  return 'isSequence' in signer && signer.isSequence
 }
 
 const defaultTopology = optimize2SignersTopology
@@ -126,7 +126,7 @@ export class SequenceWallet {
         ...simplifiedConfig,
         topology: defaultTopology(simplifiedConfig)
       },
-      signers: opts.signers.map((s) => weightedVal(s)).filter((s) => isAnyStaticSigner(s)) as StaticSigner[]
+      signers: opts.signers.map((s) => weightedVal(s)).filter(isAnyStaticSigner)
     })
   }
 
@@ -135,7 +135,7 @@ export class SequenceWallet {
   }
 
   useConfig(of: SequenceWallet | WalletConfig) {
-    const config = (of as any).address !== undefined ? (of as any).config : of
+    const config = 'config' in of ? of.config : of
     return new SequenceWallet({ ...this.options, config })
   }
 

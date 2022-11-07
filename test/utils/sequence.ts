@@ -199,7 +199,7 @@ export function subdigestLeaves(topology: ConfigTopology): string[] {
 }
 
 export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig {
-  let leaves = leavesOf(config.topology).filter((l) => isSignerLeaf(l)) as SignerLeaf[]
+  let leaves = leavesOf(config.topology).filter(isSignerLeaf)
 
   return {
     threshold: config.threshold,
