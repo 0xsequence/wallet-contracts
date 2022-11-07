@@ -61,9 +61,8 @@ abstract contract ModuleStaticAuth is ModuleSelfAuth, ModuleAuth {
     bytes32 subdigest
   ) {
     // solhint-disable-next-line not-rely-on-time
-    isValid = _readExpirationForStaticDigest(_digest) > block.timestamp;
-    if (isValid) {
-      return (isValid, _generateStaticSubdigest(_digest));
+    if (_readExpirationForStaticDigest(_digest) > block.timestamp) {
+      return (true, _generateStaticSubdigest(_digest));
     }
 
     return super._signatureValidation(_digest, _signature);
