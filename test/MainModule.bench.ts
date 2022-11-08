@@ -141,7 +141,7 @@ contract('MainModule', () => {
         const results: ethers.BigNumberish[] = []
 
         for (let i = 0; i < runs; i++) {
-          const wallet = SequenceWallet.basicWallet(context, { signing: [3, 1], iddle: [1, 1, 3], threshold: 4 })
+          const wallet = SequenceWallet.basicWallet(context, { signing: [3, 1], idle: [1, 1, 3], threshold: 4 })
           await wallet.deploy()
           const tx = await wallet.sendTransactions([transaction])
           const receipt = await tx.wait()
@@ -156,7 +156,7 @@ contract('MainModule', () => {
         const results: ethers.BigNumberish[] = []
 
         for (let i = 0; i < runs; i++) {
-          const wallet = SequenceWallet.basicWallet(context, { signing: 255, iddle: 0, threshold: 255 })
+          const wallet = SequenceWallet.basicWallet(context, { signing: 255, idle: 0, threshold: 255 })
           await wallet.deploy()
 
           const tx = await wallet.sendTransactions([transaction], undefined, { gasLimit: 60000000 })

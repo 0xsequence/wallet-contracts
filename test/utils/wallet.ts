@@ -36,7 +36,7 @@ export type BasicWalletOptions = {
   address?: string,
   threshold?: number,
   signing: number | number[],
-  iddle: number | number[],
+  idle: number | number[],
   encodingOptions?: EncodingOptions,
   topologyConvertor: (simple: SimplifiedWalletConfig) => ConfigTopology
 }
@@ -71,13 +71,13 @@ export class SequenceWallet {
   constructor(public options: WalletOptions) {}
 
   static basicWallet(context: SequenceContext, opts?: Partial<BasicWalletOptions>): SequenceWallet {
-    const options = { ...{ signing: 1, iddle: 0, topologyConvertor: defaultTopology }, ...opts }
+    const options = { ...{ signing: 1, idle: 0, topologyConvertor: defaultTopology }, ...opts }
 
     const signersWeight = Array.isArray(options.signing) ? options.signing : new Array(options.signing).fill(0).map(() => 1)
-    const iddleWeight = Array.isArray(options.iddle) ? options.iddle : new Array(options.iddle).fill(0).map(() => 1)
+    const idleWeight = Array.isArray(options.idle) ? options.idle : new Array(options.idle).fill(0).map(() => 1)
 
     const signers = signersWeight.map((s) => isAnyStaticSigner(s) ? s : ethers.Wallet.createRandom())
-    const iddle = iddleWeight.map(() => ethers.utils.getAddress(ethers.utils.hexlify(ethers.utils.randomBytes(20))))
+    const idle = idleWeight.map(() => ethers.utils.getAddress(ethers.utils.hexlify(ethers.utils.randomBytes(20))))
     const checkpoint = getCheckpoint()
 
     const simplifiedConfig = {
@@ -88,9 +88,9 @@ export class SequenceWallet {
           address: s.address,
           weight: signersWeight[i]
         })).concat(
-          iddle.map((s, i) => ({
+          idle.map((s, i) => ({
             address: s,
-            weight: iddleWeight[i]
+            weight: idleWeight[i]
           })
         ))
       )

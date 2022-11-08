@@ -52,8 +52,8 @@ contract('Chained signatures', (accounts: string[]) => {
   })
 
   it("Should accept two chained signatures", async () => {
-    let wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address, signing: 2, iddle: 1 })
-    let wallet_c = SequenceWallet.basicWallet(context, { address: wallet_b.address, signing: 3, iddle: 7 })
+    let wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address, signing: 2, idle: 1 })
+    let wallet_c = SequenceWallet.basicWallet(context, { address: wallet_b.address, signing: 3, idle: 7 })
 
     const checkpoint1 = ethers.BigNumber.from(wallet.config.checkpoint).add(1)
     const checkpoint2 = checkpoint1.add(1)
@@ -74,8 +74,8 @@ contract('Chained signatures', (accounts: string[]) => {
   })
 
   it("Should reject chained signatures if checkpoint is wrongly ordered", async () => {
-    let wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address, signing: 2, iddle: 1 })
-    let wallet_c = SequenceWallet.basicWallet(context, { address: wallet_b.address, signing: 3, iddle: 7 })
+    let wallet_b = SequenceWallet.basicWallet(context, { address: wallet.address, signing: 2, idle: 1 })
+    let wallet_c = SequenceWallet.basicWallet(context, { address: wallet_b.address, signing: 3, idle: 7 })
 
     const checkpoint1 = ethers.BigNumber.from(wallet.config.checkpoint).add(1)
     const checkpoint2 = checkpoint1.sub(1)

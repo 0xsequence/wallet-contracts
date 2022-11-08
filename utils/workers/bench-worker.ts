@@ -55,7 +55,7 @@ const worker = {
     for (let i = 0; i < d_runs; i++) {
       wallet = SequenceWallet.basicWallet(context, {
         signing: d_signing,
-        iddle: d_idle,
+        idle: d_idle,
         topologyConvertor,
         encodingOptions: { disableTrim: d_disableTrim }
       })

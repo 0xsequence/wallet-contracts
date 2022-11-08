@@ -515,7 +515,7 @@ contract('MainModule', (accounts: string[]) => {
         beforeEach(c.beforeEach)
 
         it('Should accept signatures from multiple imageHashes', async () => {
-          const altWallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
+          const altWallet = SequenceWallet.basicWallet(context, { signing: 3, idle: 9 })
 
           await wallet.deploy()
           await wallet.addExtraImageHash(altWallet.imageHash)
@@ -533,7 +533,7 @@ contract('MainModule', (accounts: string[]) => {
         })
 
         it('Should reject expired extra imgeHash', async () => {
-          const altWallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
+          const altWallet = SequenceWallet.basicWallet(context, { signing: 3, idle: 9 })
           await wallet.deploy()
           await wallet.addExtraImageHash(altWallet.imageHash, 100)
 
@@ -547,7 +547,7 @@ contract('MainModule', (accounts: string[]) => {
         })
 
         it('Should clear multiple extra imageHashes', async () => {
-          const altWallet1 = SequenceWallet.basicWallet(context, { signing: 3, iddle: 9 })
+          const altWallet1 = SequenceWallet.basicWallet(context, { signing: 3, idle: 9 })
           const altWallet2 = SequenceWallet.basicWallet(context)
 
           await wallet.deploy()
@@ -740,7 +740,7 @@ contract('MainModule', (accounts: string[]) => {
         })
 
         it('Should accept merkle proof', async () => {
-          wallet = SequenceWallet.basicWallet(context, { signing: 10, iddle: 11 })
+          wallet = SequenceWallet.basicWallet(context, { signing: 10, idle: 11 })
 
           const digests = new Array(33).fill(0).map(() => ethers.utils.hexlify(ethers.utils.randomBytes(32)))
           const subdigests = digests.map((d) => ({ subdigest: subdigestOf(wallet.address, d, 0) }))
@@ -1434,7 +1434,7 @@ contract('MainModule', (accounts: string[]) => {
 
         describe('With 3/10 wallet', () => {
           beforeEach(async () => {
-            wallet = SequenceWallet.basicWallet(context, { signing: 3, iddle: 7 })
+            wallet = SequenceWallet.basicWallet(context, { signing: 3, idle: 7 })
             await wallet.deploy()
           })
 
