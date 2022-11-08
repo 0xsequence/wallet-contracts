@@ -38,7 +38,7 @@ export type BasicWalletOptions = {
   signing: number | number[],
   idle: number | number[],
   encodingOptions?: EncodingOptions,
-  topologyConvertor: (simple: SimplifiedWalletConfig) => ConfigTopology
+  topologyConverter: (simple: SimplifiedWalletConfig) => ConfigTopology
 }
 
 export type DetailedWalletOptions = {
@@ -71,7 +71,7 @@ export class SequenceWallet {
   constructor(public options: WalletOptions) {}
 
   static basicWallet(context: SequenceContext, opts?: Partial<BasicWalletOptions>): SequenceWallet {
-    const options = { ...{ signing: 1, idle: 0, topologyConvertor: defaultTopology }, ...opts }
+    const options = { ...{ signing: 1, idle: 0, topologyConverter: defaultTopology }, ...opts }
 
     const signersWeight = Array.isArray(options.signing) ? options.signing : new Array(options.signing).fill(0).map(() => 1)
     const idleWeight = Array.isArray(options.idle) ? options.idle : new Array(options.idle).fill(0).map(() => 1)
@@ -102,7 +102,7 @@ export class SequenceWallet {
       encodingOptions: options.encodingOptions,
       config: {
         ...simplifiedConfig,
-        topology: options.topologyConvertor(simplifiedConfig)
+        topology: options.topologyConverter(simplifiedConfig)
       },
       signers: signers
     })
