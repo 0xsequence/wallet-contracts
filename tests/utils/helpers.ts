@@ -269,7 +269,7 @@ export async function multiSignAndEncodeMetaTxn(
 ): Promise<string> {
   if (!nonce) nonce = await nextNonce(wallet)
   const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize)
-  return wallet.contract.methods.execute(txs, nonce, signature).encodeABI()
+  return wallet.interface.encodeFunctionData('execute', [txs, nonce, signature])
 }
 
 export async function multiSignMetaTransactions(

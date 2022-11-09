@@ -81,7 +81,7 @@ contract('ERC165', () => {
           gasLimit: ethers.constants.Two.pow(21),
           target: wallet.address,
           value: ethers.constants.Zero,
-          data: wallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
+          data: wallet.interface.encodeFunctionData('updateImplementation', [moduleUpgradable.address])
         },
         {
           delegateCall: false,
@@ -89,7 +89,7 @@ contract('ERC165', () => {
           gasLimit: ethers.constants.Two.pow(21),
           target: wallet.address,
           value: ethers.constants.Zero,
-          data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+          data: newWallet.interface.encodeFunctionData('updateImageHash', [newImageHash])
         }
       ]
 

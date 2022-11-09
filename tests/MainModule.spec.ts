@@ -155,7 +155,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       const topLevelDigest = ethers.utils.keccak256(

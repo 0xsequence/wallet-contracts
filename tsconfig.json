@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2020",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "downlevelIteration": true,
-    "importHelpers": true,
     "removeComments": false,
+    "skipLibCheck": true,
 
     "strictNullChecks": true,
     "noImplicitUseStrict": true,
@@ -26,7 +26,7 @@
 
     "baseUrl": ".",
     "outDir": "build",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2020", "dom"],
 
     "typeRoots": [
       "./node_modules/@types"
@@ -34,10 +34,8 @@
   },
 
   "include": [
-    "typings", "tests", "utils"
+    "./hardhat.config.ts", "typings", "tests", "utils"
   ],
-
-  "files": ["./hardhat.config.ts"],
 
   "exclude": [
     "node_modules",
