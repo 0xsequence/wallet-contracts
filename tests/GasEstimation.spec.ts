@@ -28,7 +28,7 @@ contract('Estimate gas usage', (accounts: string[]) => {
 
   let networkId: number | string
 
-  let estimate: (address: string, data: ethers.BytesLike) => { call: () => Promise<{success: boolean, result: string, gas: string}> }
+  let estimate: typeof gasEstimator.functions.estimate
 
   let owner: ethers.Wallet
   let salt: string
@@ -47,7 +47,7 @@ contract('Estimate gas usage', (accounts: string[]) => {
 
     guestModule = await GuestModuleArtifact.new()
 
-    estimate = gasEstimator.contract.methods.estimate
+    estimate = gasEstimator.functions.estimate
   })
 
   beforeEach(async () => {
@@ -68,7 +68,7 @@ contract('Estimate gas usage', (accounts: string[]) => {
           revertOnError: true,
           target: factory.address,
           gasLimit: 0,
-          data: factory.contract.methods.deploy(mainModule.address, salt).encodeABI(),
+          data: factory.interface.encodeFunctionData('deploy', [mainModule.address, salt]),
           value: 0
         }, {
           delegateCall: false,
@@ -81,8 +81,8 @@ contract('Estimate gas usage', (accounts: string[]) => {
       }
 
       it('Should estimate wallet deployment', async () => {
-        const factoryData = factory.contract.methods.deploy(mainModule.address, salt).encodeABI()
-        const estimated = ethers.BigNumber.from((await estimate(factory.address, factoryData).call()).gas).toNumber()
+        const factoryData = factory.interface.encodeFunctionData('deploy', [mainModule.address, salt])
+        const estimated = ethers.BigNumber.from((await estimate(factory.address, factoryData)).gasLimit).toNumber()
         const realTx = await factory.deploy(mainModule.address, salt) as any
         expect(estimated + txBaseCost(factoryData)).to.approximately(realTx.receipt.gasUsed, 2000)
       })
@@ -96,15 +96,15 @@ contract('Estimate gas usage', (accounts: string[]) => {
           gasLimit: 0,
           target: owner.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImplementation(newImplementation.address).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
         }
 
         const txData = await signAndEncodeMetaTxn(mainModule as any, owner, [transaction], networkId)
         const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), [transaction], networkId)
 
-        const bundleDataNoSignature = guestModule.contract.methods.execute(bundleWithDeploy(txDataNoSignature), 0, []).encodeABI()
+        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
 
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
+        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature)).gasLimit).toNumber()
         const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, []) as any
         expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(realTx.receipt.gasUsed, 2000)
       })
@@ -117,22 +117,22 @@ contract('Estimate gas usage', (accounts: string[]) => {
           gasLimit: 0,
           target: owner.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImplementation(newImplementation.address).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
         }, {
           delegateCall: false,
           revertOnError: true,
           gasLimit: 0,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
         }]
 
         const txData = await signAndEncodeMetaTxn(mainModule as any, owner, transaction, networkId)
         const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), transaction, networkId)
 
-        const bundleDataNoSignature = guestModule.contract.methods.execute(bundleWithDeploy(txDataNoSignature), 0, []).encodeABI()
+        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
 
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
+        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature)).gasLimit).toNumber()
         const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, []) as any
         expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(realTx.receipt.gasUsed, 2000)
       })
@@ -147,22 +147,22 @@ contract('Estimate gas usage', (accounts: string[]) => {
           gasLimit: 0,
           target: owner.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImplementation(newImplementation.address).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
         }, {
           delegateCall: false,
           revertOnError: false,
           gasLimit: 0,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
         }]
 
         const txData = await signAndEncodeMetaTxn(mainModule as any, owner, transaction, networkId)
         const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), transaction, networkId)
 
-        const bundleDataNoSignature = guestModule.contract.methods.execute(bundleWithDeploy(txDataNoSignature), 0, []).encodeABI()
+        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
 
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
+        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature)).gasLimit).toNumber()
         const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, []) as any
         expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(realTx.receipt.gasUsed, 2000)
       })
@@ -175,22 +175,22 @@ contract('Estimate gas usage', (accounts: string[]) => {
           gasLimit: 0,
           target: owner.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImplementation(newImplementation.address).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
         }, {
           delegateCall: false,
           revertOnError: false,
           gasLimit: 900000,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
         }]
 
         const txData = await signAndEncodeMetaTxn(mainModule as any, owner, transaction, networkId)
         const txDataNoSignature = await signAndEncodeMetaTxn(mainModule as any, ethers.Wallet.createRandom(), transaction, networkId)
 
-        const bundleDataNoSignature = guestModule.contract.methods.execute(bundleWithDeploy(txDataNoSignature), 0, []).encodeABI()
+        const bundleDataNoSignature = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txDataNoSignature), 0, []])
 
-        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature).call()).gas).toNumber()
+        const estimated = ethers.BigNumber.from((await estimate(guestModule.address, bundleDataNoSignature)).gasLimit).toNumber()
         const realTx = await guestModule.execute(bundleWithDeploy(txData), 0, []) as any
         expect(estimated + txBaseCost(bundleDataNoSignature)).to.approximately(realTx.receipt.gasUsed, 2000)
       })
@@ -239,12 +239,12 @@ contract('Estimate gas usage', (accounts: string[]) => {
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }]
   
           const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
   
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
+          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature)).gasLimit).toNumber()
           const gasUsed = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0) as any).receipt.gasUsed
   
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 2000)
@@ -256,19 +256,19 @@ contract('Estimate gas usage', (accounts: string[]) => {
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }, {
             delegateCall: false,
             revertOnError: true,
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
           }]
   
           const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
   
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
+          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature)).gasLimit).toNumber()
           const gasUsed = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0) as any).receipt.gasUsed
   
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 4000)
@@ -280,19 +280,19 @@ contract('Estimate gas usage', (accounts: string[]) => {
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }, {
             delegateCall: false,
             revertOnError: true,
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
           }]
   
           const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId, 999999999)
   
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
+          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature)).gasLimit).toNumber()
           const gasUsed = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0) as any).receipt.gasUsed
   
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 4000)
@@ -307,26 +307,26 @@ contract('Estimate gas usage', (accounts: string[]) => {
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }, {
             delegateCall: false,
             revertOnError: true,
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
           }, {
             delegateCall: false,
             revertOnError: false,
             gasLimit: 0,
             target: altCallReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(229))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(229))])
           }]
   
           const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
   
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
+          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature)).gasLimit).toNumber()
           const gasUsed = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0) as any).receipt.gasUsed
   
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 8000)
@@ -341,26 +341,26 @@ contract('Estimate gas usage', (accounts: string[]) => {
             gasLimit: 0,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(299))])
           }, {
             delegateCall: false,
             revertOnError: false,
             gasLimit: 90000,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(2299))])
           }, {
             delegateCall: false,
             revertOnError: false,
             gasLimit: 0,
             target: altCallReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(1, ethers.utils.hexlify(ethers.utils.randomBytes(229))).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [1, ethers.utils.hexlify(ethers.utils.randomBytes(229))])
           }]
   
           const txDataNoSignature = await multiSignAndEncodeMetaTxn(mainModule as any, fakeAccounts, threshold, transaction, networkId)
   
-          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature).call()).gas).toNumber()
+          const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature)).gasLimit).toNumber()
           const gasUsed = (await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0) as any).receipt.gasUsed
   
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 8000)

@@ -77,7 +77,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireFreshSigner.address,
           value: ethers.constants.Zero,
-          data: requireFreshSigner.contract.methods.requireFreshSigner(owner.address).encodeABI()
+          data: requireFreshSigner.interface.encodeFunctionData('requireFreshSigner', [owner.address])
         },
         {
           delegateCall: false,
@@ -85,7 +85,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -115,15 +115,14 @@ contract('Require utils', (accounts: string[]) => {
             gasLimit: ethers.constants.Zero,
             target: requireUtils.address,
             value: ethers.constants.Zero,
-            data: requireUtils.contract.methods
-              .publishInitialSigners(
+            data: requireUtils.interface.encodeFunctionData(
+              'publishInitialSigners', [
                 wallet.address,
                 digest,
                 1,
                 signature,
                 true
-              )
-              .encodeABI()
+              ])
           }
         ],
         networkId
@@ -142,7 +141,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireFreshSigner.address,
           value: ethers.constants.Zero,
-          data: requireFreshSigner.contract.methods.requireFreshSigner(owner.address).encodeABI()
+          data: requireFreshSigner.interface.encodeFunctionData('requireFreshSigner', [owner.address])
         },
         {
           delegateCall: false,
@@ -150,7 +149,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -173,7 +172,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet.address, ethers.constants.Two).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet.address, ethers.constants.Two])
         },
         {
           delegateCall: false,
@@ -181,7 +180,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -209,7 +208,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet2.address, ethers.constants.One).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet2.address, ethers.constants.One])
         },
         {
           delegateCall: false,
@@ -217,7 +216,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -245,7 +244,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet2.address, ethers.constants.Two).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet2.address, ethers.constants.Two])
         },
         {
           delegateCall: false,
@@ -253,7 +252,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -274,9 +273,9 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods
-            .requireMinNonce(wallet.address, encodeNonce(ethers.constants.Two, ethers.constants.One))
-            .encodeABI()
+          data: requireUtils.interface.encodeFunctionData(
+            'requireMinNonce', [wallet.address, encodeNonce(ethers.constants.Two, ethers.constants.One)]
+          )
         },
         {
           delegateCall: false,
@@ -284,7 +283,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -304,7 +303,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet.address, ethers.constants.Two).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet.address, ethers.constants.Two])
         },
         {
           delegateCall: false,
@@ -312,7 +311,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
       const tx = signAndExecuteMetaTx(wallet, owner, transactions, networkId)
@@ -340,7 +339,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireNonExpired(now() + 1480).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireNonExpired', [now() + 1480])
         },
         {
           delegateCall: false,
@@ -348,7 +347,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -369,7 +368,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireNonExpired(now() - 1).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireNonExpired', [now() - 1])
         },
         {
           delegateCall: false,
@@ -377,7 +376,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 

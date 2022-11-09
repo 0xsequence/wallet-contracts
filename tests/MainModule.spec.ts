@@ -225,7 +225,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       const topLevelDigest = ethers.utils.keccak256(
@@ -301,7 +301,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       const topLevelDigest = ethers.utils.keccak256(
@@ -443,7 +443,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
   
         const topLevelDigest = ethers.utils.defaultAbiCoder.encode(['uint256', MetaTransactionsType], [await nextNonce(tree.owner as MainModule), [transaction]])
@@ -484,7 +484,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       const topLevelDigest = ethers.utils.keccak256(
@@ -561,7 +561,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       const topLevelDigest = ethers.utils.keccak256(
@@ -644,7 +644,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       const topLevelDigest = ethers.utils.keccak256(
@@ -1042,7 +1042,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
@@ -1059,7 +1059,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: ethers.constants.Zero,
-        data: callReceiver.contract.methods.testCall(0, []).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
       }
 
       const tx = signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
@@ -1083,7 +1083,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: optimalGasLimit,
             target: callReceiver1.address,
             value: ethers.constants.Zero,
-            data: callReceiver1.contract.methods.testCall(val1A, val1B).encodeABI()
+            data: callReceiver1.interface.encodeFunctionData('testCall', [val1A, val1B])
           },
           {
             delegateCall: false,
@@ -1091,7 +1091,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: optimalGasLimit,
             target: callReceiver2.address,
             value: ethers.constants.Zero,
-            data: callReceiver2.contract.methods.testCall(val2A, val2B).encodeABI()
+            data: callReceiver2.interface.encodeFunctionData('testCall', [val2A, val2B])
           }
         ]
 
@@ -1117,7 +1117,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: optimalGasLimit,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
           },
           {
             delegateCall: false,
@@ -1156,7 +1156,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: optimalGasLimit,
             target: callReceiver.address,
             value: ethers.constants.Zero,
-            data: callReceiver.contract.methods.testCall(0, []).encodeABI()
+            data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
           }
         ]
 
@@ -1271,7 +1271,7 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: callReceiver.address,
         value: value,
-        data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
@@ -1285,7 +1285,7 @@ contract('MainModule', (accounts: string[]) => {
       const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
       await callReceiver.setRevertFlag(true)
 
-      const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
+      const data = callReceiver.interface.encodeFunctionData('testCall', [0, []])
 
       const transaction = {
         delegateCall: false,
@@ -1314,8 +1314,8 @@ contract('MainModule', (accounts: string[]) => {
       const valA = 912341
       const valB = web3.utils.randomHex(30)
 
-      const data1 = callReceiver1.contract.methods.testCall(0, []).encodeABI()
-      const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
+      const data1 = callReceiver1.interface.encodeFunctionData('testCall', [0, []])
+      const data2 = callReceiver2.interface.encodeFunctionData('testCall', [valA, valB])
 
       const transactions = [
         {
@@ -1355,8 +1355,8 @@ contract('MainModule', (accounts: string[]) => {
       const valA = 912341
       const valB = web3.utils.randomHex(30)
 
-      const data1 = callReceiver1.contract.methods.testCall(0, []).encodeABI()
-      const data2 = callReceiver2.contract.methods.testCall(valA, valB).encodeABI()
+      const data1 = callReceiver1.interface.encodeFunctionData('testCall', [0, []])
+      const data2 = callReceiver2.interface.encodeFunctionData('testCall', [valA, valB])
 
       const transactions = [
         {
@@ -1409,7 +1409,7 @@ contract('MainModule', (accounts: string[]) => {
 
       await callReceiver.setRevertFlag(true)
 
-      const data = callReceiver.contract.methods.testCall(0, []).encodeABI()
+      const data = callReceiver.interface.encodeFunctionData('testCall', [0, []])
 
       const transactions = [
         {
@@ -1844,7 +1844,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: ethers.constants.Two.pow(18),
             target: newWallet.address,
             value: ethers.constants.Zero,
-            data: newWallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
+            data: newWallet.interface.encodeFunctionData('updateImplementation', [moduleUpgradable.address])
           },
           {
             delegateCall: false,
@@ -1852,7 +1852,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: ethers.constants.Two.pow(18),
             target: newWallet.address,
             value: ethers.constants.Zero,
-            data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+            data: newWallet.interface.encodeFunctionData('updateImageHash', [newImageHash])
           }
         ]
 
@@ -1863,7 +1863,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: optimalGasLimit,
             target: newWallet.address,
             value: ethers.constants.Zero,
-            data: newWallet.contract.methods.selfExecute(migrateBundle).encodeABI()
+            data: newWallet.interface.encodeFunctionData('selfExecute', [migrateBundle])
           }
         ]
 
@@ -2356,7 +2356,7 @@ contract('MainModule', (accounts: string[]) => {
                 gasLimit: ethers.constants.Two.pow(18),
                 target: newWallet.address,
                 value: ethers.constants.Zero,
-                data: newWallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
+                data: newWallet.interface.encodeFunctionData('updateImplementation', [moduleUpgradable.address])
               },
               {
                 delegateCall: false,
@@ -2364,7 +2364,7 @@ contract('MainModule', (accounts: string[]) => {
                 gasLimit: ethers.constants.Two.pow(18),
                 target: newWallet.address,
                 value: ethers.constants.Zero,
-                data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+                data: newWallet.interface.encodeFunctionData('updateImageHash', [newImageHash])
               }
             ]
     
@@ -2375,7 +2375,7 @@ contract('MainModule', (accounts: string[]) => {
                 gasLimit: optimalGasLimit,
                 target: newWallet.address,
                 value: ethers.constants.Zero,
-                data: newWallet.contract.methods.selfExecute(migrateBundle).encodeABI()
+                data: newWallet.interface.encodeFunctionData('selfExecute', [migrateBundle])
               }
             ]
     
@@ -2447,7 +2447,7 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: ethers.constants.Two.pow(18),
             target: wallet.address,
             value: ethers.constants.Zero,
-            data: newWallet.contract.methods.updateImageHash(newImageHash).encodeABI()
+            data: newWallet.interface.encodeFunctionData('updateImageHash', [newImageHash])
           }
         ]
 
@@ -3429,7 +3429,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -3559,7 +3559,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit.div(ethers.constants.Two),
           target: callReceiver1.address,
           value: ethers.constants.Zero,
-          data: callReceiver1.contract.methods.testCall(11, expected1).encodeABI()
+          data: callReceiver1.interface.encodeFunctionData('testCall', [11, expected1])
         },
         {
           delegateCall: false,
@@ -3567,7 +3567,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit.div(ethers.constants.Two),
           target: callReceiver2.address,
           value: ethers.constants.Zero,
-          data: callReceiver1.contract.methods.testCall(12, expected2).encodeABI()
+          data: callReceiver1.interface.encodeFunctionData('testCall', [12, expected2])
         }
       ]
 
@@ -3616,7 +3616,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit.div(ethers.constants.Two),
           value: ethers.constants.Zero,
           target: (contracts[obj.i] as CallReceiverMock).address,
-          data: (contracts[obj.i] as CallReceiverMock).contract.methods.testCall(obj.a, expectedb[obj.i]).encodeABI()
+          data: (contracts[obj.i] as CallReceiverMock).interface.encodeFunctionData('testCall', [obj.a, expectedb[obj.i]])
         }))
       })
 
@@ -3651,7 +3651,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit.div(4),
           target: callReceiver1.address,
           value: ethers.constants.Zero,
-          data: callReceiver1.contract.methods.testCall(11, expected1).encodeABI()
+          data: callReceiver1.interface.encodeFunctionData('testCall', [11, expected1])
         },
         {
           delegateCall: false,
@@ -3659,7 +3659,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit.div(4),
           target: callReceiver2.address,
           value: ethers.constants.Zero,
-          data: callReceiver1.contract.methods.testCall(12, expected2).encodeABI()
+          data: callReceiver1.interface.encodeFunctionData('testCall', [12, expected2])
         }
       ]
 
@@ -3709,7 +3709,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: ethers.BigNumber.from(100000),
           target: callReceiver1.address,
           value: ethers.constants.Zero,
-          data: callReceiver1.contract.methods.testCall(11, expected1).encodeABI()
+          data: callReceiver1.interface.encodeFunctionData('testCall', [11, expected1])
         },
         {
           delegateCall: false,
@@ -3717,7 +3717,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: ethers.BigNumber.from(100000),
           target: callReceiver2.address,
           value: ethers.constants.Zero,
-          data: callReceiver2.contract.methods.testCall(12, expected2).encodeABI()
+          data: callReceiver2.interface.encodeFunctionData('testCall', [12, expected2])
         },
         {
           // This transaction will revert
@@ -3727,7 +3727,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: ethers.BigNumber.from(100000),
           target: factory.address,
           value: ethers.constants.Zero,
-          data: callReceiver1.contract.methods.testCall(12, expected2).encodeABI()
+          data: callReceiver1.interface.encodeFunctionData('testCall', [12, expected2])
         }
       ]
 
@@ -3738,7 +3738,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          data: wallet.contract.methods.selfExecute(bundle).encodeABI()
+          data: wallet.interface.encodeFunctionData('selfExecute', [bundle])
         },
         {
           delegateCall: false,
@@ -3746,7 +3746,7 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver3.address,
           value: ethers.constants.Zero,
-          data: callReceiver3.contract.methods.testCall(51, expected3).encodeABI()
+          data: callReceiver3.interface.encodeFunctionData('testCall', [51, expected3])
         }
       ]
 
