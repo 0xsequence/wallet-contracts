@@ -24,14 +24,16 @@ const interfaceIds = [
   'IModuleUpdate'
 ]
 
+console.log('FactoryArtifact', FactoryArtifact)
+
 contract('ERC165', () => {
-  let factory
-  let module
+  let factory: Factory
+  let mainModule: MainModule
 
-  let owner
-  let wallet
+  let owner: ethers.Wallet
+  let wallet: MainModule
 
-  let moduleUpgradable
+  let moduleUpgradable: MainModuleUpgradable
 
   let erc165checker
 
@@ -41,7 +43,7 @@ contract('ERC165', () => {
     // Deploy wallet factory
     factory = (await FactoryArtifact.new()) as Factory
     // Deploy MainModule
-    module = (await MainModuleArtifact.new(factory.address)) as MainModule
+    mainModule = (await MainModuleArtifact.new(factory.address)) as MainModule
     moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
     // Deploy ERC165 Checker
     erc165checker = (await Erc165CheckerMockArtifact.new()) as ERC165CheckerMock
@@ -52,11 +54,11 @@ contract('ERC165', () => {
   beforeEach(async () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
-    await factory.deploy(module.address, salt)
-    wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+    await factory.deploy(mainModule.address, salt)
+    wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
   })
 
-  describe('Implement all interfaces for ERC165 on MainModule', () => {
+  describe.only('Implement all interfaces for ERC165 on MainModule', () => {
     interfaceIds.forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {
         const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
@@ -67,12 +69,15 @@ contract('ERC165', () => {
       })
     })
   })
-  describe('Implement all interfaces for ERC165 on MainModuleUpgradable', () => {
+  describe.only('Implement all interfaces for ERC165 on MainModuleUpgradable', () => {
     beforeEach(async () => {
       const newOwner = new ethers.Wallet(ethers.utils.randomBytes(32))
       const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwner.address }])
 
       const newWallet = (await MainModuleUpgradableArtifact.at(wallet.address)) as MainModuleUpgradable
+
+      // console.log(wallet)
+      console.log('sup....?', newWallet.interface)
 
       const migrateTransactions = [
         {
@@ -94,7 +99,7 @@ contract('ERC165', () => {
       ]
 
       await signAndExecuteMetaTx(wallet, owner, migrateTransactions, networkId)
-      wallet = newWallet
+      // wallet = newWallet
     })
     interfaceIds.concat('IModuleAuthUpgradable').forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {
