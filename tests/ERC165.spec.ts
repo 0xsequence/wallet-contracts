@@ -29,11 +29,6 @@ interface Artifact {
 // const FactoryArtifact: Artifact = require('../src/artifacts/contracts/Factory.sol/Factory.json')
 // const MainModuleArtifact: Artifact = require('../src/artifacts/contracts/modules/MainModule.sol/MainModule.json')
 
-
-// console.log('weeeee1')
-// console.log(MainModuleArtifact)
-// console.log('weeeee2')
-
 import { ethers as hardhat, web3 } from 'hardhat'
 
 const interfaceIds = [
@@ -51,7 +46,7 @@ const interfaceIds = [
 // console.log('FactoryArtifact', FactoryArtifact)
 
 contract('ERC165', () => {
-  let provider: ethers.providers.Provider
+  // let provider: ethers.providers.Provider
   let signer: ethers.Signer
   let networkId: number
 
@@ -67,7 +62,7 @@ contract('ERC165', () => {
   before(async () => {
     // get signer and provider from hardhat
     signer = (await hardhat.getSigners())[0]
-    provider = hardhat.provider
+    // provider = hardhat.provider
     
     // Get network ID
     networkId = process.env.NET_ID ? Number(process.env.NET_ID) : await web3.eth.net.getId()

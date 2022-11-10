@@ -1,28 +1,28 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { expect, RevertError } from './utils'
 
 import { GuestModule, CallReceiverMock, HookCallerMock, MainModuleUpgradable } from 'src/gen/typechain'
 
+import { CallReceiverMock__factory, GuestModule__factory, HookCallerMock__factory, MainModuleUpgradable__factory } from '../src'
+
+import { ethers as hardhat, web3 } from 'hardhat'
+
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const GuestModuleArtifact = artifacts.require('GuestModule')
-const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
-const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
-const HookCallerMockArtifact = artifacts.require('HookCallerMock')
-
-import { web3 } from 'hardhat'
-
 contract('GuestModule', (accounts: string[]) => {
+  let signer: ethers.Signer
   let guestModule: GuestModule
   let callReceiver: CallReceiverMock
   let hookMock: HookCallerMock
 
-  describe('GuestModule wallet', () => {
+  describe.only('GuestModule wallet', () => {
     before(async () => {
-      // Deploy wallet factory
-      guestModule = await GuestModuleArtifact.new()
-      callReceiver = await CallReceiverMockArtifact.new()
-      hookMock = await HookCallerMockArtifact.new()
+      signer = (await hardhat.getSigners())[0]
+
+      // Deploy
+      guestModule = await (new GuestModule__factory()).connect(signer).deploy()
+      callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
+      hookMock = await (new HookCallerMock__factory()).connect(signer).deploy()
     })
 
     let valA
@@ -45,10 +45,10 @@ contract('GuestModule', (accounts: string[]) => {
       ]
     })
 
-    it('Should accept transactions without signature', async () => {
+    it.only('Should accept transactions without signature', async () => {
       await guestModule.execute(transactions, 0, [])
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions on selfExecute', async () => {
@@ -97,7 +97,7 @@ contract('GuestModule', (accounts: string[]) => {
       await expect(tx).to.be.rejected
     })
     it('Should not be upgradeable', async () => {
-      const mainModule = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
+      const mainModule = await (new MainModuleUpgradable__factory()).connect(signer).deploy()
       const newImageHash = web3.utils.randomHex(32)
 
       const migrateBundle = [
