@@ -15,7 +15,7 @@ contract('GuestModule', (accounts: string[]) => {
   let callReceiver: CallReceiverMock
   let hookMock: HookCallerMock
 
-  describe.only('GuestModule wallet', () => {
+  describe('GuestModule wallet', () => {
     before(async () => {
       signer = (await hardhat.getSigners())[0]
 
@@ -45,7 +45,7 @@ contract('GuestModule', (accounts: string[]) => {
       ]
     })
 
-    it.only('Should accept transactions without signature', async () => {
+    it('Should accept transactions without signature', async () => {
       await guestModule.execute(transactions, 0, [])
 
       expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
@@ -54,7 +54,7 @@ contract('GuestModule', (accounts: string[]) => {
     it('Should accept transactions on selfExecute', async () => {
       await guestModule.selfExecute(transactions)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions with random signature', async () => {
@@ -62,7 +62,7 @@ contract('GuestModule', (accounts: string[]) => {
 
       await guestModule.execute(transactions, 0, signature)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions with random nonce', async () => {
@@ -70,7 +70,7 @@ contract('GuestModule', (accounts: string[]) => {
 
       await guestModule.execute(transactions, nonce, [])
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should revert on delegateCall transactions', async () => {
@@ -85,7 +85,7 @@ contract('GuestModule', (accounts: string[]) => {
         }
       ]
 
-      const tx = guestModule.selfExecute(transactions)
+      const tx = guestModule.selfExecute(transactions, { gasLimit: 100_000 })
       await expect(tx).to.be.rejectedWith(RevertError('GuestModule#_executeGuest: delegateCall not allowed'))
     })
     // it('Should not accept ETH', async () => {

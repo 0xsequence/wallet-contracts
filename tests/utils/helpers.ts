@@ -18,8 +18,9 @@ export const createTestWallet = (web3: any, addressIndex: number = 0) => {
 
 // Check if tx was Reverted with specified message
 export function RevertError(errorMessage?: string) {
-  let prefix = 'VM Exception while processing transaction: revert'
-  return errorMessage ? `${prefix + ' ' + errorMessage}` : prefix
+  // let prefix = 'VM Exception while processing transaction: revert'
+  // return errorMessage ? `${prefix + ' ' + errorMessage}` : prefix
+  return `VM Exception while processing transaction: reverted with reason string '${errorMessage}`
 }
 
 export interface JSONRPCRequest {

@@ -1,35 +1,12 @@
+import { ethers as hardhat, web3 } from 'hardhat'
 import { ethers } from 'ethers'
 import { expect, encodeImageHash, signAndExecuteMetaTx, interfaceIdOf, addressOf } from './utils'
 
 import { MainModule, MainModuleUpgradable, Factory } from 'src/gen/typechain'
-
 import { Factory__factory, MainModule__factory, MainModuleUpgradable__factory, ERC165CheckerMock__factory } from '../src'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-// const FactoryArtifact = artifacts.require('Factory')
-// const MainModuleArtifact = artifacts.require('MainModule')
-// const Erc165CheckerMockArtifact = artifacts.require('ERC165CheckerMock')
-// const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
-// const MainModuleArtifact2 = artifacts.require('MainModule')
-
-
-// const FactoryArtifact = require('@0xsequence/wallet-contracts/artifacts/contracts/Factory.sol/Factory.json')
-// const GuestModuleArtifact = require('@0xsequence/wallet-contracts/artifacts/contracts/modules/GuestModule.sol/GuestModule.json')
-// const MainModuleArtifact = require('@0xsequence/wallet-contracts/artifacts/contracts/modules/MainModule.sol/MainModule.json')
-// const MainModuleUpgradableArtifact = require('@0xsequence/wallet-contracts/artifacts/contracts/modules/MainModuleUpgradable.sol/MainModuleUpgradable.json')
-// const SequenceUtilsArtifact = require('@0xsequence/wallet-contracts/artifacts/contracts/modules/utils/SequenceUtils.sol/SequenceUtils.json')
-// const RequireFreshSignerArtifact = require('@0xsequence/wallet-contracts/artifacts/contracts/modules/utils/libs/RequireFreshSigner.sol/RequireFreshSigner.json')
-
-interface Artifact {
-  abi: object[]
-  bytecode: string
-}
-
-// const FactoryArtifact: Artifact = require('../src/artifacts/contracts/Factory.sol/Factory.json')
-// const MainModuleArtifact: Artifact = require('../src/artifacts/contracts/modules/MainModule.sol/MainModule.json')
-
-import { ethers as hardhat, web3 } from 'hardhat'
 
 const interfaceIds = [
   'IModuleHooks',
@@ -42,8 +19,6 @@ const interfaceIds = [
   'IModuleHooks',
   'IModuleUpdate'
 ]
-
-// console.log('FactoryArtifact', FactoryArtifact)
 
 contract('ERC165', () => {
   // let provider: ethers.providers.Provider

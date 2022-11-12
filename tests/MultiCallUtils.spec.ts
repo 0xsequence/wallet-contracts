@@ -8,8 +8,6 @@ ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 const MultiCallUtilsArtifact = artifacts.require('MultiCallUtils')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 
-import { web3 } from 'hardhat'
-
 contract('Multi call utils', (accounts: string[]) => {
   let multiCall: MultiCallUtils
   let callReceiver: CallReceiverMock

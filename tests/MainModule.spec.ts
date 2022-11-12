@@ -1,4 +1,5 @@
-import * as ethers from 'ethers'
+import { ethers as hardhat, web3 } from 'hardhat'
+import { ethers, BigNumberish } from 'ethers'
 import {
   expect,
   signAndExecuteMetaTx,
@@ -29,10 +30,11 @@ import {
   HookCallerMock,
   HookMock,
   DelegateCallMock,
-  GasBurnerMock
+  GasBurnerMock,
+  RequireUtils
 } from 'src/gen/typechain'
 
-import { BigNumberish } from 'ethers'
+import { Factory__factory, MainModule__factory, MainModuleUpgradable__factory, RequireUtils__factory } from '../src'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
@@ -47,39 +49,44 @@ const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const GasBurnerMockArtifact = artifacts.require('GasBurnerMock')
 const RequireUtilsArtifact = artifacts.require('RequireUtils')
 
-import { web3 } from 'hardhat'
-
 const optimalGasLimit = ethers.constants.Two.pow(21)
 
 contract('MainModule', (accounts: string[]) => {
-  let factory
-  let module
+  let signer: ethers.Signer
+  let networkId: number
 
-  let owner
-  let wallet
+  let factory: Factory
+  let mainModule: MainModule
+  let moduleUpgradable: MainModuleUpgradable
+  let requireUtils: RequireUtils
 
-  let moduleUpgradable
-  let requireUtils
-
-  let networkId
+  let owner: ethers.Wallet
+  let wallet: MainModule
 
   before(async () => {
-    // Deploy wallet factory
-    factory = (await FactoryArtifact.new()) as Factory
-    // Deploy MainModule
-    module = (await MainModuleArtifact.new(factory.address)) as MainModule
-    moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
+    // get signer and provider from hardhat
+    signer = (await hardhat.getSigners())[0]
+    // provider = hardhat.provider
+    
     // Get network ID
-    networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
+    networkId = process.env.NET_ID ? Number(process.env.NET_ID) : await web3.eth.net.getId()
+
+    // Deploy wallet factory
+    factory = await (new Factory__factory()).connect(signer).deploy()
+    // Deploy MainModule
+    mainModule = await (new MainModule__factory()).connect(signer).deploy(factory.address)
+    moduleUpgradable = await (new MainModuleUpgradable__factory()).connect(signer).deploy()
+
     // Deploy RequireUtils
-    requireUtils = await RequireUtilsArtifact.new(factory.address, module.address)
+    // requireUtils = await RequireUtilsArtifact.new(factory.address, module.address)
+    requireUtils = await (new RequireUtils__factory()).connect(signer).deploy(factory.address, mainModule.address)
   })
 
   beforeEach(async () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     const salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
-    await factory.deploy(module.address, salt)
-    wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+    await factory.deploy(mainModule.address, salt)
+    wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
   })
   describe('Nested signatures', () => {
     it('Should accept simple nested signed ERC1271 message', async () => {
@@ -88,13 +95,13 @@ contract('MainModule', (accounts: string[]) => {
       // WalletA
       const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
-      await factory.deploy(module.address, salt_a)
-      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+      await factory.deploy(mainModule.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt_a))) as MainModule
 
       // Top level wallet
       const salt = encodeImageHash(1, [{ weight: 1, address: wallet_a.address }])
-      await factory.deploy(module.address, salt)
-      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+      await factory.deploy(mainModule.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
 
       const message = ethers.utils.hexlify(ethers.utils.randomBytes(95))
 
@@ -136,13 +143,13 @@ contract('MainModule', (accounts: string[]) => {
       // WalletA
       const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
-      await factory.deploy(module.address, salt_a)
-      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+      await factory.deploy(mainModule.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt_a))) as MainModule
 
       // Top level wallet
       const salt = encodeImageHash(1, [{ weight: 1, address: wallet_a.address }])
-      await factory.deploy(module.address, salt)
-      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+      await factory.deploy(mainModule.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
 
       const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
 
@@ -200,19 +207,19 @@ contract('MainModule', (accounts: string[]) => {
       // WalletA
       const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
-      await factory.deploy(module.address, salt_a)
-      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+      await factory.deploy(mainModule.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt_a))) as MainModule
 
       // WalletB
       const owner_b = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt_b = encodeImageHash(1, [{ weight: 1, address: owner_b.address }])
-      await factory.deploy(module.address, salt_b)
-      const wallet_b = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_b))) as MainModule
+      await factory.deploy(mainModule.address, salt_b)
+      const wallet_b = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt_b))) as MainModule
 
       // Top level wallet
       const salt = encodeImageHash(2, [{ weight: 1, address: wallet_a.address }, { weight: 1, address: wallet_b.address }])
-      await factory.deploy(module.address, salt)
-      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+      await factory.deploy(mainModule.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
 
       const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
 
@@ -279,16 +286,16 @@ contract('MainModule', (accounts: string[]) => {
       // Wallet A
       const owner_a = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt_a = encodeImageHash(1, [{ weight: 1, address: owner_a.address }])
-      await factory.deploy(module.address, salt_a)
-      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt_a))) as MainModule
+      await factory.deploy(mainModule.address, salt_a)
+      const wallet_a = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt_a))) as MainModule
 
       // Owner B
       const owner_b = new ethers.Wallet(ethers.utils.randomBytes(32))
 
       // Top level wallet
       const salt = encodeImageHash(2, [{ weight: 1, address: wallet_a.address }, { weight: 1, address: owner_b.address }])
-      await factory.deploy(module.address, salt)
-      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+      await factory.deploy(mainModule.address, salt)
+      const wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModulemainModule.address, salt))) as MainModule
 
       const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
 
