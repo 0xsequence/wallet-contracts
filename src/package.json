@@ -9,6 +9,8 @@
   "types": "gen/adapter/index.d.ts",
   "scripts": {},
   "optionalDependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
     "ethers": "^5.7.2"
   },
   "dependencies": {},
