@@ -37,6 +37,10 @@ export function RevertOutOfGasError() {
   return /out of gas/
 }
 
+export function RevertCallException() {
+  return /call revert exception/
+}
+
 export interface JSONRPCRequest {
   jsonrpc: string
   id: number

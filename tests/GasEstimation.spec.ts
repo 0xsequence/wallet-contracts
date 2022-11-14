@@ -353,10 +353,6 @@ contract('Estimate gas usage', (accounts: string[]) => {
           const estimated = ethers.BigNumber.from((await estimate(address, txDataNoSignature)).gasLimit).toNumber()
           const tx = await multiSignAndExecuteMetaTx(wallet, accounts, threshold, transaction, networkId, 0)
           const gasUsed = (await tx.wait()).gasUsed.toNumber()
-
-          console.log('estimated', estimated)
-          console.log('basecost', txBaseCost(txDataNoSignature))
-          console.log('gasUsed', gasUsed)
           
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 120_000)
         })
