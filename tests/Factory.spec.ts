@@ -1,40 +1,41 @@
-import * as ethers from 'ethers'
+import { ethers as hardhat, web3 } from 'hardhat'
+import { ethers } from 'ethers'
 import { expect, addressOf } from './utils'
 
-import { ModuleMock, Factory } from 'src/gen/typechain'
+import { ModuleMock, Factory, ModuleMock__factory, Factory__factory } from '../src'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const FactoryArtifact = artifacts.require('Factory')
-const ModuleMockArtifact = artifacts.require('ModuleMock')
-
-import { web3 } from 'hardhat'
-
 contract('Factory', (accounts: string[]) => {
-  let moduleMock
-  let factory
+  let signer: ethers.Signer
+  let moduleMock: ModuleMock
+  let factory: Factory
 
   beforeEach(async () => {
-    moduleMock = (await ModuleMockArtifact.new()) as ModuleMock
-    factory = (await FactoryArtifact.new()) as Factory
+    signer = (await hardhat.getSigners())[0]
+    moduleMock = await (new ModuleMock__factory()).connect(signer).deploy()
+    factory = await (new Factory__factory()).connect(signer).deploy()
   })
 
   describe('Deploy wallets', () => {
     it('Should deploy wallet', async () => {
-      await factory.deploy(moduleMock.address, accounts[0])
+      // const saltHash = encodeImageHash(1, [{ weight: 1, address: accounts[0] }])
+      const hash = ethers.utils.hexlify(ethers.utils.randomBytes(32))
+      await factory.deploy(moduleMock.address, hash, { gasLimit: 100_000 })
     })
     it('Should predict wallet address', async () => {
       const hash = ethers.utils.hexlify(ethers.utils.randomBytes(32))
       const predict = addressOf(factory.address, moduleMock.address, hash)
-      await factory.deploy(moduleMock.address, hash)
+      await factory.deploy(moduleMock.address, hash, { gasLimit: 100_000 })
       expect(await web3.eth.getCode(predict)).to.not.equal('0x')
     })
     it('Should initialize with main module', async () => {
       const hash = ethers.utils.hexlify(ethers.utils.randomBytes(32))
-      await factory.deploy(moduleMock.address, hash)
+      await factory.deploy(moduleMock.address, hash, { gasLimit: 100_000 })
       const address = addressOf(factory.address, moduleMock.address, hash)
-      const wallet = (await ModuleMockArtifact.at(address)) as ModuleMock
-      expect(((await wallet.ping()) as any).logs[0].event).to.equal('Pong')
+      const wallet = await ModuleMock__factory.connect(address, signer)
+      const receipt = await (await wallet.ping()).wait()
+      expect(receipt.events![0].event).to.equal('Pong')
     })
   })
 })

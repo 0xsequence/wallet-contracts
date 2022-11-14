@@ -1,7 +1,7 @@
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import chaiString from 'chai-string'
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 
 import BN = require('bn.js') // used by web3
 

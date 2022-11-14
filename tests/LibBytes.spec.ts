@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { expect } from './utils'
 
 import { LibBytesImpl } from 'src/gen/typechain'

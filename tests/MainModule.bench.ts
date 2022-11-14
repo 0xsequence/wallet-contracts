@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { signAndExecuteMetaTx, encodeImageHash, multiSignAndExecuteMetaTx, addressOf } from './utils'
 
 import { MainModule, Factory } from 'src/gen/typechain'

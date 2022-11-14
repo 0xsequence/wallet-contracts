@@ -1,20 +1,22 @@
-import * as ethers from 'ethers'
+import { ethers as hardhat } from 'hardhat'
+import { ethers } from 'ethers'
 import { expect, b, RevertError } from './utils'
 
-import { MultiCallUtils, CallReceiverMock } from 'src/gen/typechain'
+import { MultiCallUtils, CallReceiverMock, MultiCallUtils__factory, CallReceiverMock__factory } from '../src'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const MultiCallUtilsArtifact = artifacts.require('MultiCallUtils')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
 
 contract('Multi call utils', (accounts: string[]) => {
+  let signer: ethers.Signer
   let multiCall: MultiCallUtils
   let callReceiver: CallReceiverMock
 
   before(async () => {
-    multiCall = await MultiCallUtilsArtifact.new()
-    callReceiver = await CallReceiverMockArtifact.new()
+    signer = (await hardhat.getSigners())[0]
+    multiCall = await (new MultiCallUtils__factory()).connect(signer).deploy()
+    callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
   })
 
   beforeEach(async () => {
@@ -23,14 +25,14 @@ contract('Multi call utils', (accounts: string[]) => {
 
   describe('Call multiple contracts', () => {
     it('Should execute empty call', async () => {
-      const res = await multiCall.multiCall.call([])
+      const res = await multiCall.callStatic.multiCall([])
 
       expect(res[0].length).to.equal(0)
       expect(res[1].length).to.equal(0)
     })
     it('Should execute single call', async () => {
       await callReceiver.testCall(5123, [])
-      const res = await multiCall.multiCall.call([
+      const res = await multiCall.callStatic.multiCall([
         {
           delegateCall: false,
           revertOnError: false,
@@ -50,7 +52,7 @@ contract('Multi call utils', (accounts: string[]) => {
       const bytes = ethers.utils.randomBytes(422)
 
       await callReceiver.testCall(55522, bytes)
-      const res = await multiCall.multiCall.call([
+      const res = await multiCall.callStatic.multiCall([
         {
           delegateCall: false,
           revertOnError: false,
@@ -83,7 +85,7 @@ contract('Multi call utils', (accounts: string[]) => {
       await callReceiver.testCall(55522, bytes)
       await callReceiver2.testCall(66623, [])
 
-      const res = await multiCall.multiCall.call([
+      const res = await multiCall.callStatic.multiCall([
         {
           delegateCall: false,
           revertOnError: false,
@@ -125,7 +127,7 @@ contract('Multi call utils', (accounts: string[]) => {
       await callReceiver.testCall(55522, bytes)
       await callReceiver.setRevertFlag(true)
 
-      const res = await multiCall.multiCall.call([
+      const res = await multiCall.callStatic.multiCall([
         {
           delegateCall: false,
           revertOnError: false,
@@ -156,7 +158,7 @@ contract('Multi call utils', (accounts: string[]) => {
       await callReceiver.testCall(55522, bytes)
       await callReceiver.setRevertFlag(true)
 
-      const tx = multiCall.multiCall.call([
+      const tx = multiCall.callStatic.multiCall([
         {
           delegateCall: false,
           revertOnError: false,
@@ -182,7 +184,7 @@ contract('Multi call utils', (accounts: string[]) => {
 
       await callReceiver.testCall(55522, bytes)
 
-      const tx = multiCall.multiCall.call([
+      const tx = multiCall.callStatic.multiCall([
         {
           delegateCall: true,
           revertOnError: false,
@@ -208,7 +210,7 @@ contract('Multi call utils', (accounts: string[]) => {
 
       await callReceiver.testCall(55522, bytes)
 
-      const tx = multiCall.multiCall.call([
+      const tx = multiCall.callStatic.multiCall([
         {
           delegateCall: false,
           revertOnError: false,
@@ -235,7 +237,7 @@ contract('Multi call utils', (accounts: string[]) => {
     //   const methods = multiCall.functions
     //   const emptyAccount = ethers.Wallet.createRandom().address
 
-    //   await multiCall.multiCall.call([])
+    //   await multiCall.callStatic.multiCall([])
 
     //   const lastBlock = await web3.eth.getBlock('latest')
 
@@ -267,7 +269,7 @@ contract('Multi call utils', (accounts: string[]) => {
     //     gasLimit: 0
     //   }))
 
-    //   const res = await multiCall.multiCall.call(txs)
+    //   const res = await multiCall.callStatic.multiCall(txs)
 
     //   const emptyBytes32 = ethers.utils.defaultAbiCoder.encode(['uint256'], ['0'])
 
