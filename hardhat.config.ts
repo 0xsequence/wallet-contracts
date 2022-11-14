@@ -65,6 +65,7 @@ const config: HardhatUserConfig = {
     gasPrice: 21,
     showTimeSpent: true
   },
+  // @ts-ignore
   tenderly: {
     project: "horizon/sequence-dev-1",
     username: "Agusx1211-horizon",

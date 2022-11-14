@@ -1,17 +1,10 @@
-import * as ethers from 'ethers'
+import { ethers as hardhat, web3 } from 'hardhat'
+import { ethers } from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce, walletSign } from './utils'
 
-import { MainModule, Factory, RequireUtils, CallReceiverMock, RequireFreshSigner } from 'src/gen/typechain'
+import { MainModule, Factory, RequireUtils, CallReceiverMock, RequireFreshSigner, Factory__factory, MainModule__factory, RequireUtils__factory, RequireFreshSigner__factory, CallReceiverMock__factory } from '../src'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
-
-const FactoryArtifact = artifacts.require('Factory')
-const MainModuleArtifact = artifacts.require('MainModule')
-const RequireUtilsArtifact = artifacts.require('RequireUtils')
-const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
-const RequireFreshSignerArtifact = artifacts.require('RequireFreshSigner')
-
-import { web3 } from 'hardhat'
 
 function now(): number {
   return Math.floor(Date.now() / 1000)
@@ -20,8 +13,11 @@ function now(): number {
 const optimalGasLimit = ethers.constants.Two.pow(21)
 
 contract('Require utils', (accounts: string[]) => {
+  let signer: ethers.Signer
+  let networkId: number
+
   let factory: Factory
-  let module: MainModule
+  let mainModule: MainModule
   let requireUtils: RequireUtils
   let requireFreshSigner: RequireFreshSigner
 
@@ -29,26 +25,25 @@ contract('Require utils', (accounts: string[]) => {
   let wallet: MainModule
   let salt: string
 
-  let networkId: number
-
   before(async () => {
-    // Deploy wallet factory
-    factory = await FactoryArtifact.new()
-    // Deploy MainModule
-    module = await MainModuleArtifact.new(factory.address)
-    // Get network ID
+    signer = (await hardhat.getSigners())[0]
     networkId = process.env.NET_ID ? parseInt(process.env.NET_ID) : await web3.eth.net.getId()
+
+    // Deploy wallet factory
+    factory = await (new Factory__factory()).connect(signer).deploy()
+    // Deploy MainModule
+    mainModule = await (new MainModule__factory()).connect(signer).deploy(factory.address)
     // Deploy expirable util
-    requireUtils = await RequireUtilsArtifact.new(factory.address, module.address)
+    requireUtils = await (new RequireUtils__factory()).connect(signer).deploy(factory.address, mainModule.address)
     // Deploy require fresh signer lib
-    requireFreshSigner = await RequireFreshSignerArtifact.new(requireUtils.address)
+    requireFreshSigner = await (new RequireFreshSigner__factory()).connect(signer).deploy(requireUtils.address)
   })
 
   beforeEach(async () => {
     owner = new ethers.Wallet(ethers.utils.randomBytes(32))
     salt = encodeImageHash(1, [{ weight: 1, address: owner.address }])
-    await factory.deploy(module.address, salt)
-    wallet = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt))) as MainModule
+    await factory.deploy(mainModule.address, salt, { gasLimit: 100_000 })
+    wallet = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt), signer)
   })
 
   const stubTxns = [
@@ -58,13 +53,13 @@ contract('Require utils', (accounts: string[]) => {
       gasLimit: optimalGasLimit,
       target: ethers.constants.AddressZero,
       value: ethers.constants.Zero,
-      data: '0x'
+      data: []
     }
   ]
 
   describe('Require fresh signer', () => {
     it('Should pass if signer is new', async () => {
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
       await signAndExecuteMetaTx(wallet, owner, stubTxns, networkId)
 
       const valA = 5423
@@ -77,7 +72,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireFreshSigner.address,
           value: ethers.constants.Zero,
-          data: requireFreshSigner.contract.methods.requireFreshSigner(owner.address).encodeABI()
+          data: requireFreshSigner.interface.encodeFunctionData('requireFreshSigner', [owner.address])
         },
         {
           delegateCall: false,
@@ -85,13 +80,13 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
       await signAndExecuteMetaTx(wallet, owner, transactions, networkId)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should fail if signer is not new', async () => {
@@ -104,7 +99,7 @@ contract('Require utils', (accounts: string[]) => {
 
       const signature = await walletSign(owner, preSubDigest)
 
-      await factory.deploy(module.address, salt)
+      await factory.deploy(mainModule.address, salt, { gasLimit: 100_000 })
       await signAndExecuteMetaTx(
         wallet,
         owner,
@@ -115,21 +110,20 @@ contract('Require utils', (accounts: string[]) => {
             gasLimit: ethers.constants.Zero,
             target: requireUtils.address,
             value: ethers.constants.Zero,
-            data: requireUtils.contract.methods
-              .publishInitialSigners(
+            data: requireUtils.interface.encodeFunctionData(
+              'publishInitialSigners', [
                 wallet.address,
                 digest,
                 1,
                 signature,
                 true
-              )
-              .encodeABI()
+              ])
           }
         ],
         networkId
       )
 
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
       await signAndExecuteMetaTx(wallet, owner, stubTxns, networkId)
 
       const valA = 5423
@@ -142,7 +136,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireFreshSigner.address,
           value: ethers.constants.Zero,
-          data: requireFreshSigner.contract.methods.requireFreshSigner(owner.address).encodeABI()
+          data: requireFreshSigner.interface.encodeFunctionData('requireFreshSigner', [owner.address])
         },
         {
           delegateCall: false,
@@ -150,7 +144,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -160,7 +154,7 @@ contract('Require utils', (accounts: string[]) => {
   })
   describe('Require min-nonce', () => {
     it('Should pass nonce increased from self-wallet', async () => {
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
       await signAndExecuteMetaTx(wallet, owner, stubTxns, networkId)
 
       const valA = 5423
@@ -173,7 +167,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet.address, ethers.constants.Two).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet.address, ethers.constants.Two])
         },
         {
           delegateCall: false,
@@ -181,22 +175,22 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
       await signAndExecuteMetaTx(wallet, owner, transactions, networkId)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should pass nonce increased from different wallet', async () => {
       const owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt2 = encodeImageHash(1, [{ weight: 1, address: owner2.address }])
-      await factory.deploy(module.address, salt2)
-      const wallet2 = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt2))) as MainModule
+      await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
+      const wallet2 = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt2), signer)
 
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
       await signAndExecuteMetaTx(wallet2, owner2, stubTxns, networkId)
 
       const valA = 5423
@@ -209,7 +203,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet2.address, ethers.constants.One).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet2.address, ethers.constants.One])
         },
         {
           delegateCall: false,
@@ -217,23 +211,28 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
       await signAndExecuteMetaTx(wallet, owner, transactions, networkId)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should fail if nonce is below required on different wallet', async () => {
       const owner2 = new ethers.Wallet(ethers.utils.randomBytes(32))
       const salt2 = encodeImageHash(1, [{ weight: 1, address: owner2.address }])
-      await factory.deploy(module.address, salt2)
-      const wallet2 = (await MainModuleArtifact.at(addressOf(factory.address, module.address, salt2))) as MainModule
+      await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
+      const wallet2 = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt), signer)
 
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
-      await signAndExecuteMetaTx(wallet2, owner2, stubTxns, networkId)
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
+
+      try {
+        await signAndExecuteMetaTx(wallet2, owner2, stubTxns, networkId)
+      } catch (err) {
+        // silence exception from txn failure
+      }
 
       const valA = 5423
       const valB = web3.utils.randomHex(120)
@@ -245,7 +244,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet2.address, ethers.constants.Two).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet2.address, ethers.constants.Two])
         },
         {
           delegateCall: false,
@@ -253,7 +252,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -261,7 +260,7 @@ contract('Require utils', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireMinNonce: NONCE_BELOW_REQUIRED'))
     })
     it('Should fail if nonce is below required on self-wallet on a different space', async () => {
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
       await signAndExecuteMetaTx(wallet, owner, stubTxns, networkId)
 
       const valA = 5423
@@ -274,9 +273,9 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods
-            .requireMinNonce(wallet.address, encodeNonce(ethers.constants.Two, ethers.constants.One))
-            .encodeABI()
+          data: requireUtils.interface.encodeFunctionData(
+            'requireMinNonce', [wallet.address, encodeNonce(ethers.constants.Two, ethers.constants.One)]
+          )
         },
         {
           delegateCall: false,
@@ -284,7 +283,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
@@ -292,7 +291,7 @@ contract('Require utils', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireMinNonce: NONCE_BELOW_REQUIRED'))
     })
     it('Should fail if nonce is below required on self-wallet', async () => {
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
 
       const valA = 5423
       const valB = web3.utils.randomHex(120)
@@ -304,7 +303,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireMinNonce(wallet.address, ethers.constants.Two).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireMinNonce', [wallet.address, ethers.constants.Two])
         },
         {
           delegateCall: false,
@@ -312,7 +311,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
       const tx = signAndExecuteMetaTx(wallet, owner, transactions, networkId)
@@ -328,7 +327,7 @@ contract('Require utils', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith(RevertError('RequireUtils#requireNonExpired: EXPIRED'))
     })
     it('Should pass bundle if non expired', async () => {
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
 
       const valA = 5423
       const valB = web3.utils.randomHex(120)
@@ -340,7 +339,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireNonExpired(now() + 1480).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireNonExpired', [now() + 1480])
         },
         {
           delegateCall: false,
@@ -348,16 +347,16 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
       await signAndExecuteMetaTx(wallet, owner, transactions, networkId)
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should fail bundle if expired', async () => {
-      const callReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
+      const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
 
       const valA = 5423
       const valB = web3.utils.randomHex(120)
@@ -369,7 +368,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: requireUtils.address,
           value: ethers.constants.Zero,
-          data: requireUtils.contract.methods.requireNonExpired(now() - 1).encodeABI()
+          data: requireUtils.interface.encodeFunctionData('requireNonExpired', [now() - 1])
         },
         {
           delegateCall: false,
@@ -377,7 +376,7 @@ contract('Require utils', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 

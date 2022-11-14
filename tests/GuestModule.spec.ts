@@ -1,28 +1,28 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { expect, RevertError } from './utils'
 
 import { GuestModule, CallReceiverMock, HookCallerMock, MainModuleUpgradable } from 'src/gen/typechain'
 
+import { CallReceiverMock__factory, GuestModule__factory, HookCallerMock__factory, MainModuleUpgradable__factory } from '../src'
+
+import { ethers as hardhat, web3 } from 'hardhat'
+
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
-const GuestModuleArtifact = artifacts.require('GuestModule')
-const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
-const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
-const HookCallerMockArtifact = artifacts.require('HookCallerMock')
-
-import { web3 } from 'hardhat'
-
 contract('GuestModule', (accounts: string[]) => {
-  let module: GuestModule
+  let signer: ethers.Signer
+  let guestModule: GuestModule
   let callReceiver: CallReceiverMock
   let hookMock: HookCallerMock
 
   describe('GuestModule wallet', () => {
     before(async () => {
-      // Deploy wallet factory
-      module = await GuestModuleArtifact.new()
-      callReceiver = await CallReceiverMockArtifact.new()
-      hookMock = await HookCallerMockArtifact.new()
+      signer = (await hardhat.getSigners())[0]
+
+      // Deploy
+      guestModule = await (new GuestModule__factory()).connect(signer).deploy()
+      callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
+      hookMock = await (new HookCallerMock__factory()).connect(signer).deploy()
     })
 
     let valA
@@ -40,37 +40,37 @@ contract('GuestModule', (accounts: string[]) => {
           gasLimit: ethers.constants.Two.pow(20),
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
     })
 
     it('Should accept transactions without signature', async () => {
-      await module.execute(transactions, 0, [])
+      await guestModule.execute(transactions, 0, [])
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions on selfExecute', async () => {
-      await module.selfExecute(transactions)
+      await guestModule.selfExecute(transactions)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions with random signature', async () => {
       const signature = web3.utils.randomHex(69)
 
-      await module.execute(transactions, 0, signature)
+      await guestModule.execute(transactions, 0, signature)
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should accept transactions with random nonce', async () => {
       const nonce = 9123891
 
-      await module.execute(transactions, nonce, [])
+      await guestModule.execute(transactions, nonce, [])
 
-      expect(await callReceiver.lastValA()).to.eq.BN(valA)
+      expect((await callReceiver.lastValA()).toNumber()).to.eq.BN(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
     it('Should revert on delegateCall transactions', async () => {
@@ -81,23 +81,26 @@ contract('GuestModule', (accounts: string[]) => {
           gasLimit: 1000000,
           target: callReceiver.address,
           value: ethers.constants.Zero,
-          data: callReceiver.contract.methods.testCall(valA, valB).encodeABI()
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
       ]
 
-      const tx = module.selfExecute(transactions)
+      const tx = guestModule.selfExecute(transactions, { gasLimit: 100_000 })
       await expect(tx).to.be.rejectedWith(RevertError('GuestModule#_executeGuest: delegateCall not allowed'))
     })
     it('Should not accept ETH', async () => {
-      const tx = module.send(1, { from: accounts[0] })
+      const tx = signer.sendTransaction({
+        to: guestModule.address,
+        value: 1
+      })
       await expect(tx).to.be.rejected
     })
     it('Should not implement hooks', async () => {
-      const tx = hookMock.callERC1155Received(module.address)
+      const tx = hookMock.callERC1155Received(guestModule.address)
       await expect(tx).to.be.rejected
     })
     it('Should not be upgradeable', async () => {
-      const mainModule = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
+      const mainModule = await (new MainModuleUpgradable__factory()).connect(signer).deploy()
       const newImageHash = web3.utils.randomHex(32)
 
       const migrateBundle = [
@@ -105,17 +108,17 @@ contract('GuestModule', (accounts: string[]) => {
           delegateCall: false,
           revertOnError: true,
           gasLimit: ethers.constants.Two.pow(18),
-          target: module.address,
+          target: guestModule.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImplementation(mainModule.address).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImplementation', [mainModule.address])
         },
         {
           delegateCall: false,
           revertOnError: true,
           gasLimit: ethers.constants.Two.pow(18),
-          target: module.address,
+          target: guestModule.address,
           value: ethers.constants.Zero,
-          data: mainModule.contract.methods.updateImageHash(newImageHash).encodeABI()
+          data: mainModule.interface.encodeFunctionData('updateImageHash', [newImageHash])
         }
       ]
 
@@ -124,13 +127,13 @@ contract('GuestModule', (accounts: string[]) => {
           delegateCall: false,
           revertOnError: true,
           gasLimit: ethers.constants.Two.pow(18),
-          target: module.address,
+          target: guestModule.address,
           value: ethers.constants.Zero,
-          data: module.contract.methods.selfExecute(migrateBundle).encodeABI()
+          data: guestModule.interface.encodeFunctionData('selfExecute', [migrateBundle])
         }
       ]
 
-      const tx = module.selfExecute(migrateTransaction)
+      const tx = guestModule.selfExecute(migrateTransaction)
       await expect(tx).to.be.rejected
     })
   })

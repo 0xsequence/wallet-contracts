@@ -1,5 +1,4 @@
-import * as ethers from 'ethers'
-import { BytesLike, BigNumberish } from 'ethers'
+import { ethers , BytesLike, BigNumberish } from 'ethers'
 import { MainModule } from 'src/gen/typechain'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -16,10 +15,29 @@ export const createTestWallet = (web3: any, addressIndex: number = 0) => {
   return { wallet, provider, signer }
 }
 
+// // Check if tx was Reverted with specified message
+// export function RevertError(errorMessage?: string) {
+//   // let prefix = 'VM Exception while processing transaction: revert'
+//   // return errorMessage ? `${prefix + ' ' + errorMessage}` : prefix
+//   return `VM Exception while processing transaction: reverted with reason string '${errorMessage}`
+// }
+
 // Check if tx was Reverted with specified message
 export function RevertError(errorMessage?: string) {
-  let prefix = 'VM Exception while processing transaction: revert'
-  return errorMessage ? `${prefix + ' ' + errorMessage}` : prefix
+  if (!errorMessage) {
+    return /Transaction reverted and Hardhat couldn't infer the reason/
+  } else {
+    // return new RegExp(`${errorMessage}`)
+    return new RegExp(`VM Exception while processing transaction: reverted with reason string ["']${errorMessage}["']`)
+  }
+}
+
+export function RevertOutOfGasError() {
+  return /out of gas/
+}
+
+export function RevertCallException() {
+  return /call revert exception/
 }
 
 export interface JSONRPCRequest {
@@ -269,7 +287,7 @@ export async function multiSignAndEncodeMetaTxn(
 ): Promise<string> {
   if (!nonce) nonce = await nextNonce(wallet)
   const signature = await multiSignMetaTransactions(wallet, accounts, threshold, txs, networkId, nonce, forceDynamicSize)
-  return wallet.contract.methods.execute(txs, nonce, signature).encodeABI()
+  return wallet.interface.encodeFunctionData('execute', [txs, nonce, signature])
 }
 
 export async function multiSignMetaTransactions(
