@@ -25,6 +25,7 @@ module.exports = {
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-inferrable-types': 'off',
     '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
 
     'prefer-spread': 'off',
     'prefer-const': 'off',

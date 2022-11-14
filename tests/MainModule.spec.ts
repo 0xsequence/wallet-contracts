@@ -988,7 +988,6 @@ contract('MainModule', (accounts: string[]) => {
 
   describe('Upgradeability', () => {
     it('Should update implementation', async () => {
-      // const newImplementation = (await ModuleMockArtifact.new()) as ModuleMock
       const newImplementation = await (new ModuleMock__factory()).connect(signer).deploy()
 
       const transaction = {
@@ -1002,7 +1001,6 @@ contract('MainModule', (accounts: string[]) => {
 
       await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
 
-      // const mock_wallet = (await ModuleMockArtifact.at(wallet.address)) as ModuleMock
       const mock_wallet = await ModuleMock__factory.connect(wallet.address, signer)
       expect((await (await mock_wallet.ping()).wait()).events![0].event).to.equal('Pong')
     })
@@ -1026,7 +1024,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: wallet.address,
         value: ethers.constants.Zero,
-        // data: wallet.contract.methods.updateImplementation(accounts[1]).encodeABI()
         data: wallet.interface.encodeFunctionData('updateImplementation', [accounts[1]])
       }
 
@@ -1034,7 +1031,6 @@ contract('MainModule', (accounts: string[]) => {
       await expect(tx).to.be.rejectedWith(RevertError('ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION'))
     })
     it('Should use implementation storage key', async () => {
-      // const newImplementation = (await ModuleMockArtifact.new()) as ModuleMock
       const newImplementation = await (new ModuleMock__factory()).connect(signer).deploy()
 
       const transaction = {
@@ -1043,7 +1039,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: wallet.address,
         value: ethers.constants.Zero,
-        // data: wallet.contract.methods.updateImplementation(newImplementation.address).encodeABI()
         data: wallet.interface.encodeFunctionData('updateImplementation', [newImplementation.address])
       }
 
@@ -1134,7 +1129,6 @@ contract('MainModule', (accounts: string[]) => {
         const callReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
         const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
 
-        // await wallet.send(100, { from: accounts[0] })
         await signer.sendTransaction({
           to: wallet.address,
           value: 100
@@ -1172,7 +1166,6 @@ contract('MainModule', (accounts: string[]) => {
         const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
 
         await callReceiver.setRevertFlag(true)
-        // await wallet.send(100, { from: accounts[0] })
         await signer.sendTransaction({
           to: wallet.address,
           value: 100
@@ -1207,7 +1200,6 @@ contract('MainModule', (accounts: string[]) => {
     let mockModule: DelegateCallMock
 
     beforeEach(async () => {
-      // mainModule = (await DelegateCallMockArtifact.new()) as DelegateCallMock
       mockModule = await (new DelegateCallMock__factory()).connect(signer).deploy()
     })
 
@@ -1218,7 +1210,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: mockModule.address,
         value: 0,
-        // data: module.contract.methods.write(11, 45).encodeABI()
         data: mockModule.interface.encodeFunctionData('write', [11, 45])
       }
 
@@ -1280,14 +1271,12 @@ contract('MainModule', (accounts: string[]) => {
 
   describe('Handle ETH', () => {
     it('Should receive ETH', async () => {
-      // await wallet.send(1, { from: accounts[0] })
       await signer.sendTransaction({
         to: wallet.address,
         value: 1
       })
     })
     it('Should transfer ETH', async () => {
-      // await wallet.send(100, { from: accounts[0] })
       await signer.sendTransaction({
         to: wallet.address,
         value: 100
@@ -1308,7 +1297,6 @@ contract('MainModule', (accounts: string[]) => {
       expect(await web3.eth.getBalance(receiver.address)).to.eq.BN(25)
     })
     it('Should call payable function', async () => {
-      // await wallet.send(100, { from: accounts[0] })
       await signer.sendTransaction({
         to: wallet.address,
         value: 100
@@ -1510,7 +1498,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.updateImplementation(ethers.constants.AddressZero).encodeABI()
           data: wallet.interface.encodeFunctionData('updateImplementation', [ethers.constants.AddressZero])
         }
       ]
@@ -1528,7 +1515,6 @@ contract('MainModule', (accounts: string[]) => {
   describe('Hooks', () => {
     let hookMock: HookCallerMock
     before(async () => {
-      // hookMock = (await HookCallerMockArtifact.new()) as HookCallerMock
       hookMock = await (new HookCallerMock__factory()).connect(signer).deploy()
     })
     describe('receive tokens', () => {
@@ -1589,21 +1575,17 @@ contract('MainModule', (accounts: string[]) => {
     describe('External hooks', () => {
       let hookMock: HookMock
       before(async () => {
-        // hookMock = (await HookMockArtifact.new()) as HookMock
         hookMock = await (new HookMock__factory()).connect(signer).deploy()
       })
       it('Should read added hook', async () => {
-        // const method = HookMock__factory.abi.find(i => i.name === 'onHookMockCall')!
         const selector = ethers.utils.id('onHookMockCall(uint256)').substring(0, 10)
 
-        // const selector = HookMock__factory.abi.find(i => i.name === 'onHookMockCall').signature
         const transaction = {
           delegateCall: false,
           revertOnError: true,
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
           data: wallet.interface.encodeFunctionData('addHook', [selector, hookMock.address])
         }
 
@@ -1612,12 +1594,10 @@ contract('MainModule', (accounts: string[]) => {
         expect(await wallet.readHook(selector)).to.be.equal(hookMock.address)
       })
       it('Should return zero if hook is not registered', async () => {
-        // const selector = hookMock.abi.find(i => i.name === 'onHookMockCall').signature
         const selector = ethers.utils.id('onHookMockCall(uint256)').substring(0, 10)
         expect(await wallet.readHook(selector)).to.be.equal(ethers.constants.AddressZero)
       })
       it('Should forward call to external hook', async () => {
-        // const selector = hookMock.abi.find(i => i.name === 'onHookMockCall').signature
         const selector = ethers.utils.id('onHookMockCall(uint256)').substring(0, 10)
         const transaction = {
           delegateCall: false,
@@ -1625,7 +1605,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
           data: wallet.interface.encodeFunctionData('addHook', [selector, hookMock.address])
         }
 
@@ -1635,7 +1614,6 @@ contract('MainModule', (accounts: string[]) => {
         expect((await walletHook.onHookMockCall(21)).toNumber()).to.eq.BN(42)
       })
       it('Should not forward call to deregistered hook', async () => {
-        // const selector = hookMock.abi.find(i => i.name === 'onHookMockCall').signature
         const selector = ethers.utils.id('onHookMockCall(uint256)').substring(0, 10)
         const transaction1 = {
           delegateCall: false,
@@ -1643,7 +1621,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
           data: wallet.interface.encodeFunctionData('addHook', [selector, hookMock.address])
         }
 
@@ -1655,25 +1632,21 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.removeHook(selector).encodeABI()
           data: wallet.interface.encodeFunctionData('removeHook', [selector])
         }
 
         await signAndExecuteMetaTx(wallet, owner, [transaction2], networkId)
 
-        // const walletHook = await (new HookMock__factory()).connect(signer).deploy()
         const walletHook = await HookMock__factory.connect(wallet.address, signer)
         const tx = walletHook.onHookMockCall(21)
         await expect(tx).to.be.rejectedWith(RevertCallException())
       })
       it('Should pass calling a non registered hook', async () => {
-        // const selector = hookMock.abi.find(i => i.name === 'onHookMockCall').signature
         const selector = ethers.utils.id('onHookMockCall(uint256)').substring(0, 10)
         const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
         await web3.eth.sendTransaction({ from: accounts[0], to: wallet.address, data: data })
       })
       it('Should use hooks storage key', async () => {
-        // const selector = hookMock.abi.find(i => i.name === 'onHookMockCall').signature
         const selector = ethers.utils.id('onHookMockCall(uint256)').substring(0, 10)
         const subkey = ethers.utils.defaultAbiCoder.encode(['bytes4'], [selector])
         const storageKey = moduleStorageKey('org.arcadeum.module.hooks.hooks', subkey)
@@ -1684,7 +1657,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.addHook(selector, hookMock.address).encodeABI()
           data: wallet.interface.encodeFunctionData('addHook', [selector, hookMock.address])
         }
 
@@ -1748,7 +1720,6 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should publish configuration of deployed wallet', async () => {
         await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
-        // const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const wallet2 = await MainModule__factory.connect(wallet2addr, signer)
         await signAndExecuteMetaTx(
           wallet2,
@@ -1768,14 +1739,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], false
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2.address, threshold, [
-              //     {
-              //       signer: owner2.address,
-              //       weight: 1
-              //     }
-              //   ], false)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -1807,14 +1770,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], false
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2addr, threshold, [
-              //     {
-              //       signer: owner2.address,
-              //       weight: 2
-              //     }
-              //   ], false)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -1823,7 +1778,6 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should fail to publish wrong configuration of a non-updated wallet', async () => {
         await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
-        // const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const wallet2 = await MainModule__factory.connect(wallet2addr, signer)
         const tx = signAndExecuteMetaTx(
           wallet2,
@@ -1843,14 +1797,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], false
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2.address, threshold, [
-              //     {
-              //       signer: owner2.address,
-              //       weight: 2
-              //     }
-              //   ], false)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -1887,14 +1833,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], true
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2addr, threshold, [
-              //     {
-              //       signer: owner2.address,
-              //       weight: 1
-              //     }
-              //   ], true)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -1911,7 +1849,6 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should publish configuration of a deployed wallet', async () => {
         await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
-        // const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const wallet2 = await MainModule__factory.connect(wallet2addr, signer)
         const tx = await signAndExecuteMetaTx(
           wallet2,
@@ -1931,14 +1868,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], true
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2.address, threshold, [
-              //     {
-              //       signer: owner2.address,
-              //       weight: 1
-              //     }
-              //   ], true)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -1955,13 +1884,11 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should publish configuration of an updated wallet', async () => {
         await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
-        // const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const wallet2 = await MainModule__factory.connect(wallet2addr, signer)
 
         const newOwnerA = ethers.Wallet.createRandom()
         const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
 
-        // const newWallet = (await MainModuleUpgradableArtifact.at(wallet2.address)) as MainModuleUpgradable
         const newWallet = await MainModuleUpgradable__factory.connect(wallet2.address, signer)
 
         const migrateBundle = [
@@ -2014,14 +1941,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], true
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2.address, threshold, [
-              //     {
-              //       signer: newOwnerA.address,
-              //       weight: 1
-              //     }
-              //   ], true)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -2058,14 +1977,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], true
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2addr, threshold, [
-              //     {
-              //       signer: owner2.address,
-              //       weight: 2
-              //     }
-              //   ], true)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -2074,7 +1985,6 @@ contract('MainModule', (accounts: string[]) => {
       })
       it('Should fail to publish wrong configuration of a deployed wallet', async () => {
         await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
-        // const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
         const wallet2 = await MainModule__factory.connect(wallet2addr, signer)
         const tx = signAndExecuteMetaTx(
           wallet2,
@@ -2094,14 +2004,6 @@ contract('MainModule', (accounts: string[]) => {
                   }
                 ], true
               ])
-              // data: requireUtils.contract.methods
-              //   .publishConfig(wallet2.address, threshold, [
-              //     {
-              //       signer: owner2.address,
-              //       weight: 2
-              //     }
-              //   ], true)
-              //   .encodeABI()
             }
           ],
           networkId
@@ -2228,15 +2130,6 @@ contract('MainModule', (accounts: string[]) => {
                     signature,
                     o.indexed
                   ])
-                  // data: requireUtils.contract.methods
-                  //   .publishInitialSigners(
-                  //     wallet2addr,
-                  //     digest,
-                  //     3,
-                  //     signature,
-                  //     o.indexed
-                  //   )
-                  //   .encodeABI()
                 }
               ],
               networkId
@@ -2322,15 +2215,6 @@ contract('MainModule', (accounts: string[]) => {
                     signature,
                     o.indexed
                   ])
-                  // data: requireUtils.contract.methods
-                  //   .publishInitialSigners(
-                  //     wallet2addr,
-                  //     digest,
-                  //     3,
-                  //     signature,
-                  //     o.indexed
-                  //   )
-                  //   .encodeABI()
                 }
               ],
               networkId
@@ -2415,15 +2299,6 @@ contract('MainModule', (accounts: string[]) => {
                     '0x0001ff01ab5801a7d398351b8be11c439e05c5b3259aec9b',
                     o.indexed
                   ])
-                  // data: requireUtils.contract.methods
-                  //   .publishInitialSigners(
-                  //     wallet2addr,
-                  //     digest,
-                  //     1,
-                  //     "0x0001ff01ab5801a7d398351b8be11c439e05c5b3259aec9b",
-                  //     o.indexed
-                  //   )
-                  //   .encodeABI()
                 }
               ],
               networkId
@@ -2449,15 +2324,6 @@ contract('MainModule', (accounts: string[]) => {
                     signature,
                     o.indexed
                   ])
-                  // data: requireUtils.contract.methods
-                  //   .publishInitialSigners(
-                  //     wallet2addr,
-                  //     digest,
-                  //     4,
-                  //     signature,
-                  //     o.indexed
-                  //   )
-                  //   .encodeABI()
                 }
               ],
               networkId
@@ -2485,15 +2351,6 @@ contract('MainModule', (accounts: string[]) => {
                     invalidSignature,
                     o.indexed
                   ])
-                  // data: requireUtils.contract.methods
-                  //   .publishInitialSigners(
-                  //     wallet2addr,
-                  //     digest,
-                  //     2,
-                  //     invalidSignature,
-                  //     o.indexed
-                  //   )
-                  //   .encodeABI()
                 }
               ],
               networkId
@@ -2523,15 +2380,6 @@ contract('MainModule', (accounts: string[]) => {
                     invalidSignature,
                     o.indexed
                   ])
-                  // data: requireUtils.contract.methods
-                  //   .publishInitialSigners(
-                  //     wallet2addr,
-                  //     digest,
-                  //     2,
-                  //     invalidSignature,
-                  //     o.indexed
-                  //   )
-                  //   .encodeABI()
                 }
               ],
               networkId
@@ -2542,13 +2390,11 @@ contract('MainModule', (accounts: string[]) => {
           it('Should fail to publish signers of updated wallet with invalid signature', async () => {
             await factory.deploy(mainModule.address, salt2, { gasLimit: 100_000 })
 
-            // const wallet2 = (await MainModuleArtifact.at(wallet2addr)) as MainModule
             const wallet2 = await MainModule__factory.connect(wallet2addr, signer)
 
             const newOwnerA = ethers.Wallet.createRandom()
             const newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
     
-            // const newWallet = (await MainModuleUpgradableArtifact.at(wallet2.address)) as MainModuleUpgradable
             const newWallet = await MainModuleUpgradable__factory.connect(wallet2.address, signer)
     
             const migrateBundle = [
@@ -2601,15 +2447,6 @@ contract('MainModule', (accounts: string[]) => {
                     signature,
                     o.indexed
                   ])
-                  // data: requireUtils.contract.methods
-                  //   .publishInitialSigners(
-                  //     wallet2addr,
-                  //     digest,
-                  //     1,
-                  //     signature,
-                  //     o.indexed
-                  //   )
-                  //   .encodeABI()
                 }
               ],
               networkId
@@ -2640,7 +2477,6 @@ contract('MainModule', (accounts: string[]) => {
         newOwnerA = new ethers.Wallet(ethers.utils.randomBytes(32))
         newImageHash = encodeImageHash(1, [{ weight: 1, address: newOwnerA.address }])
 
-        // const newWallet = (await MainModuleUpgradableArtifact.at(wallet.address)) as MainModuleUpgradable
         const newWallet = await MainModuleUpgradable__factory.connect(wallet.address, signer)
 
         const migrateBundle = [
@@ -2650,7 +2486,6 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: ethers.constants.Two.pow(18),
             target: wallet.address,
             value: ethers.constants.Zero,
-            // data: wallet.contract.methods.updateImplementation(moduleUpgradable.address).encodeABI()
             data: wallet.interface.encodeFunctionData('updateImplementation', [moduleUpgradable.address])
           },
           {
@@ -2670,7 +2505,6 @@ contract('MainModule', (accounts: string[]) => {
             gasLimit: optimalGasLimit,
             target: wallet.address,
             value: ethers.constants.Zero,
-            // data: wallet.contract.methods.selfExecute(migrateBundle).encodeABI()
             data: wallet.interface.encodeFunctionData('selfExecute', [migrateBundle])
           }
         ]
@@ -2697,7 +2531,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.updateImageHash('0x').encodeABI()
           data: walletUpgradable.interface.encodeFunctionData('updateImageHash', [ethers.constants.HashZero])
         }
         const tx = signAndExecuteMetaTx(wallet, newOwnerA, [transaction], networkId)
@@ -2755,14 +2588,6 @@ contract('MainModule', (accounts: string[]) => {
               members.sort((a, b) => compareAddr(a.signer, b.signer)),
               false
             ])
-            // data: requireUtils.contract.methods
-            //   .publishConfig(
-            //     wallet.address,
-            //     threshold,
-            //     members.sort((a, b) => compareAddr(a.signer, b.signer)),
-            //     false
-            //   )
-            //   .encodeABI()
           }
         ]
 
@@ -2806,14 +2631,6 @@ contract('MainModule', (accounts: string[]) => {
               members.sort((a, b) => compareAddr(a.signer, b.signer)),
               false
             ])
-            // data: requireUtils.contract.methods
-            //   .publishConfig(
-            //     wallet.address,
-            //     threshold,
-            //     members.sort((a, b) => compareAddr(a.signer, b.signer)),
-            //     false
-            //   )
-            //   .encodeABI()
           }
         ]
 
@@ -2839,7 +2656,6 @@ contract('MainModule', (accounts: string[]) => {
               gasLimit: optimalGasLimit,
               target: wallet.address,
               value: ethers.constants.Zero,
-              // data: wallet.contract.methods.updateImageHash(newImageHash).encodeABI()
               data: (wallet as unknown as MainModuleUpgradable).interface.encodeFunctionData('updateImageHash', [newImageHash])
             }
           ]
@@ -2917,7 +2733,6 @@ contract('MainModule', (accounts: string[]) => {
             ])
     
             await factory.deploy(mainModule.address, salt, { gasLimit: 100_000 })
-            // wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
             wallet = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt), signer)
           })
           it('Should accept signed message by first owner', async () => {
@@ -3037,7 +2852,6 @@ contract('MainModule', (accounts: string[]) => {
             ])
     
             await factory.deploy(mainModule.address, salt, { gasLimit: 100_000 })
-            // wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
             wallet = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt), signer)
           })
           it('Should accept signed message by both owners', async () => {
@@ -3146,7 +2960,6 @@ contract('MainModule', (accounts: string[]) => {
             ])
     
             await factory.deploy(mainModule.address, salt, { gasLimit: 100_000 })
-            // wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
             wallet = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt), signer)
           })
     
@@ -3357,7 +3170,6 @@ contract('MainModule', (accounts: string[]) => {
             )
   
             await factory.deploy(mainModule.address, salt, { gasLimit: 100_000 })
-            // wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
             wallet = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt), signer)
           })
   
@@ -3416,7 +3228,6 @@ contract('MainModule', (accounts: string[]) => {
             )
     
             await factory.deploy(mainModule.address, salt, { gasLimit: 100_000 })
-            // wallet = (await MainModuleArtifact.at(addressOf(factory.address, mainModule.address, salt))) as MainModule
             wallet = await MainModule__factory.connect(addressOf(factory.address, mainModule.address, salt), signer)
           })
     
@@ -3565,7 +3376,6 @@ contract('MainModule', (accounts: string[]) => {
     let gasBurner: GasBurnerMock
 
     before(async () => {
-      // gasBurner = (await GasBurnerMockArtifact.new()) as GasBurnerMock
       gasBurner = await (new GasBurnerMock__factory()).connect(signer).deploy()
     })
 
@@ -3578,7 +3388,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: gas,
         target: gasBurner.address,
         value: ethers.constants.Zero,
-        // data: gasBurner.contract.methods.burnGas(0).encodeABI()
         data: gasBurner.interface.encodeFunctionData('burnGas', [0])
       }
 
@@ -3597,7 +3406,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: gasA,
           target: gasBurner.address,
           value: ethers.constants.Zero,
-          // data: gasBurner.contract.methods.burnGas(8000).encodeABI()
           data: gasBurner.interface.encodeFunctionData('burnGas', [8000])
         },
         {
@@ -3606,7 +3414,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: gasB,
           target: gasBurner.address,
           value: ethers.constants.Zero,
-          // data: gasBurner.contract.methods.burnGas(340000).encodeABI()
           data: gasBurner.interface.encodeFunctionData('burnGas', [340000])
         }
       ]
@@ -3629,7 +3436,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: gas,
         target: gasBurner.address,
         value: ethers.constants.Zero,
-        // data: gasBurner.contract.methods.burnGas(11000).encodeABI()
         data: gasBurner.interface.encodeFunctionData('burnGas', [11000])
       }
 
@@ -3645,7 +3451,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: gas,
         target: gasBurner.address,
         value: ethers.constants.Zero,
-        // data: gasBurner.contract.methods.burnGas(200_000).encodeABI()
         data: gasBurner.interface.encodeFunctionData('burnGas', [200_000])
       }
 
@@ -3668,7 +3473,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: gas,
           target: gasBurner.address,
           value: ethers.constants.Zero,
-          // data: gasBurner.contract.methods.burnGas(200000).encodeABI()
           data: gasBurner.interface.encodeFunctionData('burnGas', [200000])
         },
         {
@@ -3696,7 +3500,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: gas,
         target: gasBurner.address,
         value: ethers.constants.Zero,
-        // data: gasBurner.contract.methods.burnGas(0).encodeABI()
         data: gasBurner.interface.encodeFunctionData('burnGas', [0])
       }
 
@@ -3718,7 +3521,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.createContract(deployCode).encodeABI()
           data: wallet.interface.encodeFunctionData('createContract', [deployCode])
         }
       ]
@@ -3728,7 +3530,6 @@ contract('MainModule', (accounts: string[]) => {
 
       expect(log.event).to.equal('CreatedContract')
 
-      // const deployed = (await CallReceiverMockArtifact.at(log.args._contract)) as CallReceiverMock
       const deployed = await CallReceiverMock__factory.connect(log.args?._contract, signer)
       await deployed.testCall(12345, '0x552299')
 
@@ -3738,7 +3539,6 @@ contract('MainModule', (accounts: string[]) => {
     it('Should create a contract with value', async () => {
       const deployCode = CallReceiverMockArtifact.bytecode
 
-      // await wallet.send(100, { from: accounts[0] })
       await signer.sendTransaction({
         to: wallet.address,
         value: 100
@@ -3751,7 +3551,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: 99,
-          // data: wallet.contract.methods.createContract(deployCode).encodeABI()
           data: wallet.interface.encodeFunctionData('createContract', [deployCode])
         }
       ]
@@ -3837,7 +3636,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.selfExecute(bundle).encodeABI()
           data: wallet.interface.encodeFunctionData('selfExecute', [bundle])
         }
       ]
@@ -3886,7 +3684,6 @@ contract('MainModule', (accounts: string[]) => {
         gasLimit: optimalGasLimit,
         target: wallet.address,
         value: ethers.constants.Zero,
-        // data: wallet.contract.methods.selfExecute(bundle).encodeABI()
         data: wallet.interface.encodeFunctionData('selfExecute', [bundle])
       }))
 
@@ -3931,7 +3728,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit.div(2),
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.selfExecute(bundle).encodeABI()
           data: wallet.interface.encodeFunctionData('selfExecute', [bundle])
         }
       ]
@@ -3943,7 +3739,6 @@ contract('MainModule', (accounts: string[]) => {
           gasLimit: optimalGasLimit,
           target: wallet.address,
           value: ethers.constants.Zero,
-          // data: wallet.contract.methods.selfExecute(nestedBundle).encodeABI()
           data: wallet.interface.encodeFunctionData('selfExecute', [nestedBundle])
         }
       ]

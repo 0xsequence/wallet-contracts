@@ -88,10 +88,13 @@ contract('GuestModule', (accounts: string[]) => {
       const tx = guestModule.selfExecute(transactions, { gasLimit: 100_000 })
       await expect(tx).to.be.rejectedWith(RevertError('GuestModule#_executeGuest: delegateCall not allowed'))
     })
-    // it('Should not accept ETH', async () => {
-    //   const tx = guestModule.send(1, { from: accounts[0] })
-    //   await expect(tx).to.be.rejected
-    // })
+    it('Should not accept ETH', async () => {
+      const tx = signer.sendTransaction({
+        to: guestModule.address,
+        value: 1
+      })
+      await expect(tx).to.be.rejected
+    })
     it('Should not implement hooks', async () => {
       const tx = hookMock.callERC1155Received(guestModule.address)
       await expect(tx).to.be.rejected

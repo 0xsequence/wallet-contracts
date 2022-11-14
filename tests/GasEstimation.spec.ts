@@ -3,7 +3,7 @@ import { ethers as hardhat, web3 } from 'hardhat'
 import { expect, encodeImageHash, signAndEncodeMetaTxn, addressOf, multiSignAndEncodeMetaTxn, multiSignAndExecuteMetaTx } from './utils'
 
 import { Factory__factory, GasEstimator__factory, CallReceiverMock__factory, GuestModule__factory, MainModuleGasEstimation__factory, ModuleMock__factory } from '../src'
-import { GasEstimator, CallReceiverMock, ModuleMock, MainModuleGasEstimation, Factory, GuestModule, MainModule } from 'src/gen/typechain'
+import { GasEstimator, CallReceiverMock, MainModuleGasEstimation, Factory, GuestModule, MainModule } from 'src/gen/typechain'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
@@ -321,7 +321,6 @@ contract('Estimate gas usage', (accounts: string[]) => {
           expect(estimated + txBaseCost(txDataNoSignature)).to.approximately(gasUsed, 150_000)
         })
         it('Should estimate multiple transactions with failing transactions', async () => {
-          // const altCallReceiver = (await CallReceiverMockArtifact.new()) as CallReceiverMock
           const altCallReceiver = await (new CallReceiverMock__factory()).connect(signer).deploy()
           await altCallReceiver.setRevertFlag(true)
   

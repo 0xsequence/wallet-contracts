@@ -1,18 +1,10 @@
-import { ethers as hardhat } from 'hardhat'
+import { ethers as hardhat, web3 } from 'hardhat'
 import { ethers } from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf, encodeNonce, walletSign } from './utils'
 
 import { MainModule, Factory, RequireUtils, CallReceiverMock, RequireFreshSigner, Factory__factory, MainModule__factory, RequireUtils__factory, RequireFreshSigner__factory, CallReceiverMock__factory } from '../src'
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
-
-const FactoryArtifact = artifacts.require('Factory')
-const MainModuleArtifact = artifacts.require('MainModule')
-const RequireUtilsArtifact = artifacts.require('RequireUtils')
-const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
-const RequireFreshSignerArtifact = artifacts.require('RequireFreshSigner')
-
-import { web3 } from 'hardhat'
 
 function now(): number {
   return Math.floor(Date.now() / 1000)
