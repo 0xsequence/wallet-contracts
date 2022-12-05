@@ -46,6 +46,7 @@ const config: HardhatUserConfig = {
     metis: networkConfig('metis'),
     nova: networkConfig('nova'),
     avalanche: networkConfig('avalanche'),
+    avalancheTestnet: networkConfig('avalanche-testnet'),
     ganache: ganacheNetwork,
     coverage: {
       url: 'http://localhost:8555'

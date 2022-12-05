@@ -3,7 +3,7 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum' | 'arbitrum-testnet' | 'optimism' | 'metis' | 'nova' | 'avalanche'
+type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'matic' | 'arbitrum' | 'arbitrum-testnet' | 'optimism' | 'metis' | 'nova' | 'avalanche' | 'avalanche-testnet'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -56,6 +56,9 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
     case 'avalanche':
       return 'https://nodes.sequence.app/avalanche'
 
+    case 'avalanche-testnet':
+      return 'https://nodes.sequence.app/avalanche-testnet'
+
     default:
       return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
   }
@@ -103,6 +106,9 @@ export const networkChainId = (network: EthereumNetworksTypes): number => {
 
     case 'avalanche':
       return 43114
+
+    case 'avalanche-testnet':
+      return 43113
   }
 }
 
