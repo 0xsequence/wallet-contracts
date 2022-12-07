@@ -51,14 +51,14 @@ abstract contract ModuleAuth is
     }
 
     if (signatureType == DYNAMIC_TYPE) {
-      // noChainId digest + dynamic recovery
+      // networkId digest + dynamic recover
       subdigest = SequenceBaseSig.subdigest(_digest);
       (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subdigest, _signature);
       return (threshold, weight, imageHash, subdigest, checkpoint);
     }
 
     if (signatureType == NO_CHAIN_ID_TYPE) {
-      // networkId digest + dynamic recover
+      // noChainId digest + dynamic recover
       subdigest = SequenceNoChainIdSig.subdigest(_digest);
       (threshold, weight, imageHash, checkpoint) = SequenceDynamicSig.recover(subdigest, _signature);
       return (threshold, weight, imageHash, subdigest, checkpoint);
@@ -66,7 +66,7 @@ abstract contract ModuleAuth is
 
     if (signatureType == CHAINED_TYPE) {
       // original digest + chained recover
-      // (subdigest will be computed in the chained recovery)
+      // (subdigest will be computed in the chained recover)
       return chainedRecover(_digest, _signature);
     }
 
