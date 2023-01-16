@@ -5,12 +5,15 @@ import '@nomiclabs/hardhat-truffle5'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-web3'
 import '@nomiclabs/hardhat-etherscan'
-import "@tenderly/hardhat-tenderly"
 
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
 
 import './utils/benchmarker'
+
+import * as tdly from "@tenderly/hardhat-tenderly"
+
+tdly.setup()
 
 const ganacheNetwork = {
   url: 'http://127.0.0.1:8545',
@@ -22,8 +25,8 @@ const config: HardhatUserConfig = {
     version: '0.8.17',
     settings: {
       optimizer: {
-        enabled: true,
-        runs: 4294967295
+        enabled: false,
+        runs: 500000
       }
     }
   },
