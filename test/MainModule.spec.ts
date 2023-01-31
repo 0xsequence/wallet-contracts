@@ -1723,10 +1723,11 @@ contract('MainModule', (accounts: string[]) => {
       const txHash = subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
       const receipt = await wallet.sendTransactions([{}]).then((t) => t.wait())
 
-      const log = receipt.logs[1]
+      const log = receipt.events!.find(l => l.event === 'TxExecuted')!
 
-      expect(log.topics.length).to.equal(0)
-      expect(log.data).to.be.equal(txHash)
+      expect(log.topics.length).to.equal(2)
+      expect(log.topics[1]).to.be.equal(txHash)
+      expect(log.data).to.be.equal(ethers.utils.solidityPack(['uint256'], [0]))
     })
 
     it('Should emit multiple TxExecuted events', async () => {
@@ -1736,11 +1737,13 @@ contract('MainModule', (accounts: string[]) => {
       const log1 = receipt.logs[1]
       const log2 = receipt.logs[2]
 
-      expect(log1.topics.length).to.equal(0)
-      expect(log1.data).to.be.equal(txHash)
+      expect(log1.topics.length).to.equal(2)
+      expect(log1.topics[1]).to.be.equal(txHash)
+      expect(log1.data).to.be.equal(ethers.utils.solidityPack(['uint256'], [0]))
 
-      expect(log2.topics.length).to.equal(0)
-      expect(log2.data).to.be.equal(txHash)
+      expect(log2.topics.length).to.equal(2)
+      expect(log1.topics[1]).to.be.equal(txHash)
+      expect(log2.data).to.be.equal(ethers.utils.solidityPack(['uint256'], [1]))
     })
   })
 

@@ -5,8 +5,8 @@ pragma experimental ABIEncoderV2;
 
 interface IModuleCalls {
   // Events
-  event TxFailed(bytes32 _tx, bytes _reason);
-  event TxExecuted(bytes32 _tx) anonymous;
+  event TxFailed(bytes32 indexed _tx, uint256 _index, bytes _reason);
+  event TxExecuted(bytes32 indexed _tx, uint256 _index);
 
   // Errors
   error NotEnoughGas(uint256 _index, uint256 _requested, uint256 _available);

@@ -92,9 +92,14 @@ contract GuestModule is
       );
 
       if (success) {
-        emit TxExecuted(_txHash);
+        emit TxExecuted(_txHash, i);
       } else {
-        _revertBytes(transaction.revertOnError, _txHash, LibOptim.returnData());
+        _revertBytes(
+          transaction.revertOnError,
+          _txHash,
+          i,
+          LibOptim.returnData()
+        );
       }
     }
   }

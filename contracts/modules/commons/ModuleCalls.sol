@@ -108,12 +108,13 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
         }
 
         if (success) {
-          emit TxExecuted(_txHash);
+          emit TxExecuted(_txHash, i);
         } else {
           // Avoid copy of return data until neccesary
           _revertBytes(
             transaction.revertOnError,
             _txHash,
+            i,
             LibOptim.returnData()
           );
         }
@@ -125,17 +126,19 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @notice Logs a failed transaction, reverts if the transaction is not optional
    * @param _revertOnError  Signals if it should revert or just log
    * @param _txHash         Hash of the transaction
+   * @param _index          Index of the transaction in the batch
    * @param _reason         Encoded revert message
    */
   function _revertBytes(
     bool _revertOnError,
     bytes32 _txHash,
+    uint256 _index,
     bytes memory _reason
   ) internal {
     if (_revertOnError) {
       assembly { revert(add(_reason, 0x20), mload(_reason)) }
     } else {
-      emit TxFailed(_txHash, _reason);
+      emit TxFailed(_txHash, _index, _reason);
     }
   }
 
