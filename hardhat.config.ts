@@ -23,7 +23,7 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 4294967295
+        runs: 500000
       }
     }
   },
@@ -33,7 +33,7 @@ const config: HardhatUserConfig = {
     rinkeby: networkConfig('rinkeby'),
     kovan: networkConfig('kovan'),
     goerli: networkConfig('goerli'),
-    matic: networkConfig('matic'),
+    polygon: networkConfig('polygon'),
     mumbai: networkConfig('mumbai'),
     arbitrum: networkConfig('arbitrum'),
     arbitrumTestnet: networkConfig('arbitrum-testnet'),
