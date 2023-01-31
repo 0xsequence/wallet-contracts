@@ -69,7 +69,7 @@ library SequenceBaseSig {
 
       // Iterate until the image is completed
       while (rindex < _signature.length) {
-        // Read next item type and addrWeight
+        // Read next item type
         uint256 flag;
         (flag, rindex) = _signature.readUint8(rindex);
 
@@ -104,7 +104,7 @@ library SequenceBaseSig {
         }
 
         if (flag == FLAG_DYNAMIC_SIGNATURE) {
-          // Read signer and wight
+          // Read signer and weight
           uint8 addrWeight; address addr;
           (addrWeight, addr, rindex) = _signature.readUint8Address(rindex);
 
@@ -181,7 +181,7 @@ library SequenceBaseSig {
 
         if (flag == FLAG_SUBDIGEST) {
           // A hardcoded always accepted digest
-          // it pushes the weight to 100%
+          // it pushes the weight to the maximum
           bytes32 hardcoded;
           (hardcoded, rindex) = _signature.readBytes32(rindex);
           if (hardcoded == _subdigest) {
@@ -210,7 +210,8 @@ library SequenceBaseSig {
     unchecked {
       (weight, imageHash) = recoverBranch(_subdigest, _signature[6:]);
 
-      // Threshold is the top-most node (but first on the signature)
+      // Threshold & checkpoint are the top nodes
+      // (but they are first on the signature)
       threshold = LibBytes.readFirstUint16(_signature);
       checkpoint = LibBytes.readUint32(_signature, 2);
 

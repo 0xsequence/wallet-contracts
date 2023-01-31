@@ -64,9 +64,9 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
     rindex = nrindex;
 
     //
-    // Afterward signatures are handled by this loop
+    // Following signatures are handled by this loop
     // this is done this way because the last signature does not have a
-    // checkpoint
+    // checkpoint to be validated.
     //
     while (rindex < _signature.length) {
       // First uint24 is the size of the signature
@@ -80,7 +80,7 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
         weight,
         imageHash,,
         // Don't change the subdigest
-        // it should remain the first signature
+        // it should remain the one of the first signature
         nextCheckpoint
       ) = signatureRecovery(
         _hashSetImageHashStruct(imageHash),
