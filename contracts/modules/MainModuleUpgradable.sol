@@ -12,7 +12,7 @@ import "./commons/ModuleAuthConvenience.sol";
 
 
 /**
- * @notice Contains the core functionality arcadeum wallets will inherit with
+ * @notice Contains the core functionality Sequence wallets will inherit with
  *         the added functionality that the main module can be changed.
  * @dev If using a new main module, developers must ensure that all inherited
  *      contracts by the main module don't conflict and are accounted for to be
