@@ -8,7 +8,6 @@ import "./commons/ModuleCalls.sol";
 import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
-import "./commons/ModuleStaticAuth.sol";
 import "./commons/ModuleAuthConvenience.sol";
 
 
@@ -22,7 +21,6 @@ import "./commons/ModuleAuthConvenience.sol";
 contract MainModuleUpgradable is
   ModuleAuthUpgradable,
   ModuleExtraAuth,
-  ModuleStaticAuth,
   ModuleCalls,
   ModuleUpdate,
   ModuleHooks,
@@ -37,17 +35,6 @@ contract MainModuleUpgradable is
     ModuleExtraAuth
   ) view returns (bool) {
     return super._isValidImage(_imageHash);
-  }
-
-  function _signatureValidation(
-    bytes32 _digest,
-    bytes calldata _signature
-  ) internal view override(
-    IModuleAuth,
-    ModuleAuth,
-    ModuleStaticAuth
-  ) returns (bool, bytes32) {
-    return super._signatureValidation(_digest, _signature);
   }
 
   /**

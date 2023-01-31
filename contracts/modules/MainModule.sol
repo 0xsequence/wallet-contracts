@@ -10,7 +10,6 @@ import "./commons/ModuleHooks.sol";
 import "./commons/ModuleCalls.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
-import "./commons/ModuleStaticAuth.sol";
 import "./commons/ModuleAuthConvenience.sol";
 
 import "../interfaces/receivers/IERC1155Receiver.sol";
@@ -28,7 +27,6 @@ import "../interfaces/IERC1271Wallet.sol";
 contract MainModule is
   ModuleAuthFixed,
   ModuleExtraAuth,
-  ModuleStaticAuth,
   ModuleCalls,
   ModuleHooks,
   ModuleCreator,
@@ -50,17 +48,6 @@ contract MainModule is
     ModuleExtraAuth
   ) view returns (bool) {
     return super._isValidImage(_imageHash);
-  }
-
-  function _signatureValidation(
-    bytes32 _digest,
-    bytes calldata _signature
-  ) internal view override(
-    IModuleAuth,
-    ModuleAuth,
-    ModuleStaticAuth
-  ) returns (bool, bytes32) {
-    return super._signatureValidation(_digest, _signature);
   }
 
   /**
