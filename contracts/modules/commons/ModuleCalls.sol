@@ -6,6 +6,7 @@ import "./ModuleSelfAuth.sol";
 import "./ModuleStorage.sol";
 import "./ModuleERC165.sol";
 import "./ModuleNonce.sol";
+import "./ModuleOnlyDelegatecall.sol";
 
 import "./interfaces/IModuleCalls.sol";
 import "./interfaces/IModuleAuth.sol";
@@ -16,7 +17,7 @@ import "./submodules/auth/SequenceBaseSig.sol";
 import "../../utils/LibOptim.sol";
 
 
-abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth, ModuleNonce {
+abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleOnlyDelegatecall, ModuleSelfAuth, ModuleNonce {
   /**
    * @notice Allow wallet owner to execute an action
    * @dev Relayers must ensure that the gasLimit specified for each transaction
@@ -30,7 +31,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     Transaction[] calldata _txs,
     uint256 _nonce,
     bytes calldata _signature
-  ) external override virtual {
+  ) external override virtual onlyDelegatecall {
     // Validate and update nonce
     _validateNonce(_nonce);
 

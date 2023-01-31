@@ -449,6 +449,14 @@ contract('MainModule', (accounts: string[]) => {
       const subdigest = subdigestOf(wallet.address, digestOf([{}], 0))
       await expectToBeRejected(tx, `InvalidSignatureType("0x20")`)
     })
+
+    it('Should reject direct calls to templates', async () => {
+      const tx1 = context.mainModule.execute([], 0, '0x')
+      await expectToBeRejected(tx1, 'OnlyDelegatecall')
+
+      const tx2 = context.mainModuleUpgradable.execute([], 0, '0x')
+      await expectToBeRejected(tx2, 'OnlyDelegatecall')
+    })
   })
 
   describe('Upgradeability', () => {
