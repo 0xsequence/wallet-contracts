@@ -1995,4 +1995,57 @@ contract('MainModule', (accounts: string[]) => {
       expect(await callReceiver3.lastValB()).to.equal(expected3)
     })
   })
+
+  describe('Update imageHash and IPFS at once', () => {
+    ([{
+      name: 'using MainModule',
+      beforeEach: () => {},
+    }, {
+      name: 'using MainModuleUpgradable',
+      beforeEach: async () => {
+        const newConfig = SequenceWallet.basicWallet(context)
+        await wallet.updateImageHash(newConfig.imageHash)
+        wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+      }
+    }]).map((c) => {
+      describe(c.name, () => {
+        it('Should update imageHash and IPFS at the same time', async () => {
+          const ipfs = randomHex(32)
+          const imageHash = randomHex(32)
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'updateImageHashAndIPFS',
+              [imageHash, ipfs]
+            )
+          }])
+
+          expect(await wallet.mainModuleUpgradable.imageHash()).to.equal(imageHash)
+          expect(await wallet.mainModule.ipfsRootBytes32()).to.equal(ipfs)
+        })
+
+        it('Should fail to update imageHash and IPFS if caller is not self', async () => {
+          const tx = wallet.mainModule.updateImageHashAndIPFS(randomHex(32), randomHex(32))
+          await expectToBeRejected(tx, 'OnlySelf')
+        })
+
+        it('Updated imageHash should be usable', async () => {
+          const nextWallet = SequenceWallet.basicWallet(context)
+          const ipfs = randomHex(32)
+
+          await wallet.sendTransactions([{
+            target: wallet.address,
+            data: wallet.mainModule.interface.encodeFunctionData(
+              'updateImageHashAndIPFS',
+              [nextWallet.imageHash, ipfs]
+            )
+          }])
+
+          wallet = wallet.useAddress(wallet.address).useConfig(nextWallet.config).useSigners(nextWallet.signers)
+          await wallet.sendTransactions([{}])
+        })
+      })
+    })
+  })
 })

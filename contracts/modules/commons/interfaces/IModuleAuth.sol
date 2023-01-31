@@ -44,4 +44,10 @@ abstract contract IModuleAuth {
    * @param _imageHash New required image hash of the signature
    */
   function updateImageHash(bytes32 _imageHash) external virtual;
+
+  /**
+   * @notice Updates the signers configuration of the wallet
+   * @param _imageHash New required image hash of the signature
+   */
+  function _updateImageHash(bytes32 _imageHash) internal virtual;
 }
