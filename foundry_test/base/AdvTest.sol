@@ -29,11 +29,7 @@ contract AdvTest is Test {
     address c3 = address(0x00000000000000000000636f6e736f6c652e6c6f67);
 
     _a = boundNoPrecompile(_a);
-
-    _a = boundDiff(_a, c2);
-    _a = boundDiff(_a, vm);
-    _a = boundDiff(_a, c3);
-    _a = boundDiff(_a, address(this));
+    _a = boundDiff(_a, c2, vm, c3, address(this));
 
     return _a;
   }
@@ -50,6 +46,40 @@ contract AdvTest is Test {
     if (_a != _b) return _a;
 
     return address(uint160(_b) == type(uint160).max ? 0 : uint160(_b) + 1);
+  }
+
+  function boundDiff(address _a, address _b, address _c) internal pure returns (address) {
+    address[] memory arr = new address[](2);
+    arr[0] = _b;
+    arr[1] = _c;
+    return boundDiff(_a, arr);
+  }
+
+  function boundDiff(address _a, address _b, address _c, address _d) internal pure returns (address) {
+    address[] memory _arr = new address[](3);
+    _arr[0] = _b;
+    _arr[1] = _c;
+    _arr[2] = _d;
+    return boundDiff(_a, _arr);
+  }
+
+  function boundDiff(address _a, address _b, address _c, address _d, address _e) internal pure returns (address) {
+    address[] memory _arr = new address[](4);
+    _arr[0] = _b;
+    _arr[1] = _c;
+    _arr[2] = _d;
+    _arr[3] = _e;
+    return boundDiff(_a, _arr);
+  }
+
+  function boundDiff(address _a, address[] memory _b) internal pure returns (address) {
+    unchecked {
+      while (inSet(_a, _b)) {
+        _a = address(uint160(_a) + 1);
+      }
+
+      return _a;
+    }
   }
 
   function boundPk(uint256 _a) internal pure returns (uint256) {
@@ -137,6 +167,18 @@ contract AdvTest is Test {
   }
 
   function inSet(uint256 _a, uint256[] memory _b) internal pure returns (bool) {
+    unchecked {
+      for (uint256 i = 0; i < _b.length; i++) {
+        if (_a == _b[i]) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+  }
+
+  function inSet(address _a, address[] memory _b) internal pure returns (bool) {
     unchecked {
       for (uint256 i = 0; i < _b.length; i++) {
         if (_a == _b[i]) {

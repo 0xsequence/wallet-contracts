@@ -121,10 +121,11 @@ contract ModuleCallsImp is ModuleCalls {
 contract ModuleCallsTest is AdvTest {
   ModuleCallsImp private template;
   ModuleCallsImp private imp;
+  Factory private factory;
 
   function setUp() external {
     template = new ModuleCallsImp();
-    Factory factory = new Factory();
+    factory = new Factory();
     imp = ModuleCallsImp(factory.deploy(address(template), bytes32(0)));
   }
 
@@ -147,7 +148,7 @@ contract ModuleCallsTest is AdvTest {
 
     for (uint256 i = 0; i < size; i++) {
       txs[i].data = _rtxs[i].data;
-      txs[i].target = boundNoSys(_rtxs[i].target);
+      txs[i].target = boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory));
       txs[i].value = bound(_rtxs[i].value, 0, type(uint256).max - total);
 
       total += txs[i].value;
@@ -206,7 +207,7 @@ contract ModuleCallsTest is AdvTest {
         txs[i].revertOnError = _revertsOnErr;
         txs[i].delegateCall = _delegateCall;
       } else {
-        txs[i].target = boundNoSys(_rtxs[i].target);
+        txs[i].target = boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory));
       }
 
       txs[i].data = _rtxs[i].data;
@@ -270,7 +271,7 @@ contract ModuleCallsTest is AdvTest {
 
     for (uint256 i = 0; i < size; i++) {
       txs[i].data = _rtxs[i].data;
-      txs[i].target = boundNoSys(_rtxs[i].target);
+      txs[i].target = boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory));
       txs[i].value = bound(_rtxs[i].value, 0, type(uint256).max - total);
 
       total += txs[i].value;
