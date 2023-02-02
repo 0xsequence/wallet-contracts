@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.17;
+pragma solidity 0.8.18;
 pragma experimental ABIEncoderV2;
 
 import "../commons/interfaces/IModuleCalls.sol";
@@ -49,7 +49,11 @@ contract MultiCallUtils {
   }
 
   function callDifficulty() external view returns (uint256) {
-    return block.difficulty;
+    return block.prevrandao; // old block.difficulty
+  }
+
+  function callPrevrandao() external view returns (uint256) {
+    return block.prevrandao;
   }
 
   function callGasLimit() external view returns (uint256) {
