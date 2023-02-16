@@ -31,6 +31,19 @@ abstract contract ModuleAuth is
   bytes4 internal constant SELECTOR_ERC1271_BYTES_BYTES = 0x20c13b0b;
   bytes4 internal constant SELECTOR_ERC1271_BYTES32_BYTES = 0x1626ba7e;
 
+  /**
+   * @notice Recovers the threshold, weight, imageHash, subdigest, and checkpoint of a signature.
+   * @dev The signature must be prefixed with a type byte, which is used to determine the recovery method.
+   *
+   * @param _digest Digest of the signed data.
+   * @param _signature A Sequence signature.
+   *
+   * @return threshold The required number of signatures needed to consider the signature valid.
+   * @return weight The actual number of signatures collected in the signature.
+   * @return imageHash The imageHash of the configuration that signed the message.
+   * @return subdigest A modified version of the original digest, unique for each wallet/network.
+   * @return checkpoint A nonce that is incremented every time a new configuration is set.
+   */
   function signatureRecovery(
     bytes32 _digest,
     bytes calldata _signature
@@ -73,6 +86,15 @@ abstract contract ModuleAuth is
     revert InvalidSignatureType(signatureType);
   }
 
+  /**
+   * @dev Validates a signature.
+   *
+   * @param _digest Digest of the signed data.
+   * @param _signature A Sequence signature.
+   *
+   * @return isValid Indicates whether the signature is valid or not.
+   * @return subdigest A modified version of the original digest, unique for each wallet/network.
+   */
   function _signatureValidation(
     bytes32 _digest,
     bytes calldata _signature
