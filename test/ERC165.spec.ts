@@ -4,11 +4,11 @@ import { SequenceWallet } from './utils/wallet'
 import { expect, interfaceIdOf, randomHex } from './utils'
 
 const interfaceIds = [
-  'IModuleHooks',
   'IERC223Receiver',
   'IERC721Receiver',
   'IERC1155Receiver',
   'IERC1271Wallet',
+  'IModuleAuth',
   'IModuleCalls',
   'IModuleCreator',
   'IModuleHooks',
