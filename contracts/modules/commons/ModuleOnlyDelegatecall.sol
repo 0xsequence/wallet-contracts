@@ -12,6 +12,9 @@ contract ModuleOnlyDelegatecall {
     self = address(this);
   }
 
+  /**
+   * @notice Modifier that only allows functions to be called via delegatecall.
+   */
   modifier onlyDelegatecall() {
     if (address(this) == self) {
       revert OnlyDelegatecall();

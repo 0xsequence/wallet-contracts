@@ -1,19 +1,37 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.18;
 
-
+/**
+ * @title Library for string manipulation operations
+ * @notice This library contains functions for manipulating strings in Solidity.
+ */
 library LibString {
   bytes private constant ALPHABET_HEX_16 = '0123456789abcdef';
   bytes private constant ALPHABET_32 = 'abcdefghijklmnopqrstuvwxyz234567';
 
+  /**
+   * @notice Prefixes a hexadecimal string with "0x".
+   * @param _hex The hexadecimal string to prefix.
+   * @return The prefixed hexadecimal string.
+   */
   function prefixHexadecimal(string memory _hex) internal pure returns (string memory) {
     return string(abi.encodePacked('0x', _hex));
   }
 
+  /**
+   * @notice Prefixes a base32 string with "b".
+   * @param _base32 The base32 string to prefix.
+   * @return The prefixed base32 string.
+   */
   function prefixBase32(string memory _base32) internal pure returns (string memory) {
     return string(abi.encodePacked('b', _base32));
   }
 
+  /**
+   * @notice Converts a byte array to a hexadecimal string.
+   * @param _bytes The byte array to convert.
+   * @return The resulting hexadecimal string.
+   */
   function bytesToHexadecimal(bytes memory _bytes) internal pure returns (string memory) {
     uint256 bytesLength = _bytes.length;
     bytes memory bytesArray = new bytes(bytesLength << 1);
@@ -30,6 +48,11 @@ library LibString {
     return string(bytesArray);
   }
 
+  /**
+   * @notice Converts a byte array to a base32 string.
+   * @param _bytes The byte array to convert.
+   * @return The resulting base32 string.
+   */
   function bytesToBase32(bytes memory _bytes) internal pure returns (string memory) {
     uint256 bytesLength = _bytes.length;
 

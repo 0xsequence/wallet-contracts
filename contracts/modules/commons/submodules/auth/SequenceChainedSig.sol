@@ -12,7 +12,13 @@ import "../../ModuleStorage.sol";
 import "../../../../utils/LibBytesPointer.sol";
 import "../../../../utils/LibOptim.sol";
 
-
+/**
+ * @title Sequence chained auth recovery submodule
+ * @author Agustin Aguilar (aa@horizon.io)
+ * @notice Defines Sequence signatures that work by delegating control to new configurations.
+ * @dev The delegations can be chained together, the first signature is the one that is used to validate
+ *      the message, the last signature must match the current on-chain configuration of the wallet.
+ */
 abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
   using LibBytesPointer for bytes;
 
@@ -21,10 +27,30 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
   error LowWeightChainedSignature(bytes _signature, uint256 threshold, uint256 _weight);
   error WrongChainedCheckpointOrder(uint256 _current, uint256 _prev);
 
+  /**
+   * @notice Defined the special token that must be signed to delegate control to a new configuration.
+   * @param _imageHash The hash of the new configuration.
+   * @return bytes32 The message hash to be signed.
+   */
   function _hashSetImageHashStruct(bytes32 _imageHash) internal pure returns (bytes32) {
     return LibOptim.fkeccak256(SET_IMAGE_HASH_TYPE_HASH, _imageHash);
   }
 
+  /**
+   * @notice Returns the threshold, weight, root, and checkpoint of a (chained) signature.
+   * 
+   * @dev This method return the `threshold`, `weight` and `imageHash` of the last signature in the chain.
+   *      Intermediate signatures are validated directly in this method. The `subdigest` is the one of the
+   *      first signature in the chain (since that's the one that is used to validate the message).
+   *
+   * @param _digest The digest to recover the signature from.
+   * @param _signature The signature to recover.
+   * @return threshold The threshold of the (last) signature.
+   * @return weight The weight of the (last) signature.
+   * @return imageHash The image hash of the (last) signature.
+   * @return subdigest The subdigest of the (first) signature in the chain.
+   * @return checkpoint The checkpoint of the (last) signature.
+   */
   function chainedRecover(
     bytes32 _digest,
     bytes calldata _signature
@@ -92,6 +118,9 @@ abstract contract SequenceChainedSig is IModuleAuth, ModuleSelfAuth {
         revert LowWeightChainedSignature(_signature[rindex:nrindex], threshold, weight);
       }
 
+      // Checkpoints must be provided in descending order
+      // since the first signature is the one that is used to validate the message
+      // and the last signature is the one that is used to validate the current configuration
       if (nextCheckpoint >= checkpoint) {
         revert WrongChainedCheckpointOrder(nextCheckpoint, checkpoint);
       }

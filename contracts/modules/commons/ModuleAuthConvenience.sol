@@ -9,6 +9,15 @@ import "../../utils/LibString.sol";
 
 
 abstract contract ModuleAuthConvenience is ModuleSelfAuth, ModuleAuth, ModuleIPFS {
+
+  /**
+  * @notice Updates the image hash and the IPFS root in a single operation.
+  * @dev These two operations are often performed together, so this function
+  *      allows to save some gas by performing them in a single step.
+  *
+  * @param _imageHash The new image hash to be set.
+  * @param _ipfsRoot The new IPFS root to be set.
+  */
   function updateImageHashAndIPFS(
     bytes32 _imageHash,
     bytes32 _ipfsRoot

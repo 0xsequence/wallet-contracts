@@ -2,7 +2,22 @@
 pragma solidity 0.8.18;
 
 
+/**
+ * @title Library for reading data from bytes arrays
+ * @author Agustin Aguilar (aa@horizon.io)
+ * @notice This library contains functions for reading data from bytes arrays.
+ *
+ * @dev These functions do not check if the input index is within the bounds of the data array.
+ *         Reading out of bounds may return dirty values.
+ */
 library LibBytes {
+
+  /**
+   * @notice Returns the bytes32 value at the given index in the input data.
+   * @param data The input data.
+   * @param index The index of the value to retrieve.
+   * @return a The bytes32 value at the given index.
+   */
   function readBytes32(
     bytes calldata data,
     uint256 index
@@ -14,6 +29,12 @@ library LibBytes {
     }
   }
 
+  /**
+   * @notice Returns the uint8 value at the given index in the input data.
+   * @param data The input data.
+   * @param index The index of the value to retrieve.
+   * @return a The uint8 value at the given index.
+   */
   function readUint8(
     bytes calldata data,
     uint256 index
@@ -26,6 +47,11 @@ library LibBytes {
     }
   }
 
+  /**
+   * @notice Returns the first uint16 value in the input data.
+   * @param data The input data.
+   * @return a The first uint16 value in the input data.
+   */
   function readFirstUint16(
     bytes calldata data
   ) internal pure returns (
@@ -37,6 +63,12 @@ library LibBytes {
     }
   }
 
+  /**
+   * @notice Returns the uint32 value at the given index in the input data.
+   * @param data The input data.
+   * @param index The index of the value to retrieve.
+   * @return a The uint32 value at the given index.
+   */
   function readUint32(
     bytes calldata data,
     uint256 index
