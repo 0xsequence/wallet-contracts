@@ -22,6 +22,64 @@ contract MainModuleGasEstimation is
   ModuleHooks,
   ModuleCreator
 {
+  struct SimulateResult {
+    bool executed;
+    bool succeeded;
+    bytes result;
+    uint256 gasUsed;
+  }
+
+  /**
+   * @notice Simulate each transaction in a bundle for gas usage and execution result
+   * @param _txs Transactions to process
+   * @return The gas used and execution result for each transaction in the bundle
+   */
+  function simulateExecute(Transaction[] calldata _txs) public virtual returns (SimulateResult[] memory) {
+    unchecked {
+      SimulateResult[] memory results = new SimulateResult[](_txs.length);
+
+      // Execute transaction
+      uint256 size = _txs.length;
+      for (uint256 i = 0; i < size; i++) {
+        Transaction calldata transaction = _txs[i];
+        uint256 gasLimit = transaction.gasLimit;
+
+        results[i].executed = true;
+
+        if (gasleft() < gasLimit) {
+          results[i].succeeded = false;
+          results[i].result = abi.encodeWithSelector(IModuleCalls.NotEnoughGas.selector, i, gasLimit, gasleft());
+          break;
+        }
+
+        if (transaction.delegateCall) {
+          uint256 initialGas = gasleft();
+
+          (results[i].succeeded, results[i].result) = transaction.target.delegatecall{
+            gas: gasLimit == 0 ? gasleft() : gasLimit
+          }(transaction.data);
+
+          results[i].gasUsed = initialGas - gasleft();
+        } else {
+          uint256 initialGas = gasleft();
+
+          (results[i].succeeded, results[i].result) = transaction.target.call{
+            value: transaction.value,
+            gas: gasLimit == 0 ? gasleft() : gasLimit
+          }(transaction.data);
+
+          results[i].gasUsed = initialGas - gasleft();
+        }
+
+        if (!results[i].succeeded && transaction.revertOnError) {
+          break;
+        }
+      }
+
+      return results;
+    }
+  }
+
   function _isValidImage(bytes32 _imageHash) internal override(
     IModuleAuth,
     ModuleIgnoreAuthUpgradable
