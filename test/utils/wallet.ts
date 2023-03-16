@@ -181,6 +181,10 @@ export class SequenceWallet {
   }
 
   async deploy() {
+    if (await this.options.context.factory.provider.getCode(this.address).then((c) => c !== '0x')) {
+      return
+    }
+
     return this.options.context.factory.deploy(this.options.context.mainModule.address, this.imageHash)
   }
 
