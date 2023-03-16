@@ -2,22 +2,13 @@
 pragma solidity 0.8.18;
 pragma experimental ABIEncoderV2;
 
-import "../utils/SignatureValidator.sol";
 import "../utils/LibOptim.sol";
 
 import "./commons/submodules/auth/SequenceBaseSig.sol";
 
-import "./commons/Implementation.sol";
 import "./commons/ModuleAuth.sol";
-import "./commons/ModuleHooks.sol";
 import "./commons/ModuleCalls.sol";
-import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";
-
-import "../interfaces/receivers/IERC1155Receiver.sol";
-import "../interfaces/receivers/IERC721Receiver.sol";
-
-import "../interfaces/IERC1271Wallet.sol";
 
 
 /**

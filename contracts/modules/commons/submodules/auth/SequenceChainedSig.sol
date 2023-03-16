@@ -2,7 +2,6 @@
 pragma solidity 0.8.18;
 
 import "./SequenceBaseSig.sol";
-import "./SequenceNoChainIdSig.sol";
 
 import "../../interfaces/IModuleAuth.sol";
 
