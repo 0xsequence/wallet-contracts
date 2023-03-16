@@ -63,6 +63,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
   */
   function _writeHook(bytes4 _signature, address _implementation) private {
     ModuleStorage.writeBytes32Map(HOOKS_KEY, _signature, bytes32(uint256(uint160(_implementation))));
+    emit DefinedHook(_signature, _implementation);
   }
 
   /**

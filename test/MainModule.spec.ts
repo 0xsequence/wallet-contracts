@@ -1202,6 +1202,50 @@ contract('MainModule', (accounts: string[]) => {
       const tx2 = hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: "0x11223300" }).then((t) => t.wait())
       await expect(tx2).to.be.rejected
     })
+
+    it('Should emit an event when adding a hook', async () => {
+      const selector = '0x2385ac0a'
+      const implementation = ethers.Wallet.createRandom().address
+
+      const transaction = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('addHook', [selector, implementation])
+      }
+
+      const receipt = await wallet.sendTransactions([transaction]).then((t) => t.wait())
+      const event = receipt.events?.find((e) => e.event === 'DefinedHook')
+      expect(event).to.not.be.undefined
+      const decode = event!.decode!(event!.data)
+      expect(decode._signature).to.equal(selector)
+      expect(decode._implementation).to.equal(implementation)
+    })
+
+    it('Should emit an event when removing a hook', async () => {
+      const selector = '0x2385ac0a'
+      const implementation = ethers.Wallet.createRandom().address
+
+      const transaction1 = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('addHook', [selector, implementation])
+      }
+      
+
+      await wallet.sendTransactions([transaction1]).then((t) => t.wait())
+
+      const transaction2 = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('removeHook', [selector])
+      }
+      
+
+      const receipt = await wallet.sendTransactions([transaction2]).then((t) => t.wait())
+
+      const event = receipt.events?.find((e) => e.event === 'DefinedHook')
+      expect(event).to.not.be.undefined
+      const decode = event!.decode!(event!.data)
+      expect(decode._signature).to.equal(selector)
+      expect(decode._implementation).to.equal(ethers.constants.AddressZero)
+    })
   })
 
   describe('Update owners', async () => {
