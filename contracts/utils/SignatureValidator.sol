@@ -13,6 +13,7 @@ import "./LibBytes.sol";
 library SignatureValidator {
   // Errors
   error InvalidSignatureLength(bytes _signature);
+  error EmptySignature();
   error InvalidSValue(bytes _signature, bytes32 _s);
   error InvalidVValue(bytes _signature, uint256 _v);
   error UnsupportedSignatureType(bytes _signature, uint256 _type, bool _recoverMode);
@@ -114,8 +115,11 @@ library SignatureValidator {
     address _signer,
     bytes calldata _signature
   ) internal view returns (bool valid) {
-    uint256 signatureType = uint8(_signature[_signature.length - 1]);
+    if (_signature.length == 0) {
+      revert EmptySignature();
+    }
 
+    uint256 signatureType = uint8(_signature[_signature.length - 1]);
     if (signatureType == SIG_TYPE_EIP712 || signatureType == SIG_TYPE_ETH_SIGN) {
       // Recover signer and compare with provided
       valid = recoverSigner(_hash, _signature) == _signer;

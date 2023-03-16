@@ -457,6 +457,11 @@ contract('MainModule', (accounts: string[]) => {
       const tx2 = context.mainModuleUpgradable.execute([], 0, '0x')
       await expectToBeRejected(tx2, 'OnlyDelegatecall')
     })
+
+    it('Should reject empty dynamic signature', async () => {
+      const tx = wallet.relayTransactions([{}], '0x0001000000000201ABFf4013541fd79ee5b6847C9dF3C9B34183C283000000')
+      await expectToBeRejected(tx, 'EmptySignature()')
+    })
   })
 
   describe('Upgradeability', () => {
