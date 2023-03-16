@@ -3,7 +3,7 @@ import { ethers as hethers } from 'hardhat'
 
 import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } from './utils'
 
-import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock } from './utils/contracts'
+import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock, AlwaysRevertMock } from './utils/contracts'
 import { Imposter } from './utils/imposter'
 import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, legacyTopology, merkleTopology, optimize2SignersTopology, printTopology, SignatureType, SimplifiedWalletConfig, subdigestOf, toSimplifiedConfig, WalletConfig } from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
@@ -1176,6 +1176,26 @@ contract('MainModule', (accounts: string[]) => {
         const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [hookSelector])
         await hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: data })
       })
+    })
+
+    it('Should not forward msg.data with less than 4 bytes', async () => {
+      const alwaysRevertMock = await AlwaysRevertMock.deploy()
+      const paddedSelector = "0x11223300"
+
+      const transaction = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('addHook', [paddedSelector, alwaysRevertMock.address])
+      }
+
+      await wallet.sendTransactions([transaction])
+
+      // Calling the wallet with '0x112233' should not forward the call to the hook
+      const tx = hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: "0x112233" }).then((t) => t.wait())
+      await expect(tx).to.be.fulfilled
+
+      // Calling the wallet with '0x11223300' should forward the call to the hook (and thus revert)
+      const tx2 = hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: "0x11223300" }).then((t) => t.wait())
+      await expect(tx2).to.be.rejected
     })
   })
 

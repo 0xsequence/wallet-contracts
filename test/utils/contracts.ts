@@ -50,6 +50,7 @@ export const GasBurnerMock = adapt<t.GasBurnerMock>("GasBurnerMock")
 export const GasEstimator = adapt<t.GasEstimator>("GasEstimator")
 export const MainModuleGasEstimation = adapt<t.MainModuleGasEstimation>("MainModuleGasEstimation")
 export const LibStringImp = adapt<t.LibStringImp>("LibStringImp")
+export const AlwaysRevertMock = adapt<t.AlwaysRevertMock>("AlwaysRevertMock")
 
 ;[
   LibBytesImpl,
