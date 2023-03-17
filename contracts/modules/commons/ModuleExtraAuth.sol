@@ -4,9 +4,10 @@ pragma solidity 0.8.18;
 import "./ModuleAuth.sol";
 import "./ModuleStorage.sol";
 import "./ModuleSelfAuth.sol";
+import "./ModuleERC165.sol";
 
 
-abstract contract ModuleExtraAuth is ModuleSelfAuth, ModuleAuth {
+abstract contract ModuleExtraAuth is ModuleERC165, ModuleSelfAuth, ModuleAuth {
   //                       EXTRA_IMAGE_HASH_KEY = keccak256("org.sequence.module.static.auth.extra.image.hash");
   bytes32 private constant EXTRA_IMAGE_HASH_KEY = bytes32(0x849e7bdc245db17e50b9f43086f1914d70eb4dab6dd89af4d541d53353ad97de);
 
@@ -51,5 +52,21 @@ abstract contract ModuleExtraAuth is ModuleSelfAuth, ModuleAuth {
        emit SetExtraImageHash(imageHash, 0);
       }
     }
+  }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override (
+    ModuleERC165,
+    ModuleAuth
+  ) virtual pure returns (bool) {
+    if (_interfaceID == type(ModuleExtraAuth).interfaceId) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
   }
 }

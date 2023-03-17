@@ -48,9 +48,10 @@ contract MainModuleUpgradable is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
-    ModuleAuth,
     ModuleAuthUpgradable,
+    ModuleAuthConvenience,
     ModuleCalls,
+    ModuleExtraAuth,
     ModuleUpdate,
     ModuleHooks,
     ModuleCreator

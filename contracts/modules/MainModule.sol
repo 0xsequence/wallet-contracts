@@ -50,9 +50,10 @@ contract MainModule is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
-    ModuleAuth,
     ModuleAuthFixed,
+    ModuleAuthConvenience,
     ModuleCalls,
+    ModuleExtraAuth,
     ModuleHooks,
     ModuleCreator
   ) pure returns (bool) {
