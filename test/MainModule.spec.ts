@@ -3,7 +3,7 @@ import { ethers as hethers } from 'hardhat'
 
 import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } from './utils'
 
-import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock } from './utils/contracts'
+import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock, AlwaysRevertMock } from './utils/contracts'
 import { Imposter } from './utils/imposter'
 import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, legacyTopology, merkleTopology, optimize2SignersTopology, printTopology, SignatureType, SimplifiedWalletConfig, subdigestOf, toSimplifiedConfig, WalletConfig } from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
@@ -456,6 +456,11 @@ contract('MainModule', (accounts: string[]) => {
 
       const tx2 = context.mainModuleUpgradable.execute([], 0, '0x')
       await expectToBeRejected(tx2, 'OnlyDelegatecall')
+    })
+
+    it('Should reject empty dynamic signature', async () => {
+      const tx = wallet.relayTransactions([{}], '0x0001000000000201ABFf4013541fd79ee5b6847C9dF3C9B34183C283000000')
+      await expectToBeRejected(tx, 'EmptySignature()')
     })
   })
 
@@ -1176,6 +1181,70 @@ contract('MainModule', (accounts: string[]) => {
         const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [hookSelector])
         await hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: data })
       })
+    })
+
+    it('Should not forward msg.data with less than 4 bytes', async () => {
+      const alwaysRevertMock = await AlwaysRevertMock.deploy()
+      const paddedSelector = "0x11223300"
+
+      const transaction = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('addHook', [paddedSelector, alwaysRevertMock.address])
+      }
+
+      await wallet.sendTransactions([transaction])
+
+      // Calling the wallet with '0x112233' should not forward the call to the hook
+      const tx = hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: "0x112233" }).then((t) => t.wait())
+      await expect(tx).to.be.fulfilled
+
+      // Calling the wallet with '0x11223300' should forward the call to the hook (and thus revert)
+      const tx2 = hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: "0x11223300" }).then((t) => t.wait())
+      await expect(tx2).to.be.rejected
+    })
+
+    it('Should emit an event when adding a hook', async () => {
+      const selector = '0x2385ac0a'
+      const implementation = ethers.Wallet.createRandom().address
+
+      const transaction = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('addHook', [selector, implementation])
+      }
+
+      const receipt = await wallet.sendTransactions([transaction]).then((t) => t.wait())
+      const event = receipt.events?.find((e) => e.event === 'DefinedHook')
+      expect(event).to.not.be.undefined
+      const decode = event!.decode!(event!.data)
+      expect(decode._signature).to.equal(selector)
+      expect(decode._implementation).to.equal(implementation)
+    })
+
+    it('Should emit an event when removing a hook', async () => {
+      const selector = '0x2385ac0a'
+      const implementation = ethers.Wallet.createRandom().address
+
+      const transaction1 = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('addHook', [selector, implementation])
+      }
+      
+
+      await wallet.sendTransactions([transaction1]).then((t) => t.wait())
+
+      const transaction2 = {
+        target: wallet.address,
+        data: wallet.mainModule.interface.encodeFunctionData('removeHook', [selector])
+      }
+      
+
+      const receipt = await wallet.sendTransactions([transaction2]).then((t) => t.wait())
+
+      const event = receipt.events?.find((e) => e.event === 'DefinedHook')
+      expect(event).to.not.be.undefined
+      const decode = event!.decode!(event!.data)
+      expect(decode._signature).to.equal(selector)
+      expect(decode._implementation).to.equal(ethers.constants.AddressZero)
     })
   })
 

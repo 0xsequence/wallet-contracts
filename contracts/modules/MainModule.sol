@@ -1,21 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.18;
-pragma experimental ABIEncoderV2;
 
-import "../utils/SignatureValidator.sol";
-
-import "./commons/Implementation.sol";
 import "./commons/ModuleAuthFixed.sol";
 import "./commons/ModuleHooks.sol";
 import "./commons/ModuleCalls.sol";
 import "./commons/ModuleCreator.sol";
 import "./commons/ModuleExtraAuth.sol";
 import "./commons/ModuleAuthConvenience.sol";
-
-import "../interfaces/receivers/IERC1155Receiver.sol";
-import "../interfaces/receivers/IERC721Receiver.sol";
-
-import "../interfaces/IERC1271Wallet.sol";
 
 
 /**
@@ -58,9 +49,10 @@ contract MainModule is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
-    ModuleAuth,
     ModuleAuthFixed,
+    ModuleAuthConvenience,
     ModuleCalls,
+    ModuleExtraAuth,
     ModuleHooks,
     ModuleCreator
   ) pure returns (bool) {

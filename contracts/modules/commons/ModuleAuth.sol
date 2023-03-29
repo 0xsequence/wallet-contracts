@@ -2,7 +2,6 @@
 pragma solidity 0.8.18;
 
 import "../../utils/LibBytes.sol";
-import "../../utils/SignatureValidator.sol";
 import "../../interfaces/IERC1271Wallet.sol";
 
 import "./interfaces/IModuleAuth.sol";

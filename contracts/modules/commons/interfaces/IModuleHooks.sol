@@ -7,6 +7,9 @@ interface IModuleHooks {
   error HookAlreadyExists(bytes4 _signature);
   error HookDoesNotExist(bytes4 _signature);
 
+  // Events
+  event DefinedHook(bytes4 _signature, address _implementation);
+
   /**
    * @notice Reads the implementation hook of a signature
    * @param _signature Signature function

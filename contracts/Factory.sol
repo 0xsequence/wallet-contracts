@@ -5,6 +5,8 @@ import "./Wallet.sol";
 
 
 contract Factory {
+  error DeployFailed(address _mainModule, bytes32 _salt);
+
   /**
    * @notice Will deploy a new wallet instance
    * @param _mainModule Address of the main module to be used by the wallet
@@ -17,5 +19,6 @@ contract Factory {
   function deploy(address _mainModule, bytes32 _salt) public payable returns (address _contract) {
     bytes memory code = abi.encodePacked(Wallet.creationCode, uint256(uint160(_mainModule)));
     assembly { _contract := create2(callvalue(), add(code, 32), mload(code), _salt) }
+    if (_contract == address(0)) revert DeployFailed(_mainModule, _salt);
   }
 }

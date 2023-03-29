@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.18;
-pragma experimental ABIEncoderV2;
 
-import "./commons/ModuleIgnoreAuthUpgradable.sol";
-import "./commons/ModuleIgnoreNonceCalls.sol";
+import "./commons/gas-estimation/ModuleIgnoreAuthUpgradable.sol";
+import "./commons/gas-estimation/ModuleIgnoreNonceCalls.sol";
 import "./commons/ModuleHooks.sol";
 import "./commons/ModuleUpdate.sol";
 import "./commons/ModuleCreator.sol";

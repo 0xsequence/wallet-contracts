@@ -4,11 +4,13 @@ pragma solidity 0.8.18;
 import "./ModuleSelfAuth.sol";
 import "./ModuleAuth.sol";
 import "./ModuleIPFS.sol";
+import "./ModuleERC165.sol";
 
 import "../../utils/LibString.sol";
 
 
-abstract contract ModuleAuthConvenience is ModuleSelfAuth, ModuleAuth, ModuleIPFS {
+
+abstract contract ModuleAuthConvenience is ModuleERC165, ModuleSelfAuth, ModuleAuth, ModuleIPFS {
 
   /**
   * @notice Updates the image hash and the IPFS root in a single operation.
@@ -24,5 +26,21 @@ abstract contract ModuleAuthConvenience is ModuleSelfAuth, ModuleAuth, ModuleIPF
   ) external onlySelf {
     _updateImageHash(_imageHash);
     _updateIPFSRoot(_ipfsRoot);
+  }
+
+  /**
+   * @notice Query if a contract implements an interface
+   * @param _interfaceID The interface identifier, as specified in ERC-165
+   * @return `true` if the contract implements `_interfaceID`
+   */
+  function supportsInterface(bytes4 _interfaceID) public override (
+    ModuleERC165,
+    ModuleAuth
+  ) virtual pure returns (bool) {
+    if (_interfaceID == type(ModuleAuthConvenience).interfaceId) {
+      return true;
+    }
+
+    return super.supportsInterface(_interfaceID);
   }
 }

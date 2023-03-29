@@ -154,7 +154,7 @@ contract SignatureValidatorTest is AdvTest {
   }
 
   function test_isValidSignature_Fail_EmptySignature(bytes32 _hash, address _signer) external {
-    vm.expectRevert(stdError.arithmeticError);
+    vm.expectRevert(abi.encodeWithSignature('EmptySignature()'));
     lib.isValidSignature(_hash, _signer, bytes(''));
   }
 

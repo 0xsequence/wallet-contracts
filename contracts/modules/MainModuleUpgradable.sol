@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.18;
-pragma experimental ABIEncoderV2;
 
 import "./commons/ModuleAuthUpgradable.sol";
 import "./commons/ModuleHooks.sol";
@@ -48,9 +47,10 @@ contract MainModuleUpgradable is
   function supportsInterface(
     bytes4 _interfaceID
   ) public override(
-    ModuleAuth,
     ModuleAuthUpgradable,
+    ModuleAuthConvenience,
     ModuleCalls,
+    ModuleExtraAuth,
     ModuleUpdate,
     ModuleHooks,
     ModuleCreator
