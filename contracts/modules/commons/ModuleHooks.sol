@@ -8,11 +8,12 @@ import "./ModuleStorage.sol";
 import "./ModuleERC165.sol";
 
 import "../../interfaces/receivers/IERC1155Receiver.sol";
+import "../../interfaces/receivers/IERC777Receiver.sol";
 import "../../interfaces/receivers/IERC721Receiver.sol";
 import "../../interfaces/receivers/IERC223Receiver.sol";
 
 
-contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IERC223Receiver, IModuleHooks, ModuleERC165, ModuleSelfAuth {
+contract ModuleHooks is IERC1155Receiver, IERC777Receiver, IERC721Receiver, IERC223Receiver, IModuleHooks, ModuleERC165, ModuleSelfAuth {
   //                       HOOKS_KEY = keccak256("org.arcadeum.module.hooks.hooks");
   bytes32 private constant HOOKS_KEY = bytes32(0xbe27a319efc8734e89e26ba4bc95f5c788584163b959f03fa04e2d7ab4b9a120);
 
@@ -95,6 +96,12 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IERC223Receiver, IMod
   }
 
   /**
+   * @notice Handle the receipt of ERC777 token types.
+   */
+   // solhint-disable-next-line no-empty-blocks
+  function tokensReceived(address, address, address, uint256, bytes calldata, bytes calldata) external override virtual {}
+
+  /**
    * @notice Handle the receipt of a single ERC721 token.
    * @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
    */
@@ -140,6 +147,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IERC223Receiver, IMod
     if (
       _interfaceID == type(IModuleHooks).interfaceId ||
       _interfaceID == type(IERC1155Receiver).interfaceId ||
+      _interfaceID == type(IERC777Receiver).interfaceId ||
       _interfaceID == type(IERC721Receiver).interfaceId ||
       _interfaceID == type(IERC223Receiver).interfaceId
     ) {
