@@ -34,9 +34,17 @@ const config: HardhatUserConfig = {
     kovan: networkConfig('kovan'),
     goerli: networkConfig('goerli'),
     polygon: networkConfig('polygon'),
+    polygonZkevm: networkConfig('polygon-zkevm'),
     mumbai: networkConfig('mumbai'),
     arbitrum: networkConfig('arbitrum'),
     arbitrumTestnet: networkConfig('arbitrum-testnet'),
+    arbitrumNova: networkConfig('arbitrum-nova'),
+    optimism: networkConfig('optimism'),
+    bnb: networkConfig('bnb'),
+    bnbTestnet: networkConfig('bnb-testnet'),
+    gnosis: networkConfig('gnosis'),
+    avalanche: networkConfig('avalanche'),
+    avalancheFuji: networkConfig('avalanche-fuji'),
     ganache: ganacheNetwork,
     coverage: {
       url: 'http://localhost:8555'

@@ -3,7 +3,7 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'polygon' | 'arbitrum' | 'arbitrum-testnet'
+type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'polygon' | 'arbitrum' | 'arbitrum-testnet' | 'arbitrum-nova' | 'optimism' | 'bnb' | 'gnosis' | 'polygon-zkevm' | 'avalanche' | 'bnb-testnet' | 'avalanche-fuji'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -19,10 +19,6 @@ export const getEnvConfig = (env: string) => {
 
 export const networkGasMultiplier = (network: EthereumNetworksTypes): number => {
   switch (network) {
-    case 'arbitrum-testnet':
-    case 'arbitrum':
-      return 5
-
     default:
       return 1
   }
@@ -33,7 +29,7 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
 
   switch (network) {
     case 'mumbai':
-      return 'https://rpc-mumbai.matic.today/'
+      return 'https://endpoints.omniatech.io/v1/matic/mumbai/public'
 
     case 'polygon':
       return 'https://nodes.sequence.app/polygon'
@@ -42,7 +38,31 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
       return 'https://rinkeby.arbitrum.io/rpc'
 
     case 'arbitrum':
-      return 'https://arb1.arbitrum.io/rpc'
+      return 'https://endpoints.omniatech.io/v1/arbitrum/one/public'
+    
+    case 'arbitrum-nova':
+      return 'https://nova.arbitrum.io/rpc'
+
+    case 'optimism':
+      return 'https://endpoints.omniatech.io/v1/op/mainnet/public'
+
+    case 'bnb':
+      return 'https://bsc-dataseed3.binance.org'
+
+    case 'gnosis':
+      return 'https://gnosis-mainnet.public.blastapi.io'
+
+    case 'polygon-zkevm':
+      return 'https://zkevm-rpc.com'
+
+    case 'avalanche':
+      return 'https://endpoints.omniatech.io/v1/avax/mainnet/public'
+
+    case 'bnb-testnet':
+      return 'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+
+    case 'avalanche-fuji':
+      return 'https://endpoints.omniatech.io/v1/avax/fuji/public'
 
     default:
       return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
@@ -79,6 +99,30 @@ export const networkChainId = (network: EthereumNetworksTypes): number => {
 
     case 'kovan':
       return 42
+
+    case 'arbitrum-nova':
+      return 42170
+
+    case 'optimism':
+      return 10
+
+    case 'bnb':
+      return 56
+
+    case 'gnosis':
+      return 100
+
+    case 'polygon-zkevm':
+      return 1101
+
+    case 'avalanche':
+      return 43114
+
+    case 'bnb-testnet':
+      return 97
+
+    case 'avalanche-fuji':
+      return 43113
   }
 }
 
