@@ -13,7 +13,7 @@ contract RequireUtils {
    * @param _expiration  Expiration to check
    */
   function requireNonExpired(uint256 _expiration) external view {
-    require(block.timestamp < _expiration, "RequireUtils#requireNonExpired: EXPIRED");
+    require(block.timestamp <= _expiration, "RequireUtils#requireNonExpired: EXPIRED");
   }
 
   /**
