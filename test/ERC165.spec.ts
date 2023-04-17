@@ -6,6 +6,7 @@ import { expect, interfaceIdOf, randomHex } from './utils'
 const interfaceIds = [
   'IERC223Receiver',
   'IERC721Receiver',
+  'IERC777Receiver',
   'IERC1155Receiver',
   'IERC1271Wallet',
   'IModuleAuth',
