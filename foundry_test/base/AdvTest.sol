@@ -5,17 +5,17 @@ import "forge-std/Test.sol";
 
 
 contract AdvTest is Test {
-  function signAndPack(uint256 _pk, bytes32 _hash) internal returns (bytes memory) {
+  function signAndPack(uint256 _pk, bytes32 _hash) internal pure returns (bytes memory) {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(_pk, _hash);
     return abi.encodePacked(r, s, v);
   }
 
-  function signAndPack(uint256 _pk, bytes32 _hash, uint8 _sufix) internal returns (bytes memory) {
+  function signAndPack(uint256 _pk, bytes32 _hash, uint8 _sufix) internal pure returns (bytes memory) {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(_pk, _hash);
     return abi.encodePacked(r, s, v, _sufix);
   }
 
-  function mayBoundArr(uint256 _size) internal returns (uint256) {
+  function mayBoundArr(uint256 _size) internal view returns (uint256) {
     try vm.envUint('MAX_ARRAY_LEN') returns (uint256 b) {
       return b == 0 ? _size : bound(_size, 0, b);
     } catch {
@@ -28,24 +28,20 @@ contract AdvTest is Test {
     address vm = address(0x004e59b44847b379578588920ca78fbf26c0b4956c);
     address c3 = address(0x00000000000000000000636f6e736f6c652e6c6f67);
 
-    _a = boundNoPrecompile(_a);
-    _a = boundDiff(_a, c2, vm, c3, address(this));
+    boundNoPrecompile(_a);
+    boundDiff(_a, c2, vm, c3, address(this));
 
     return _a;
   }
 
   function boundNoPrecompile(address _a) internal pure returns (address) {
-    if (uint160(_a) > 0 && uint160(_a) < 10) {
-      return address(10);
-    }
-
+    vm.assume(uint160(_a)> 10);
     return _a;
   }
 
   function boundDiff(address _a, address _b) internal pure returns (address) {
-    if (_a != _b) return _a;
-
-    return address(uint160(_b) == type(uint160).max ? 0 : uint160(_b) + 1);
+    vm.assume(_a != _b);
+    return _a;
   }
 
   function boundDiff(address _a, address _b, address _c) internal pure returns (address) {
@@ -73,30 +69,18 @@ contract AdvTest is Test {
   }
 
   function boundDiff(address _a, address[] memory _b) internal pure returns (address) {
-    unchecked {
-      while (inSet(_a, _b)) {
-        _a = address(uint160(_a) + 1);
-      }
-
-      return _a;
-    }
+    vm.assume(!inSet(_a, _b));
+    return _a;
   }
 
   function boundPk(uint256 _a) internal pure returns (uint256) {
-    if (_a > 0 && _a <= 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140) {
-      return _a;
-    }
-
-    uint256 mod = _a % 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140;
-    return 1 + mod;
+    vm.assume(_a > 0 && _a <= 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140);
+    return _a;
   }
 
   function boundDiff(uint256 _a, uint256 _b) internal pure returns (uint256) {
-    if (_a != _b) return _a;
-
-    unchecked {
-      return _a + 1;
-    }
+    vm.assume(_a != _b);
+    return _a;
   }
 
   function boundDiff(uint256 _a, uint256 _b, uint256 _c) internal pure returns (uint256) {
@@ -157,13 +141,8 @@ contract AdvTest is Test {
   }
 
   function boundDiff(uint256 _a, uint256[] memory _b) internal pure returns (uint256) {
-    unchecked {
-      while (inSet(_a, _b)) {
-        _a++;
-      }
-
-      return _a;
-    }
+    vm.assume(!inSet(_a, _b));
+    return _a;
   }
 
   function inSet(uint256 _a, uint256[] memory _b) internal pure returns (bool) {
@@ -188,6 +167,16 @@ contract AdvTest is Test {
 
       return false;
     }
+  }
+
+  function boundNoContract(address _a) internal view returns (address) {
+    vm.assume(_a.code.length == 0);
+    return _a;
+  }
+
+  function boundNoBalance(address _a) internal view returns (address) {
+    vm.assume(_a.balance == 0);
+    return _a;
   }
 
   function replicate(bytes memory _data) internal {

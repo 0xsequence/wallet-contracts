@@ -26,8 +26,8 @@ contract SequenceNoChainIdSigTest is AdvTest {
   }
 
   function test_subdigest_DiffAddress(bytes32 _digest, address _addr1, address _addr2) external {
-    _addr1 = boundNoSys(_addr1);
-    _addr2 = boundNoSys(_addr2);
+    boundNoContract(boundNoSys(_addr1));
+    boundNoContract(boundNoSys(_addr2));
 
     vm.etch(_addr1, address(lib).code);
     vm.etch(_addr2, address(lib).code);

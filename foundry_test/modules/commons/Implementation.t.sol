@@ -29,7 +29,7 @@ contract NextImplementation is ImplementationImp {
 
 contract ImplementationTest is AdvTest {
   function test_setImplementation(address _imp, address _next) external {
-    _imp = boundNoSys(_imp);
+    boundNoContract(boundNoSys(_imp));
 
     vm.etch(_imp, address(new ImplementationImp()).code);
 
@@ -44,19 +44,19 @@ contract ImplementationTest is AdvTest {
   function test_setImplementation_matchWallet(bytes32 _salt, address _imp, address _imp2) external {
     Factory factory = new Factory();
 
-    _imp = boundNoSys(_imp);
-    _imp2 = boundNoSys(_imp2);
+    ImplementationImp imp = new ImplementationImp();
+    ImplementationImp imp2 = new NextImplementation();
 
-    _imp = boundDiff(_imp, address(factory));
-    _imp2 = boundDiff(_imp2, address(factory));
+    boundNoContract(boundDiff(boundNoSys(_imp), address(factory)));
+    boundNoContract(boundDiff(boundNoSys(_imp2), address(factory)));
 
-    vm.etch(_imp, address(new ImplementationImp()).code);
+    vm.etch(_imp, address(imp).code);
     address wallet = factory.deploy(_imp, _salt);
 
     assertEq(ImplementationImp(wallet).getImplementation(), _imp);
     assertEq(ImplementationImp(wallet).stub(), 1);
 
-    vm.etch(_imp2, address(new NextImplementation()).code);
+    vm.etch(_imp2, address(imp2).code);
 
     ImplementationImp(wallet).setImplementation(_imp2);
 

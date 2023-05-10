@@ -8,7 +8,7 @@ import "foundry_test/base/AdvTest.sol";
 
 contract LibAddressTest is AdvTest {
   function test_isContract(address _addr, bytes calldata _code) external {
-    _addr = boundNoSys(_addr);
+    boundNoSys(_addr);
 
     vm.etch(_addr, _code);
     assertEq(LibAddress.isContract(_addr), _code.length > 0);

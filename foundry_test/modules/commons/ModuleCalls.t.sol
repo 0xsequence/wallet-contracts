@@ -148,7 +148,7 @@ contract ModuleCallsTest is AdvTest {
 
     for (uint256 i = 0; i < size; i++) {
       txs[i].data = _rtxs[i].data;
-      txs[i].target = boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory));
+      txs[i].target = boundNoBalance(boundNoContract(boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory))));
       txs[i].value = bound(_rtxs[i].value, 0, type(uint256).max - total);
 
       total += txs[i].value;
@@ -207,7 +207,7 @@ contract ModuleCallsTest is AdvTest {
         txs[i].revertOnError = _revertsOnErr;
         txs[i].delegateCall = _delegateCall;
       } else {
-        txs[i].target = boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory));
+        txs[i].target = boundNoBalance(boundNoContract(boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory))));
       }
 
       txs[i].data = _rtxs[i].data;
@@ -271,7 +271,7 @@ contract ModuleCallsTest is AdvTest {
 
     for (uint256 i = 0; i < size; i++) {
       txs[i].data = _rtxs[i].data;
-      txs[i].target = boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory));
+      txs[i].target = boundNoBalance(boundNoContract(boundDiff(boundNoSys(_rtxs[i].target), address(template), address(imp), address(factory))));
       txs[i].value = bound(_rtxs[i].value, 0, type(uint256).max - total);
 
       total += txs[i].value;

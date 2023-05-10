@@ -25,7 +25,7 @@ contract SequenceDynamicSigTest is AdvTest {
   }
 
   function test_recover_ignoreFirstByte(uint8 _first, bytes32 _subdigest, uint256 _pk, uint16 _threshold, uint32 _checkpoint, uint8 _weight) external {
-    _pk = boundPk(_pk);
+    boundPk(_pk);
 
     bytes memory encoded = abi.encodePacked(_threshold, _checkpoint, uint8(0), _weight, signAndPack(_pk, _subdigest, 1));
 
