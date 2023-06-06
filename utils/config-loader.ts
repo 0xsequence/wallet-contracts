@@ -3,7 +3,7 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'polygon' | 'arbitrum' | 'arbitrum-testnet' | 'arbitrum-nova' | 'optimism' | 'bnb' | 'gnosis' | 'polygon-zkevm' | 'avalanche' | 'bnb-testnet' | 'avalanche-fuji'
+type EthereumNetworksTypes = 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'polygon' | 'arbitrum' | 'arbitrum-goerli' | 'arbitrum-nova' | 'optimism' | 'bnb' | 'gnosis' | 'polygon-zkevm' | 'avalanche' | 'bnb-testnet' | 'avalanche-fuji'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -34,8 +34,8 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
     case 'polygon':
       return 'https://nodes.sequence.app/polygon'
 
-    case 'arbitrum-testnet':
-      return 'https://rinkeby.arbitrum.io/rpc'
+    case 'arbitrum-goerli':
+      return 'https://goerli-rollup.arbitrum.io/rpc'
 
     case 'arbitrum':
       return 'https://endpoints.omniatech.io/v1/arbitrum/one/public'
@@ -70,8 +70,6 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
 }
 
 export const networkChainId = (network: EthereumNetworksTypes): number => {
-  const config = getEnvConfig('PROD')
-
   switch (network) {
     case 'mumbai':
       return 80001
@@ -82,14 +80,11 @@ export const networkChainId = (network: EthereumNetworksTypes): number => {
     case 'polygon':
       return 137
 
-    case 'arbitrum-testnet':
-      return 421611
+    case 'arbitrum-goerli':
+      return 421613
 
     case 'arbitrum':
       return 42161
-
-    case 'rinkeby':
-      return 4
 
     case 'goerli':
       return 5
@@ -127,12 +122,13 @@ export const networkChainId = (network: EthereumNetworksTypes): number => {
 }
 
 export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig & { etherscan?: string } => {
-  const config = getEnvConfig('PROD')
+  const prodConfig = getEnvConfig('PROD')
+  const networkConfig = getEnvConfig(network)
   return {
     url: networkRpcUrl(network),
     chainId: networkChainId(network),
     accounts: {
-      mnemonic: config['ETH_MNEMONIC'],
+      mnemonic: networkConfig['ETH_MNEMONIC'] ?? prodConfig['ETH_MNEMONIC'],
       initialIndex: 0,
       count: 10,
       path: `m/44'/60'/0'/0`,
@@ -143,6 +139,6 @@ export const networkConfig = (network: EthereumNetworksTypes): HttpNetworkConfig
     gasMultiplier: networkGasMultiplier(network),
     timeout: 20000,
     httpHeaders: {},
-    etherscan: config['ETHERSCAN']
+    etherscan: networkConfig['ETHERSCAN'] ?? prodConfig['ETHERSCAN']
   }
 }
