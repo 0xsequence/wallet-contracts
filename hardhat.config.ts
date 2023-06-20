@@ -45,6 +45,10 @@ const config: HardhatUserConfig = {
     gnosis: networkConfig('gnosis'),
     avalanche: networkConfig('avalanche'),
     avalancheFuji: networkConfig('avalanche-fuji'),
+    // Permissioned chains below
+    oasysHomeverse: networkConfig('oasys-homeverse'),
+    oasysHomeverseTestnet: networkConfig('oasys-homeverse-testnet'),
+    // Local chain
     ganache: ganacheNetwork,
     coverage: {
       url: 'http://localhost:8555'

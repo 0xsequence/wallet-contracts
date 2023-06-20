@@ -3,7 +3,26 @@ import * as path from 'path'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { ethers } from 'ethers'
 
-type EthereumNetworksTypes = 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'mainnet' | 'mumbai' | 'polygon' | 'arbitrum' | 'arbitrum-testnet' | 'arbitrum-nova' | 'optimism' | 'bnb' | 'gnosis' | 'polygon-zkevm' | 'avalanche' | 'bnb-testnet' | 'avalanche-fuji'
+type EthereumNetworksTypes =
+  | 'rinkeby'
+  | 'ropsten'
+  | 'kovan'
+  | 'goerli'
+  | 'mainnet'
+  | 'mumbai'
+  | 'polygon'
+  | 'polygon-zkevm'
+  | 'arbitrum'
+  | 'arbitrum-testnet'
+  | 'arbitrum-nova'
+  | 'optimism'
+  | 'bnb'
+  | 'bnb-testnet'
+  | 'gnosis'
+  | 'avalanche'
+  | 'avalanche-fuji'
+  | 'oasys-homeverse'
+  | 'oasys-homeverse-testnet'
 
 export const getEnvConfig = (env: string) => {
   const envFile = path.resolve(__dirname, `../config/${env}.env`)
@@ -64,6 +83,12 @@ export const networkRpcUrl = (network: EthereumNetworksTypes): string => {
     case 'avalanche-fuji':
       return 'https://endpoints.omniatech.io/v1/avax/fuji/public'
 
+    case 'oasys-homeverse':
+      return 'https://rpc.mainnet.oasys.homeverse.games'
+
+    case 'oasys-homeverse-testnet':
+      return 'https://rpc.testnet.oasys.homeverse.games'
+
     default:
       return `https://${network}.infura.io/v3/${config['INFURA_API_KEY']}`
   }
@@ -123,6 +148,12 @@ export const networkChainId = (network: EthereumNetworksTypes): number => {
 
     case 'avalanche-fuji':
       return 43113
+
+    case 'oasys-homeverse':
+      return 19011
+
+    case 'oasys-homeverse-testnet':
+      return 40875
   }
 }
 
