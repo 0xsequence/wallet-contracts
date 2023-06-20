@@ -73,8 +73,8 @@ contract AdvTest is Test {
     return _a;
   }
 
-  function boundPk(uint256 _a) internal pure returns (uint256) {
-    vm.assume(_a > 0 && _a <= 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140);
+  function boundPk(uint256 _a) internal view returns (uint256) {
+    _a = bound(_a, 1, 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364139);
     return _a;
   }
 

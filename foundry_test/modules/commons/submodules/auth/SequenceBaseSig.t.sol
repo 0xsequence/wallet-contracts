@@ -189,7 +189,7 @@ contract SequenceBaseSigTest is AdvTest {
 
     uint256 size = mayBoundArr(_pks.length);
     for (uint256 i = 0; i < size; i++) {
-      boundPk(_pks[i]);
+      _pks[i] = boundPk(_pks[i]);
 
       uint8 randomWeight = uint8(bound(uint256(keccak256(abi.encode(_pks[i], i, _seed))), 0, type(uint8).max));
       address addr = vm.addr(_pks[i]);
@@ -233,7 +233,7 @@ contract SequenceBaseSigTest is AdvTest {
         signature = abi.encodePacked(FLAG_BRANCH, uint24(signature.length), signature);
       }
 
-      boundPk(_pks[i]);
+      _pks[i] = boundPk(_pks[i]);
 
       uint8 randomWeight = uint8(bound(uint256(keccak256(abi.encode(_pks[i], i, _seed))), 0, type(uint8).max));
       address addr = vm.addr(_pks[i]);
@@ -283,7 +283,7 @@ contract SequenceBaseSigTest is AdvTest {
   }
 
   function test_recover(bytes32 _subdigest, uint256 _pk, uint32 _checkpoint, uint16 _threshold, uint8 _weight) external {
-    boundPk(_pk);
+    _pk = boundPk(_pk);
 
     bytes memory signature = signAndPack(_pk, _subdigest, 1);
     address addr = vm.addr(_pk);

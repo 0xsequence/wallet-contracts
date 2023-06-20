@@ -60,7 +60,7 @@ contract SubModuleNonceTest is AdvTest {
     requireUtils.requireNonExpired(_expiration);
   }
 
-  function test_requireNonExpiredWithExactBlock(uint256 _expiration) external {
+  function test_requireNonExpiredWithExactBlock() external view {
     requireUtils.requireNonExpired(block.timestamp);
   }
 
