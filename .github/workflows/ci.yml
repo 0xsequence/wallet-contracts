@@ -38,6 +38,7 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-lerna-${{ hashFiles('**/package.json', '**/yarn.lock') }}
+      - run: yarn build
       - run: yarn benchmark
 
   lint-ts:
@@ -92,32 +93,11 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-lerna-${{ hashFiles('**/package.json', '**/yarn.lock') }}
+      - run: yarn build
       - run: yarn test
 
-  # coverage:
-  #   name: Coverage
-  #   runs-on: ubuntu-latest
-  #   needs: [install]
-  #   steps:
-  #     - uses: actions/checkout@v1
-  #     - uses: actions/setup-node@v1
-  #       with:
-  #         node-version: 18
-  #     - uses: actions/cache@master
-  #       id: yarn-cache
-  #       with:
-  #         path: |
-  #           node_modules
-  #           */*/node_modules
-  #         key: ${{ runner.os }}-lerna-${{ hashFiles('**/package.json', '**/yarn.lock') }}
-  #     - run: yarn coverage || true
-  #     - name: Coveralls
-  #       uses: coverallsapp/github-action@master
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-
-  build:
-    name: Is latest build commited?
+  coverage:
+    name: Coverage
     runs-on: ubuntu-latest
     needs: [install]
     steps:
@@ -132,5 +112,40 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-lerna-${{ hashFiles('**/package.json', '**/yarn.lock') }}
-      - run: yarn test
-      - run: git diff --exit-code
+      - run: yarn coverage || true
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  foundry-tests:
+    name: Foundry tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run tests
+        run: FOUNDRY_FUZZ_RUNS=2048 MAX_ARRAY_LEN=32 forge test -vvv
+
+  foundry-tests-long-arrays:
+    name: Foundry tests (long arrays)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run tests
+        run: FOUNDRY_FUZZ_RUNS=1024 forge test -vvv

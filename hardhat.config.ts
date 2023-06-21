@@ -1,4 +1,4 @@
-import { HardhatUserConfig } from 'hardhat/config'
+import { HardhatUserConfig, task } from 'hardhat/config'
 import { networkConfig } from './utils/config-loader'
 
 import '@nomiclabs/hardhat-truffle5'
@@ -10,6 +10,8 @@ import "@tenderly/hardhat-tenderly"
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
 
+import './utils/benchmarker'
+
 const ganacheNetwork = {
   url: 'http://127.0.0.1:8545',
   blockGasLimit: 6000000000
@@ -17,38 +19,38 @@ const ganacheNetwork = {
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.7.6',
+    version: '0.8.18',
     settings: {
       optimizer: {
         enabled: true,
-        runs: 999999,
-        details: {
-          yul: true
-        }
+        runs: 500000
       }
     }
-  },
-  paths: {
-    root: 'src',
-    tests: '../tests'
   },
   networks: {
     mainnet: networkConfig('mainnet'),
     ropsten: networkConfig('ropsten'),
+    rinkeby: networkConfig('rinkeby'),
     kovan: networkConfig('kovan'),
     goerli: networkConfig('goerli'),
-    matic: networkConfig('matic'),
+    polygon: networkConfig('polygon'),
+    polygonZkevm: networkConfig('polygon-zkevm'),
     mumbai: networkConfig('mumbai'),
     arbitrum: networkConfig('arbitrum'),
-    arbitrumGoerli: networkConfig('arbitrum-goerli'),
+    arbitrumTestnet: networkConfig('arbitrum-testnet'),
+    arbitrumNova: networkConfig('arbitrum-nova'),
     optimism: networkConfig('optimism'),
-    metis: networkConfig('metis'),
-    nova: networkConfig('nova'),
+    bnb: networkConfig('bnb'),
+    bnbTestnet: networkConfig('bnb-testnet'),
+    gnosis: networkConfig('gnosis'),
     avalanche: networkConfig('avalanche'),
-    avalancheTestnet: networkConfig('avalanche-testnet'),
+    avalancheFuji: networkConfig('avalanche-fuji'),
     ganache: ganacheNetwork,
     coverage: {
       url: 'http://localhost:8555'
+    },
+    hardhat: {
+      blockGasLimit: 60000000
     }
   },
   etherscan: {
@@ -65,7 +67,6 @@ const config: HardhatUserConfig = {
     gasPrice: 21,
     showTimeSpent: true
   },
-  // @ts-ignore
   tenderly: {
     project: "horizon/sequence-dev-1",
     username: "Agusx1211-horizon",
