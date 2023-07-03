@@ -46,9 +46,6 @@ const config: HardhatUserConfig = {
     avalanche: networkConfig('avalanche'),
     avalancheFuji: networkConfig('avalanche-fuji'),
     ganache: ganacheNetwork,
-    coverage: {
-      url: 'http://localhost:8555'
-    },
     hardhat: {
       blockGasLimit: 60000000
     }
