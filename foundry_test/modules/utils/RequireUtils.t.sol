@@ -54,14 +54,10 @@ contract SubModuleNonceTest is AdvTest {
   }
 
   function test_requireNonExpired(uint256 _expiration) external {
-    if (block.timestamp > _expiration) {
+    if (block.timestamp >= _expiration) {
       vm.expectRevert(bytes('RequireUtils#requireNonExpired: EXPIRED'));
     }
     requireUtils.requireNonExpired(_expiration);
-  }
-
-  function test_requireNonExpiredWithExactBlock() external view {
-    requireUtils.requireNonExpired(block.timestamp);
   }
 
   function test_requireMinNonce(uint160 _space, uint96 _nonce, uint96 _nonceToCheck) external {
