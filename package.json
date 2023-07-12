@@ -11,6 +11,7 @@
     "benchmark": "BENCHMARK=true yarn test",
     "coverage": "COVERAGE=true NET_ID=1 hardhat coverage",
     "deploy": "hardhat run utils/deploy-contracts.ts --network",
+    "deploy:fixed": "hardhat run utils/deploy-fixed.ts --network",
     "verify": "hardhat verify --network",
     "release": "yarn publish src",
     "lint": "yarn lint:ts && yarn lint:sol",
@@ -35,6 +36,7 @@
     }
   },
   "devDependencies": {
+    "@0xsequence/deployer": "^0.21.5",
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
