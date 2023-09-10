@@ -20,7 +20,9 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
   }
 
   modifier onlyEntrypoint() {
-    require(msg.sender == entrypoint, 'EIP4337Hook: only 4337 or self'); //FIXME error obj
+    if (msg.sender != entrypoint) {
+      revert InvalidCaller();
+    }
     _;
   }
 
@@ -28,14 +30,14 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
    * Allow the EIP-4337 entrypoint to execute a transaction on the wallet.
    * @dev This function does not validate as the entrypoint is trusted to have called validateUserOp.
    * @dev Failure handling done by ModuleCalls.
+   * @notice This functions is only callable by the Entrypoint.
    */
   function eip4337SelfExecute(IModuleCalls.Transaction[] calldata txs) external payable onlyEntrypoint {
     // Self execute
     (bool success, ) = payable(address(this)).call{value: msg.value}(
       abi.encodeWithSelector(IModuleCalls.selfExecute.selector, txs)
     );
-    //FIXME Required? selfexecute should revert if it fails
-    require(success, 'call failed'); // FIXME Better error?
+    (success);
   }
 
   /**
@@ -48,8 +50,9 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
     bytes32 userOpHash,
     uint256 missingAccountFunds
   ) external onlyEntrypoint returns (uint256 validationData) {
-    // Check nonce
-    _validateNonce(userOp.nonce); //FIXME Sequence space encoding is diff to EIP-4337 encoding
+    // Check nonce.
+    // Note Sequence space encoding is diff to EIP-4337 encoding.
+    _validateNonce(userOp.nonce);
 
     // Check signature
     bytes32 ethHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", userOpHash));

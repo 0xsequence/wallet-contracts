@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import 'contracts/hooks/EIP4337Hook.sol';
+import 'contracts/hooks/interfaces/IEIP4337Hook.sol';
 import 'contracts/modules/commons/ModuleHooks.sol';
 import 'contracts/modules/MainModule.sol';
 import 'contracts/modules/MainModuleUpgradable.sol';
@@ -9,7 +10,7 @@ import 'contracts/Factory.sol';
 
 import 'foundry_test/base/AdvTest.sol';
 
-contract EIP4337HookTest is AdvTest {
+contract EIP4337HookTest is AdvTest, IEIP4337HookErrors {
   MainModule private template;
   EIP4337Hook private wallet;
 
@@ -40,7 +41,24 @@ contract EIP4337HookTest is AdvTest {
     uint256 value;
   }
 
-  function test_execute_sendEth(ToVal memory sendTx) external {
+  function test_4337execute_invalidCaller(ToVal memory sendTx, address sender) external {
+    vm.assume(sender != ENTRYPOINT);
+    IModuleCalls.Transaction[] memory txs = new IModuleCalls.Transaction[](1);
+    txs[0] = IModuleCalls.Transaction({
+      delegateCall: false,
+      revertOnError: false,
+      gasLimit: 0,
+      target: sendTx.target,
+      value: sendTx.value,
+      data: ''
+    });
+
+    vm.expectRevert(InvalidCaller.selector);
+    vm.prank(sender);
+    wallet.eip4337SelfExecute(txs);
+  }
+
+  function test_4337execute_sendEth(ToVal memory sendTx) external {
     vm.assume(sendTx.target.code.length == 0); // Non contract
     uint256 walletBal = address(wallet).balance;
     vm.assume(sendTx.value <= walletBal);
