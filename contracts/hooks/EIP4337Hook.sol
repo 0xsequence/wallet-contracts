@@ -29,7 +29,6 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
   /**
    * Allow the EIP-4337 entrypoint to execute a transaction on the wallet.
    * @dev This function does not validate as the entrypoint is trusted to have called validateUserOp.
-   * @dev Failure handling done by ModuleCalls.
    * @notice This functions is only callable by the Entrypoint.
    */
   function eip4337SelfExecute(IModuleCalls.Transaction[] calldata txs) external payable onlyEntrypoint {
@@ -37,7 +36,13 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
     (bool success, ) = payable(address(this)).call{value: msg.value}(
       abi.encodeWithSelector(IModuleCalls.selfExecute.selector, txs)
     );
-    (success);
+    if (!success) {
+      // Bubble up revert reason
+      bytes memory reason = LibOptim.returnData();
+      assembly {
+        revert(add(reason, 0x20), mload(reason))
+      }
+    }
   }
 
   /**
@@ -55,7 +60,8 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
     _validateNonce(userOp.nonce);
 
     // Check signature
-    bytes32 ethHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", userOpHash));
+    bytes32 ethHash = keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n32', userOpHash));
+    // solhint-disable-next-line avoid-low-level-calls
     (bool sigSuccess, bytes memory data) = address(this).call{gas: type(uint256).max}(
       abi.encodeWithSelector(ERC1271_SELECTOR, ethHash, userOp.signature)
     );
@@ -66,7 +72,7 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
 
     // Pay entrypoint
     if (missingAccountFunds != 0) {
-      (bool success,) = payable(msg.sender).call{value: missingAccountFunds, gas: type(uint256).max}('');
+      (bool success, ) = payable(msg.sender).call{value: missingAccountFunds, gas: type(uint256).max}('');
       (success);
     }
 
