@@ -105,6 +105,7 @@ contract EIP4337HookTest is AdvTest, IEIP4337HookErrors {
 
   function test_4337execute_sendEth(ToVal memory sendTx) external {
     _assumeSafeAddress(sendTx.target);
+    uint256 targetBal = sendTx.target.balance;
 
     // Give wallet exact funds
     vm.deal(address(wallet), sendTx.value);
@@ -123,7 +124,7 @@ contract EIP4337HookTest is AdvTest, IEIP4337HookErrors {
     wallet.eip4337SelfExecute(txs);
 
     assertEq(address(wallet).balance, 0);
-    assertEq(sendTx.target.balance, sendTx.value);
+    assertEq(sendTx.target.balance, targetBal + sendTx.value);
   }
 
   function test_4337execute_insufficientEth(ToVal memory sendTx) external {
@@ -163,8 +164,6 @@ contract EIP4337HookTest is AdvTest, IEIP4337HookErrors {
     bytes32 userOpHash,
     uint256 missingAccountFunds
   ) external {
-    vm.assume(userOp.nonce == 0);
-
     // Give wallet enough funds
     vm.deal(address(wallet), missingAccountFunds);
 
@@ -184,8 +183,6 @@ contract EIP4337HookTest is AdvTest, IEIP4337HookErrors {
     bytes32 userOpHash,
     uint256 missingAccountFunds
   ) external {
-    vm.assume(userOp.nonce == 0);
-
     // Give wallet enough funds
     vm.deal(address(wallet), missingAccountFunds);
 
@@ -201,8 +198,6 @@ contract EIP4337HookTest is AdvTest, IEIP4337HookErrors {
     bytes32 userOpHash,
     uint256 missingAccountFunds
   ) external {
-    vm.assume(userOp.nonce == 0);
-
     // Accept the hash
     bytes32 encodedHash = keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n32', userOpHash));
     walletMod.mockSignature(encodedHash, userOp.signature, bytes32(0), true);

@@ -4,10 +4,9 @@ pragma solidity 0.8.18;
 import {IEIP4337Hook, IAccount} from './interfaces/IEIP4337Hook.sol';
 import {IERC1271Wallet} from '../interfaces/IERC1271Wallet.sol';
 import {IModuleCalls} from '../modules/commons/interfaces/IModuleCalls.sol';
-import {ModuleNonce} from '../modules/commons/ModuleNonce.sol';
 import {LibOptim} from '../utils/LibOptim.sol';
 
-contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
+contract EIP4337Hook is IEIP4337Hook {
   address public immutable entrypoint;
   uint256 private constant SIG_VALIDATION_FAILED = 1;
   bytes4 private constant ERC1271_SELECTOR = 0x1626ba7e;
@@ -55,10 +54,6 @@ contract EIP4337Hook is IEIP4337Hook, ModuleNonce {
     bytes32 userOpHash,
     uint256 missingAccountFunds
   ) external onlyEntrypoint returns (uint256 validationData) {
-    // Check nonce.
-    // Note Sequence space encoding is diff to EIP-4337 encoding.
-    _validateNonce(userOp.nonce);
-
     // Check signature
     bytes32 ethHash = keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n32', userOpHash));
     // solhint-disable-next-line avoid-low-level-calls
