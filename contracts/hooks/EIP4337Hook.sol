@@ -4,7 +4,6 @@ pragma solidity 0.8.18;
 import {IEIP4337Hook, IAccount} from './interfaces/IEIP4337Hook.sol';
 import {IERC1271Wallet} from '../interfaces/IERC1271Wallet.sol';
 import {IModuleCalls} from '../modules/commons/interfaces/IModuleCalls.sol';
-import {LibOptim} from '../utils/LibOptim.sol';
 
 contract EIP4337Hook is IEIP4337Hook {
   address public immutable entrypoint;
@@ -32,14 +31,17 @@ contract EIP4337Hook is IEIP4337Hook {
    */
   function eip4337SelfExecute(IModuleCalls.Transaction[] calldata txs) external payable onlyEntrypoint {
     // Self execute
-    (bool success, ) = payable(address(this)).call{value: msg.value}(
+    (bool success, bytes memory returndata) = payable(address(this)).call{value: msg.value}(
       abi.encodeWithSelector(IModuleCalls.selfExecute.selector, txs)
     );
     if (!success) {
       // Bubble up revert reason
-      bytes memory reason = LibOptim.returnData();
+      if (returndata.length == 0) {
+        revert(); // solhint-disable-line reason-string
+      }
       assembly {
-        revert(add(reason, 0x20), mload(reason))
+        let returndata_size := mload(returndata)
+        revert(add(32, returndata), returndata_size)
       }
     }
   }
