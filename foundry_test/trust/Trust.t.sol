@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import "contracts/trust/Trust.sol";
+import "contracts/interfaces/IERC1271Wallet.sol";
 
 import "foundry_test/base/AdvTest.sol";
 
@@ -21,6 +22,35 @@ contract MockFail {
     assembly {
       revert(add(rd, 0x20), mload(rd))
     }
+  }
+}
+
+contract MockContractSigner {
+  mapping(bytes32 => mapping(bytes => bytes4)) public staticSignatures;
+  bytes public staticRevertErr;
+  bool public staticReverts;
+
+  function isValidSignature(
+    bytes32 _hash,
+    bytes calldata _signature
+  ) external view returns (bytes4 magicValue) {
+    if (staticReverts) {
+      bytes memory rd = staticRevertErr;
+      assembly {
+        revert(add(rd, 0x20), mload(rd))
+      }
+    }
+
+    return staticSignatures[_hash][_signature];
+  }
+
+  function setSignature(bytes32 _hash, bytes calldata _signature, bytes4 _magicValue) external {
+    staticSignatures[_hash][_signature] = _magicValue;
+  }
+
+  function setRevertErr(bool _reverts, bytes calldata _revertErr) external {
+    staticRevertErr = _revertErr;
+    staticReverts = _reverts;
   }
 }
 
@@ -460,10 +490,10 @@ contract TrustTest is AdvTest {
     _duration = bound(_duration, 0, type(uint256).max - block.timestamp);
     _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max);
 
-    Trust t = new Trust(vm.addr(_ownerPk), vm.addr(_beneficiaryPk), _duration);
+    trust = new Trust(vm.addr(_ownerPk), vm.addr(_beneficiaryPk), _duration);
 
     vm.prank(vm.addr(_beneficiaryPk));
-    t.setUnlocksAt(_unlockAt);
+    trust.setUnlocksAt(_unlockAt);
 
     if (_signsOwner) {
       vm.assume(_ownerPk != _badSignerPk);
@@ -477,7 +507,7 @@ contract TrustTest is AdvTest {
     {
       // Stack too deep manual workaround
       bytes32 rawHash = keccak256(_message);
-      bytes32 finalHash = keccak256(abi.encodePacked(address(t), rawHash));
+      bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
       (uint8 v, bytes32 r, bytes32 s) = vm.sign(_badSignerPk, finalHash);
       m.rawHash = rawHash;
       m.finalHash = finalHash;
@@ -497,9 +527,224 @@ contract TrustTest is AdvTest {
     );
 
     vm.expectRevert(revertErr);
-    t.isValidSignature(m.rawHash, sig);
+    trust.isValidSignature(m.rawHash, sig);
 
     vm.expectRevert(revertErr);
-    t.isValidSignature(_message, sig);
+    trust.isValidSignature(_message, sig);
+  }
+
+  function test_accept_contract_signature_for_owner(
+    address _beneficiaryAddress,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _elapsed,
+    bytes calldata _signature,
+    bytes calldata _message
+  ) external {
+    MockContractSigner mcs = new MockContractSigner();
+
+    _duration = bound(_duration, 0, type(uint256).max - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max);
+    _elapsed = bound(_elapsed, 0, type(uint256).max - block.timestamp);
+
+    trust = new Trust(address(mcs), _beneficiaryAddress, _duration);
+
+    vm.prank(_beneficiaryAddress);
+    trust.setUnlocksAt(_unlockAt);
+
+    vm.warp(block.timestamp + _elapsed);
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    mcs.setSignature(finalHash, _signature, bytes4(0x1626ba7e));
+    bytes memory sig = abi.encodePacked(_signature, uint8(3), bytes1(0x00));
+
+    assertEq(trust.isValidSignature(rawHash, sig), bytes4(0x1626ba7e));
+    assertEq(trust.isValidSignature(_message, sig), bytes4(0x20c13b0b));
+  }
+
+  function test_fail_bad_contract_signature_for_owner(
+    address _beneficiaryAddress,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _elapsed,
+    bytes4 _badReturnBytes,
+    bytes calldata _badSignature,
+    bytes calldata _message
+  ) external {
+    vm.assume(_badReturnBytes != bytes4(0x1626ba7e));
+
+    MockContractSigner mcs = new MockContractSigner();
+
+    _duration = bound(_duration, 0, type(uint256).max - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max);
+    _elapsed = bound(_elapsed, 0, type(uint256).max - block.timestamp);
+
+    trust = new Trust(address(mcs), _beneficiaryAddress, _duration);
+
+    vm.prank(_beneficiaryAddress);
+    trust.setUnlocksAt(_unlockAt);
+
+    vm.warp(block.timestamp + _elapsed);
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    mcs.setSignature(finalHash, _badSignature, _badReturnBytes);
+    bytes memory sig = abi.encodePacked(_badSignature, uint8(3), bytes1(0x00));
+
+    bytes memory revertErr = abi.encodeWithSignature(
+      'InvalidSignature(bytes32,bytes32,address,bytes)',
+      rawHash,
+      finalHash,
+      address(mcs),
+      abi.encodePacked(_badSignature, uint8(3))
+    );
+
+    vm.expectRevert(revertErr);
+    trust.isValidSignature(rawHash, sig);
+
+    vm.expectRevert(revertErr);
+    trust.isValidSignature(_message, sig);
+  }
+
+  function test_accept_contract_signature_for_beneficiary(
+    address _ownerAddress,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _extra,
+    bytes calldata _signature,
+    bytes calldata _message
+  ) external {
+    MockContractSigner mcs = new MockContractSigner();
+
+    _duration = bound(_duration, 0, (type(uint256).max - 1) - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max - 1);
+    _extra    = bound(_extra, 0, type(uint256).max - _unlockAt);
+
+    trust = new Trust(_ownerAddress, address(mcs), _duration);
+
+    vm.prank(address(mcs));
+    trust.setUnlocksAt(_unlockAt);
+
+    vm.warp(_unlockAt + _extra);
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    mcs.setSignature(finalHash, _signature, bytes4(0x1626ba7e));
+    bytes memory sig = abi.encodePacked(_signature, uint8(3), bytes1(0x01));
+
+    assertEq(trust.isValidSignature(rawHash, sig), bytes4(0x1626ba7e));
+    assertEq(trust.isValidSignature(_message, sig), bytes4(0x20c13b0b));
+  }
+
+  function test_fail_bad_contract_signature_for_beneficiary(
+    address _ownerAddress,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _extra,
+    bytes4 _badReturnBytes,
+    bytes calldata _badSignature,
+    bytes calldata _message
+  ) external {
+    vm.assume(_badReturnBytes != bytes4(0x1626ba7e));
+
+    MockContractSigner mcs = new MockContractSigner();
+
+    _duration = bound(_duration, 0, (type(uint256).max - 1) - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max - 1);
+    _extra    = bound(_extra, 0, type(uint256).max - _unlockAt);
+
+    trust = new Trust(_ownerAddress, address(mcs), _duration);
+
+    vm.prank(address(mcs));
+    trust.setUnlocksAt(_unlockAt);
+
+    vm.warp(_unlockAt + _extra);
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    mcs.setSignature(finalHash, _badSignature, _badReturnBytes);
+    bytes memory sig = abi.encodePacked(_badSignature, uint8(3), bytes1(0x01));
+
+    bytes memory revertErr = abi.encodeWithSignature(
+      'InvalidSignature(bytes32,bytes32,address,bytes)',
+      rawHash,
+      finalHash,
+      address(mcs),
+      abi.encodePacked(_badSignature, uint8(3))
+    );
+
+    vm.expectRevert(revertErr);
+    trust.isValidSignature(rawHash, sig);
+
+    vm.expectRevert(revertErr);
+    trust.isValidSignature(_message, sig);
+  }
+
+  function test_fail_revert_contract_signer_owner(
+    address _beneficiaryAddress,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _extra,
+    bytes calldata _revertErr,
+    bytes calldata _signature,
+    bytes calldata _message
+  ) external {
+    MockContractSigner mcs = new MockContractSigner();
+
+    _duration = bound(_duration, 0, type(uint256).max - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max);
+    _extra    = bound(_extra, 0, type(uint256).max - _unlockAt);
+
+    trust = new Trust(address(mcs), _beneficiaryAddress, _duration);
+
+    vm.prank(_beneficiaryAddress);
+    trust.setUnlocksAt(_unlockAt);
+
+    vm.warp(block.timestamp + _extra);
+
+    bytes32 rawHash = keccak256(_message);
+    mcs.setRevertErr(true, _revertErr);
+    bytes memory sig = abi.encodePacked(_signature, uint8(3), bytes1(0x00));
+
+
+    vm.expectRevert(_revertErr);
+    trust.isValidSignature(rawHash, sig);
+
+    vm.expectRevert(_revertErr);
+    trust.isValidSignature(_message, sig);
+  }
+
+  function test_fail_revert_contract_signer_beneficiary(
+    address _ownerAddress,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _extra,
+    bytes calldata _revertErr,
+    bytes calldata _signature,
+    bytes calldata _message
+  ) external {
+    MockContractSigner mcs = new MockContractSigner();
+
+    _duration = bound(_duration, 0, (type(uint256).max - 1) - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max - 1);
+    _extra    = bound(_extra, 0, type(uint256).max - _unlockAt);
+
+    trust = new Trust(_ownerAddress, address(mcs), _duration);
+
+    vm.prank(address(mcs));
+    trust.setUnlocksAt(_unlockAt);
+
+    vm.warp(_unlockAt + _extra);
+
+    bytes32 rawHash = keccak256(_message);
+    mcs.setRevertErr(true, _revertErr);
+    bytes memory sig = abi.encodePacked(_signature, uint8(3), bytes1(0x01));
+
+    vm.expectRevert(_revertErr);
+    trust.isValidSignature(rawHash, sig);
+
+    vm.expectRevert(_revertErr);
+    trust.isValidSignature(_message, sig);
   }
 }
