@@ -112,11 +112,8 @@ contract Trust is IERC1271Wallet {
       _signature
     );
 
-    if (res == SELECTOR_ERC1271_BYTES32_BYTES) {
-      return SELECTOR_ERC1271_BYTES_BYTES;
-    }
-
-    return bytes4(0);
+    assert(res == SELECTOR_ERC1271_BYTES32_BYTES);
+    return SELECTOR_ERC1271_BYTES_BYTES;
   }
 
   function isValidSignature(

@@ -27,13 +27,7 @@ contract TrustFactory {
     address _owner,
     address _beneficiary,
     uint256 _duration
-  ) external returns (address) {
-    Trust trust = new Trust{ salt: bytes32(0) }( _owner, _beneficiary, _duration);
-
-    if (address(trust) == address(0)) {
-      revert ErrorDeployingTrust(_owner, _beneficiary, _duration);
-    }
-
-    return address(trust);
+  ) external returns (Trust) {
+    return new Trust{ salt: bytes32(0) }( _owner, _beneficiary, _duration);
   }
 }

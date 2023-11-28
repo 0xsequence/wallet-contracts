@@ -27,6 +27,13 @@ contract MockFail {
 contract TrustTest is AdvTest {
   Trust private trust;
 
+  function test_define_initial_parameters(uint256 _ownerPk, uint256 _beneficiaryPk, uint256 _duration) external {
+    trust = new Trust(vm.addr(boundPk(_ownerPk)), vm.addr(boundPk(_beneficiaryPk)), _duration);
+    assertEq(trust.owner(), vm.addr(boundPk(_ownerPk)));
+    assertEq(trust.beneficiary(), vm.addr(boundPk(_beneficiaryPk)));
+    assertEq(trust.duration(), _duration);
+  }
+
   function test_start_locked(uint256 _ownerPk, uint256 _beneficiaryPk, uint256 _duration) external {
     trust = new Trust(vm.addr(boundPk(_ownerPk)), vm.addr(boundPk(_beneficiaryPk)), _duration);
     assertEq(trust.isLocked(), true);
@@ -396,5 +403,103 @@ contract TrustTest is AdvTest {
 
     vm.expectRevert(abi.encodeWithSignature('InvalidSignatureFlag(bytes,bytes1)', sig, bytes1(_signerFlag)));
     t.isValidSignature(keccak256(_message), sig);
+  }
+
+  function test_fail_isValidSignature_pre_unlock_as_beneficiary(
+    uint256 _ownerPk,
+    uint256 _beneficiaryPk,
+    uint256 _duration,
+    uint256 _unlockAt,
+    bytes calldata _message
+  ) external {
+    _duration = bound(_duration, 1, type(uint256).max - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max);
+
+    vm.assume(boundPk(_ownerPk) != boundPk(_beneficiaryPk));
+    Trust t = new Trust(vm.addr(boundPk(_ownerPk)), vm.addr(boundPk(_beneficiaryPk)), _duration);
+
+    vm.prank(vm.addr(boundPk(_beneficiaryPk)));
+    t.setUnlocksAt(_unlockAt);
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encodePacked(address(t), rawHash));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(boundPk(_beneficiaryPk), finalHash);
+
+    bytes memory sig = abi.encodePacked(r, s, v, uint8(1), bytes1(0x01));
+
+    vm.expectRevert(abi.encodeWithSignature('NotUnlocked(uint256)', _unlockAt));
+    t.isValidSignature(rawHash, sig);
+
+    vm.expectRevert(abi.encodeWithSignature('NotUnlocked(uint256)', _unlockAt));
+    t.isValidSignature(_message, sig);
+  }
+
+  struct MemoryStruct1 {
+    bytes32 rawHash;
+    bytes32 finalHash;
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
+  }
+
+  function test_fail_isValidSignature_invalid_signature(
+    uint256 _ownerPk,
+    uint256 _beneficiaryPk,
+    uint256 _badSignerPk,
+    bool _signsOwner,
+    uint256 _duration,
+    uint256 _unlockAt,
+    bytes calldata _message
+  ) external {
+    _ownerPk = boundPk(_ownerPk);
+    _beneficiaryPk = boundPk(_beneficiaryPk);
+    _badSignerPk = boundPk(_badSignerPk);
+
+    address expectedSigner = _signsOwner ? vm.addr(_ownerPk) : vm.addr(_beneficiaryPk);
+
+    _duration = bound(_duration, 0, type(uint256).max - block.timestamp);
+    _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max);
+
+    Trust t = new Trust(vm.addr(_ownerPk), vm.addr(_beneficiaryPk), _duration);
+
+    vm.prank(vm.addr(_beneficiaryPk));
+    t.setUnlocksAt(_unlockAt);
+
+    if (_signsOwner) {
+      vm.assume(_ownerPk != _badSignerPk);
+    } else {
+      vm.assume(_beneficiaryPk != _badSignerPk);
+      // Advance clock to unlock
+      vm.warp(_unlockAt); 
+    }
+
+    MemoryStruct1 memory m;
+    {
+      // Stack too deep manual workaround
+      bytes32 rawHash = keccak256(_message);
+      bytes32 finalHash = keccak256(abi.encodePacked(address(t), rawHash));
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_badSignerPk, finalHash);
+      m.rawHash = rawHash;
+      m.finalHash = finalHash;
+      m.v = v;
+      m.r = r;
+      m.s = s;
+    }
+
+    bytes memory sig = abi.encodePacked(m.r, m.s, m.v, uint8(1), _signsOwner ? bytes1(0x00) : bytes1(0x01));
+
+    bytes memory revertErr = abi.encodeWithSignature(
+      'InvalidSignature(bytes32,bytes32,address,bytes)',
+      m.rawHash,
+      m.finalHash,
+      expectedSigner,
+      abi.encodePacked(m.r, m.s, m.v, uint8(1))
+    );
+
+    vm.expectRevert(revertErr);
+    t.isValidSignature(m.rawHash, sig);
+
+    vm.expectRevert(revertErr);
+    t.isValidSignature(_message, sig);
   }
 }
