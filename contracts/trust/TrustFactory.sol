@@ -5,8 +5,6 @@ import "./Trust.sol";
 
 
 contract TrustFactory {
-  error ErrorDeployingTrust(address _owner, address _beneficiary, uint256 _duration);
-
   function addressOf(
     address _owner,
     address _beneficiary,
