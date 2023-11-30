@@ -18,5 +18,9 @@
   {
     "contractName": "SequenceUtils",
     "address": "0xdbbFa3cB3B087B64F4ef5E3D20Dda2488AA244e6"
+  },
+  {
+    "contractName": "TrustFactory",
+    "address": "0x8E7e68e74065C561480d0DD5C13794B5dCF0DFda"
   }
 ]

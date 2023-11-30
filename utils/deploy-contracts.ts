@@ -1,5 +1,4 @@
 import { network, run, tenderly, ethers as hethers } from 'hardhat'
-import * as _ from 'lodash'
 import ora from 'ora'
 
 import {
@@ -7,7 +6,8 @@ import {
   SequenceUtils__factory,
   MainModuleUpgradable__factory,
   GuestModule__factory,
-  Factory__factory
+  Factory__factory,
+  TrustFactory__factory
 } from '../gen/typechain'
 
 import { BigNumber, ContractFactory, ethers } from 'ethers'
@@ -141,6 +141,7 @@ const main = async () => {
   const mainModule = await deploy("MainModule", MainModule__factory, walletFactory.address, mainModuleUpgradeable.address)
   const guestModule = await deploy("GuestModule", GuestModule__factory)
   const sequenceUtils = await deploy("SequenceUtils", SequenceUtils__factory)
+  const trustFactory = await deploy("TrustFactory", TrustFactory__factory)
 
   prompt.start(`writing deployment information to ${network.name}.json`)
   fs.writeFileSync(`./networks/${network.name}.json`, JSON.stringify(buildNetworkJson(
@@ -148,7 +149,8 @@ const main = async () => {
     { name: "MainModule", address: mainModule.address },
     { name: "MainModuleUpgradable", address: mainModuleUpgradeable.address },
     { name: "GuestModule", address: guestModule.address },
-    { name: "SequenceUtils", address: sequenceUtils.address }
+    { name: "SequenceUtils", address: sequenceUtils.address },
+    { name: "TrustFactory", address: trustFactory.address },
   ), null, 2))
   prompt.succeed()
 
@@ -159,6 +161,7 @@ const main = async () => {
   await attempVerify("MainModule", MainModule__factory, mainModule.address, walletFactory.address, mainModuleUpgradeable.address)
   await attempVerify("GuestModule", GuestModule__factory, guestModule.address)
   await attempVerify("SequenceUtils", SequenceUtils__factory, sequenceUtils.address)
+  await attempVerify("TrustFactory", TrustFactory__factory, trustFactory.address)
 
   prompt.succeed()
 }
