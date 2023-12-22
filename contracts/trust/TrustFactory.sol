@@ -5,6 +5,10 @@ import "./Trust.sol";
 
 
 contract TrustFactory {
+  function trustCreationCode() external pure returns (bytes memory) {
+    return type(Trust).creationCode;
+  }
+
   function addressOf(
     address _owner,
     address _beneficiary,
