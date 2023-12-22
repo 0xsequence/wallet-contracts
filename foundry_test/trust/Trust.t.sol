@@ -350,13 +350,136 @@ contract TrustTest is AdvTest {
     );
 
     bytes32 rawHash = keccak256(_message);
-    bytes32 finalHash = keccak256(abi.encodePacked(address(t), rawHash));
+    bytes32 finalHash = keccak256(abi.encode(address(t), rawHash, block.chainid));
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, finalHash);
 
     bytes memory sig = abi.encodePacked(r, s, v, uint8(1), _signedByOwner ? bytes1(0x00) : bytes1(0x01));
 
     assertEq(t.isValidSignature(rawHash, sig), bytes4(0x1626ba7e));
     assertEq(t.isValidSignature(_message, sig), bytes4(0x20c13b0b));
+  }
+
+  function test_isValidSignature_anyNetwork(
+    uint256 _ownerPk,
+    uint256 _beneficiaryPk,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _extra,
+    uint64 _useChainId,
+    bool _signedByOwner,
+    bytes calldata _message
+  ) external {
+    uint256 signerPk = boundPk(_signedByOwner ? _ownerPk : _beneficiaryPk);
+
+    Trust t = gen_and_unlock(
+      _ownerPk,
+      _beneficiaryPk,
+      _duration,
+      _unlockAt,
+      _extra
+    );
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encode(address(t), rawHash, 0));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, finalHash);
+
+    bytes memory sig = abi.encodePacked(r, s, v, uint8(1), _signedByOwner ? bytes1(0x02) : bytes1(0x03));
+
+    vm.chainId(_useChainId);
+    assertEq(t.isValidSignature(rawHash, sig), bytes4(0x1626ba7e));
+    assertEq(t.isValidSignature(_message, sig), bytes4(0x20c13b0b));
+  }
+
+  function test_fail_isValidSignature_anyNetwork_wrongEncode(
+    uint256 _ownerPk,
+    uint256 _beneficiaryPk,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _extra,
+    uint64 _useChainId,
+    bool _signedByOwner,
+    bytes calldata _message
+  ) external {
+    vm.assume(_useChainId != 0);
+
+    uint256 signerPk = boundPk(_signedByOwner ? _ownerPk : _beneficiaryPk);
+
+    Trust t = gen_and_unlock(
+      _ownerPk,
+      _beneficiaryPk,
+      _duration,
+      _unlockAt,
+      _extra
+    );
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encode(address(t), rawHash, 0));
+    bytes32 realHash = keccak256(abi.encode(address(t), rawHash, _useChainId));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, finalHash);
+
+    bytes memory sig = abi.encodePacked(r, s, v, uint8(1), _signedByOwner ? bytes1(0x00) : bytes1(0x01));
+
+    vm.chainId(_useChainId);
+
+    bytes memory revertErr = abi.encodeWithSignature(
+      'InvalidSignature(bytes32,bytes32,address,bytes)',
+      rawHash,
+      realHash,
+      vm.addr(signerPk),
+      abi.encodePacked(r, s, v, uint8(1))
+    );
+
+    vm.expectRevert(revertErr);
+    t.isValidSignature(rawHash, sig);
+
+    vm.expectRevert(revertErr);
+    t.isValidSignature(_message, sig);
+  }
+
+  function test_fail_isValidSignature_anyNetwork_onlyEncode(
+    uint256 _ownerPk,
+    uint256 _beneficiaryPk,
+    uint256 _duration,
+    uint256 _unlockAt,
+    uint256 _extra,
+    uint64 _useChainId,
+    bool _signedByOwner,
+    bytes calldata _message
+  ) external {
+    vm.assume(_useChainId != 0);
+
+    uint256 signerPk = boundPk(_signedByOwner ? _ownerPk : _beneficiaryPk);
+
+    Trust t = gen_and_unlock(
+      _ownerPk,
+      _beneficiaryPk,
+      _duration,
+      _unlockAt,
+      _extra
+    );
+
+    bytes32 rawHash = keccak256(_message);
+    bytes32 finalHash = keccak256(abi.encode(address(t), rawHash, _useChainId));
+    bytes32 realHash = keccak256(abi.encode(address(t), rawHash, 0));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, finalHash);
+
+    bytes memory sig = abi.encodePacked(r, s, v, uint8(1), _signedByOwner ? bytes1(0x02) : bytes1(0x03));
+
+    vm.chainId(_useChainId);
+
+    bytes memory revertErr = abi.encodeWithSignature(
+      'InvalidSignature(bytes32,bytes32,address,bytes)',
+      rawHash,
+      realHash,
+      vm.addr(signerPk),
+      abi.encodePacked(r, s, v, uint8(1))
+    );
+
+    vm.expectRevert(revertErr);
+    t.isValidSignature(rawHash, sig);
+
+    vm.expectRevert(revertErr);
+    t.isValidSignature(_message, sig);
   }
 
   function test_isValidSignature_pre_unlock_as_owner(
@@ -375,7 +498,7 @@ contract TrustTest is AdvTest {
     t.setUnlocksAt(_unlockAt);
 
     bytes32 rawHash = keccak256(_message);
-    bytes32 finalHash = keccak256(abi.encodePacked(address(t), rawHash));
+    bytes32 finalHash = keccak256(abi.encode(address(t), rawHash, block.chainid));
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(boundPk(_ownerPk), finalHash);
 
     bytes memory sig = abi.encodePacked(r, s, v, uint8(1), bytes1(0x00));
@@ -419,7 +542,7 @@ contract TrustTest is AdvTest {
   ) external {
     _duration = bound(_duration, 0, type(uint256).max - block.timestamp);
     _unlockAt = bound(_unlockAt, block.timestamp + _duration, type(uint256).max);
-    _signerFlag = uint8(bound(_signerFlag, 2, type(uint8).max));
+    _signerFlag = uint8(bound(_signerFlag, 4, type(uint8).max));
 
     Trust t = new Trust(vm.addr(boundPk(_ownerPk)), vm.addr(boundPk(_beneficiaryPk)), _duration);
 
@@ -452,7 +575,7 @@ contract TrustTest is AdvTest {
     t.setUnlocksAt(_unlockAt);
 
     bytes32 rawHash = keccak256(_message);
-    bytes32 finalHash = keccak256(abi.encodePacked(address(t), rawHash));
+    bytes32 finalHash = keccak256(abi.encode(address(t), rawHash, block.chainid));
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(boundPk(_beneficiaryPk), finalHash);
 
     bytes memory sig = abi.encodePacked(r, s, v, uint8(1), bytes1(0x01));
@@ -507,7 +630,7 @@ contract TrustTest is AdvTest {
     {
       // Stack too deep manual workaround
       bytes32 rawHash = keccak256(_message);
-      bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+      bytes32 finalHash = keccak256(abi.encode(address(trust), rawHash, block.chainid));
       (uint8 v, bytes32 r, bytes32 s) = vm.sign(_badSignerPk, finalHash);
       m.rawHash = rawHash;
       m.finalHash = finalHash;
@@ -555,7 +678,7 @@ contract TrustTest is AdvTest {
     vm.warp(block.timestamp + _elapsed);
 
     bytes32 rawHash = keccak256(_message);
-    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    bytes32 finalHash = keccak256(abi.encode(address(trust), rawHash, block.chainid));
     mcs.setSignature(finalHash, _signature, bytes4(0x1626ba7e));
     bytes memory sig = abi.encodePacked(_signature, uint8(3), bytes1(0x00));
 
@@ -588,7 +711,7 @@ contract TrustTest is AdvTest {
     vm.warp(block.timestamp + _elapsed);
 
     bytes32 rawHash = keccak256(_message);
-    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    bytes32 finalHash = keccak256(abi.encode(address(trust), rawHash, block.chainid));
     mcs.setSignature(finalHash, _badSignature, _badReturnBytes);
     bytes memory sig = abi.encodePacked(_badSignature, uint8(3), bytes1(0x00));
 
@@ -629,7 +752,7 @@ contract TrustTest is AdvTest {
     vm.warp(_unlockAt + _extra);
 
     bytes32 rawHash = keccak256(_message);
-    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    bytes32 finalHash = keccak256(abi.encode(address(trust), rawHash, block.chainid));
     mcs.setSignature(finalHash, _signature, bytes4(0x1626ba7e));
     bytes memory sig = abi.encodePacked(_signature, uint8(3), bytes1(0x01));
 
@@ -662,7 +785,7 @@ contract TrustTest is AdvTest {
     vm.warp(_unlockAt + _extra);
 
     bytes32 rawHash = keccak256(_message);
-    bytes32 finalHash = keccak256(abi.encodePacked(address(trust), rawHash));
+    bytes32 finalHash = keccak256(abi.encode(address(trust), rawHash, block.chainid));
     mcs.setSignature(finalHash, _badSignature, _badReturnBytes);
     bytes memory sig = abi.encodePacked(_badSignature, uint8(3), bytes1(0x01));
 

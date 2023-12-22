@@ -124,16 +124,32 @@ contract Trust is IERC1271Wallet {
       revert EmptySignature();
     }
 
-    // If last byte is 0x00 we use the owner
-    // if 0x01 we use the beneficiary
+    // The last byte determines how the signature is going to be interpreted
+    // 0x00 -> Signed by the owner
+    // 0x01 -> Signed by the beneficiary
+    // 0x02 -> Signed by the owner for any network
+    // 0x03 -> Signed by the beneficiary for any network
     address signer;
+    uint256 chainId;
 
-    if (_signature[_signature.length - 1] == 0x00) {
-      signer = owner;
-    } else if (_signature[_signature.length - 1] == 0x01) {
-      signer = beneficiary;
-    } else {
-      revert InvalidSignatureFlag(_signature, _signature[_signature.length - 1]);
+    {
+      bytes1 flag = _signature[_signature.length - 1];
+
+      if (flag == 0x00) {
+        signer = owner;
+        chainId = block.chainid;
+      } else if (flag == 0x01) {
+        signer = beneficiary;
+        chainId = block.chainid;
+      } else if (flag == 0x02) {
+        signer = owner;
+        chainId = 0;
+      } else if (flag == 0x03) {
+        signer = beneficiary;
+        chainId = 0;
+      } else {
+        revert InvalidSignatureFlag(_signature, flag);
+      }
     }
 
     if (signer != owner && isLocked()) {
@@ -142,7 +158,7 @@ contract Trust is IERC1271Wallet {
 
     // Re-hash the hash adding the address of the trust
     // otherwise the signature will be valid for any trust
-    bytes32 rehash = keccak256(abi.encodePacked(address(this), _hash));
+    bytes32 rehash = keccak256(abi.encode(address(this), _hash, chainId));
 
     // Validate the signature
     if (!SignatureValidator.isValidSignature(rehash, signer, _signature[0:_signature.length - 1])) {
