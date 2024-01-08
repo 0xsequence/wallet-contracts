@@ -1,4 +1,9 @@
 [profile.default]
+solc-version = "0.8.19"
+optimizer = true
+optimizer-runs = 10_000_000
+fs_permissions = [{ access = "read", path = "./"}]
+
 src = 'contracts'
 out = 'foundry_artifacts'
 libs = ["node_modules", "lib"]
