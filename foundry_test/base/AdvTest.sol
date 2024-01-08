@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.18;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 
@@ -73,9 +73,13 @@ contract AdvTest is Test {
     return _a;
   }
 
+  // For standard secp256k1
   function boundPk(uint256 _a) internal view returns (uint256) {
-    _a = bound(_a, 1, 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364139);
-    return _a;
+    return boundPk(_a, 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141);
+  }
+
+  function boundPk(uint256 _a, uint256 _n) internal view returns (uint256) {
+    return bound(_a, 1, _n - 1);
   }
 
   function boundDiff(uint256 _a, uint256 _b) internal pure returns (uint256) {
