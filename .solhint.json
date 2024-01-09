@@ -19,7 +19,7 @@
     "not-rely-on-time": "off",
     "no-inline-assembly": "off",
     "visibility-modifier-order": "off",
-    "compiler-version": ["error", "0.8.18"],
+    "compiler-version": ["error", "0.8.19"],
     "func-visibility": ["warn", {"ignoreConstructors":true}],
     "reason-string": ["warn", {"maxLength": 96}]
   }
