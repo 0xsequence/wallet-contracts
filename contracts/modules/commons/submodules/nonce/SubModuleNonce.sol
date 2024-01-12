@@ -27,4 +27,11 @@ library SubModuleNonce {
       _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
     }
   }
+
+  function encodeNonce(uint256 _space, uint256 _nonce) internal pure returns (uint256) {
+    unchecked {
+      // Combine space and nonce
+      return (_space << NONCE_BITS) | _nonce;
+    }
+  }
 }
