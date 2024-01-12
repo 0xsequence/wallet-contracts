@@ -12,7 +12,6 @@
   [FREE_MEMORY_START]  // [windex, rindex]
 
   0x01                 // [flag, windex, rindex]
-
   FLAG_READ_BYTES32()    // [windex, rindex]
 }
 
@@ -298,16 +297,10 @@
 
   swap1         // [size, cdata[rindex], size + rindex]
   0x08 mul      // [size bits, cdata[rindex], size + rindex]
+  0x0100        // [0x0100, size bits, cdata[rindex], size + rindex]
+  sub           // [0x0100 - size bits, cdata[rindex], size + rindex]
+
   shr           // [cdata[rindex] >> size bits, size + rindex]
 
   // output stack: [cdata[rindex] >> size bits, size + rindex]
-}
-
-#[calldata("0x0005")]
-#define test TEST_LOAD_DYNAMIC_SIZE() = {
-  0x02 0x00           // [size, rindex]
-  LOAD_DYNAMIC_SIZE() // [val, rindex]
-
-  0x0005 eq ASSERT()    // [rindex]
-  0x02 eq ASSERT()    // []
 }

@@ -1,0 +1,29 @@
+#include "../L2Compressor.huff"
+
+#define function testLoadDynamicSize(bytes32 _a, bytes32 _b, uint256, uint256) view returns (uint256, uint256)
+
+// Function Dispatching
+#define macro MAIN() = takes (1) returns (1) {
+  // Identify which function is being called.
+  0x00 calldataload 0xE0 shr          // [func_sig]
+
+  dup1 __FUNC_SIG(testLoadDynamicSize)             eq testLoadDynamicSize           jumpi
+
+  // Revert if no match is found.
+  0x00 dup1 revert
+
+  testLoadDynamicSize:
+    IMP_LOAD_DYNAMIC_SIZE()
+}
+
+#define macro IMP_LOAD_DYNAMIC_SIZE() = takes (2) returns (0) {
+  0x04 0x40 add calldataload    // [rindex]
+  0x04 0x60 add calldataload    // [size, rindex]
+
+  LOAD_DYNAMIC_SIZE()  // [size bits, rindex + size]
+
+  0x00 mstore          // [rindex + size]
+  0x20 mstore          // []
+
+  0x40 0x00 return
+}
