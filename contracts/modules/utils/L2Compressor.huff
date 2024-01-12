@@ -1,0 +1,313 @@
+#include "./Errors.huff"
+
+#define constant ADDR_BYTES_STORAGE = 0x00
+#define constant FREE_MEMORY_START = 0x40
+
+#define constant FLAG_READ_BYTES32_2_BYTES = 0x23
+
+#define constant READ_BYTES32_X_BYTES_FLAG_OFFSET = 0x21 // (FLAG_READ_BYTES32_2_BYTES - 2) since it starts at 2 bytes
+
+#define macro MAIN() = takes (0) returns (0) {
+  0x00                 // [rindex]
+  [FREE_MEMORY_START]  // [windex, rindex]
+
+  0x01                 // [flag, windex, rindex]
+
+  FLAG_READ_BYTES32()    // [windex, rindex]
+}
+
+#define macro ADDRESSES_NUM() = takes (0) returns (1) {
+  [ADDR_BYTES_STORAGE] sload // [packed]
+  0x80 shr                 // [num]
+
+  // output stack: [num]
+}
+
+#define macro PULL_ADDRESS() = takes(0) returns (1) {
+  [ADDR_BYTES_STORAGE] sload // [packed]
+  dup1                       // [packed, packed]
+  0x80 shr                   // [num, packed]
+
+  0x01 add                   // [num + 1, packed]
+  swap1                      // [packed, num + 1]
+
+  // Mask packed (only want lower 128 bits)
+  0xffffffffffffffffffffffffffffffff and
+
+  dup2                       // [num + 1, packed, num + 1]
+  0x80 shl                   // [num + 1 << 0x80, packed, num + 1]
+  or                         // [nextpacked, num + 1]
+
+  [ADDR_BYTES_STORAGE] sstore // [num + 1]
+
+  // output stack: [num + 1]
+}
+
+#define macro BYTES32_NUM() = takes (0) returns (1) {
+  [ADDR_BYTES_STORAGE] sload             // [packed]
+  0xffffffffffffffffffffffffffffffff and // [num]
+
+  // output stack: [num]
+}
+
+#define macro PULL_BYTES32() = takes(0) returns (1) {
+  [ADDR_BYTES_STORAGE] sload             // [packed]
+  dup1                                   // [packed, packed]
+  0xffffffffffffffffffffffffffffffff and // [num, packed]
+
+  0x01 add                               // [num + 1, packed]
+  swap1                                  // [packed, num + 1]
+
+  0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 and // [packed, num + 1]
+
+  dup2                                   // [num + 1, packed, num + 1]
+  or                                     // [nextpacked, num + 1]
+
+  [ADDR_BYTES_STORAGE] sstore            // [num + 1]
+
+  // output stack: [num + 1]
+}
+
+#define test TEST_NUMS() = {
+  ADDRESSES_NUM()  // [num]
+  0x00 eq ASSERT() // []
+
+  PULL_ADDRESS()   // [nnum]
+  0x01 eq ASSERT() // []
+
+  ADDRESSES_NUM()  // [num]
+  0x01 eq ASSERT() // []
+
+  PULL_ADDRESS()   // [nnum]
+  0x02 eq ASSERT() // []
+
+  ADDRESSES_NUM()  // [num]
+  0x02 eq ASSERT() // []
+
+  PULL_BYTES32()   // [nnum]
+  0x01 eq ASSERT() // []
+
+  BYTES32_NUM()    // [num]
+  0x01 eq ASSERT() // []
+
+  ADDRESSES_NUM()  // [num]
+  0x02 eq ASSERT() // []
+
+  PULL_ADDRESS()   // [nnum]
+  0x03 eq ASSERT() // []
+
+  BYTES32_NUM()   // [nnum]
+  0x01 eq ASSERT() // []
+}
+
+#define macro FLAG_READ_BYTES32() = takes (3) returns (2) {
+  // input stack: [flag, windex, rindex, initial]
+
+  0x20       // [0x20, flag, windex, rindex, initial]
+  dup4       // [rindex, 0x20, flag, windex, rindex, initial]
+  dup4       // [windex, rindex, 0x20, flag, windex, rindex, initial]
+
+  calldatacopy // [flag, windex, rindex, initial]
+
+  // Increment both rindex and windex by the size of the flag
+
+  dup1       // [flag, flag, windex, rindex, initial]
+  swap3      // [rindex, flag, windex, flag, initial]
+
+  add        // [rindex + flag, windex, flag, initial]
+  swap2      // [flag, windex, rindex + flag, initial]
+
+  add        // [flag + windex, rindex + flag, initial]
+
+  // output stack: [flag + windex, flag + rindex, initial]
+}
+
+#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a8"), value(0x01)]
+#define test TEST_FLAG_READ_BYTES32() = {
+  0x01 // [rindex]
+  0x20 // [windex]
+
+  0x02 // [flag, windex, rindex]
+
+  FLAG_READ_BYTES32() // [windex, rindex]
+
+  0x22 eq ASSERT()    // [rindex]
+  0x03 eq ASSERT()    // []
+
+  // Validate that memory was written correctly
+
+  0x20 mload  // [mem[0x20]]
+  0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a800
+  
+  eq ASSERT() // []
+}
+
+#define macro FLAG_SAVE_ADDRESS() = takes (3) returns (2) {
+  // input stack: [flag, windex, rindex]
+
+  pop            // [windex, rindex]
+
+  dup2           // [rindex, windex, rindex]
+  calldataload   // [word, windex, rindex]
+
+  dup1           // [word, word, windex, rindex]
+
+  dup3           // [windex, word, word, windex, rindex]
+  mstore         // [word, windex, rindex]
+
+  // Clean the address before storing it
+  // shifting it to the right by 0x60 bits
+
+  0x60 shr                       // [addr, windex, rindex]
+  PULL_ADDRESS() 0x01 add sstore // [windex, rindex]
+
+  // Add 20 bytes to both indexes
+
+  0x14 dup1  // [0x14, 0x14, windex, rindex]
+  swap3      // [rindex, 0x14, windex, 0x14]
+  add        // [windex + 0x14, 0x14, rindex]
+
+  swap2      // [rindex, 0x14, windex + 0x14]
+  add        // [rindex + 0x14, windex + 0x14]
+
+  swap1      // [windex + 0x14, rindex + 0x14]
+
+  // output stack: [windex + 20, rindex + 20]
+}
+
+// 0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8e
+#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a8"), value(0x01)]
+#define test TEST_FLAG_SAVE_ADDRESS() = {
+  0x01 // [rindex]
+  0x20 // [windex, rindex]
+
+  0x02 // [flag, windex, rindex]
+
+  FLAG_SAVE_ADDRESS() // [windex, rindex]
+
+  0x15 eq ASSERT()    // [rindex]
+  0x34 eq ASSERT()    // []
+
+  // Validate that memory was written correctly
+
+  0x20 mload  // [mem[0x20]] ()
+  0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a800
+  
+  eq ASSERT() // []
+
+  // Validate that the written address is correct
+  0x02 sload // [addr]
+  0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8e eq ASSERT() // []
+
+  // Validate that the total increased to 1
+  ADDRESSES_NUM() 0x01 eq ASSERT() // []
+}
+
+#define macro FLAG_SAVE_BYTES32() = takes (3) returns (2) {
+  // input stack: [flag, windex, rindex]
+
+  pop            // [windex, rindex]
+
+  dup2           // [rindex, windex, rindex]
+  calldataload   // [word, windex, rindex]
+
+  dup1           // [word, word, windex, rindex]
+
+  dup3           // [windex, word, word, windex, rindex]
+  mstore         // [word, windex, rindex]
+
+  PULL_BYTES32() 0x80 shl sstore  // [windex, rindex]
+
+  // Add 32 bytes to both indexes
+
+  0x20 dup1  // [0x20, 0x20, windex, rindex]
+  swap3      // [rindex, 0x20, windex, 0x20]
+  add        // [windex + 0x20, 0x20, rindex]
+
+  swap2      // [rindex, 0x20, windex + 0x20]
+  add        // [rindex + 0x20, windex + 0x20]
+
+  swap1      // [windex + 0x20, rindex + 0x20]
+
+  // output stack: [windex + 32, rindex + 32]
+}
+
+#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899"), value(0x01)]
+#define test TEST_FLAG_SAVE_BYTES32() = {
+  0x01 // [rindex]
+  0x20 // [windex, rindex]
+
+  0x02 // [flag, windex, rindex]
+
+  FLAG_SAVE_BYTES32() // [windex, rindex]
+
+  0x21 eq ASSERT()    // [rindex]
+  0x40 eq ASSERT()    // []
+
+  // Validate that memory was written correctly
+
+  0x20 mload  // [mem[0x20]] ()
+  0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899
+  
+  eq ASSERT() // []
+
+  // Validate that the written address is correct
+  0x01 0x80 shl sload // [addr]
+  0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899 eq ASSERT() // []
+
+  // Validate that the total increased to 1
+  BYTES32_NUM() 0x01 eq ASSERT() // []
+}
+
+// Reads a stored bytes32 using a 2 to 5 bytes pointer index
+#define macro READ_BYTES32() = takes (3) returns (2) {
+  // input stack: [flag, windex, rindex]
+
+  [READ_BYTES32_X_BYTES_FLAG_OFFSET] sub // [size, windex, rindex]
+
+  swap1 // [windex, size, rindex]
+  swap2 // [rindex, size, windex]
+
+  LOAD_DYNAMIC_SIZE() // [index, nrindex + size, windex]
+
+  0x80 shl sload      // [bytes32, nrindex + size, windex]
+
+  dup3                // [windex, bytes32, nrindex + size, windex]
+  sstore              // [nrindex + size, windex]
+
+  swap1               // [windex, nrindex + size]
+
+  0x20 add            // [windex + 0x20, nrindex + size]
+
+  // output stack: [windex + 0x20, nrindex + size]
+}
+
+#define macro LOAD_DYNAMIC_SIZE() = takes (2) returns (2) {
+  // input stack: [size, rindex]
+
+  dup2          // [rindex, size, rindex]
+
+  dup2          // [size, rindex, size, rindex]
+  add           // [size + rindex, size, rindex]
+  swap2         // [rindex, size, size + rindex]
+
+  calldataload  // [cdata[rindex], size, size + rindex]
+
+  // Value needs to be shifted, so we only read
+  // the first "size" bytes
+
+  swap1         // [size, cdata[rindex], size + rindex]
+  0x08 mul      // [size bits, cdata[rindex], size + rindex]
+  shr           // [cdata[rindex] >> size bits, size + rindex]
+
+  // output stack: [cdata[rindex] >> size bits, size + rindex]
+}
+
+#[calldata("0x0005")]
+#define test TEST_LOAD_DYNAMIC_SIZE() = {
+  0x02 0x00           // [size, rindex]
+  LOAD_DYNAMIC_SIZE() // [val, rindex]
+
+  0x0005 eq ASSERT()    // [rindex]
+  0x02 eq ASSERT()    // []
+}
