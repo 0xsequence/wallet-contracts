@@ -177,16 +177,14 @@
   0x60 shr                       // [addr, windex, rindex]
   PULL_ADDRESS() ADDRESS_STORAGE_POINTER() sstore // [windex, rindex]
 
-  // Add 20 bytes to both indexes
+  // Add 32 bytes to both indexes
 
-  0x14 dup1  // [0x14, 0x14, windex, rindex]
-  swap3      // [rindex, 0x14, windex, 0x14]
-  add        // [windex + 0x14, 0x14, rindex]
+  0x20 dup1  // [0x20, 0x20, windex, rindex]
+  swap3      // [rindex, 0x20, windex, 0x20]
+  add        // [rindex + 0x20, 0x20, windex]
 
-  swap2      // [rindex, 0x14, windex + 0x14]
-  add        // [rindex + 0x14, windex + 0x14]
-
-  swap1      // [windex + 0x14, rindex + 0x14]
+  swap2      // [windex, 0x20, rindex + 0x20]
+  add        // [windex + 0x20, rindex + 0x20]
 
   // output stack: [windex + 20, rindex + 20]
 }
@@ -201,8 +199,8 @@
 
   FLAG_SAVE_ADDRESS() // [windex, rindex]
 
-  0x15 eq ASSERT()    // [rindex]
-  0x34 eq ASSERT()    // []
+  0x40 eq ASSERT()    // [rindex]
+  0x21 eq ASSERT()    // []
 
   // Validate that memory was written correctly
 
@@ -238,12 +236,10 @@
 
   0x20 dup1  // [0x20, 0x20, windex, rindex]
   swap3      // [rindex, 0x20, windex, 0x20]
-  add        // [windex + 0x20, 0x20, rindex]
+  add        // [rindex + 0x20, 0x20, windex]
 
-  swap2      // [rindex, 0x20, windex + 0x20]
-  add        // [rindex + 0x20, windex + 0x20]
-
-  swap1      // [windex + 0x20, rindex + 0x20]
+  swap2      // [windex, 0x20, rindex + 0x20]
+  add        // [windex + 0x20, rindex + 0x20]
 
   // output stack: [windex + 32, rindex + 32]
 }
@@ -257,8 +253,8 @@
 
   FLAG_SAVE_BYTES32() // [windex, rindex]
 
-  0x21 eq ASSERT()    // [rindex]
   0x40 eq ASSERT()    // []
+  0x21 eq ASSERT()    // [rindex]
 
   // Validate that memory was written correctly
 
