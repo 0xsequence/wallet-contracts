@@ -4,8 +4,13 @@
 #define constant FREE_MEMORY_START = 0x40
 
 #define constant FLAG_READ_BYTES32_2_BYTES = 0x23
+#define constant FLAG_READ_ADDRESS_2_BYTES = 0x27
 
 #define constant READ_BYTES32_X_BYTES_FLAG_OFFSET = 0x21 // (FLAG_READ_BYTES32_2_BYTES - 2) since it starts at 2 bytes
+#define constant READ_ADDRESS_X_BYTES_FLAG_OFFSET = 0x25 // (FLAG_READ_ADDRESS_2_BYTES - 2) since it starts at 2 bytes
+
+#define constant BYTES32_SMV = 0x80
+#define constant ADDRESS_SMV = 0x01
 
 #define macro MAIN() = takes (0) returns (0) {
   0x00                 // [rindex]
@@ -40,6 +45,18 @@
   [ADDR_BYTES_STORAGE] sstore // [num + 1]
 
   // output stack: [num + 1]
+}
+
+#define macro BYTES32_STORAGE_POINTER() = takes (1) returns (1) {
+  // input stack: [index]
+  0x80 shl
+  // output stack: [index << 0x80]
+}
+
+#define macro ADDRESS_STORAGE_POINTER() = takes (1) returns (1) {
+  // input stack: [index]
+  0x01 add
+  // output stack: [index + 1]
 }
 
 #define macro BYTES32_NUM() = takes (0) returns (1) {
@@ -158,7 +175,7 @@
   // shifting it to the right by 0x60 bits
 
   0x60 shr                       // [addr, windex, rindex]
-  PULL_ADDRESS() 0x01 add sstore // [windex, rindex]
+  PULL_ADDRESS() ADDRESS_STORAGE_POINTER() sstore // [windex, rindex]
 
   // Add 20 bytes to both indexes
 
@@ -215,7 +232,7 @@
   dup3           // [windex, word, word, windex, rindex]
   mstore         // [word, windex, rindex]
 
-  PULL_BYTES32() 0x80 shl sstore  // [windex, rindex]
+  PULL_BYTES32() BYTES32_STORAGE_POINTER() sstore  // [windex, rindex]
 
   // Add 32 bytes to both indexes
 
@@ -260,25 +277,278 @@
 
 // Reads a stored bytes32 using a 2 to 5 bytes pointer index
 #define macro READ_BYTES32() = takes (3) returns (2) {
+  READ_STORAGE(READ_BYTES32_X_BYTES_FLAG_OFFSET, BYTES32_SMV, shl)
+}
+
+#define macro READ_ADDRESS() = takes (3) returns (2) {
+  READ_STORAGE(READ_ADDRESS_X_BYTES_FLAG_OFFSET, ADDRESS_SMV, add)
+}
+
+#define macro READ_STORAGE(flagOffset, smv, smc) = takes (3) returns (2) {
   // input stack: [flag, windex, rindex]
 
-  [READ_BYTES32_X_BYTES_FLAG_OFFSET] sub // [size, windex, rindex]
+  <flagOffset> swap1 sub // [size, windex, rindex]
 
   swap1 // [windex, size, rindex]
   swap2 // [rindex, size, windex]
+  swap1 // [size, rindex, windex]
 
-  LOAD_DYNAMIC_SIZE() // [index, nrindex + size, windex]
-
-  0x80 shl sload      // [bytes32, nrindex + size, windex]
+  LOAD_DYNAMIC_SIZE()      // [index, nrindex + size, windex]
+  <smv> <smc> sload   // [bytes32, nrindex + size, windex]
 
   dup3                // [windex, bytes32, nrindex + size, windex]
-  sstore              // [nrindex + size, windex]
+  mstore              // [nrindex + size, windex]
 
   swap1               // [windex, nrindex + size]
 
   0x20 add            // [windex + 0x20, nrindex + size]
 
   // output stack: [windex + 0x20, nrindex + size]
+}
+
+#[calldata("0x0201f020c002f1e0040203")]
+#define test TEST_READ_BYTES32() = {
+  // Save 3 different bytes32 values
+
+  0xfe9716a384ec3b055bb8aae87323a14412cbfceb52c95324dccf071fb3f83855
+  0x0201 0x80 shl sstore
+
+  0xcf85e6408b0191a7ed9970e635257854b95aa7b708f485ae667e6fd467e5f45e
+  0xf020c002 0x80 shl sstore
+
+  0xa577e893e614c9aa4b19f2369e1c177adab9fe3156970a39afc166c0f2d905ee
+  0xf1e0040203 0x80 shl sstore
+
+  // Read the first bytes32
+  0x00                        // [rindex]
+  0x00                        // [windex, rindex]
+  [FLAG_READ_BYTES32_2_BYTES] // [flag, windex, rindex]
+
+  READ_BYTES32() // [windex, rindex]
+
+  0x20 eq ASSERT() // [rindex]
+  0x02 eq ASSERT() // []
+
+  0x00 mload 0xfe9716a384ec3b055bb8aae87323a14412cbfceb52c95324dccf071fb3f83855 eq ASSERT() // []
+
+  // Read the second bytes32
+  0x02                                 // [rindex]
+  0x20                                 // [windex, rindex]
+  [FLAG_READ_BYTES32_2_BYTES] 0x02 add // [flag, windex, rindex]
+
+  READ_BYTES32() // [windex, rindex]
+
+  0x40 eq ASSERT() // [rindex]
+  0x06 eq ASSERT() // []
+
+  0x20 mload 0xcf85e6408b0191a7ed9970e635257854b95aa7b708f485ae667e6fd467e5f45e eq ASSERT() // []
+
+  // Read the third bytes32
+  0x06                                 // [rindex]
+  0x10                                 // [windex, rindex]
+
+  [FLAG_READ_BYTES32_2_BYTES] 0x03 add // [flag, windex, rindex]
+
+  READ_BYTES32() // [windex, rindex]
+
+  0x30 eq ASSERT() // [rindex]
+  0x0b eq ASSERT() // []
+
+  0x10 mload 0xa577e893e614c9aa4b19f2369e1c177adab9fe3156970a39afc166c0f2d905ee eq ASSERT() // []
+}
+
+#[calldata("0x0201f020c002f1e0040203")]
+#define test TEST_READ_ADDRESS() = {
+  // Save 3 different bytes32 values
+
+  0x000000000000000000000000d789f5242a537b0584893b564a8c7a4be35b9238
+  0x0201 ADDRESS_STORAGE_POINTER() sstore
+
+  0x000000000000000000000000d5b5127436fd875ab7c334dffb62533ba011c2d9
+  0xf020c002 ADDRESS_STORAGE_POINTER() sstore
+
+  0x0000000000000000000000008a745d2b92c6e02e8ed087581c63d073f98f2479
+  0xf1e0040203 ADDRESS_STORAGE_POINTER() sstore
+
+  // Read the first bytes32
+  0x00                        // [rindex]
+  0x00                        // [windex, rindex]
+  [FLAG_READ_ADDRESS_2_BYTES] // [flag, windex, rindex]
+
+  READ_ADDRESS() // [windex, rindex]
+
+  0x20 eq ASSERT() // [rindex]
+  0x02 eq ASSERT() // []
+
+  0x00 mload 0x000000000000000000000000d789f5242a537b0584893b564a8c7a4be35b9238 eq ASSERT() // []
+
+  // Read the second bytes32
+  0x02                                 // [rindex]
+  0x20                                 // [windex, rindex]
+  [FLAG_READ_ADDRESS_2_BYTES] 0x02 add // [flag, windex, rindex]
+
+  READ_ADDRESS() // [windex, rindex]
+
+  0x40 eq ASSERT() // [rindex]
+  0x06 eq ASSERT() // []
+
+  0x20 mload 0x000000000000000000000000d5b5127436fd875ab7c334dffb62533ba011c2d9 eq ASSERT() // []
+
+  // Read the third bytes32
+  0x06                                 // [rindex]
+  0x10                                 // [windex, rindex]
+
+  [FLAG_READ_ADDRESS_2_BYTES] 0x03 add // [flag, windex, rindex]
+
+  READ_ADDRESS() // [windex, rindex]
+
+  0x30 eq ASSERT() // [rindex]
+  0x0b eq ASSERT() // []
+
+  0x10 mload 0x0000000000000000000000008a745d2b92c6e02e8ed087581c63d073f98f2479 eq ASSERT() // []
+}
+
+// TODO: The first 4/5 bits of the exponent are never going to be used
+// (ther are literals for those values) it may be worth to use them
+// for special cases of power_2 (-1, +1, etc).
+#define macro READ_POWER_OF_2() = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  0x01          // [0x01, windex, rindex]
+  dup3          // [rindex, 0x01, windex, rindex]
+
+  calldataload  // [cdata[rindex], 0x01, windex, rindex]
+
+  0x00 byte     // [cdata[rindex][0:8], 0x01, windex, rindex]
+
+  shl           // [0x01 << cdata[rindex][0:8], windex, rindex]
+
+  dup2          // [windex, 0x01 << cdata[rindex][0:8], windex, rindex]
+  mstore        // [windex, rindex]
+
+
+  0x20 add           // [windex + 0x20, rindex]
+  swap1              // [rindex, windex + 0x20]
+  0x01 add           // [rindex + 0x01, windex + 0x20]
+  swap1              // [windex + 0x20, rindex + 0x01]
+
+  // output stack: [windex + 0x20, rindex + 0x01]
+}
+
+#[calldata("0x000203ff")]
+#define test TEST_READ_POWER_OF_2() = takes (2) returns (2) {
+  0x00 // [rindex]
+  0x00 // [windex, rindex]
+
+  READ_POWER_OF_2() // [windex, rindex]
+
+  0x20 eq ASSERT() // [rindex]
+  0x01 eq ASSERT() // []
+
+  0x00 mload 0x01 eq ASSERT() // []
+
+  0x01 // [rindex]
+  0x20 // [windex, rindex]
+
+  READ_POWER_OF_2() // [windex, rindex]
+
+  0x40 eq ASSERT() // [rindex]
+  0x02 eq ASSERT() // []
+
+  0x20 mload 0x04 eq ASSERT() // []
+
+  0x02 // [rindex]
+  0x05 // [windex, rindex]
+
+  READ_POWER_OF_2() // [windex, rindex]
+
+  0x25 eq ASSERT() // [rindex]
+  0x03 eq ASSERT() // []
+
+  0x05 mload 0x08 eq ASSERT() // []
+
+  0x03 // [rindex]
+  0x00 // [windex, rindex]
+
+  READ_POWER_OF_2() // [windex, rindex]
+
+  0x20 eq ASSERT() // [rindex]
+  0x04 eq ASSERT() // []
+
+  0x00 mload 0x8000000000000000000000000000000000000000000000000000000000000000 eq ASSERT() // []
+}
+
+#define macro READ_MAX_UINT256() = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff dup2 mstore
+  0x20 add           // [windex + 0x20, rindex]
+
+  // output stack: [windex + 0x20, rindex]
+}
+
+#define test TEST_READ_MAX_UINT256() = {
+  0x00 // [rindex]
+  0x10 // [windex, rindex]
+
+  READ_MAX_UINT256() // [windex, rindex]
+
+  0x30 eq ASSERT() // [rindex]
+  0x00 eq ASSERT() // []
+
+  0x10 mload 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff eq ASSERT() // []
+}
+
+#define macro READ_N_BYTES() = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  dup2          // [rindex, windex, rindex]
+  calldataload  // [cdata[rindex], windex, rindex]
+
+  0x00 byte     // [size, windex, rindex]
+
+  swap2         // [rindex, windex, size]
+  0x01 add      // [rindex + 1, windex, size]
+  swap2         // [size, windex, rindex + 1]
+
+  dup2          // [windex, size, windex, rindex + 1]
+  dup2 add      // [windex + size, size, windex, rindex + 1]
+  swap2         // [windex, size, windex + size, rindex + 1]
+
+  dup4          // [rindex + 1, windex, size, windex + size, rindex + 1]
+  dup3          // [size, rindex + 1, windex, size, windex + size, rindex + 1]
+  add           // [rindex + 1 + size, windex, size, windex + size, rindex + 1]
+  swap4         // [rindex + 1, windex, size, windex + size, rindex + 1 + size]
+  swap1         // [windex, rindex + 1, size, windex + size, rindex + 1 + size]
+
+  calldatacopy  // [windex, rindex + 1 + size]
+
+  // output stack: [windex + size, rindex + 1 + size]
+}
+
+#[calldata("0x02f1f240a3b3dcc26b3a2b584cf0427ac8ef901401c89b22613407ddfc6790209bf4151a2ed3d1275d5f8f13a8cbe8adda0193aaf438230c921b2d717dc314592b9f53fc")]
+#define test TEST_READ_N_BYTES() = {
+  0x00 // [rindex]
+  0x00 // [windex, rindex]
+
+  READ_N_BYTES() // [windex, rindex]
+
+  0x02 eq ASSERT() // [rindex]
+  0x03 eq ASSERT() // []
+
+  0x00 mload 0x00 byte 0xf1 eq ASSERT() // []
+  0x00 mload 0x01 byte 0xf2 eq ASSERT() // []
+
+  0x03 // [rindex]
+  0x20 // [windex, rindex]
+
+  READ_N_BYTES() // [windex, rindex]
+
+  0x60 eq ASSERT() // [rindex]
+  0x03 0x40 add 0x01 add eq ASSERT() // []
+
+  0x20 mload 0xa3b3dcc26b3a2b584cf0427ac8ef901401c89b22613407ddfc6790209bf4151a eq ASSERT() // []
+  0x40 mload 0x2ed3d1275d5f8f13a8cbe8adda0193aaf438230c921b2d717dc314592b9f53fc eq ASSERT() // []
 }
 
 #define macro LOAD_DYNAMIC_SIZE() = takes (2) returns (2) {
@@ -303,4 +573,23 @@
   shr           // [cdata[rindex] >> size bits, size + rindex]
 
   // output stack: [cdata[rindex] >> size bits, size + rindex]
+}
+
+#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899")]
+#define test TEST_LOAD_DYNAMIC_SIZE() = {
+  0x00 // [rindex]
+  0x02 // [size, rindex]
+
+  LOAD_DYNAMIC_SIZE() // [val, nrindex + size]
+
+  0xb2d1 eq ASSERT()    // [rindex]
+  0x02 eq ASSERT()      // []
+
+  0x04 // [rindex]
+  0x05 // [size, rindex]
+
+  LOAD_DYNAMIC_SIZE() // [val, nrindex + size]
+
+  0x7ef5838bb8 eq ASSERT()    // [rindex]
+  0x09 eq ASSERT()            // []
 }
