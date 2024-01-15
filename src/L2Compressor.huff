@@ -17,7 +17,7 @@
   [FREE_MEMORY_START]  // [windex, rindex]
 
   0x01                 // [flag, windex, rindex]
-  FLAG_READ_BYTES32()    // [windex, rindex]
+  READ_FLAG()          // [windex, rindex]
 }
 
 #define macro ADDRESSES_NUM() = takes (0) returns (1) {
@@ -84,6 +84,213 @@
   // output stack: [num + 1]
 }
 
+#define jumptable__packed FLAG_TABLE {
+  FLAG_READ_BYTES32_0_BYTES
+  FLAG_READ_BYTES32_1_BYTES
+  FLAG_READ_BYTES32_2_BYTES
+  FLAG_READ_BYTES32_3_BYTES
+  FLAG_READ_BYTES32_4_BYTES
+  FLAG_READ_BYTES32_5_BYTES
+  FLAG_READ_BYTES32_6_BYTES
+  FLAG_READ_BYTES32_7_BYTES
+  FLAG_READ_BYTES32_8_BYTES
+  FLAG_READ_BYTES32_9_BYTES
+  FLAG_READ_BYTES32_10_BYTES
+  FLAG_READ_BYTES32_11_BYTES
+  FLAG_READ_BYTES32_12_BYTES
+  FLAG_READ_BYTES32_13_BYTES
+  FLAG_READ_BYTES32_14_BYTES
+  FLAG_READ_BYTES32_15_BYTES
+  FLAG_READ_BYTES32_16_BYTES
+  FLAG_READ_BYTES32_17_BYTES
+  FLAG_READ_BYTES32_18_BYTES
+  FLAG_READ_BYTES32_19_BYTES
+  FLAG_READ_BYTES32_20_BYTES
+  FLAG_READ_BYTES32_21_BYTES
+  FLAG_READ_BYTES32_22_BYTES
+  FLAG_READ_BYTES32_23_BYTES
+  FLAG_READ_BYTES32_24_BYTES
+  FLAG_READ_BYTES32_25_BYTES
+  FLAG_READ_BYTES32_26_BYTES
+  FLAG_READ_BYTES32_27_BYTES
+  FLAG_READ_BYTES32_28_BYTES
+  FLAG_READ_BYTES32_29_BYTES
+  FLAG_READ_BYTES32_30_BYTES
+  FLAG_READ_BYTES32_31_BYTES
+  FLAG_READ_BYTES32_32_BYTES
+  JUMP_SAVE_ADDRESS     // 0x00
+  JUMP_SAVE_BYTES32     // 0x01
+  JUMP_READ_ADDRESS_2   // 0x02
+  JUMP_READ_ADDRESS_3   // 0x03
+  JUMP_READ_ADDRESS_4   // 0x04
+  JUMP_READ_ADDRESS_5   // 0x05
+  JUMP_READ_BYTES32_2   // 0x06
+  JUMP_READ_BYTES32_3   // 0x07
+  JUMP_READ_BYTES32_4   // 0x08
+  JUMP_READ_BYTES32_5   // 0x09
+  JUMP_READ_N_BYTES     // 0x0a
+  JUMP_READ_POWER_OF_2  // 0x0b
+}
+
+#define macro READ_FLAG(nested_read_flag_jump) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  dup2          // [rindex, windex, rindex]
+  calldataload  // [cdata[rindex], windex, rindex]
+  0x00 byte     // [flag, windex, rindex]
+
+  swap3         // [rindex, windex, flag]
+  0x01 add      // [rindex + 1, windex, flag]
+  swap3         // [flag, windex, rindex + 1]
+
+  __tablesize(FLAG_TABLE)     // [table_size, flag, windex, rindex + 1]
+  __tablestart(FLAG_TABLE)    // [table_start, table_size, flag, windex, rindex + 1]
+  0x00                        // [0x00, table_start, table_size, flag, windex, rindex + 1]
+  codecopy                    // [flag, windex, rindex + 1]
+
+  dup1                        // [flag, flag, windex, rindex + 1]
+  0x0b lt                     // [0x0b < flag, flag, windex, rindex + 1]
+  default jumpi               // [flag, windex, rindex + 1]
+
+  dup1                        // [flag, flag, windex, rindex + 1]
+  mload 0xf0 shr              // [dst, flag, windex, rindex + 1]
+  jump                        // [flag, windex, rindex + 1]
+
+  FLAG_READ_BYTES32_0_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_1_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_2_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_3_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_4_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_5_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_6_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_7_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_8_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_9_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_10_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_11_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_12_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_13_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_14_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_15_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_16_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_17_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_18_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_19_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_20_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_21_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_22_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_23_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_24_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_25_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_26_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_27_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_28_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_29_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_30_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_31_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+  FLAG_READ_BYTES32_32_BYTES:
+    READ_BYTES32()      // [windex, rindex]
+    jump end
+
+  JUMP_SAVE_ADDRESS:
+    SAVE_ADDRESS() // [windex, rindex]
+    jump end
+
+  JUMP_SAVE_BYTES32:
+    SAVE_BYTES32() // [windex, rindex]
+    jump end
+
+  JUMP_READ_ADDRESS_2:
+  JUMP_READ_ADDRESS_3:
+  JUMP_READ_ADDRESS_4:
+  JUMP_READ_ADDRESS_5:
+    READ_ADDRESS_STORAGE()      // [windex, rindex]
+    jump end
+
+  JUMP_READ_BYTES32_2:
+  JUMP_READ_BYTES32_3:
+  JUMP_READ_BYTES32_4:
+  JUMP_READ_BYTES32_5:
+    READ_BYTES32_STORAGE()      // [windex, rindex]
+    jump end
+
+  JUMP_READ_N_BYTES:
+    READ_N_BYTES()      // [windex, rindex]
+    jump end
+
+  JUMP_READ_POWER_OF_2:
+    READ_POWER_OF_2()   // [windex, rindex]
+    jump end
+
+  default:
+
+  end:
+}
+
 #define test TEST_NUMS() = {
   ADDRESSES_NUM()  // [num]
   0x00 eq ASSERT() // []
@@ -116,7 +323,7 @@
   0x01 eq ASSERT() // []
 }
 
-#define macro FLAG_READ_BYTES32() = takes (3) returns (2) {
+#define macro READ_BYTES32() = takes (3) returns (2) {
   // input stack: [flag, windex, rindex, initial]
 
   0x20       // [0x20, flag, windex, rindex, initial]
@@ -145,7 +352,7 @@
 
   0x02 // [flag, windex, rindex]
 
-  FLAG_READ_BYTES32() // [windex, rindex]
+  READ_BYTES32() // [windex, rindex]
 
   0x22 eq ASSERT()    // [rindex]
   0x03 eq ASSERT()    // []
@@ -158,7 +365,7 @@
   eq ASSERT() // []
 }
 
-#define macro FLAG_SAVE_ADDRESS() = takes (3) returns (2) {
+#define macro SAVE_ADDRESS() = takes (3) returns (2) {
   // input stack: [flag, windex, rindex]
 
   pop            // [windex, rindex]
@@ -191,13 +398,13 @@
 
 // 0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8e
 #[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a8"), value(0x01)]
-#define test TEST_FLAG_SAVE_ADDRESS() = {
+#define test TEST_SAVE_ADDRESS() = {
   0x01 // [rindex]
   0x20 // [windex, rindex]
 
   0x02 // [flag, windex, rindex]
 
-  FLAG_SAVE_ADDRESS() // [windex, rindex]
+  SAVE_ADDRESS() // [windex, rindex]
 
   0x40 eq ASSERT()    // [rindex]
   0x21 eq ASSERT()    // []
@@ -217,7 +424,7 @@
   ADDRESSES_NUM() 0x01 eq ASSERT() // []
 }
 
-#define macro FLAG_SAVE_BYTES32() = takes (3) returns (2) {
+#define macro SAVE_BYTES32() = takes (3) returns (2) {
   // input stack: [flag, windex, rindex]
 
   pop            // [windex, rindex]
@@ -245,13 +452,13 @@
 }
 
 #[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899"), value(0x01)]
-#define test TEST_FLAG_SAVE_BYTES32() = {
+#define test TEST_SAVE_BYTES32() = {
   0x01 // [rindex]
   0x20 // [windex, rindex]
 
   0x02 // [flag, windex, rindex]
 
-  FLAG_SAVE_BYTES32() // [windex, rindex]
+  SAVE_BYTES32() // [windex, rindex]
 
   0x40 eq ASSERT()    // []
   0x21 eq ASSERT()    // [rindex]
@@ -272,11 +479,11 @@
 }
 
 // Reads a stored bytes32 using a 2 to 5 bytes pointer index
-#define macro READ_BYTES32() = takes (3) returns (2) {
+#define macro READ_BYTES32_STORAGE() = takes (3) returns (2) {
   READ_STORAGE(READ_BYTES32_X_BYTES_FLAG_OFFSET, BYTES32_SMV, shl)
 }
 
-#define macro READ_ADDRESS() = takes (3) returns (2) {
+#define macro READ_ADDRESS_STORAGE() = takes (3) returns (2) {
   READ_STORAGE(READ_ADDRESS_X_BYTES_FLAG_OFFSET, ADDRESS_SMV, add)
 }
 
@@ -320,7 +527,7 @@
   0x00                        // [windex, rindex]
   [FLAG_READ_BYTES32_2_BYTES] // [flag, windex, rindex]
 
-  READ_BYTES32() // [windex, rindex]
+  READ_BYTES32_STORAGE() // [windex, rindex]
 
   0x20 eq ASSERT() // [rindex]
   0x02 eq ASSERT() // []
@@ -332,7 +539,7 @@
   0x20                                 // [windex, rindex]
   [FLAG_READ_BYTES32_2_BYTES] 0x02 add // [flag, windex, rindex]
 
-  READ_BYTES32() // [windex, rindex]
+  READ_BYTES32_STORAGE() // [windex, rindex]
 
   0x40 eq ASSERT() // [rindex]
   0x06 eq ASSERT() // []
@@ -345,7 +552,7 @@
 
   [FLAG_READ_BYTES32_2_BYTES] 0x03 add // [flag, windex, rindex]
 
-  READ_BYTES32() // [windex, rindex]
+  READ_BYTES32_STORAGE() // [windex, rindex]
 
   0x30 eq ASSERT() // [rindex]
   0x0b eq ASSERT() // []
@@ -371,7 +578,7 @@
   0x00                        // [windex, rindex]
   [FLAG_READ_ADDRESS_2_BYTES] // [flag, windex, rindex]
 
-  READ_ADDRESS() // [windex, rindex]
+  READ_ADDRESS_STORAGE() // [windex, rindex]
 
   0x20 eq ASSERT() // [rindex]
   0x02 eq ASSERT() // []
@@ -383,7 +590,7 @@
   0x20                                 // [windex, rindex]
   [FLAG_READ_ADDRESS_2_BYTES] 0x02 add // [flag, windex, rindex]
 
-  READ_ADDRESS() // [windex, rindex]
+  READ_ADDRESS_STORAGE() // [windex, rindex]
 
   0x40 eq ASSERT() // [rindex]
   0x06 eq ASSERT() // []
@@ -396,7 +603,7 @@
 
   [FLAG_READ_ADDRESS_2_BYTES] 0x03 add // [flag, windex, rindex]
 
-  READ_ADDRESS() // [windex, rindex]
+  READ_ADDRESS_STORAGE() // [windex, rindex]
 
   0x30 eq ASSERT() // [rindex]
   0x0b eq ASSERT() // []
