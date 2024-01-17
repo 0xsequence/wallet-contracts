@@ -1,0 +1,28 @@
+#include "../L2Compressor.huff"
+
+// Function Dispatching
+#define macro MAIN() = takes (1) returns (1) {
+  // readAdvanced with whatever calldata is passed
+  // first 32 bytes returns the new rindex and the next 32 bytes returns the new windex
+
+  0x00          // [rindex]
+  0x80          // [windex, rindex]
+
+  READ_FLAG()   // [windex, rindex]
+
+  0x80          // [0x80, windex, rindex]
+  dup2          // [windex, 0x80, windex, rindex]
+  sub           // [len, windex, rindex]
+
+  swap2         // [rindex, windex, len]
+
+  0x00 mstore   // [windex, len]
+  0x20 mstore   // [len]
+
+  0x60 0x40 mstore  // [len]
+  dup1 0x60 mstore  // [len]
+
+  0x80 add      // [len + 0x80]
+
+  0x00 return
+}
