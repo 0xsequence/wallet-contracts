@@ -9,6 +9,8 @@ import "forge-std/console2.sol";
 import { HuffConfig } from "foundry-huff/HuffConfig.sol";
 import { HuffDeployer } from "foundry-huff/HuffDeployer.sol";
 
+uint256 constant FMS = 0xa0;
+
 contract L2CompressorHuffTests is AdvTest {
   address public imp;
 
@@ -29,7 +31,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 1);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(uint256(0)), res);
   }
@@ -42,7 +44,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 2);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(uint256(_val)), res);
   }
@@ -55,7 +57,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 3);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(uint256(_val)), res);
   }
@@ -70,7 +72,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 1 + _size);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     _content = abi.encodePacked(_content, bytes32(0));
     uint256 expected;
@@ -92,7 +94,7 @@ contract L2CompressorHuffTests is AdvTest {
     (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
 
     assertEq(rindex, 1 + 20);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_addr), res);
 
@@ -104,7 +106,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 3);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_addr), res);
 
@@ -117,7 +119,7 @@ contract L2CompressorHuffTests is AdvTest {
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
 
     assertEq(rindex, 1 + 20);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_addr2), res);
 
@@ -129,7 +131,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 4);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_addr2), res);
 
@@ -140,7 +142,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 5);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_addr2), res);
 
@@ -151,7 +153,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 6);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_addr2), res);
   }
@@ -165,7 +167,7 @@ contract L2CompressorHuffTests is AdvTest {
     (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
 
     assertEq(rindex, 1 + 32);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_b1), res);
 
@@ -177,7 +179,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 3);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_b1), res);
 
@@ -190,7 +192,7 @@ contract L2CompressorHuffTests is AdvTest {
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
 
     assertEq(rindex, 1 + 32);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_b2), res);
 
@@ -202,7 +204,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 4);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_b2), res);
 
@@ -213,7 +215,7 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 5);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_b2), res);
 
@@ -224,20 +226,36 @@ contract L2CompressorHuffTests is AdvTest {
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
     assertEq(rindex, 6);
-    assertEq(windex, 0x80 + 32);
+    assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_b2), res);
   }
 
-  // function test_read_flag_bytes_n(bytes calldata _data, bytes calldata _extra) external {
-  //   (bool s, bytes memory r) = imp.staticcall(
-  //     abi.encodePacked(hex"2b", _data, _extra)
-  //   );
+  function test_read_flag_bytes_n(bytes calldata _data, bytes calldata _extra) external {
+    (bool s, bytes memory r) = imp.staticcall(
+      abi.encodePacked(hex"2b", hex"04", uint32(_data.length), _data, _extra)
+    );
 
-  //   assertTrue(s);
-  //   (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+    assertTrue(s);
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
 
-  //   assertEq(rindex, _data.length + 1);
+    assertEq(rindex, _data.length + 1 + 1 + 4);
+    assertEq(windex, FMS + _data.length);
+    assertEq(res, _data);
+  }
 
-  // }
+  function test_read_flag_abi_encode_1() external {
+    bytes4 selector = 0x9988aabb;
+    uint256 val = type(uint64).max;
+
+    (bool s, bytes memory r) = imp.staticcall(
+      abi.encodePacked(hex"2e", selector, hex"08", uint64(val))
+    );
+
+    assertTrue(s);
+    console.logBytes(r);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+    console.logBytes(res);
+  }
 }

@@ -131,9 +131,16 @@
   JUMP_READ_BYTES32_5        // 0x2a
   JUMP_READ_N_BYTES          // 0x2b
   JUMP_READ_POWER_OF_2       // 0x2c
+  FLAG_ABI_0_PARAM           // 0x2d
+  FLAG_ABI_1_PARAM           // 0x2e
+  FLAG_ABI_2_PARAMS          // 0x2f
+  FLAG_ABI_3_PARAMS          // 0x20
+  FLAG_ABI_4_PARAMS          // 0x31
+  FLAG_ABI_5_PARAMS          // 0x32
+  FLAG_ABI_6_PARAMS          // 0x33
 }
 
-#define constant HIGHEST_FLAG = 0x2c
+#define constant HIGHEST_FLAG = 0x32
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nested_read_flag_start:
@@ -292,6 +299,28 @@
     READ_POWER_OF_2()   // [windex, rindex]
     end jump
 
+  FLAG_ABI_0_PARAM:
+    READ_ABI(nested_read_flag_start, 0x00) // [windex, rindex]
+    end jump
+  FLAG_ABI_1_PARAM:
+    READ_ABI(nested_read_flag_start, 0x01) // [windex, rindex]
+    end jump
+  FLAG_ABI_2_PARAMS:
+    READ_ABI(nested_read_flag_start, 0x02) // [windex, rindex]
+    end jump
+  FLAG_ABI_3_PARAMS:
+    READ_ABI(nested_read_flag_start, 0x03) // [windex, rindex]
+    end jump
+  FLAG_ABI_4_PARAMS:
+    READ_ABI(nested_read_flag_start, 0x04) // [windex, rindex]
+    end jump
+  FLAG_ABI_5_PARAMS:
+    READ_ABI(nested_read_flag_start, 0x05) // [windex, rindex]
+    end jump
+  FLAG_ABI_6_PARAMS:
+    READ_ABI(nested_read_flag_start, 0x06) // [windex, rindex]
+    end jump
+
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
     // notice that we start at 0x01 since 0x00 can be pushed with the flag 0x00
@@ -304,23 +333,32 @@
   end:
 
   // If the NESTED memory slot is not 0, then we need to jump there
-  // it means that this READ_FLAG() is nested
+  // but each "return" only takes 2 bytes, so we need to only jump to
+  // to the last 2 bytes. Notice that this limits nested calls to a depth
+  // of 16 only.
 
   [NESTED_READ_FLAG_RETURN_MSLOT] mload  // [nrfr, windex, rindex]
+  0xffff and                             // [nrfr & 0xffff, windex, rindex]
   dup1 jumpi                             // [windex, rindex]
 }
 
 #define macro PERFORM_NESTED_READ_FLAG(nrfs) = takes(0) returns (0) {
-  back                                // [back]
-  [NESTED_READ_FLAG_RETURN_MSLOT]     // [nrfr, back]
-  mstore                              // []
+  // input stack: []
 
-  <nrfs> jump                         // []
+  [NESTED_READ_FLAG_RETURN_MSLOT] mload // [nrfr]
+  0x10 shl                              // [nrfr << 0x10]
+  back or                               // [nrfr << 0x10 | back]
+  [NESTED_READ_FLAG_RETURN_MSLOT]       // [nrfr, new_nrfr]
+  mstore                                // []
+
+  <nrfs> jump // []
 
   back:
 
-  // Clear the back pointer!
-  0x00 [NESTED_READ_FLAG_RETURN_MSLOT] mstore
+  // Clear the last callback pointer
+  [NESTED_READ_FLAG_RETURN_MSLOT] mload  // [nrfr]
+  0x10 shr                               // [nrfr >> 0x10]
+  [NESTED_READ_FLAG_RETURN_MSLOT] mstore // []
 }
 
 #define macro BACKREAD_SINGLE_VALUE() = takes (1) returns (2) {
@@ -402,6 +440,92 @@
 
   ADDRESSES_NUM()  // [num]
   0x03 eq ASSERT() // []
+}
+
+#define macro READ_ABI(nrfs, nparams) = takes (3) returns (2) {
+  // input stack: [flag, windex, rindex]
+
+  pop            // [windex, rindex]
+
+  // Reserve 32 bytes to store the size, dynamic values
+  // use the first 32 bytes to store the size of the value
+  0x20           // [0x20, windex, rindex]
+  add            // [0x20 + windex, rindex]
+
+  0x04           // [0x04, windex, rindex]
+  dup1           // [0x04, 0x04, windex, rindex]
+  dup4           // [rindex, 0x04, 0x04, windex, rindex]
+  dup4           // [windex, rindex, 0x04, 0x04, windex, rindex]
+  calldatacopy   // [0x04, windex, rindex]
+
+  dup2           // [windex, 0x04, windex, rindex]
+
+  swap3          // [rindex, 0x04, windex, windex]
+  add            // [rindex + 0x04, windex, windex]
+
+  swap1          // [windex, rindex + 0x04, windex]
+  0x04 add       // [windex + 0x04, rindex + 0x04, windex]
+  swap1          // [rindex + 0x04, windex + 0x04, windex]
+
+  0x00           // [i, rindex, windex, prev_windex]
+  read_param:    // [i, rindex, windex, prev_windex]
+    swap2        // [windex, rindex, i, prev_windex]
+
+    PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, rindex, i, prev_windex]
+    BACKREAD_SINGLE_VALUE()          // [val, windex, rindex, i, prev_windex]
+
+    dup2         // [windex, val, windex, rindex, i, prev_windex]
+    mstore       // [windex, rindex, i, prev_windex]
+
+    0x20 add     // [windex + 0x20, rindex, i, prev_windex]
+
+    swap2        // [i, rindex, windex + 0x20, prev_windex]
+
+    0x01 add     // [i + 1, rindex, windex, prev_windex]
+
+    dup1         // [i + 1, i + 1, rindex, windex, prev_windex]
+    <nparams> lt // [i + 1 < nparams, i + 1, rindex, windex, prev_windex]
+    read_param   // [read_param, i + 1 < nparams, i + 1, rindex, windex, prev_windex]
+    jumpi        // [i + 1, rindex, windex, prev_windex]
+
+  pop            // [rindex, windex, prev_windex]
+
+  // We need to fill the last 32 bytes with 0x00, dynamic values
+  // must be padded to 32 bytes
+
+  dup3           // [prev_windex, rindex, windex, prev_windex]
+  dup3           // [windex, prev_windex, rindex, windex, prev_windex]
+  
+  sub            // [size, rindex, windex, prev_index]
+  dup1           // [size, size, rindex, windex, prev_index]
+
+  0x1f and       // [size % 32, size, rindex, windex, prev_index]
+  0x20 sub       // [32 - size % 32, size, rindex, windex, prev_index]
+
+  // Zero out the memory, just in case
+
+  0x00          // [0x00, 32 - size % 32, size, rindex, windex, prev_index]
+  dup5          // [windex, 0x00, 32 - size % 32, size, rindex, windex, prev_index]
+  mstore        // [32 - size % 32, size, rindex, windex, prev_index]
+
+  // Advance the windex by the number of required bytes
+  swap1         // [size, 32 - size % 32, rindex, windex, prev_index]
+  swap3         // [windex, 32 - size % 32, rindex, size, prev_index]
+  add           // [windex, rindex, size, prev_index]
+
+  // Now we need to store the full size of the value
+  // luckly windex - prev_index should give us the padded index
+
+  swap2         // [size, rindex, windex, prev_index]
+  0x20          // [0x20, size, rindex, windex, prev_index]
+  dup5          // [prev_index, size, rindex, windex, prev_index]
+  sub           // [(0x20 - prev_index), size, rindex, windex, prev_index]
+  mstore        // [rindex, windex, prev_index]
+
+  swap2         // [prev_index, windex, rindex]
+  pop           // [windex, rindex]
+
+  // output stack: [windex, rindex]
 }
 
 #define macro READ_BYTES32(shift_bits, read_bytes) = takes (3) returns (2) {
