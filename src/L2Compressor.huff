@@ -442,6 +442,150 @@
   0x03 eq ASSERT() // []
 }
 
+#define macro READ_TRANSACTION() = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  // The first byte gives us information about what the transaction contains
+
+  dup2          // [rindex, windex, rindex]
+  calldataload  // [cdata[rindex], windex, rindex]
+  0x00 byte     // [tflag, windex, rindex]
+  swap2         // [rindex, windex, tflag]
+  0x01 add      // [rindex + 1, windex, tflag]
+  swap2         // [tflag, windex, rindex + 1]
+
+  // First bit of the flag determines if the transaction uses delegateCall
+
+  dup1          // [tflag, tflag, windex, rindex]
+  0x07 shr      // [tflag >> 0x07, tflag, windex, rindex]
+  dup3          // [windex, tflag >> 0x07, tflag, windex, rindex]
+  mstore        // [tflag, windex, rindex]
+
+  swap1         // [windex, tflag, rindex]
+  0x20 add      // [windex + 0x20, tflag, rindex]
+
+  // Second bit of the flag determines if the transaction uses revertOnError
+
+  dup2          // [tflag, windex, tflag, rindex]
+  0x06 shr      // [tflag >> 0x06, windex, tflag, rindex]
+  0x01 and      // [tflag >> 0x06 & 0x01, windex, tflag, rindex]
+  dup3          // [windex, tflag >> 0x06 & 0x01, windex, tflag, rindex]
+  mstore        // [windex, tflag, rindex]
+
+  0x20 add      // [windex + 0x20, tflag, rindex]
+
+  // Third bit of the flag determines if the transaction has a defined gasLimit
+
+  dup2                // [tflag, windex, tflag, rindex]
+  0x05 shr            // [tflag >> 0x05, windex, tflag, rindex]
+  0x01 and            // [has_gas_limit, windex, tflag, rindex]
+  has_gas_limit jumpi // [windex, tflag, rindex]
+
+    // The transaction has no gas_limit, we still need to write 0s
+    // to the memory and push the write index
+
+    0x00 dup2 mstore // [windex, tflag, rindex]
+    0x20 add         // [windex + 0x20, tflag, rindex]
+
+    // Re-arrange the stack so it matches the other branch
+
+    swap1         // [tflag, windex, rindex]
+    swap2         // [rindex, windex, tflag]
+    swap1         // [windex, rindex, tflag]
+
+    end_gas_Limit_if jump
+
+  has_gas_limit:
+
+    // Read advanced; this should only increase 32 bytes
+    // but we don't check that, buyer beware
+
+    swap1         // [tflag, windex, rindex]
+    swap2         // [rindex, windex, tflag]
+    swap1         // [windex, rindex, tflag]
+
+    READ_FLAG()   // [windex, rindex, tflag]
+
+  end_gas_Limit_if:
+
+  // All transactions must define an address
+  // this is simple, as it is just one more flag
+
+  READ_FLAG()
+
+  // 4th bit of the flag determines if the transaction has a defined value
+
+  dup3               // [tflag, windex, rindex, tflag]
+  0x04 shr           // [tflag >> 0x04, windex, rindex, tflag]
+  0x01 and           // [tflag >> 0x04 & 0x01, windex, rindex, tflag]
+  has_value jumpi    // [windex, rindex, tflag]
+
+    // The transaction has no value, we still need to write 0s
+    // to the memory and push the write index
+
+    0x00 dup2 mstore   // [windex, rindex, tflag]
+    0x20 add           // [windex + 0x20, rindex, tflag]
+    end_value_if jump
+
+  has_value:
+
+    // Read advanced; this should only increase 32 bytes
+    // but we don't check that, buyer beware
+
+    READ_FLAG()   // [windex, rindex, tflag]
+  
+  end_value_if:
+
+  // 1st bit determines if the transaction has data
+
+  swap2           // [tflag, rindex, windex]
+  0x01 and        // [has_data, rindex, windex]  
+
+  swap1           // [rindex, has_data, windex]
+  swap2           // [windex, has_data, rindex]
+  swap1           // [has_data, windex, rindex]
+
+  has_data jumpi  // [windex, rindex]
+    
+    // The transaction has no data, we still need to write 0s
+    // both for the pointer and size
+
+    dup1          // [windex, windex, rindex]
+    0x20 add      // [windex + 0x20, windex, rindex]
+    dup1          // [windex + 0x20, windex + 0x20, windex, rindex]
+    swap2         // [windex, windex + 0x20, windex + 0x20, rindex]
+    mstore        // [windex + 0x20, rindex]
+    0x00          // [0x00, windex + 0x20, rindex]
+    dup2          // [windex + 0x20, 0x00, windex + 0x20, rindex]
+    mstore        // [windex + 0x20, rindex]
+    0x20 add      // [windex + 0x40, rindex]
+
+    end_data_if jump
+
+  has_data:       // [windex, rindex]
+
+    swap1         // [rindex, windex]
+    dup2          // [windex, rindex, prev_windex]
+
+    // Leave some room to store the size of the data
+    0x20 add      // [windex + 0x20, rindex, prev_windex]
+
+    READ_FLAG()   // [windex, rindex, prev_windex]
+
+    dup3          // [prev_windex, windex, rindex, prev_windex]
+    dup2          // [windex, prev_windex, windex, rindex, prev_windex]
+    sub           // [(windex - prev_windex), windex, rindex, prev_windex]
+    0x20 add      // [size, windex, rindex, prev_windex]
+
+    dup4          // [prev_windex, size, windex, rindex, prev_windex]
+    mstore        // [windex, rindex, prev_windex]
+    swap2         // [prev_windex, rindex, windex]
+    pop           // [rindex, windex]
+    swap1         // [windex, rindex]
+
+  end_data_if:
+}
+
 #define macro READ_ABI(nrfs, nparams) = takes (3) returns (2) {
   // input stack: [flag, windex, rindex]
 
