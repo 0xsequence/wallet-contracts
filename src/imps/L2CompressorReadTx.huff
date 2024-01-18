@@ -10,7 +10,7 @@
   0x00          // [rindex]
   [FMS]         // [windex, rindex]
 
-  READ_TRANSACTION()   // [windex, rindex]
+  READ_TRANSACTION_STANDALONE()   // [windex, rindex]
 
   [FMS]         // [0xa0, windex, rindex]
   dup2          // [windex, 0xa0, windex, rindex]
