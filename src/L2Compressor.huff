@@ -162,10 +162,15 @@
   [HIGHEST_FLAG] lt           // [HIGHEST_FLAG < flag, flag, windex, rindex + 1]
   default jumpi               // [flag, windex, rindex + 1]
 
-  __tablesize(FLAG_TABLE)     // [table_size, flag, windex, rindex + 1]
-  __tablestart(FLAG_TABLE)    // [table_start, table_size, flag, windex, rindex + 1]
-  0x00                        // [0x00, table_start, table_size, flag, windex, rindex + 1]
-  codecopy                    // [flag, windex, rindex + 1]
+  // Starts to become cheaper to skip the loading
+  // after 5 times, most real world cases will have more than
+  // 5 times. Notice that this assumes a single READ_FLAG instance
+  0x00 mload no_load jumpi
+    __tablesize(FLAG_TABLE)     // [table_size, flag, windex, rindex + 1]
+    __tablestart(FLAG_TABLE)    // [table_start, table_size, flag, windex, rindex + 1]
+    0x00                        // [0x00, table_start, table_size, flag, windex, rindex + 1]
+    codecopy                    // [flag, windex, rindex + 1]
+  no_load:
 
   dup1                        // [flag, flag, windex, rindex + 1]
   0x01 shl                    // [flag << 0x01, flag, windex, rindex + 1]
@@ -444,6 +449,97 @@
 
   ADDRESSES_NUM()  // [num]
   0x03 eq ASSERT() // []
+}
+
+#define macro READ_TRANSACTIONS_STANDALONE() = takes (2) returns (2) {
+  skip jump
+  rf:
+  READ_FLAG()
+  skip:
+  READ_TRANSACTIONS(rf)
+}
+
+#define macro READ_TRANSACTIONS(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  dup2          // [rindex, windex, rindex]
+  calldataload  // [mem[rindex], windex, rindex]
+  0x00 byte     // [tx_num, windex, rindex]
+  swap2         // [rindex, windex, tx_num]
+  0x01 add      // [rindex + 1, windex, tx_num]
+  0x00          // [i, rindex, windex, tx_num]
+
+  swap3         // [tx_num, rindex, windex, i]
+  swap2         // [windex, rindex, tx_num, i]
+
+  // Write the number of transactions
+
+  dup3         // [tx_num, windex, rindex, tx_num, i]
+  dup2         // [windex, tx_num, windex, rindex, tx_num, i]
+  mstore       // [windex, rindex, tx_num, i]
+  0x20 add     // [windex + 0x20, rindex, tx_num, i]
+
+  // Reserve 32 bytes for each tx (excluding the first one, as we already know)
+  // these will be used to store start of each tx
+
+  // The first transaction will always start at 0x20 * txs + 0x20
+
+  dup3         // [tx_num, windex, rindex, tx_num, i]
+  0x05 shl     // [r_start, windex, rindex, tx_num, i]
+  dup1         // [r_start, r_start, windex, rindex, tx_num, i]
+  
+  dup3         // [windex, r_start, r_start, ts_index, rindex, tx_num, i]
+  add          // [windex, r_start, ts_index, rindex, tx_num, i]
+  
+  swap3        // [rindex, r_start, ts_index, windex, tx_num, i]
+  dup4         // [windex, rindex, r_start, ts_index, windex, tx_num, i]
+
+  do_tx:       // [windex, rindex, pos, ts_index, windex, tx_num, i]
+
+    // store pos for this transaction
+    // but keep a copy of it as it will be used again
+
+    swap2         // [pos, rindex, windex, ts_index, windex, tx_num, i]
+    dup1          // [pos, pos, rindex, windex, ts_index, windex, tx_num, i]
+    dup5          // [ts_index, pos, pos, rindex, windex, ts_index, windex, tx_num, i]
+    mstore        // [pos, rindex, windex, ts_index, windex, tx_num, i]
+
+    swap3         // [ts_index, rindex, windex, pos, windex, tx_num, i]
+    0x20 add      // [ts_index, rindex, windex, pos, windex, tx_num, i]
+    
+    swap3         // [pos, rindex, windex, ts_index, windex, tx_num, i]
+    swap2         // [windex, rindex, pos, ts_index, windex, tx_num, i]
+
+    READ_TRANSACTION(<nrfs>) // [windex, rindex, pos, ts_index, prev_windex, tx_num, i]
+
+    // size = windex - prev_windex
+
+    swap4                    // [prev_windex, rindex, r_start, ts_index, windex, tx_num, i]
+    dup5                     // [windex, prev_windex, rindex, r_start, ts_index, windex, tx_num, i]
+    sub                      // [tx_i_size, rindex, r_start, ts_index, windex, tx_num, i]
+
+    // pos = size + r_start
+
+    swap1                    // [rindex, tx_i_size, r_start, ts_index, windex, tx_num, i]
+    swap2                    // [r_start, tx_i_size, rindex, ts_index, windex, tx_num, i]
+    add                      // [pos, rindex, ts_index, windex, tx_num, i]
+
+    // Re-arrange the stack, we are about to loop back
+
+    swap1                    // [rindex, pos, ts_index, windex, tx_num, i]
+    dup4                     // [windex, rindex, pos, ts_index, windex, tx_num, i]
+
+    // Check if we have more to read
+    swap6                    // [i, rindex, pos, ts_index, windex, tx_num, windex]
+    0x01 add                 // [i + 1, rindex, pos, ts_index, windex, tx_num, windex]
+    swap6                    // [windex, rindex, pos, ts_index, windex, tx_num, i]
+    dup7                     // [i, windex, rindex, pos, ts_index, windex, tx_num, i]
+
+    // The ts_index contains the index of the transaction x 32, we can
+    // easily get the i and compare it with the len of transactions to know if we must continue or not
+
+    dup7                     // [tx_num, i, windex, rindex, pos, ts_index, windex, tx_num, i]
+    xor do_tx jumpi          // [windex, rindex, pos, ts_index, windex, tx_num]
 }
 
 #define macro READ_TRANSACTION_STANDALONE() = takes (2) returns (2) {
