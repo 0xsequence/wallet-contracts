@@ -451,6 +451,46 @@
   0x03 eq ASSERT() // []
 }
 
+#define macro READ_NONCE_STANDALONE() = takes (2) returns (2) {
+  skip jump
+  rf:
+  READ_FLAG()
+  skip:
+  READ_NONCE(rf)
+}
+
+#define macro READ_NONCE(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, rindex]
+  BACKREAD_SINGLE_VALUE()          // [val, windex, rindex]
+
+  0x60 shl                         // [space, windex, rindex]
+
+  swap2                            // [rindex, windex, space]
+  swap1                            // [windex, rindex, space]
+
+  PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, rindex, space]
+  BACKREAD_SINGLE_VALUE()          // [nonce, windex, rindex, space]
+
+  // Assume that we are reading the nonce already masked
+
+  swap1                            // [windex, nonce, rindex, space]
+  swap2                            // [rindex, nonce, windex, space]
+  swap3                            // [space, nonce, windex, rindex]
+  or                               // [(space | nonce), windex, rindex]
+
+  // Now we have the compact representation of the nonce
+  // we can write it to memory on windex
+
+  dup2                             // [windex, (space | nonce), windex, rindex]
+  mstore                           // [windex, rindex]
+
+  0x20 add                         // [windex + 0x20, rindex]
+
+  // output stack: [windex, rindex]
+}
+
 #define macro READ_TRANSACTIONS_STANDALONE() = takes (2) returns (2) {
   skip jump
   rf:
