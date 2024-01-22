@@ -148,6 +148,10 @@ function packToBytes(uint256 value, uint256 b) pure returns (bytes memory) {
   }
 }
 
+function encodeWord(bytes32 _value) pure returns (bytes memory) {
+  return encodeWord(uint256(_value));
+}
+
 function encodeWord(uint256 _value) pure returns (bytes memory) {
   uint8 b = requiredBytesFor(_value);
   return abi.encodePacked(b, packToBytes(_value, b));
@@ -186,4 +190,32 @@ function encode_raw_address(address _addr) pure returns (bytes memory) {
 
 function encode_bytes_n(bytes memory _data) pure returns (bytes memory) {
   return abi.encodePacked(uint8(0x2b), encodeWord(_data.length), _data);
+}
+
+function encode_abi_call(bytes4 _selector) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x2d), _selector);
+}
+
+function encode_abi_call(bytes4 _selector, bytes32 _v1) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x2e), _selector, encodeWord(_v1));
+}
+
+function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x2f), _selector, encodeWord(_v1), encodeWord(_v2));
+}
+
+function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3) pure returns (bytes memory) {
+    return abi.encodePacked(uint8(0x30), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3));
+}
+
+function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3, bytes32 _v4) pure returns (bytes memory) {
+    return abi.encodePacked(uint8(0x31), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4));
+}
+
+function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3, bytes32 _v4, bytes32 _v5) pure returns (bytes memory) {
+    return abi.encodePacked(uint8(0x32), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4), encodeWord(_v5));
+}
+
+function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3, bytes32 _v4, bytes32 _v5, bytes32 _v6) pure returns (bytes memory) {
+    return abi.encodePacked(uint8(0x33), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4), encodeWord(_v5), encodeWord(_v6));
 }

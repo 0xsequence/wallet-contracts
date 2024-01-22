@@ -9,6 +9,8 @@ import "forge-std/console2.sol";
 import { HuffConfig } from "foundry-huff/HuffConfig.sol";
 import { HuffDeployer } from "foundry-huff/HuffDeployer.sol";
 
+import "./L2CompressorEncoder.sol";
+
 uint256 constant FMS = 0xa0;
 
 contract L2CompressorHuffReadFlagTests is AdvTest {
@@ -244,18 +246,115 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(res, _data);
   }
 
-  function test_read_flag_abi_encode_1() external {
-    bytes4 selector = 0x9988aabb;
-    uint256 val = type(uint64).max;
-
-    (bool s, bytes memory r) = imp.staticcall(
-      abi.encodePacked(hex"2e", selector, hex"08", uint64(val))
-    );
+  function test_read_flag_abi_encode_0(bytes4 _selector) external {
+    bytes memory encoded = encode_abi_call(_selector);
+    (bool s, bytes memory r) = imp.staticcall(encoded);
 
     assertTrue(s);
-    console.logBytes(r);
 
     (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
-    console.logBytes(res);
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_selector), res);
+  }
+
+  function test_read_flag_abi_encode_1(bytes4 _selector, bytes32 _v1) external {
+    bytes memory encoded = encode_abi_call(_selector, _v1);
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_selector, _v1), res);
+  }
+
+  function test_read_flag_abi_encode_2(bytes4 _selector, bytes32 _v1, bytes32 _v2) external {
+    bytes memory encoded = encode_abi_call(_selector, _v1, _v2);
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_selector, _v1, _v2), res);
+  }
+
+  function test_read_flag_abi_encode_3(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3) external {
+    bytes memory encoded = encode_abi_call(_selector, _v1, _v2, _v3);
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_selector, _v1, _v2, _v3), res);
+  }
+
+  function test_read_flag_abi_encode_4(
+    bytes4 _selector,
+    bytes32 _v1,
+    bytes32 _v2,
+    bytes32 _v3,
+    bytes32 _v4
+  ) external {
+    bytes memory encoded = encode_abi_call(_selector, _v1, _v2, _v3, _v4);
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_selector, _v1, _v2, _v3, _v4), res);
+  }
+
+  function test_read_flag_abi_encode_5(
+    bytes4 _selector,
+    bytes32 _v1,
+    bytes32 _v2,
+    bytes32 _v3,
+    bytes32 _v4,
+    bytes32 _v5
+  ) external {
+    bytes memory encoded = encode_abi_call(_selector, _v1, _v2, _v3, _v4, _v5);
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_selector, _v1, _v2, _v3, _v4, _v5), res);
+  }
+
+  function test_read_flag_abi_encode_5(
+    bytes4 _selector,
+    bytes32 _v1,
+    bytes32 _v2,
+    bytes32 _v3,
+    bytes32 _v4,
+    bytes32 _v5,
+    bytes32 _v6
+  ) external {
+    bytes memory encoded = encode_abi_call(_selector, _v1, _v2, _v3, _v4, _v5, _v6);
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_selector, _v1, _v2, _v3, _v4, _v5, _v6), res);
   }
 }

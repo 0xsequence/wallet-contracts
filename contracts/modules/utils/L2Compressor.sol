@@ -8,8 +8,6 @@ import "../commons/submodules/auth/SequenceBaseSig.sol";
 import "../../utils/LibBytesPointer.sol";
 import "../../utils/LibBytes.sol";
 
-import "forge-std/console.sol";
-
 function bytesToUint256(
   bytes memory _b
 ) pure returns (uint256 result) {
