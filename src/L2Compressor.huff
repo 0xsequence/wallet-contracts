@@ -13,12 +13,17 @@
 #define constant BYTES32_SMV = 0x80
 #define constant ADDRESS_SMV = 0x01
 
-// #define macro MAIN() = takes (0) returns (0) {
-//   0x00                 // [rindex]
-//   [FMS]  // [windex, rindex]
+// #define jumptable FLAG_SELECTORS {
+//   execute_many_transactions:
+//   execute_transaction:
+//   read_address:
+//   read_bytes32:
+//   sizes:
+  
+// }
 
-//   0x01                 // [flag, windex, rindex]
-//   READ_FLAG()          // [windex, rindex]
+// #define macro MAIN() = takes (0) returns (0) {
+  
 // }
 
 #define macro ADDRESSES_NUM() = takes (0) returns (1) {
@@ -140,7 +145,7 @@
   FLAG_ABI_6_PARAMS          // 0x33
 }
 
-#define constant HIGHEST_FLAG = 0x32
+#define constant HIGHEST_FLAG = 0x33
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -451,6 +456,96 @@
   0x03 eq ASSERT() // []
 }
 
+#define macro READ_EXECUTE_STANDALONE() = takes (2) returns (2) {
+  skip jump
+  rf:
+  READ_FLAG()
+  skip:
+  READ_EXECUTE(rf)
+}
+
+#define macro READ_EXECUTE(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  // The execution function signature of Sequence is 0x7a9a1628
+
+  __RIGHTPAD(0x7a9a1628)  // [0x7a9a1628, windex, rindex]
+  dup2                    // [windex, 0x7a9a1628, windex, rindex]
+  mstore                  // [windex, rindex]
+  0x04 add                // [windex, rindex]
+
+  // The first value is always where do the list of transactions starts
+  // this is always the same, as the list of transactions is the first
+  // dynamic type
+
+  0x60        // [0x60, windex, rindex]
+  dup2        // [windex, 0x60, windex, rindex]
+  mstore      // [windex, rindex]
+  0x20 add    // [windex, rindex]
+
+  // Reading the nonce is the simplest one, it is just a value
+
+  READ_NONCE(nrfs)  // [windex, rindex]
+
+  // We can't know when the signature will start, since we need to
+  // read the list of transactions first. So we leave a copy of the pointer
+  // to write it later.
+  
+  swap1         // [rindex, windex]
+  dup2          // [windex, rindex, prev_windex]
+  0x20 add      // [windex, rindex, prev_windex]
+
+  // We start reading the transactions, the macro takes care of writting the
+  // internal pointers for them (and the number of transactions)
+
+  READ_TRANSACTIONS(nrfs) // [windex, rindex, prev_windex]
+
+  // The signature starts at windex - prev_windex + 0x20
+  // and the pointer needs to be written to prev_windex
+
+  swap1               // [rindex, windex, prev_windex]
+  swap2               // [prev_windex, windex, rindex]
+  dup1                // [prev_windex, prev_windex, windex, rindex]
+  dup3                // [windex, prev_windex, prev_windex, windex, rindex]
+  sub                 // [(windex - prev_windex), prev_windex, windex, rindex]
+  0x40 add            // [sig_starts, prev_windex, windex, rindex]
+  swap1               // [prev_windex, sig_starts, windex, rindex]
+
+  mstore              // [windex, rindex]
+
+  // Now we can read the signature, we just read a nested flag, it can generate
+  // a Sequence signature. We only need to take care of the size and the padding
+
+  0x20 add            // [windex, rindex]
+  swap1               // [rindex, windex]
+  dup2                // [windex, rindex, prev_index]
+
+  PERFORM_NESTED_READ_FLAG(nrfs)
+
+  swap1               // [rindex, windex, prev_windex]
+  swap2               // [prev_windex, windex, rindex]
+  dup1                // [prev_windex, prev_windex, windex, rindex]
+  dup3                // [windex, prev_windex, prev_windex, windex, rindex]
+  sub                 // [size, prev_windex, windex, rindex]
+  dup1                // [size, size, prev_windex, windex, rindex]
+  swap2               // [prev_windex, size, size, windex, rindex]
+  0x20 swap1 sub      // [size_place, size, size, windex, rindex]
+  mstore              // [size, windex, rindex]
+
+  // Last thing is handling the padding, bytes need to be multiple of 0x20
+
+  0x00                // [0x00, size, windex, rindex]
+  dup3                // [windex, 0x00, size, windex, rindex]
+  mstore              // [size, windex, rindex]
+
+  0x1f and            // [size % 32, windex, rindex]
+  0x20 sub            // [pad_diff, windex, rindex]
+  0x1f and            // [pad_diff % 32, windex, rindex]
+  add                 // [(padd_diff + windex), rindex]
+
+  // output stack: [windex, rindex]
+}
+
 #define macro READ_NONCE_STANDALONE() = takes (2) returns (2) {
   skip jump
   rf:
@@ -579,7 +674,17 @@
     // easily get the i and compare it with the len of transactions to know if we must continue or not
 
     dup7                     // [tx_num, i, windex, rindex, pos, ts_index, windex, tx_num, i]
-    xor do_tx jumpi          // [windex, rindex, pos, ts_index, windex, tx_num]
+    xor do_tx jumpi          // [windex, rindex, pos, ts_index, windex, tx_num, i]
+
+  pop                        // [rindex, pos, ts_index, windex, tx_num, i]
+  swap5                      // [i, pos, ts_index, windex, tx_num, rindex]
+  pop                        // [pos, ts_index, windex, tx_num, rindex]
+  pop                        // [ts_index, windex, tx_num, rindex]
+  pop                        // [windex, tx_num, rindex]
+  swap1                      // [tx_num, windex, rindex]
+  pop                        // [windex, rindex]
+
+  // output stack: [windex, rindex]
 }
 
 #define macro READ_TRANSACTION_STANDALONE() = takes (2) returns (2) {
