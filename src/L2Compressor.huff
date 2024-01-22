@@ -174,11 +174,10 @@
     codecopy                    // [flag, windex, rindex + 1]
   no_load:
 
-  dup1                        // [flag, flag, windex, rindex + 1]
-  0x01 shl                    // [flag << 0x01, flag, windex, rindex + 1]
-  mload                       // [word, flag, windex, rindex + 1]
-  0xf0 shr                    // [word >> 0xf0, flag, windex, rindex + 1]
-  jump                        // [flag, windex, rindex + 1]
+  0x01 shl                    // [flag << 0x01, windex, rindex + 1]
+  mload                       // [word, windex, rindex + 1]
+  0xf0 shr                    // [word >> 0xf0, windex, rindex + 1]
+  jump                        // [windex, rindex + 1]
 
   FLAG_READ_BYTES32_0_BYTES:
     READ_BYTES32_EMPTY()     // [windex, rindex]
@@ -878,9 +877,7 @@
 }
 
 #define macro READ_ABI(nrfs, nparams) = takes (3) returns (2) {
-  // input stack: [flag, windex, rindex]
-
-  pop            // [windex, rindex]
+  // input stack: [windex, rindex]
 
   // Reserve 32 bytes to store the size, dynamic values
   // use the first 32 bytes to store the size of the value
@@ -965,9 +962,7 @@
 }
 
 #define macro READ_BYTES32(shift_bits, read_bytes) = takes (3) returns (2) {
-  // input stack: [flag, windex, rindex]
-
-  pop            // [windex, rindex]
+  // input stack: [windex, rindex]
 
   0x20           // [0x20, windex, rindex]
 
@@ -991,9 +986,7 @@
 }
 
 #define macro READ_BYTES32_EMPTY() = takes (3) returns (2) {
-  // input stack: [flag, windex, rindex]
-
-  pop            // [windex, rindex]
+  // input stack: [windex, rindex]
 
   0x00           // [0x00, windex, rindex]
   dup2           // [windex, 0x00, windex, rindex]
@@ -1002,13 +995,11 @@
   0x20           // [0x20, windex, rindex]
   add            // [(0x20 + windex), rindex]
 
-  // input stack: [flag, windex, rindex]
+  // input stack: [windex, rindex]
 }
 
 #define macro READ_BYTES32_WORD() = takes (3) returns (2) {
-  // input stack: [flag, windex, rindex]
-
-  pop            // [windex, rindex]
+  // input stack: [windex, rindex]
 
   0x20           // [0x20, windex, rindex]
   dup1           // [0x20, 0x20, windex, rindex]
@@ -1032,7 +1023,6 @@
 #define test TEST_FLAG_READ_BYTES32() = {
   0x01            // [rindex]
   [FMS] 0x40 add  // [windex, rindex]
-  0x00            // [flag, windex, rindex]
 
   READ_BYTES32(0xf0, 0x02)      // [windex, rindex]
 
@@ -1043,7 +1033,6 @@
 
   0x00  // [rindex]
   [FMS] // [windex, rindex]
-  0xff  // [flag, windex, rindex]
 
   READ_BYTES32(0x00, 0x20) // [windex, rindex]
 
@@ -1054,7 +1043,6 @@
 
   0x00           // [rindex]
   [FMS] 0x40 add // [windex, rindex]
-  0x00           // [flag, windex, rindex]
 
   READ_BYTES32_WORD() // [windex, rindex]
 
@@ -1066,7 +1054,6 @@
 
   0x15           // [rindex]
   [FMS] 0x10 add // [windex, rindex]
-  0xf1           // [flag, windex, rindex]
 
   READ_BYTES32_EMPTY() // [windex, rindex]
 
@@ -1077,9 +1064,7 @@
 }
 
 #define macro SAVE_ADDRESS() = takes (3) returns (2) {
-  // input stack: [flag, windex, rindex]
-
-  pop            // [windex, rindex]
+  // input stack: [windex, rindex]
 
   dup2           // [rindex, windex, rindex]
   calldataload   // [word, windex, rindex]
@@ -1110,8 +1095,6 @@
   0x01  // [rindex]
   [FMS] // [windex, rindex]
 
-  0x02 // [flag, windex, rindex]
-
   SAVE_ADDRESS() // [windex, rindex]
 
   [FMS] 0x20 add eq ASSERT() // [rindex]
@@ -1133,9 +1116,7 @@
 }
 
 #define macro SAVE_BYTES32() = takes (3) returns (2) {
-  // input stack: [flag, windex, rindex]
-
-  pop            // [windex, rindex]
+  // input stack: [windex, rindex]
 
   dup2           // [rindex, windex, rindex]
   calldataload   // [word, windex, rindex]
@@ -1163,8 +1144,6 @@
 #define test TEST_SAVE_BYTES32() = {
   0x01 // [rindex]
   0x20 // [windex, rindex]
-
-  0x02 // [flag, windex, rindex]
 
   SAVE_BYTES32() // [windex, rindex]
 
@@ -1196,9 +1175,8 @@
 }
 
 #define macro READ_STORAGE(smv, smc, read_bytes, read_bits_shift) = takes (3) returns (2) {
-  // input stack: [flag, windex, rindex]
+  // input stack: [windex, rindex]
 
-  pop   // [windex, rindex]
   swap1 // [rindex, windex]
 
   LOAD_DYNAMIC_SIZE(<read_bytes>, <read_bits_shift>) // [index, nrindex + size, windex]
@@ -1230,7 +1208,6 @@
   // Read the first bytes32
   0x00                        // [rindex]
   0x00                        // [windex, rindex]
-  [FLAG_READ_BYTES32_2_BYTES] // [flag, windex, rindex]
 
   READ_BYTES32_STORAGE(0x02, 0xf0) // [windex, rindex]
 
@@ -1242,7 +1219,6 @@
   // Read the second bytes32
   0x02                                 // [rindex]
   0x20                                 // [windex, rindex]
-  [FLAG_READ_BYTES32_2_BYTES] 0x02 add // [flag, windex, rindex]
 
   READ_BYTES32_STORAGE(0x04, 0xe0) // [windex, rindex]
 
@@ -1254,8 +1230,6 @@
   // Read the third bytes32
   0x06                                 // [rindex]
   0x10                                 // [windex, rindex]
-
-  [FLAG_READ_BYTES32_2_BYTES] 0x03 add // [flag, windex, rindex]
 
   READ_BYTES32_STORAGE(0x05, 0xd8) // [windex, rindex]
 
@@ -1281,7 +1255,6 @@
   // Read the first bytes32
   0x00                        // [rindex]
   0x00                        // [windex, rindex]
-  [FLAG_READ_ADDRESS_2_BYTES] // [flag, windex, rindex]
 
   READ_ADDRESS_STORAGE(0x02, 0xf0) // [windex, rindex]
 
@@ -1293,7 +1266,6 @@
   // Read the second bytes32
   0x02                                 // [rindex]
   0x20                                 // [windex, rindex]
-  [FLAG_READ_ADDRESS_2_BYTES] 0x02 add // [flag, windex, rindex]
 
   READ_ADDRESS_STORAGE(0x04, 0xe0) // [windex, rindex]
 
@@ -1305,8 +1277,6 @@
   // Read the third bytes32
   0x06                                 // [rindex]
   0x10                                 // [windex, rindex]
-
-  [FLAG_READ_ADDRESS_2_BYTES] 0x03 add // [flag, windex, rindex]
 
   READ_ADDRESS_STORAGE(0x05, 0xd8) // [windex, rindex]
 
@@ -1408,9 +1378,7 @@
 }
 
 #define macro READ_N_BYTES(nrfs) = takes (2) returns (2) {
-  // input stack: [flag, windex, rindex]
-
-  pop                              // [windex, rindex]
+  // input stack: [windex, rindex]
 
   PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, rindex]
   BACKREAD_SINGLE_VALUE()          // [size, windex, rindex]

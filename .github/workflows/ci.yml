@@ -119,7 +119,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
   huff-tests:
-    name: Foundry tests
+    name: Huff tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
