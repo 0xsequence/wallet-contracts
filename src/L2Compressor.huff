@@ -7,9 +7,6 @@
 #define constant FLAG_READ_BYTES32_2_BYTES = 0x27
 #define constant FLAG_READ_ADDRESS_2_BYTES = 0x23
 
-#define constant READ_BYTES32_X_BYTES_FLAG_OFFSET = 0x25 // (FLAG_READ_BYTES32_2_BYTES - 2) since it starts at 2 bytes
-#define constant READ_ADDRESS_X_BYTES_FLAG_OFFSET = 0x21 // (FLAG_READ_ADDRESS_2_BYTES - 2) since it starts at 2 bytes
-
 #define constant BYTES32_SMV = 0x80
 #define constant ADDRESS_SMV = 0x01
 
@@ -292,17 +289,29 @@
     end jump
 
   JUMP_READ_ADDRESS_2:
+    READ_ADDRESS_STORAGE(0x02, 0xf0)  // [windex, rindex]
+    end jump
   JUMP_READ_ADDRESS_3:
+    READ_ADDRESS_STORAGE(0x03, 0xe8)  // [windex, rindex]
+    end jump
   JUMP_READ_ADDRESS_4:
+    READ_ADDRESS_STORAGE(0x04, 0xe0)  // [windex, rindex]
+    end jump
   JUMP_READ_ADDRESS_5:
-    READ_ADDRESS_STORAGE()      // [windex, rindex]
+    READ_ADDRESS_STORAGE(0x05, 0xd8)  // [windex, rindex]
     end jump
 
   JUMP_READ_BYTES32_2:
+    READ_BYTES32_STORAGE(0x02, 0xf0)  // [windex, rindex]
+    end jump
   JUMP_READ_BYTES32_3:
+    READ_BYTES32_STORAGE(0x03, 0xe8)  // [windex, rindex]
+    end jump
   JUMP_READ_BYTES32_4:
+    READ_BYTES32_STORAGE(0x04, 0xe0)  // [windex, rindex]
+    end jump
   JUMP_READ_BYTES32_5:
-    READ_BYTES32_STORAGE()      // [windex, rindex]
+    READ_BYTES32_STORAGE(0x05, 0xd8)  // [windex, rindex]
     end jump
 
   JUMP_READ_N_BYTES:
@@ -1178,32 +1187,29 @@
 }
 
 // Reads a stored bytes32 using a 2 to 5 bytes pointer index
-#define macro READ_BYTES32_STORAGE() = takes (3) returns (2) {
-  READ_STORAGE(READ_BYTES32_X_BYTES_FLAG_OFFSET, BYTES32_SMV, shl)
+#define macro READ_BYTES32_STORAGE(read_bytes, read_bits_shift) = takes (3) returns (2) {
+  READ_STORAGE(BYTES32_SMV, shl, <read_bytes>, <read_bits_shift>)
 }
 
-#define macro READ_ADDRESS_STORAGE() = takes (3) returns (2) {
-  READ_STORAGE(READ_ADDRESS_X_BYTES_FLAG_OFFSET, ADDRESS_SMV, add)
+#define macro READ_ADDRESS_STORAGE(read_bytes, read_bits_shift) = takes (3) returns (2) {
+  READ_STORAGE(ADDRESS_SMV, add, <read_bytes>, <read_bits_shift>)
 }
 
-#define macro READ_STORAGE(flagOffset, smv, smc) = takes (3) returns (2) {
+#define macro READ_STORAGE(smv, smc, read_bytes, read_bits_shift) = takes (3) returns (2) {
   // input stack: [flag, windex, rindex]
 
-  <flagOffset> swap1 sub // [size, windex, rindex]
+  pop   // [windex, rindex]
+  swap1 // [rindex, windex]
 
-  swap1 // [windex, size, rindex]
-  swap2 // [rindex, size, windex]
-  swap1 // [size, rindex, windex]
+  LOAD_DYNAMIC_SIZE(<read_bytes>, <read_bits_shift>) // [index, nrindex + size, windex]
+  <smv> <smc> sload                                 // [bytes32, nrindex + size, windex]
 
-  LOAD_DYNAMIC_SIZE() // [index, nrindex + size, windex]
-  <smv> <smc> sload   // [bytes32, nrindex + size, windex]
+  dup3      // [windex, bytes32, nrindex + size, windex]
+  mstore    // [nrindex + size, windex]
 
-  dup3                // [windex, bytes32, nrindex + size, windex]
-  mstore              // [nrindex + size, windex]
+  swap1     // [windex, nrindex + size]
 
-  swap1               // [windex, nrindex + size]
-
-  0x20 add            // [windex + 0x20, nrindex + size]
+  0x20 add  // [windex + 0x20, nrindex + size]
 
   // output stack: [windex + 0x20, nrindex + size]
 }
@@ -1226,7 +1232,7 @@
   0x00                        // [windex, rindex]
   [FLAG_READ_BYTES32_2_BYTES] // [flag, windex, rindex]
 
-  READ_BYTES32_STORAGE() // [windex, rindex]
+  READ_BYTES32_STORAGE(0x02, 0xf0) // [windex, rindex]
 
   0x20 eq ASSERT() // [rindex]
   0x02 eq ASSERT() // []
@@ -1238,7 +1244,7 @@
   0x20                                 // [windex, rindex]
   [FLAG_READ_BYTES32_2_BYTES] 0x02 add // [flag, windex, rindex]
 
-  READ_BYTES32_STORAGE() // [windex, rindex]
+  READ_BYTES32_STORAGE(0x04, 0xe0) // [windex, rindex]
 
   0x40 eq ASSERT() // [rindex]
   0x06 eq ASSERT() // []
@@ -1251,7 +1257,7 @@
 
   [FLAG_READ_BYTES32_2_BYTES] 0x03 add // [flag, windex, rindex]
 
-  READ_BYTES32_STORAGE() // [windex, rindex]
+  READ_BYTES32_STORAGE(0x05, 0xd8) // [windex, rindex]
 
   0x30 eq ASSERT() // [rindex]
   0x0b eq ASSERT() // []
@@ -1277,7 +1283,7 @@
   0x00                        // [windex, rindex]
   [FLAG_READ_ADDRESS_2_BYTES] // [flag, windex, rindex]
 
-  READ_ADDRESS_STORAGE() // [windex, rindex]
+  READ_ADDRESS_STORAGE(0x02, 0xf0) // [windex, rindex]
 
   0x20 eq ASSERT() // [rindex]
   0x02 eq ASSERT() // []
@@ -1289,7 +1295,7 @@
   0x20                                 // [windex, rindex]
   [FLAG_READ_ADDRESS_2_BYTES] 0x02 add // [flag, windex, rindex]
 
-  READ_ADDRESS_STORAGE() // [windex, rindex]
+  READ_ADDRESS_STORAGE(0x04, 0xe0) // [windex, rindex]
 
   0x40 eq ASSERT() // [rindex]
   0x06 eq ASSERT() // []
@@ -1302,7 +1308,7 @@
 
   [FLAG_READ_ADDRESS_2_BYTES] 0x03 add // [flag, windex, rindex]
 
-  READ_ADDRESS_STORAGE() // [windex, rindex]
+  READ_ADDRESS_STORAGE(0x05, 0xd8) // [windex, rindex]
 
   0x30 eq ASSERT() // [rindex]
   0x0b eq ASSERT() // []
@@ -1425,26 +1431,21 @@
 }
 
 
-#define macro LOAD_DYNAMIC_SIZE() = takes (2) returns (2) {
-  // input stack: [size, rindex]
+#define macro LOAD_DYNAMIC_SIZE(read_bytes, read_bits_shift) = takes (1) returns (2) {
+  // input stack: [rindex]
 
-  dup2          // [rindex, size, rindex]
+  dup1               // [rindex, rindex]
 
-  dup2          // [size, rindex, size, rindex]
-  add           // [size + rindex, size, rindex]
-  swap2         // [rindex, size, size + rindex]
+  <read_bytes> add   // [rindex + size, rindex]
+  swap1              // [rindex, rindex + size]
 
-  calldataload  // [cdata[rindex], size, size + rindex]
+  calldataload       // [cdata[rindex], rindex]
 
   // Value needs to be shifted, so we only read
   // the first "size" bytes
 
-  swap1         // [size, cdata[rindex], size + rindex]
-  0x08 mul      // [size bits, cdata[rindex], size + rindex]
-  0x0100        // [0x0100, size bits, cdata[rindex], size + rindex]
-  sub           // [0x0100 - size bits, cdata[rindex], size + rindex]
-
-  shr           // [cdata[rindex] >> size bits, size + rindex]
+  <read_bits_shift>  // [size, cdata[rindex], rindex]
+  shr                // [cdata[rindex] >> size bits, size + rindex]
 
   // output stack: [cdata[rindex] >> size bits, size + rindex]
 }
@@ -1452,17 +1453,15 @@
 #[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899")]
 #define test TEST_LOAD_DYNAMIC_SIZE() = {
   0x00 // [rindex]
-  0x02 // [size, rindex]
 
-  LOAD_DYNAMIC_SIZE() // [val, nrindex + size]
+  LOAD_DYNAMIC_SIZE(0x02, 0xf0) // [val, nrindex + size]
 
   0xb2d1 eq ASSERT()    // [rindex]
   0x02 eq ASSERT()      // []
 
   0x04 // [rindex]
-  0x05 // [size, rindex]
 
-  LOAD_DYNAMIC_SIZE() // [val, nrindex + size]
+  LOAD_DYNAMIC_SIZE(0x05, 0xd8) // [val, nrindex + size]
 
   0x7ef5838bb8 eq ASSERT()    // [rindex]
   0x09 eq ASSERT()            // []
