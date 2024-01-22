@@ -140,9 +140,11 @@
   FLAG_ABI_4_PARAMS          // 0x31
   FLAG_ABI_5_PARAMS          // 0x32
   FLAG_ABI_6_PARAMS          // 0x33
+  FLAG_NESTED_N_FLAGS_8      // 0x34
+  FLAG_NESTED_N_FLAGS_16     // 0x35
 }
 
-#define constant HIGHEST_FLAG = 0x33
+#define constant HIGHEST_FLAG = 0x35
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -342,6 +344,14 @@
   FLAG_ABI_6_PARAMS:
     READ_ABI_6(nrfs) // [windex, rindex]
     end jump
+    
+  FLAG_NESTED_N_FLAGS_8:
+    READ_NESTED_N_FLAGS_8(nrfs)  // [windex, rindex]
+    end jump 
+
+  FLAG_NESTED_N_FLAGS_16:
+    READ_NESTED_N_FLAGS_16(nrfs)  // [windex, rindex]
+    end jump 
 
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
@@ -392,6 +402,61 @@
   mload          // [mem[windex - 0x20], windex - 0x20]
 
   // output stack: [mem[windex - 0x20], windex - 0x20]
+}
+
+#define macro READ_NESTED_N_FLAGS_8(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1       // [rindex, windex]
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8)  // [size, rindex, windex]
+
+  swap2       // [windex, rindex, size]
+  READ_NESTED_N_FLAGS(nrfs)
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_NESTED_N_FLAGS_16(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1       // [rindex, windex]
+  LOAD_DYNAMIC_SIZE(0x02, 0xf0)  // [size, rindex, windex]
+
+  swap2       // [windex, rindex, size]
+  READ_NESTED_N_FLAGS(nrfs)
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_NESTED_N_FLAGS(nrfs) = takes (3) returns (2) {
+  // input stack: [windex, rindex, n]
+
+  0x00          // [i, windex, rindex, n]
+
+  read_more:    // [i, windex, rindex, n]
+
+    swap2       // [rindex, windex, i, n]
+    swap1       // [windex, rindex, i, n]
+    
+    PERFORM_NESTED_READ_FLAG(nrfs) // [windex, rindex, i, n]
+
+    swap1                          // [rindex, windex, i, n]
+    swap2                          // [i, windex, rindex, n]
+
+    0x01 add                       // [i + 1, windex, rindex, n]
+
+    dup4                           // [n, i, windex, rindex, n]
+    dup2                           // [i, n, i, windex, rindex, n]
+    lt                             // [(i < n), i, windex, rindex, n]
+    
+    read_more jumpi                // [i, windex, rindex, n]
+
+  pop           // [windex, rindex, n]
+  swap2         // [n, rindex, windex]
+  pop           // [rindex, windex]
+  swap1         // [windex, rindex]
+
+  // output stack: [windex, rindex]
 }
 
 #[calldata("0x02f1f2")]

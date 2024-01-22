@@ -219,3 +219,19 @@ function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3
 function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3, bytes32 _v4, bytes32 _v5, bytes32 _v6) pure returns (bytes memory) {
     return abi.encodePacked(uint8(0x33), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4), encodeWord(_v5), encodeWord(_v6));
 }
+
+function encode_nested(bytes memory _a, bytes memory _b) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x34), uint8(2), _a, _b);
+}
+
+function encode_nested(bytes memory _a, bytes memory _b, bytes memory _c) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x34), uint8(3), _a, _b, _c);
+}
+
+function encode_nested(bytes[] memory _bs) pure returns (bytes memory) {
+  bytes memory res = abi.encodePacked(uint8(0x35), uint16(_bs.length));
+  for (uint256 i = 0; i < _bs.length; i++) {
+    res = abi.encodePacked(res, _bs[i]);
+  }
+  return res;
+}

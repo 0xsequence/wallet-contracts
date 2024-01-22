@@ -357,4 +357,47 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(windex, FMS + res.length);
     assertEq(abi.encodePacked(_selector, _v1, _v2, _v3, _v4, _v5, _v6), res);
   }
+
+  function test_read_nested(bytes memory _dynamic, uint256 _val1, uint256 _val2) external {
+    bytes memory encoded = encode_nested(
+      encode_bytes_n(_dynamic),
+      encode_nested(
+        encodeWord(_val1),
+        encodeWord(_val2)
+      )
+    );
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+    assertEq(s, true);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(_dynamic, _val1, _val2), res);
+  }
+
+  function test_read_encode_nested_long() external {
+    bytes[] memory vals = new bytes[](2000);
+
+    for (uint256 i = 0; i < vals.length; i++) {
+      vals[i] = encodeWord(i * 2);
+    }
+
+    bytes memory encoded = encode_nested(vals);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+    assertEq(s, true);
+
+    bytes memory expected;
+    for (uint256 i = 0; i < vals.length; i++) {
+      expected = abi.encodePacked(expected, uint256(i * 2));
+    }
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(expected, res);
+  }
 }
