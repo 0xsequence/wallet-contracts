@@ -235,3 +235,15 @@ function encode_nested(bytes[] memory _bs) pure returns (bytes memory) {
   }
   return res;
 }
+
+function encode_eoa_signature(uint8 _weight, bytes memory _sig) pure returns (bytes memory) {
+  if (_sig.length != 66) {
+    revert("Invalid signature length");
+  }
+
+  if (_weight != 0 && _weight <= 4) {
+    return abi.encodePacked(uint8(0x36 + _weight), _sig);
+  }
+
+  return abi.encodePacked(uint8(0x36), uint8(_weight), _sig);
+}

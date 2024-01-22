@@ -142,9 +142,15 @@
   FLAG_ABI_6_PARAMS          // 0x33
   FLAG_NESTED_N_FLAGS_8      // 0x34
   FLAG_NESTED_N_FLAGS_16     // 0x35
+  // Signature specific methods
+  FLAG_SIGNATURE_W0          // 0x36
+  FLAG_SIGNATURE_W1          // 0x37
+  FLAG_SIGNATURE_W2          // 0x38
+  FLAG_SIGNATURE_W3          // 0x39
+  FLAG_SIGNATURE_W4          // 0x3a
 }
 
-#define constant HIGHEST_FLAG = 0x35
+#define constant HIGHEST_FLAG = 0x3a
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -348,10 +354,25 @@
   FLAG_NESTED_N_FLAGS_8:
     READ_NESTED_N_FLAGS_8(nrfs)  // [windex, rindex]
     end jump 
-
   FLAG_NESTED_N_FLAGS_16:
-    READ_NESTED_N_FLAGS_16(nrfs)  // [windex, rindex]
+    READ_NESTED_N_FLAGS_16(nrfs) // [windex, rindex]
     end jump 
+
+  FLAG_SIGNATURE_W0:
+    READ_SIGNATURE_W0()     // [windex, rindex]
+    end jump
+  FLAG_SIGNATURE_W1:
+    READ_SIGNATURE_WX(0x01) // [windex, rindex]
+    end jump
+  FLAG_SIGNATURE_W2:
+    READ_SIGNATURE_WX(0x02) // [windex, rindex]
+    end jump
+  FLAG_SIGNATURE_W3:
+    READ_SIGNATURE_WX(0x03) // [windex, rindex]
+    end jump
+  FLAG_SIGNATURE_W4:
+    READ_SIGNATURE_WX(0x04) // [windex, rindex]
+    end jump
 
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
@@ -455,6 +476,71 @@
   swap2         // [n, rindex, windex]
   pop           // [rindex, windex]
   swap1         // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_SIGNATURE_W0() = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1        // [rindex, windex]
+
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8)   // [weight, rindex, windex]
+
+  swap2        // [windex, rindex, weight]
+
+  READ_SIGNATURE()                // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_SIGNATURE_WX(weight) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 
+
+  swap1        // [rindex, windex]
+  <weight>     // [weight, rindex, windex]
+  swap2        // [windex, rindex, weight]
+
+  READ_SIGNATURE()                // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_SIGNATURE() = takes (3) returns (2) {
+  // input stack: [windex, rindex, weight]
+
+  // First thing we must write is the flag (sequence)
+
+  0x00          // [0x00, windex, rindex, weight]
+  dup2          // [windex, 0x00, windex, rindex, weight]
+  mstore        // [windex, rindex, weight]
+  0x01 add      // [windex, rindex, weight]
+
+  // Second thing we must write is the weight, always 1 byte
+
+  swap2         // [weight, rindex, windex]
+  dup3          // [windex, weight, rindex, windex]
+  mstore8       // [rindex, windex]
+  swap1         // [windex, rindex]
+  0x01 add      // [windex, rindex]
+
+  // EOA signatures are always 66 bytes long
+  // we can just copy them
+
+  0x42          // [0x42, windex, rindex]
+  dup1          // [0x42, 0x42, windex, rindex]
+
+  dup4          // [rindex, 0x42, 0x42, windex, rindex]
+  dup4          // [windex, rindex, 0x42, 0x42, windex, rindex]
+  calldatacopy  // [0x42, windex, rindex]
+
+  dup1          // [0x42, 0x42, windex, rindex]
+  swap3         // [rindex, 0x42, windex, 0x42]
+  add           // [rindex, windex, 0x42]
+  swap2         // [0x42, windex, rindex]
+  add           // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
