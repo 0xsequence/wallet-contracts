@@ -275,3 +275,29 @@ function encode_nested(uint8 _weight, uint8 _threshold, bytes memory _nested) pu
 function encode_dynamic_signature(uint8 _weight, address _signer, bytes memory _signature) pure returns (bytes memory) {
   return abi.encodePacked(uint8(0x44), uint8(_weight), encodeWord(uint256(uint160(_signer))), encode_bytes_n(_signature));
 }
+
+function encode_sequence_signature(bool _noChainId, uint256 _threshold, uint32 _checkpoint, bytes memory _tree) pure returns (bytes memory) {
+  uint8 flag;
+
+  bytes memory t;
+
+  if (_noChainId) {
+    if (_threshold <= type(uint8).max) {
+      flag = 0x45;
+      t = abi.encodePacked(uint8(_threshold));
+    } else {
+      flag = 0x47;
+      t = abi.encodePacked(uint16(_threshold));
+    }
+  } else {
+    if (_threshold <= type(uint8).max) {
+      flag = 0x46;
+      t = abi.encodePacked(uint8(_threshold));
+    } else {
+      flag = 0x48;
+      t = abi.encodePacked(uint16(_threshold));
+    }
+  }
+
+  return abi.encodePacked(flag, t, encodeWord(_checkpoint), encode_bytes_n(_tree));
+}

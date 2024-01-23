@@ -517,4 +517,19 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
 
     assertEq(res, abi.encodePacked(uint8(2), uint8(_weight), _signer, uint24(_signature.length + 1), _signature, uint8(3)));
   }
+
+  function test_read_sequence_signature(bool _noChainId, uint16 _threshold, uint32 _checkpoint, bytes memory _tree) external {
+    bytes memory encoded = encode_sequence_signature(_noChainId, _threshold, _checkpoint, _tree);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+
+    assertEq(res, abi.encodePacked(uint8(_noChainId ? 0x02 : 0x01), uint16(_threshold), uint32(_checkpoint), _tree));
+  }
 }
