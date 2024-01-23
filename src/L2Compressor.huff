@@ -148,9 +148,14 @@
   FLAG_SIGNATURE_W2          // 0x38
   FLAG_SIGNATURE_W3          // 0x39
   FLAG_SIGNATURE_W4          // 0x3a
+  FLAG_ADDRESS_W0            // 0x3b
+  FLAG_ADDRESS_W1            // 0x3c
+  FLAG_ADDRESS_W2            // 0x3d
+  FLAG_ADDRESS_W3            // 0x3f
+  FLAG_ADDRESS_W4            // 0x40
 }
 
-#define constant HIGHEST_FLAG = 0x3a
+#define constant HIGHEST_FLAG = 0x40
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -374,6 +379,22 @@
     READ_SIGNATURE_WX(0x04) // [windex, rindex]
     end jump
 
+  FLAG_ADDRESS_W0:
+    READ_ADDRESS_W0(nrfs)     // [windex, rindex]
+    end jump
+  FLAG_ADDRESS_W1:
+    READ_ADDRESS_WX(nrfs, 0x01) // [windex, rindex]
+    end jump
+  FLAG_ADDRESS_W2:
+    READ_ADDRESS_WX(nrfs, 0x02) // [windex, rindex]
+    end jump
+  FLAG_ADDRESS_W3:
+    READ_ADDRESS_WX(nrfs, 0x03) // [windex, rindex]
+    end jump
+  FLAG_ADDRESS_W4:
+    READ_ADDRESS_WX(nrfs, 0x04) // [windex, rindex]
+    end jump
+
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
     // notice that we start at 0x01 since 0x00 can be pushed with the flag 0x00
@@ -497,8 +518,6 @@
 #define macro READ_SIGNATURE_WX(weight) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
-  0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 0x10 pop 
-
   swap1        // [rindex, windex]
   <weight>     // [weight, rindex, windex]
   swap2        // [windex, rindex, weight]
@@ -543,6 +562,65 @@
   add           // [windex, rindex]
 
   // output stack: [windex, rindex]
+}
+
+#define macro READ_ADDRESS_W0(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1        // [rindex, windex]
+
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8)   // [weight, rindex, windex]
+
+  swap2        // [windex, rindex, weight]
+
+  READ_ADDRESS(nrfs)              // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_ADDRESS_WX(nrfs, weight) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1        // [rindex, windex]
+  <weight>     // [weight, rindex, windex]
+  swap2        // [windex, rindex, weight]
+
+  READ_ADDRESS(nrfs) // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_ADDRESS(nrfs) = takes (3) returns (2) {
+  // input stack: [windex, rindex, weight]
+
+  // First thing we must write is the flag (sequence)
+
+  0x01          // [0x01, windex, rindex, weight]
+  dup2          // [windex, 0x01, windex, rindex, weight]
+  mstore8       // [windex, rindex, weight]
+  0x01 add      // [windex, rindex, weight]
+
+  // Second thing we must write is the weight, always 1 byte
+
+  swap2         // [weight, rindex, windex]
+  dup3          // [windex, weight, rindex, windex]
+  mstore8       // [rindex, windex]
+  swap1         // [windex, rindex]
+  0x01 add      // [windex, rindex]
+
+  // Addresses are always 20 bytes long
+  // we use a nested read flag call, since this address
+  // could come from storage
+
+  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
+  BACKREAD_SINGLE_VALUE()         // [word, windex, rindex]
+
+  0x60 shl                        // [address, windex, rindex]
+
+  dup2                            // [windex, word, windex, rindex]
+  mstore                          // [windex, rindex]
+
+  0x14 add                        // [windex + 0x14, rindex]
 }
 
 #[calldata("0x02f1f2")]

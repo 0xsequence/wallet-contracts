@@ -247,3 +247,11 @@ function encode_eoa_signature(uint8 _weight, bytes memory _sig) pure returns (by
 
   return abi.encodePacked(uint8(0x36), uint8(_weight), _sig);
 }
+
+function encode_address(uint8 _weight, address _addr) pure returns (bytes memory) {
+  if (_weight != 0 && _weight <= 4) {
+    return abi.encodePacked(uint8(0x3b + _weight), encodeWord(uint256(uint160(_addr))));
+  }
+
+  return abi.encodePacked(uint8(0x3b), uint8(_weight), encodeWord(uint256(uint160(_addr))));
+}

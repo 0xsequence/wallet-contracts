@@ -421,4 +421,19 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
 
     assertEq(res, abi.encodePacked(uint8(0), _weight, _sig2));
   }
+
+  function test_read_address(uint8 _weight, address _addr) external {
+    bytes memory encoded = encode_address(_weight, _addr);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+
+    assertEq(res, abi.encodePacked(uint8(1), _weight, _addr));
+  }
 }
