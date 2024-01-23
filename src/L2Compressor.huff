@@ -151,11 +151,15 @@
   FLAG_ADDRESS_W0            // 0x3b
   FLAG_ADDRESS_W1            // 0x3c
   FLAG_ADDRESS_W2            // 0x3d
-  FLAG_ADDRESS_W3            // 0x3f
-  FLAG_ADDRESS_W4            // 0x40
+  FLAG_ADDRESS_W3            // 0x3e
+  FLAG_ADDRESS_W4            // 0x4f
+  FLAG_NODE                  // 0x40
+  FLAG_BRANCH                // 0x41
+  FLAG_SUBDIGEST             // 0x42
+  FLAG_NESTED                // 0x43
 }
 
-#define constant HIGHEST_FLAG = 0x40
+#define constant HIGHEST_FLAG = 0x44
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -395,6 +399,19 @@
     READ_ADDRESS_WX(nrfs, 0x04) // [windex, rindex]
     end jump
 
+  FLAG_NODE:
+    READ_NODE(nrfs)      // [windex, rindex]
+    end jump
+  FLAG_BRANCH:
+    READ_BRANCH(nrfs)    // [windex, rindex]
+    end jump
+  FLAG_SUBDIGEST:
+    READ_SUBDIGEST(nrfs) // [windex, rindex]
+    end jump
+  FLAG_NESTED:
+    READ_NESTED(nrfs)    // [windex, rindex]
+    end jump             // [end jump, windex, rindex]
+
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
     // notice that we start at 0x01 since 0x00 can be pushed with the flag 0x00
@@ -530,12 +547,7 @@
 #define macro READ_SIGNATURE() = takes (3) returns (2) {
   // input stack: [windex, rindex, weight]
 
-  // First thing we must write is the flag (sequence)
-
-  0x00          // [0x00, windex, rindex, weight]
-  dup2          // [windex, 0x00, windex, rindex, weight]
-  mstore        // [windex, rindex, weight]
-  0x01 add      // [windex, rindex, weight]
+  WRITE_SEQUENCE_FLAG(0x00)
 
   // Second thing we must write is the weight, always 1 byte
 
@@ -593,12 +605,7 @@
 #define macro READ_ADDRESS(nrfs) = takes (3) returns (2) {
   // input stack: [windex, rindex, weight]
 
-  // First thing we must write is the flag (sequence)
-
-  0x01          // [0x01, windex, rindex, weight]
-  dup2          // [windex, 0x01, windex, rindex, weight]
-  mstore8       // [windex, rindex, weight]
-  0x01 add      // [windex, rindex, weight]
+  WRITE_SEQUENCE_FLAG(0x01)
 
   // Second thing we must write is the weight, always 1 byte
 
@@ -621,6 +628,146 @@
   mstore                          // [windex, rindex]
 
   0x14 add                        // [windex + 0x14, rindex]
+}
+
+#define macro READ_NODE(nrfr) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  WRITE_SEQUENCE_FLAG(0x03)
+
+  // Now we just proceed by reading another flag
+
+  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_BRANCH(nrfr) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  WRITE_SEQUENCE_FLAG(0x04)
+
+  // Now we just proceed by reading the branch
+  // the only important part is that we need to
+  // measure how much is written, as the branch is
+  // always prefixed by the size
+
+  // Clear the memory here, that way we don't need to mask it
+  // when we write the size
+  callvalue    // [0x00, windex, rindex]
+  dup2 mstore  // [windex, rindex]
+
+  // Reserve 3 bytes for the size
+  dup1     // [windex, size_pointer, rindex]
+  0x03 add // [windex, size_pointer, rindex]
+  
+  swap2    // [rindex, size_pointer, windex]
+  dup3     // [windex, rindex, size_pointer, prev_windex]
+
+  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex, size_pointer, prev_windex]
+
+  // Need to go back and write the size now
+
+  swap3                           // [prev_windex, rindex, size_pointer, windex]
+  dup4                            // [windex, prev_windex, rindex, size_pointer, windex]
+  sub                             // [size, rindex, size_pointer, windex]  
+  0xe8 shl                        // [size << 0xe8, rindex, size_pointer, windex]
+  dup3                            // [size_pointer, size, rindex, size_pointer, windex]
+  mload                           // [mload[size_pointer], size, rindex, size_pointer, windex]
+  or                              // [(mload[size_pointer] | size), rindex, size_pointer, windex]
+  swap1                           // [rindex, (mload[size_pointer] | size), size_pointer, windex]
+  swap2                           // [size_pointer, (mload[size_pointer] | size), rindex, windex]
+  mstore                          // [rindex, windex]
+  swap1                           // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_SUBDIGEST(nrfr) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  WRITE_SEQUENCE_FLAG(0x05)
+
+  // Now we just proceed by reading another flag
+
+  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+
+#define macro READ_NESTED(nrfr) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  WRITE_SEQUENCE_FLAG(0x06) // [windex, rindex]
+
+  // Read the weight and the threshold
+  // the weight is always 1 byte, the threshold uses 2
+  // but in reality most Sequence wallets use 1, so this library
+  // only supports 1 byte for it. If the wallet is not compatible, READ_NESTED
+  // can't be used, and READ_N_BYTES must be used instead
+
+  swap1                           // [rindex, windex]
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8)   // [weight, rindex, windex]
+  swap1                           // [rindex, weight, windex]
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8)   // [threshold, rindex, weight, windex]
+  0xf0 shl                        // [threshold << 0xf0, rindex, weight, windex]
+  swap2                           // [weight, rindex, threshold, windex]
+
+  dup4                            // [windex, weight, rindex, threshold, windex]
+  mstore8                         // [rindex, threshold, windex]
+  swap2                           // [windex, threshold, rindex]
+  0x01 add                        // [windex, threshold, rindex]
+  swap1                           // [threshold, windex, rindex]
+  dup2                            // [windex, threshold, windex, rindex]
+  mstore                          // [windex, rindex]
+  0x02 add                        // [windex, rindex]
+
+  // Now we just proceed by reading the branch
+  // the only important part is that we need to
+  // measure how much is written, as the branch is
+  // always prefixed by the size
+
+  // Clear the memory here, that way we don't need to mask it
+  // when we write the size
+  callvalue    // [0x00, windex, rindex]
+  dup2 mstore  // [windex, rindex]
+
+  // Reserve 3 bytes for the size
+  dup1     // [windex, size_pointer, rindex]
+  0x03 add // [windex, size_pointer, rindex]
+  
+  swap2    // [rindex, size_pointer, windex]
+  dup3     // [windex, rindex, size_pointer, prev_windex]
+
+  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex, size_pointer, prev_windex]
+
+  // Need to go back and write the size now
+
+  swap3                           // [prev_windex, rindex, size_pointer, windex]
+  dup4                            // [windex, prev_windex, rindex, size_pointer, windex]
+  sub                             // [size, rindex, size_pointer, windex]  
+  0xe8 shl                        // [size << 0xe8, rindex, size_pointer, windex]
+  dup3                            // [size_pointer, size, rindex, size_pointer, windex]
+  mload                           // [mload[size_pointer], size, rindex, size_pointer, windex]
+  or                              // [(mload[size_pointer] | size), rindex, size_pointer, windex]
+  swap1                           // [rindex, (mload[size_pointer] | size), size_pointer, windex]
+  swap2                           // [size_pointer, (mload[size_pointer] | size), rindex, windex]
+  mstore                          // [rindex, windex]
+  swap1                           // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro WRITE_SEQUENCE_FLAG(flag) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  <flag>        // [flag, windex, rindex]
+  dup2          // [windex, flag, windex, rindex]
+  mstore8       // [windex, rindex]
+  0x01 add      // [windex, rindex]
+
+  // output stack: [windex, rindex]
 }
 
 #[calldata("0x02f1f2")]

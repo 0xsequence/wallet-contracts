@@ -255,3 +255,19 @@ function encode_address(uint8 _weight, address _addr) pure returns (bytes memory
 
   return abi.encodePacked(uint8(0x3b), uint8(_weight), encodeWord(uint256(uint160(_addr))));
 }
+
+function encode_node(bytes32 _node) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x40), encodeWord(_node));
+}
+
+function encode_branch(bytes memory _nested) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x41), encode_bytes_n(_nested));
+}
+
+function encode_subdigest(bytes32 _subdigest) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x42), encodeWord(_subdigest));
+}
+
+function encode_nested(uint8 _weight, uint8 _threshold, bytes memory _nested) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x43), uint8(_weight), uint8(_threshold), encode_bytes_n(_nested));
+}

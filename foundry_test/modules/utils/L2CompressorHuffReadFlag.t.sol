@@ -436,4 +436,68 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
 
     assertEq(res, abi.encodePacked(uint8(1), _weight, _addr));
   }
+
+  function test_read_node(bytes32 _node) external {
+    bytes memory encoded = encode_node(_node);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+
+    assertEq(res, abi.encodePacked(uint8(3), _node));
+  }
+
+  function test_read_subdigest(bytes32 _subdigest) external {
+    bytes memory encoded = encode_subdigest(_subdigest);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+
+    assertEq(res, abi.encodePacked(uint8(5), _subdigest));
+  }
+
+  function test_read_branch(bytes memory _data) external {
+    vm.assume(_data.length <= type(uint24).max);
+
+    bytes memory encoded = encode_branch(_data);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+
+    assertEq(res, abi.encodePacked(uint8(4), uint24(_data.length), _data));
+  }
+
+  function test_read_nested(uint8 _weight, uint8 _threshold, bytes memory _data) external {
+    vm.assume(_data.length <= type(uint24).max);
+
+    bytes memory encoded = encode_nested(_weight, _threshold, _data);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+
+    assertEq(res, abi.encodePacked(uint8(6), uint8(_weight), uint16(_threshold), uint24(_data.length), _data));
+  }
 }

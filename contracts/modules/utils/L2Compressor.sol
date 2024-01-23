@@ -512,7 +512,7 @@ contract L2SequenceDecompressor {
         uint256 internalThreshold = bytesToUint256(data);
 
         (data, newPointer) = readSignatureBranch(newPointer);
-        data = abi.encodePacked(uint8(SequenceBaseSig.FLAG_NESTED), uint8(externalWeight), uint8(internalThreshold), uint24(data.length), data);
+        data = abi.encodePacked(uint8(SequenceBaseSig.FLAG_NESTED), uint8(externalWeight), uint16(internalThreshold), uint24(data.length), data);
 
         return (data, newPointer);
 
