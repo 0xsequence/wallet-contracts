@@ -1,6 +1,6 @@
 #include "../L2Compressor.huff"
 
-#define constant FMS = 0xa0
+#define constant FMS = 0xc0
 
 // Function Dispatching
 #define macro MAIN() = takes (1) returns (1) {

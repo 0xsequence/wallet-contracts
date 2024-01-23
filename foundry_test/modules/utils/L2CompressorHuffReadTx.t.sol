@@ -13,7 +13,7 @@ import "contracts/modules/commons/interfaces/IModuleCalls.sol";
 
 import "./L2CompressorEncoder.sol";
 
-uint256 constant FMS = 0xa0;
+uint256 constant FMS = 0xc0;
 
 contract L2CompressorHuffReadTxTests is AdvTest {
   address public imp;

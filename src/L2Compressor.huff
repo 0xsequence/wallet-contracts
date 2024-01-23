@@ -1,8 +1,8 @@
 #include "./Errors.huff"
 
 #define constant ADDR_BYTES_STORAGE = 0x00
-#define constant FMS = 0xa0
-#define constant NESTED_READ_FLAG_RETURN_MSLOT = 0x80
+#define constant FMS = 0xc0
+#define constant NESTED_READ_FLAG_RETURN_MSLOT = 0xa0
 
 #define constant FLAG_READ_BYTES32_2_BYTES = 0x27
 #define constant FLAG_READ_ADDRESS_2_BYTES = 0x23
