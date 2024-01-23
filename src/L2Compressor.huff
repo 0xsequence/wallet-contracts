@@ -157,6 +157,7 @@
   FLAG_BRANCH                // 0x41
   FLAG_SUBDIGEST             // 0x42
   FLAG_NESTED                // 0x43
+  FLAG_DYNAMIC_SIGNATURE     // 0x44
 }
 
 #define constant HIGHEST_FLAG = 0x44
@@ -410,7 +411,10 @@
     end jump
   FLAG_NESTED:
     READ_NESTED(nrfs)    // [windex, rindex]
-    end jump             // [end jump, windex, rindex]
+    end jump
+  FLAG_DYNAMIC_SIGNATURE:
+    READ_DYNAMIC_SIGNATURE(nrfs) // [windex, rindex]
+    end jump
 
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
@@ -518,6 +522,74 @@
   // output stack: [windex, rindex]
 }
 
+#define macro READ_DYNAMIC_SIGNATURE(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  WRITE_SEQUENCE_FLAG(0x02)
+
+  swap1  // [rindex, windex]
+
+  // Read the weight, it is always 1 byte
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8)   // [weight, rindex, windex]
+
+  dup3      // [windex, weight, rindex, windex]
+  mstore8   // [rindex, windex]
+  swap1     // [windex, rindex]
+  0x01 add  // [windex, rindex]
+
+  // Read the address, use read flag as it may use a pointer
+  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
+  BACKREAD_SINGLE_VALUE()         // [word, windex, rindex]
+  0x60 shl                        // [address, windex, rindex]
+
+  dup2                            // [windex, word, windex, rindex]
+  mstore                          // [windex, rindex]
+  0x14 add                        // [windex, rindex]
+
+  // Now read another nested flag, as-is, but leave
+  // the space to demark the size
+
+  // Clear the memory here, that way we don't need to mask it
+  // when we write the size
+  callvalue    // [0x00, windex, rindex]
+  dup2 mstore  // [windex, rindex]
+
+  // Reserve 3 bytes for the size
+  dup1     // [windex, size_pointer, rindex]
+  0x03 add // [windex, size_pointer, rindex]
+  
+  swap2    // [rindex, size_pointer, windex]
+  dup3     // [windex, rindex, size_pointer, prev_windex]
+
+  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex, size_pointer, prev_windex]
+
+  // Need to go back and write the size now
+
+  swap3                           // [prev_windex, rindex, size_pointer, windex]
+  dup4                            // [windex, prev_windex, rindex, size_pointer, windex]
+  sub                             // [size, rindex, size_pointer, windex]
+
+  // The size is +1 since we also need to include the suffix "03" for EIP1271
+  0x01 add                        // [size + 1, rindex, size_pointer, windex]
+
+  0xe8 shl                        // [size << 0xe8, rindex, size_pointer, windex]
+  dup3                            // [size_pointer, size, rindex, size_pointer, windex]
+  mload                           // [mload[size_pointer], size, rindex, size_pointer, windex]
+  or                              // [(mload[size_pointer] | size), rindex, size_pointer, windex]
+  swap1                           // [rindex, (mload[size_pointer] | size), size_pointer, windex]
+  swap2                           // [size_pointer, (mload[size_pointer] | size), rindex, windex]
+  mstore                          // [rindex, windex]
+  swap1                           // [windex, rindex]
+
+  // Write the suffix, just 03
+  0x03                            // [0x03, windex, rindex]
+  dup2                            // [windex, 0x03, windex, rindex]
+  mstore8                         // [windex, rindex]
+  0x01 add                        // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
 #define macro READ_SIGNATURE_W0() = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
@@ -621,7 +693,6 @@
 
   PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
   BACKREAD_SINGLE_VALUE()         // [word, windex, rindex]
-
   0x60 shl                        // [address, windex, rindex]
 
   dup2                            // [windex, word, windex, rindex]

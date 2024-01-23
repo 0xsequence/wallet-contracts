@@ -271,3 +271,7 @@ function encode_subdigest(bytes32 _subdigest) pure returns (bytes memory) {
 function encode_nested(uint8 _weight, uint8 _threshold, bytes memory _nested) pure returns (bytes memory) {
   return abi.encodePacked(uint8(0x43), uint8(_weight), uint8(_threshold), encode_bytes_n(_nested));
 }
+
+function encode_dynamic_signature(uint8 _weight, address _signer, bytes memory _signature) pure returns (bytes memory) {
+  return abi.encodePacked(uint8(0x44), uint8(_weight), encodeWord(uint256(uint160(_signer))), encode_bytes_n(_signature));
+}
