@@ -162,9 +162,11 @@
   FLAG_S_SIG                 // 0x46
   FLAG_S_L_SIG_NO_CHAIN      // 0x47
   FLAG_S_L_SIG               // 0x48
+  FLAG_READ_CHAINED          // 0x49
+  FLAG_READ_CHAINED_L        // 0x4a
 }
 
-#define constant HIGHEST_FLAG = 0x48
+#define constant HIGHEST_FLAG = 0x4a
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -336,7 +338,7 @@
     end jump
 
   JUMP_READ_N_BYTES:
-    READ_N_BYTES(nrfs)
+    READ_N_BYTES(<nrfs>)
     end jump
 
   JUMP_READ_POWER_OF_2:
@@ -347,29 +349,29 @@
     READ_ABI_0()
     end jump
   FLAG_ABI_1_PARAM:
-    READ_ABI_1(nrfs)
+    READ_ABI_1(<nrfs>)
     end jump
   FLAG_ABI_2_PARAMS:
-    READ_ABI_2(nrfs)
+    READ_ABI_2(<nrfs>)
     end jump
   FLAG_ABI_3_PARAMS:
-    READ_ABI_3(nrfs)
+    READ_ABI_3(<nrfs>)
     end jump
   FLAG_ABI_4_PARAMS:
-    READ_ABI_4(nrfs)
+    READ_ABI_4(<nrfs>)
     end jump
   FLAG_ABI_5_PARAMS:
-    READ_ABI_5(nrfs)
+    READ_ABI_5(<nrfs>)
     end jump
   FLAG_ABI_6_PARAMS:
-    READ_ABI_6(nrfs)
+    READ_ABI_6(<nrfs>)
     end jump
     
   FLAG_NESTED_N_FLAGS_8:
-    READ_NESTED_N_FLAGS_8(nrfs)
+    READ_NESTED_N_FLAGS_8(<nrfs>)
     end jump 
   FLAG_NESTED_N_FLAGS_16:
-    READ_NESTED_N_FLAGS_16(nrfs)
+    READ_NESTED_N_FLAGS_16(<nrfs>)
     end jump 
 
   FLAG_SIGNATURE_W0:
@@ -389,48 +391,55 @@
     end jump
 
   FLAG_ADDRESS_W0:
-    READ_ADDRESS_W0(nrfs)
+    READ_ADDRESS_W0(<nrfs>)
     end jump
   FLAG_ADDRESS_W1:
-    READ_ADDRESS_WX(nrfs, 0x01)
+    READ_ADDRESS_WX(<nrfs>, 0x01)
     end jump
   FLAG_ADDRESS_W2:
-    READ_ADDRESS_WX(nrfs, 0x02)
+    READ_ADDRESS_WX(<nrfs>, 0x02)
     end jump
   FLAG_ADDRESS_W3:
-    READ_ADDRESS_WX(nrfs, 0x03)
+    READ_ADDRESS_WX(<nrfs>, 0x03)
     end jump
   FLAG_ADDRESS_W4:
-    READ_ADDRESS_WX(nrfs, 0x04)
+    READ_ADDRESS_WX(<nrfs>, 0x04)
     end jump
 
   FLAG_NODE:
-    READ_NODE(nrfs)
+    READ_NODE(<nrfs>)
     end jump
   FLAG_BRANCH:
-    READ_BRANCH(nrfs)
+    READ_BRANCH(<nrfs>)
     end jump
   FLAG_SUBDIGEST:
-    READ_SUBDIGEST(nrfs)
+    READ_SUBDIGEST(<nrfs>)
     end jump
   FLAG_NESTED:
-    READ_NESTED(nrfs)
+    READ_NESTED(<nrfs>)
     end jump
   FLAG_DYNAMIC_SIGNATURE:
-    READ_DYNAMIC_SIGNATURE(nrfs)
+    READ_DYNAMIC_SIGNATURE(<nrfs>)
     end jump
 
   FLAG_S_SIG_NO_CHAIN:
-    READ_SEQUENCE_SIGNATURE(nrfr, 0x02, 0x01, 0xf8)
+    READ_SEQUENCE_SIGNATURE(<nrfs>, 0x02, 0x01, 0xf8)
     end jump
   FLAG_S_SIG:
-    READ_SEQUENCE_SIGNATURE(nrfr, 0x01, 0x01, 0xf8)
+    READ_SEQUENCE_SIGNATURE(<nrfs>, 0x01, 0x01, 0xf8)
     end jump
   FLAG_S_L_SIG_NO_CHAIN:
-    READ_SEQUENCE_SIGNATURE(nrfr, 0x02, 0x02, 0xf0)
+    READ_SEQUENCE_SIGNATURE(<nrfs>, 0x02, 0x02, 0xf0)
     end jump
   FLAG_S_L_SIG:
-    READ_SEQUENCE_SIGNATURE(nrfr, 0x01, 0x02, 0xf0)
+    READ_SEQUENCE_SIGNATURE(<nrfs>, 0x01, 0x02, 0xf0)
+    end jump
+
+  FLAG_READ_CHAINED:
+    READ_CHAINED(<nrfs>, 0x01, 0xf8)
+    end jump
+  FLAG_READ_CHAINED_L:
+    READ_CHAINED(<nrfs>, 0x02, 0xf0)
     end jump
 
   default:
@@ -491,7 +500,7 @@
   LOAD_DYNAMIC_SIZE(0x01, 0xf8)  // [size, rindex, windex]
 
   swap2       // [windex, rindex, size]
-  READ_NESTED_N_FLAGS(nrfs)
+  READ_NESTED_N_FLAGS(<nrfs>)
 
   // output stack: [windex, rindex]
 }
@@ -503,7 +512,7 @@
   LOAD_DYNAMIC_SIZE(0x02, 0xf0)  // [size, rindex, windex]
 
   swap2       // [windex, rindex, size]
-  READ_NESTED_N_FLAGS(nrfs)
+  READ_NESTED_N_FLAGS(<nrfs>)
 
   // output stack: [windex, rindex]
 }
@@ -518,10 +527,10 @@
     swap2       // [rindex, windex, i, n]
     swap1       // [windex, rindex, i, n]
     
-    PERFORM_NESTED_READ_FLAG(nrfs) // [windex, rindex, i, n]
+    PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, rindex, i, n]
 
-    swap1                          // [rindex, windex, i, n]
-    swap2                          // [i, windex, rindex, n]
+    swap1                            // [rindex, windex, i, n]
+    swap2                            // [i, windex, rindex, n]
 
     0x01 add                       // [i + 1, windex, rindex, n]
 
@@ -535,6 +544,88 @@
   swap2         // [n, rindex, windex]
   pop           // [rindex, windex]
   swap1         // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_CHAINED(nrfs, s_bytes, s_offset) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  // First we need to write the chainId sequence prefix (0x03)
+  WRITE_SEQUENCE_FLAG(0x03)
+
+  // Second we need to read the number of flags we are going to read
+
+  swap1                                     // [rindex, windex]
+  LOAD_DYNAMIC_SIZE(<s_bytes>, <s_offset>)  // [size, rindex, windex]
+
+  // This should match the number of chained signatures on the chain
+  // we need to write it, it uses 3 bytes
+  dup1                                  // [size, size, rindex, windex]
+  0xe8 shl                              // [size << 0xe8, size, rindex, windex]
+  dup4                                  // [windex, size, size, rindex, windex]
+  mstore                                // [size, rindex, windex]  
+
+  callvalue                             // [0x00, size, rindex, windex]
+  swap2                                 // [rindex, size, 0x00, windex]
+  swap1                                 // [size, rindex, 0x00, windex]
+  swap3                                 // [windex, rindex, 0x00, size]
+
+  0x03 add                              // [windex + 0x03, rindex, 0x00, size]
+
+  read_more:  // [windex, rindex, i, size]
+
+    // Reserve 3 bytes of the size, and keep a copy of the windex
+    // one will serve as a comparation point to determine the size
+    // the other will be the pointer that determines where we need to store
+    // the size
+
+    // Clear the memory now, that way we don't need to make it later
+    callvalue // [0x00, windex, rindex, i, size]
+    dup2      // [windex, 0x00, windex, rindex, i, size]
+    mstore    // [windex, rindex, i, size]
+
+    // Create copies for windex, and advance 2 of them by 3
+    dup1      // [windex, windex, rindex, i, size]
+    0x03 add  // [windex, size_pointer, rindex, i, size]
+    dup1      // [windex, windex, size_pointer, rindex, i, size]
+
+    swap3     // [rindex, windex, size_pointer, windex, i, size]
+    swap1     // [windex, rindex, size_pointer, prev_windex, i, size]
+
+    PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex, size_pointer, prev_windex, i, size]
+
+    // Calculate the size and write it at the start
+
+    swap1                           // [rindex, windex, size_pointer, prev_windex, i, size]
+    swap3                           // [prev_windex, windex, size_pointer, rindex, i, size]
+    dup2                            // [windex, prev_windex, windex, size_pointer, rindex, i, size]
+    sub                             // [size, windex, size_pointer, rindex, i, size]
+    0xe8 shl                        // [size << 0xe8, windex, size_pointer, rindex, i, size]
+
+    dup3                            // [size_pointer, size, windex, size_pointer, rindex, i, size]
+    mload                           // [mload[size_pointer], size, windex, size_pointer, rindex, i, size]
+    or                              // [(mload[size_pointer] | size), windex, size_pointer, rindex, i, size]
+    
+    swap1                           // [windex, (mload[size_pointer] | size), size_pointer, rindex, i, size]
+    swap2                           // [size_pointer, (mload[size_pointer] | size), windex, rindex, i, size]
+    mstore                          // [windex, rindex, i, size]
+
+    swap2                           // [i, rindex, windex, size]
+    0x01 add                        // [i + 1, rindex, windex, size]
+    swap2                           // [windex, rindex, i + 1, size]
+
+    dup4                            // [size, windex, rindex, i + 1, size]
+    dup4                            // [i + 1, size, windex, rindex, i + 1, size]
+    lt                              // [(i + 1 < size), windex, rindex, i + 1, size]
+    read_more jumpi                 // [windex, rindex, i + 1, size]
+
+  // [windex, rindex, i + 1, size]
+
+  swap2       // [i, rindex, windex, size]
+  pop         // [rindex, windex, size]
+  swap2       // [size, windex, rindex]
+  pop         // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
@@ -555,7 +646,7 @@
   0x01 add  // [windex, rindex]
 
   // Read the address, use read flag as it may use a pointer
-  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex]
   BACKREAD_SINGLE_VALUE()         // [word, windex, rindex]
   0x60 shl                        // [address, windex, rindex]
 
@@ -578,7 +669,7 @@
   swap2    // [rindex, size_pointer, windex]
   dup3     // [windex, rindex, size_pointer, prev_windex]
 
-  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex, size_pointer, prev_windex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex, size_pointer, prev_windex]
 
   // Need to go back and write the size now
 
@@ -674,7 +765,7 @@
 
   swap2        // [windex, rindex, weight]
 
-  READ_ADDRESS(nrfs)              // [windex, rindex]
+  READ_ADDRESS(<nrfs>)            // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
@@ -686,7 +777,7 @@
   <weight>     // [weight, rindex, windex]
   swap2        // [windex, rindex, weight]
 
-  READ_ADDRESS(nrfs) // [windex, rindex]
+  READ_ADDRESS(<nrfs>) // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
@@ -708,9 +799,9 @@
   // we use a nested read flag call, since this address
   // could come from storage
 
-  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
-  BACKREAD_SINGLE_VALUE()         // [word, windex, rindex]
-  0x60 shl                        // [address, windex, rindex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex]
+  BACKREAD_SINGLE_VALUE()           // [word, windex, rindex]
+  0x60 shl                          // [address, windex, rindex]
 
   dup2                            // [windex, word, windex, rindex]
   mstore                          // [windex, rindex]
@@ -718,19 +809,19 @@
   0x14 add                        // [windex + 0x14, rindex]
 }
 
-#define macro READ_NODE(nrfr) = takes (2) returns (2) {
+#define macro READ_NODE(nrfs) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
   WRITE_SEQUENCE_FLAG(0x03)
 
   // Now we just proceed by reading another flag
 
-  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
 
-#define macro READ_BRANCH(nrfr) = takes (2) returns (2) {
+#define macro READ_BRANCH(nrfs) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
   WRITE_SEQUENCE_FLAG(0x04)
@@ -752,7 +843,7 @@
   swap2    // [rindex, size_pointer, windex]
   dup3     // [windex, rindex, size_pointer, prev_windex]
 
-  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex, size_pointer, prev_windex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex, size_pointer, prev_windex]
 
   // Need to go back and write the size now
 
@@ -771,20 +862,20 @@
   // output stack: [windex, rindex]
 }
 
-#define macro READ_SUBDIGEST(nrfr) = takes (2) returns (2) {
+#define macro READ_SUBDIGEST(nrfs) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
   WRITE_SEQUENCE_FLAG(0x05)
 
   // Now we just proceed by reading another flag
 
-  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
 
 
-#define macro READ_NESTED(nrfr) = takes (2) returns (2) {
+#define macro READ_NESTED(nrfs) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
   WRITE_SEQUENCE_FLAG(0x06) // [windex, rindex]
@@ -828,7 +919,7 @@
   swap2    // [rindex, size_pointer, windex]
   dup3     // [windex, rindex, size_pointer, prev_windex]
 
-  PERFORM_NESTED_READ_FLAG(nrfs)  // [windex, rindex, size_pointer, prev_windex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex, size_pointer, prev_windex]
 
   // Need to go back and write the size now
 
@@ -858,7 +949,7 @@
   // output stack: [windex, rindex]
 }
 
-#define macro READ_SEQUENCE_SIGNATURE(nrfr, sig_flag, size_t, offset_t) = takes (2) returns (2) {
+#define macro READ_SEQUENCE_SIGNATURE(nrfs, sig_flag, size_t, offset_t) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
   // Write the signature flag as-is
@@ -881,17 +972,17 @@
   // Next read the checkpoint, using read flag is overkill here
   // but we do it for the sake of simplicity
 
-  PERFORM_NESTED_READ_FLAG(nrfs)      // [windex, rindex]
-  BACKREAD_SINGLE_VALUE()             // [checkpoint, windex, rindex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)      // [windex, rindex]
+  BACKREAD_SINGLE_VALUE()               // [checkpoint, windex, rindex]
 
   // The checkpoint always uses 4 bytes
-  0xe0 shl                            // [checkpoint << 0xe0, windex, rindex]
-  dup2                                // [windex, checkpoint, windex, rindex]
-  mstore                              // [windex, rindex]
-  0x04 add                            // [windex, rindex]
+  0xe0 shl                              // [checkpoint << 0xe0, windex, rindex]
+  dup2                                  // [windex, checkpoint, windex, rindex]
+  mstore                                // [windex, rindex]
+  0x04 add                              // [windex, rindex]
 
   // Now read the rest of the tree, this is just another read flag
-  PERFORM_NESTED_READ_FLAG(nrfs)      // [windex, rindex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)      // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
@@ -969,7 +1060,7 @@
 #define macro READ_EXECUTE_STANDALONE() = takes (2) returns (2) {
   skip jump
   rf:
-  READ_FLAG()
+  FN_READ_FLAG(rf)
   skip:
   READ_EXECUTE(rf)
 }
@@ -995,7 +1086,7 @@
 
   // Reading the nonce is the simplest one, it is just a value
 
-  READ_NONCE(nrfs)  // [windex, rindex]
+  READ_NONCE(<nrfs>)  // [windex, rindex]
 
   // We can't know when the signature will start, since we need to
   // read the list of transactions first. So we leave a copy of the pointer
@@ -1008,7 +1099,7 @@
   // We start reading the transactions, the macro takes care of writting the
   // internal pointers for them (and the number of transactions)
 
-  READ_TRANSACTIONS(nrfs) // [windex, rindex, prev_windex]
+  READ_TRANSACTIONS(<nrfs>) // [windex, rindex, prev_windex]
 
   // The signature starts at windex - prev_windex + 0x20
   // and the pointer needs to be written to prev_windex
@@ -1030,7 +1121,7 @@
   swap1               // [rindex, windex]
   dup2                // [windex, rindex, prev_index]
 
-  PERFORM_NESTED_READ_FLAG(nrfs)
+  PERFORM_NESTED_READ_FLAG(<nrfs>)
 
   swap1               // [rindex, windex, prev_windex]
   swap2               // [prev_windex, windex, rindex]
@@ -1059,7 +1150,7 @@
 #define macro READ_NONCE_STANDALONE() = takes (2) returns (2) {
   skip jump
   rf:
-  READ_FLAG()
+  FN_READ_FLAG(rf)
   skip:
   READ_NONCE(rf)
 }
@@ -1099,7 +1190,7 @@
 #define macro READ_TRANSACTIONS_STANDALONE() = takes (2) returns (2) {
   skip jump
   rf:
-  READ_FLAG()
+  FN_READ_FLAG(rf)
   skip:
   READ_TRANSACTIONS(rf)
 }
@@ -1200,7 +1291,7 @@
 #define macro READ_TRANSACTION_STANDALONE() = takes (2) returns (2) {
   skip jump
   rf:
-  READ_FLAG()
+  FN_READ_FLAG(rf)
   skip:
   READ_TRANSACTION(rf)
 }

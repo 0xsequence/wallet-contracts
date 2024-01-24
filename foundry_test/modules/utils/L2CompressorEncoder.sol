@@ -301,3 +301,19 @@ function encode_sequence_signature(bool _noChainId, uint256 _threshold, uint32 _
 
   return abi.encodePacked(flag, t, encodeWord(_checkpoint), encode_bytes_n(_tree));
 }
+
+function encode_sequence_chained_signatures(bytes[] memory _payloads) pure returns (bytes memory) {
+  bytes memory encoded;
+
+  if (_payloads.length > type(uint8).max) {
+    encoded = abi.encodePacked(uint8(0x4a), uint16(_payloads.length));
+  } else {
+    encoded = abi.encodePacked(uint8(0x49), uint8(_payloads.length));
+  }
+
+  for (uint256 i = 0; i < _payloads.length; i++) {
+    encoded = abi.encodePacked(encoded, encode_bytes_n(_payloads[i]));
+  }
+
+  return encoded;
+}
