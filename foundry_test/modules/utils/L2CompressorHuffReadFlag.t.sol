@@ -557,4 +557,56 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
 
     assertEq(res, expected);
   }
+
+  function test_read_abi_dynamic_no_dynamic(
+    bytes4 _selector,
+    bytes32[] calldata _values
+  ) external {
+    vm.assume(_values.length <= type(uint8).max && _values.length != 0);
+    bool[] memory isDynamic = new bool[](_values.length);
+    bytes[] memory values = new bytes[](_values.length);
+    for (uint256 i = 0; i < _values.length; i++) {
+      values[i] = abi.encodePacked(_values[i]);
+    }
+
+    bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, values);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, encoded.length);
+
+    assertEq(res, abi.encodePacked(_selector, _values));
+  }
+
+  function test_read_abi_dynamic_only(
+    bytes4 _selector,
+    bytes memory _data1,
+    bytes memory _data2
+  ) external {
+    bool[] memory isDynamic = new bool[](2);
+    bytes[] memory _values = new bytes[](2);
+
+    isDynamic[0] = true;
+    isDynamic[1] = true;
+
+    _values[0] = _data1;
+    _values[1] = _data2;
+
+    bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, encoded.length);
+
+    assertEq(res, abi.encodeWithSelector(_selector, _values[0], _values[1]));
+  }
 }

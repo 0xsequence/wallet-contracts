@@ -168,7 +168,7 @@
   FLAG_READ_DYNAMIC_ABI      // 0x4b
 }
 
-#define constant HIGHEST_FLAG = 0x4a
+#define constant HIGHEST_FLAG = 0x4b
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -1577,23 +1577,24 @@
 
   // First byte determines the number of parameters
 
-  swap1              // [rindex, windex]
-  dup1               // [rindex, rindex, windex]
-  mload              // [word, rindex, windex]
-  callvalue byte     // [size, rindex, windex]
-  swap1              // [rindex, size, windex]
-  0x01 add           // [rindex, size, windex]
+  dup1               // [windex, windex, rindex]
+  swap2              // [rindex, windex, windex]
+  dup1               // [rindex, rindex, windex, windex]
+  calldataload       // [word, rindex, windex, windex]
+  callvalue byte     // [size, rindex, windex, windex]
+  swap1              // [rindex, size, windex, windex]
+  0x01 add           // [rindex, size, windex, windex]
 
   // Second is a bitmap, it determines which
   // parameters are dynamic and which ones are static
   // notice: this limits dynamic parameters to the first 8 ones
   // all other ones are automatically considered static
 
-  dup1               // [rindex, rindex, size, windex]
-  mload              // [word, rindex, size, windex]
-  callvalue byte     // [d_bitmap, rindex, size, windex]
-  swap1              // [rindex, d_bitmap, size, windex]
-  0x01 add           // [rindex, d_bitmap, size, windex]
+  dup1               // [rindex, rindex, size, windex, windex]
+  calldataload       // [word, rindex, size, windex, windex]
+  callvalue byte     // [d_bitmap, rindex, size, windex, windex]
+  swap1              // [rindex, d_bitmap, size, windex, windex]
+  0x01 add           // [rindex, d_bitmap, size, windex, windex]
 
   callvalue          // [0x00, rindex, d_bitmap, size, windex]
 
@@ -1601,45 +1602,46 @@
   // and another one for the data blobs. The data blobs are the actual data
   // of the dynamic parameters. It starts on (windex + size * 0x20).
 
-  dup5               // [windex, i, rindex, d_bitmap, size, windex]
-  dup5               // [size, windex, i, rindex, d_bitmap, size, windex]
-  0x05 shl           // [size * 0x20, windex, i, rindex, d_bitmap, size, windex]
-  add                // [bwindex, i, rindex, d_bitmap, size, windex]
+  dup5               // [windex, i, rindex, d_bitmap, size, windex, windex]
+  dup5               // [size, windex, i, rindex, d_bitmap, size, windex, windex]
+  0x05 shl           // [size * 0x20, windex, i, rindex, d_bitmap, size, windex, windex]
+  add                // [bwindex, i, rindex, d_bitmap, size, windex, windex]
 
-  read_param:        // [bwindex, i, rindex, d_bitmap, size, windex]
+  read_param:        // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
 
     // We read the bitmap and determine if the param is dynamic or not
-    dup4             // [d_bitmap, bwindex, i, rindex, d_bitmap, size, windex]
-    0x01             // [0x01, d_bitmap, bwindex, i, rindex, d_bitmap, size, windex]
-    dup4             // [i, 0x01, d_bitmap, bwindex, i, rindex, d_bitmap, size, windex]
-    shl              // [(0x01 << i), d_bitmap, bwindex, i, rindex, d_bitmap, size, windex]
-    and              // [is_dynamic, bwindex, i, rindex, d_bitmap, size, windex]
+    dup4             // [d_bitmap, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+    0x01             // [0x01, d_bitmap, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+    dup4             // [i, 0x01, d_bitmap, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+    shl              // [(0x01 << i), d_bitmap, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+    and              // [is_dynamic, bwindex, i, rindex, d_bitmap, size, windex, swindex]
 
-    is_dynamic jumpi // [bwindex, i, rindex, d_bitmap, size, windex]
+    is_dynamic jumpi // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
 
     // is_not_dynamic:
 
       // The parameter is not dynamic, we just need to read one value on windex
       // and we can continue
 
-      swap2          // [rindex, i, bwindex, d_bitmap, size, windex]
-      swap1          // [i, rindex, bwindex, d_bitmap, size, windex]
-      swap5          // [windex, rindex, bwindex, d_bitmap, size, i]
+      swap2          // [rindex, i, bwindex, d_bitmap, size, windex, swindex]
+      swap1          // [i, rindex, bwindex, d_bitmap, size, windex, swindex]
+      swap5          // [windex, rindex, bwindex, d_bitmap, size, i, swindex]
 
-      PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, rindex, bwindex, d_bitmap, size, i]
+      PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, rindex, bwindex, d_bitmap, size, i, swindex]
 
       // We trust that we only increased windex by 0x20, and we keep iterating
-      swap5                            // [i, rindex, bwindex, d_bitmap, size, windex]
-      0x01 add                         // [i + 1, rindex, bwindex, d_bitmap, size, windex]
+      swap5                            // [i, rindex, bwindex, d_bitmap, size, windex, swindex]
+      0x01 add                         // [i + 1, rindex, bwindex, d_bitmap, size, windex, swindex]
 
-      swap1                            // [rindex, i, bwindex, d_bitmap, size, windex]
-      swap2                            // [bwindex, i, rindex, d_bitmap, size, windex]
-      dup5                             // [size, bwindex, i, rindex, d_bitmap, size, windex]
-      dup3                             // [i, size, bwindex, i, rindex, d_bitmap, size, windex]
-      lt                               // [(i < size), bwindex, i, rindex, d_bitmap, size, windex]
-      read_param jumpi                 // [bwindex, i, rindex, d_bitmap, size, windex]
+      swap1                            // [rindex, i, bwindex, d_bitmap, size, windex, swindex]
+      swap2                            // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      dup5                             // [size, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      dup3                             // [i, size, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      lt                               // [(i < size), bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      read_param jumpi                 // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      break jump
 
-    is_dynamic:      // [bwindex, i, rindex, d_bitmap, size, windex]
+    is_dynamic:      // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
 
       // The parameter is dynamic, we are going to write it on bwindex
       // but we need to:
@@ -1648,57 +1650,64 @@
       // - pad the end result to 32 bytes
       // - store in windex a pointer to bwindex
 
-      dup1           // [bwindex, bwindex, i, rindex, d_bitmap, size, windex]
-      dup7           // [windex, bwindex, bwindex, i, rindex, d_bitmap, size, windex]
-      mstore         // [bwindex, i, rindex, d_bitmap, size, windex]
-      swap5          // [windex, i, rindex, d_bitmap, size, bwindex]
-      0x20 add       // [windex + 0x20, i, rindex, d_bitmap, size, bwindex]
+      // The data pointer should lead to bwindex - swindex
+      dup7           // [swindex, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      dup2           // [bwindex, swindex, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      sub            // [d_pointer, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      dup7           // [windex, d_pointer, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      mstore         // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      swap5          // [windex, i, rindex, d_bitmap, size, bwindex, swindex]
+      0x20 add       // [windex + 0x20, i, rindex, d_bitmap, size, bwindex, swindex]
 
-      dup6           // [bwindex, windex, i, rindex, d_bitmap, size, bwindex]
-      0x20 add       // [bwindex + 0x20, windex, i, rindex, d_bitmap, size, bwindex]
-      swap3          // [rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer]
-      dup4           // [bwindex, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer]
+      dup6           // [bwindex, windex, i, rindex, d_bitmap, size, bwindex, swindex]
+      0x20 add       // [bwindex + 0x20, windex, i, rindex, d_bitmap, size, bwindex, swindex]
+      swap3          // [rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer, swindex]
+      dup4           // [bwindex, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer, swindex]
 
-      PERFORM_NESTED_READ_FLAG(<nrfs>) // [bwindex, rindex, windex, i, prev_bwindex, d_bitmap, size, size_b_pointer]
+      PERFORM_NESTED_READ_FLAG(<nrfs>) // [bwindex, rindex, windex, i, prev_bwindex, d_bitmap, size, size_b_pointer, swindex]
 
-      swap4                            // [prev_bwindex, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer]
-      dup5                             // [bwindex, prev_bwindex, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer]
-      sub                              // [b_size, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer]
+      swap4                            // [prev_bwindex, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer, swindex]
+      dup5                             // [bwindex, prev_bwindex, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer, swindex]
+      sub                              // [b_size, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer, swindex]
 
-      dup1                             // [b_size, b_size, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer]
-      swap8                            // [size_b_pointer, b_size, rindex, windex, i, bwindex, d_bitmap, size, b_size]
-      mstore                           // [rindex, windex, i, bwindex, d_bitmap, size, b_size]
+      dup1                             // [b_size, b_size, rindex, windex, i, bwindex, d_bitmap, size, size_b_pointer, swindex]
+      swap8                            // [size_b_pointer, b_size, rindex, windex, i, bwindex, d_bitmap, size, b_size, swindex]
+      mstore                           // [rindex, windex, i, bwindex, d_bitmap, size, b_size, swindex]
 
       // Last we need to pad the bwindex
       callvalue                        // [0x00, rindex, windex, i, bwindex, d_bitmap, size, b_size]
-      dup5                             // [bwindex, 0x00, rindex, windex, i, bwindex, d_bitmap, size, b_size]
-      mstore                           // [rindex, windex, i, bwindex, d_bitmap, size, b_size]
+      dup5                             // [bwindex, 0x00, rindex, windex, i, bwindex, d_bitmap, size, b_size, swindex]
+      mstore                           // [rindex, windex, i, bwindex, d_bitmap, size, b_size, swindex]
 
-      swap3                            // [bwindex, windex, i, rindex, d_bitmap, size, b_size]
-      swap1                            // [windex, bwindex, i, rindex, d_bitmap, size, b_size]
-      swap6                            // [b_size, bwindex, i, rindex, d_bitmap, size, windex]
+      swap3                            // [bwindex, windex, i, rindex, d_bitmap, size, b_size, swindex]
+      swap1                            // [windex, bwindex, i, rindex, d_bitmap, size, b_size, swindex]
+      swap6                            // [b_size, bwindex, i, rindex, d_bitmap, size, windex, swindex]
 
-      0x1f and                         // [b_size % 32, bwindex, i, rindex, d_bitmap, size, windex]
-      0x20 sub                         // [pad_diff, bwindex, i, rindex, d_bitmap, size, windex]
-      0x1f and                         // [pad_diff % 32, bwindex, i, rindex, d_bitmap, size, windex]
-      add                              // [bwindex, i, rindex, d_bitmap, size, windex]
+      0x1f and                         // [b_size % 32, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      0x20 sub                         // [pad_diff, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      0x1f and                         // [pad_diff % 32, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      add                              // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
 
-      swap1                            // [i, bwindex, rindex, d_bitmap, size, windex]
-      0x01 add                         // [i + 1, bwindex, rindex, d_bitmap, size, windex]
-      swap1                            // [bwindex, i, rindex, d_bitmap, size, windex]
+      swap1                            // [i, bwindex, rindex, d_bitmap, size, windex, swindex]
+      0x01 add                         // [i + 1, bwindex, rindex, d_bitmap, size, windex, swindex]
+      swap1                            // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
 
-      dup5                             // [size, bwindex, i, rindex, d_bitmap, size, windex]
-      dup3                             // [i, size, bwindex, i, rindex, d_bitmap, size, windex]
-      lt                               // [(i < size), bwindex, i, rindex, d_bitmap, size, windex]
-      read_param jumpi                 // [bwindex, i, rindex, d_bitmap, size, windex]
+      dup5                             // [size, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      dup3                             // [i, size, bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      lt                               // [(i < size), bwindex, i, rindex, d_bitmap, size, windex, swindex]
+      read_param jumpi                 // [bwindex, i, rindex, d_bitmap, size, windex, swindex]
+
+  break:
 
   // We have finished! we only need to clear the stack
-  pop                                  // [i, rindex, d_bitmap, size, windex]
-  pop                                  // [rindex, d_bitmap, size, windex]
-  swap2                                // [size, d_bitmap, rindex, windex]
-  pop                                  // [d_bitmap, rindex, windex]
-  pop                                  // [rindex, windex]
-  swap1                                // [windex, rindex]
+  // notice that bwindex is the windex now
+  swap5                                // [windex, i, rindex, d_bitmap, size, bwindex, swindex]
+  pop                                  // [i, rindex, d_bitmap, size, bwindex, swindex]
+  pop                                  // [rindex, d_bitmap, size, bwindex, swindex]
+  swap4                                // [swindex, d_bitmap, size, bwindex, rindex]
+  pop                                  // [d_bitmap, size, bwindex, rindex]
+  pop                                  // [size, bwindex, rindex]
+  pop                                  // [bwindex, rindex]
 
   // output stack: [windex, rindex]
 }

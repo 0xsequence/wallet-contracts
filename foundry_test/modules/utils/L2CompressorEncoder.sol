@@ -317,3 +317,31 @@ function encode_sequence_chained_signatures(bytes[] memory _payloads) pure retur
 
   return encoded;
 }
+
+function encode_abi_dynamic(
+  bytes4 _selector,
+  bool[] memory _isDynamic,
+  bytes[] memory _values
+) pure returns (bytes memory) {
+  bytes memory encoded = abi.encodePacked(uint8(0x4b), _selector, uint8(_isDynamic.length));
+  uint8 isDynamicBitmap = 0;
+
+  // The first 8 values can be dynamic, this is marked using a bitmap
+  for (uint256 i = 0; i < 8 && i < _isDynamic.length; i++) {
+    if (_isDynamic[i]) {
+      isDynamicBitmap |= uint8(1 << i);
+    }
+  }
+
+  encoded = abi.encodePacked(encoded, isDynamicBitmap);
+
+  for (uint256 i = 0; i < _values.length; i++) {
+    if (_isDynamic[i]) {
+      encoded = abi.encodePacked(encoded, encode_bytes_n(_values[i]));
+    } else {
+      encoded = abi.encodePacked(encoded, encodeWord(abi.decode(_values[i], (uint256))));
+    }
+  }
+
+  return encoded;
+}
