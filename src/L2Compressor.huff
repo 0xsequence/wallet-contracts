@@ -2041,16 +2041,6 @@
   // output stack: [windex, rindex]
 }
 
-#define macro READ_MAX_UINT256() = takes (2) returns (2) {
-  // input stack: [windex, rindex]
-
-  0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff dup2 mstore
-  0x20 add           // [windex + 0x20, rindex]
-
-  // output stack: [windex + 0x20, rindex]
-}
-
-
 #define macro READ_N_BYTES(nrfs) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
@@ -2278,18 +2268,6 @@
   0x06 eq ASSERT() // []
 
   0x00 mload 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff eq ASSERT() // []
-}
-
-#define test TEST_READ_MAX_UINT256() = {
-  0x00 // [rindex]
-  0x10 // [windex, rindex]
-
-  READ_MAX_UINT256() // [windex, rindex]
-
-  0x30 eq ASSERT() // [rindex]
-  0x00 eq ASSERT() // []
-
-  0x10 mload 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff eq ASSERT() // []
 }
 
 #[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899")]
