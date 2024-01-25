@@ -9,6 +9,8 @@ import "forge-std/console2.sol";
 import { HuffConfig } from "foundry-huff/HuffConfig.sol";
 import { HuffDeployer } from "foundry-huff/HuffDeployer.sol";
 
+import "contracts/modules/commons/interfaces/IModuleCalls.sol";
+
 import "./L2CompressorEncoder.sol";
 
 uint256 constant FMS = 0xa0;
@@ -999,7 +1001,7 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
   }
 
   function test_read_pow_10_and_mul(uint256 _exp, uint8 _factor) external {
-    _exp = bound(_exp, 0, 77);
+    _exp = bound(_exp, 1, 77);
 
     // First bit means we aren't going to multiply it after
     bytes memory encoded = abi.encodePacked(uint8(0x00), uint8(_exp), uint8(_factor));
@@ -1014,5 +1016,40 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
       assertEq(rindex, encoded.length);
       assertEq(res, abi.encode(uint256(10 ** _exp) * uint256(_factor)));
     }
+  }
+
+  function test_read_self_execute() external {
+    // vm.assume(_txs.length != 0 && _txs.length <= type(uint8).max);
+
+    IModuleCalls.Transaction[] memory _txs = new IModuleCalls.Transaction[](1);
+
+    bytes memory encoded = abi.encodePacked(
+      uint8(0x00), uint8(0x00),
+      uint8(_txs.length)
+    );
+
+    for (uint256 i = 0; i < _txs.length; i++) {
+      IModuleCalls.Transaction memory t = _txs[i];
+
+      encoded = abi.encodePacked(
+        encoded,
+        build_flag(t.delegateCall, t.revertOnError, t.gasLimit != 0, t.value != 0, t.data.length != 0),
+        t.gasLimit != 0 ? encodeWord(t.gasLimit) : bytes(""),
+        encode_raw_address(t.target),
+        t.value != 0 ? encodeWord(t.value) : bytes(""),
+        t.data.length != 0 ? encode_bytes_n(t.data) : bytes("")
+      );
+    }
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, res.length + FMS);
+
+    bytes memory solidityEncoded = abi.encodeWithSelector(IModuleCalls.selfExecute.selector, _txs);
+    assertEq(solidityEncoded, res);
   }
 }

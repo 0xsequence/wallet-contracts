@@ -87,7 +87,7 @@
 }
 
 #define jumptable__packed FLAG_TABLE {
-  FLAG_READ_POWER_OF_10      // 0x00
+  FLAG_READ_POWER_OF_10_MISC // 0x00
   FLAG_READ_BYTES32_1_BYTES  // 0x01
   FLAG_READ_BYTES32_2_BYTES  // 0x02
   FLAG_READ_BYTES32_3_BYTES  // 0x03
@@ -217,8 +217,8 @@
   0xf0 shr                    // [word >> 0xf0, windex, rindex + 1, jump_to]
   jump                        // [windex, rindex + 1, jump_to]
 
-  FLAG_READ_POWER_OF_10:
-    READ_POW_10()
+  FLAG_READ_POWER_OF_10_MISC:
+    READ_POW_10_AND_SELF_EXECUTE(<nrfs>)
     end jump
   FLAG_READ_BYTES32_1_BYTES:
     READ_BYTES32(0xf8, 0x01)
@@ -490,11 +490,28 @@
   // output stack:          // [windex, rindex]
 }
 
-#define macro READ_POW_10() = takes (2) returns (2) {
+#define macro READ_POW_10_AND_SELF_EXECUTE(nrfs) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
   swap1                         // [rindex, windex]
   LOAD_DYNAMIC_SIZE(0x01, 0xf8) // [exp_word, rindex, windex]
+
+  // We didn't had any more pleace for READ_SELF_EXECUTE without expanding
+  // the jumptable! so it has to live here. Sorry about that.
+  // 10 ** 0 * N is more expensive than just reading 1 byte,
+  // so this wasn't useful anyway
+
+  dup1                  // [exp_word, exp_word, rindex, windex]
+  normal_flow jumpi     // [exp_word, rindex, windex]
+
+    // --- WARNING UGLY CODE ---
+
+    pop                        // [rindex, windex]
+    swap1                      // [windex, rindex]
+    READ_SELF_EXECUTE(<nrfs>)  // [windex, rindex]
+    end_pow_10 jump            // [windex, rindex]
+
+  normal_flow:
 
   // The last bit determines if we will multiply this by
   // the next byte or not, this is fine as the maximum value that we
@@ -512,7 +529,8 @@
   swap1                         // [rindex, windex, not_use_mul]
   swap2                         // [not_use_mul, windex, rindex]
 
-  no_mul jumpi                    // [windex, rindex]
+  end_pow_10 jumpi              // [windex, rindex]
+
     BACKREAD_SINGLE_VALUE()       // [pow_result, windex, rindex]
     swap2                         // [rindex, windex, pow_result]
     LOAD_DYNAMIC_SIZE(0x01, 0xf8) // [factor, rindex, windex, pow_result]
@@ -524,7 +542,7 @@
     0x20                          // [0x20, windex, rindex]
     add                           // [(0x20 + windex), rindex]
 
-  no_mul:                       // [windex, rindex]
+  end_pow_10:                       // [windex, rindex]
 
   // output stack: [windex, rindex]
 }
@@ -1604,6 +1622,32 @@
     swap1         // [windex, rindex]
 
   end_data_if:
+}
+
+#define macro READ_SELF_EXECUTE(nrfs) = takes (2) returns (2) {
+  // input stack:  [windex, rindex]
+
+  // The SELF execution function signature of Sequence is 0x61c2926c
+
+  __RIGHTPAD(0x61c2926c)  // [0x61c2926c, windex, rindex]
+  dup2                    // [windex, 0x61c2926c, windex, rindex]
+  mstore                  // [windex, rindex]
+  0x04 add                // [windex, rindex]
+
+  // We need to write a single 0x20, this marks the position
+  // of the list of transactions. It is always the same.
+  0x20                    // [0x20, windex, rindex]
+  dup1                    // [0x20, 0x20, windex, rindex]
+  dup3                    // [windex, 0x20, 0x20, windex, rindex]
+  mstore                  // [0x20, windex, rindex]
+  add                     // [(0x20 + windex), rindex]
+
+  // Now we can just read the list of transactions
+  // the macro handles all internal pointers
+
+  READ_TRANSACTIONS(<nrfs>) // [windex, rindex]
+
+  // output stack:  [windex, rindex]
 }
 
 #define macro READ_ABI_4_BYTES() = takes (2) returns (2) {

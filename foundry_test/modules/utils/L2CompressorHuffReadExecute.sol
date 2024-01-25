@@ -11,9 +11,9 @@ import { HuffDeployer } from "foundry-huff/HuffDeployer.sol";
 
 import "contracts/modules/commons/interfaces/IModuleCalls.sol";
 
-uint256 constant FMS = 0xa0;
-
 import "./L2CompressorEncoder.sol";
+
+uint256 constant FMS = 0xa0;
 
 contract L2CompressorHuffReadExecuteTest is AdvTest {
   address public imp;
