@@ -173,6 +173,7 @@
 }
 
 #define constant HIGHEST_FLAG = 0x4f
+#define constant HIGHEST_FLAG_PLUS_ONE = 0x50
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -467,11 +468,11 @@
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
     // notice that we start at 0x01 since 0x00 can be pushed with the flag 0x00
-    [HIGHEST_FLAG]  // [HIGHEST_FLAG, flag, windex, rindex]
-    swap1 sub       // [flag - HIGHEST_FLAG, windex, rindex]
-    dup2            // [windex, flag - HIGHEST_FLAG, windex, rindex]
-    mstore          // [windex, rindex]
-    0x20 add        // [windex + 0x20, rindex]
+    [HIGHEST_FLAG_PLUS_ONE] // [HIGHEST_FLAG_PLUS_ONE, flag, windex, rindex]
+    swap1 sub               // [flag - HIGHEST_FLAG_PLUS_ONE, windex, rindex]
+    dup2                    // [windex, flag - HIGHEST_FLAG_PLUS_ONE, windex, rindex]
+    mstore                  // [windex, rindex]
+    0x20 add                // [windex + 0x20, rindex]
 
   end:
 
@@ -1861,7 +1862,7 @@
   // output stack: [windex + 0x20, rindex + 0x20]
 }
 
-#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a8"), value(0x01)]
+#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a8")]
 #define test TEST_FLAG_READ_BYTES32() = {
   0x01            // [rindex]
   [FMS] 0x40 add  // [windex, rindex]
@@ -1932,7 +1933,7 @@
 }
 
 // 0xd10eb37ef5838bb835ea71bbd4053daf8de7bd8e
-#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a8"), value(0x01)]
+#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a8")]
 #define test TEST_SAVE_ADDRESS() = {
   0x01  // [rindex]
   [FMS] // [windex, rindex]
@@ -1982,7 +1983,7 @@
   // output stack: [windex + 32, rindex + 32]
 }
 
-#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899"), value(0x01)]
+#[calldata("0xb2d10eb37ef5838bb835ea71bbd4053daf8de7bd8ecdf638451a2bc966a145a899")]
 #define test TEST_SAVE_BYTES32() = {
   0x01 // [rindex]
   0x20 // [windex, rindex]

@@ -153,6 +153,12 @@ function encodeWord(bytes32 _value) pure returns (bytes memory) {
 }
 
 function encodeWord(uint256 _value) pure returns (bytes memory) {
+  uint256 highestFlag = 0x4f;
+
+  if (_value < type(uint8).max - highestFlag) {
+    return abi.encodePacked(uint8(_value + highestFlag + 1));
+  }
+
   uint8 b = requiredBytesFor(_value);
   return abi.encodePacked(b, packToBytes(_value, b));
 }
