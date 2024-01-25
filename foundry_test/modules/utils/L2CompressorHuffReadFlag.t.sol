@@ -582,7 +582,32 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(res, abi.encodePacked(_selector, _values));
   }
 
-  function test_read_abi_dynamic_only(
+  function test_read_abi_dynamic_only_1(
+    bytes4 _selector,
+    bytes memory _data1
+  ) external {
+    bool[] memory isDynamic = new bool[](1);
+    bytes[] memory _values = new bytes[](1);
+
+    isDynamic[0] = true;
+
+    _values[0] = _data1;
+
+    bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, encoded.length);
+
+    assertEq(res, abi.encodeWithSelector(_selector, _values[0]));
+  }
+
+  function test_read_abi_dynamic_only_2(
     bytes4 _selector,
     bytes memory _data1,
     bytes memory _data2
@@ -608,5 +633,285 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(rindex, encoded.length);
 
     assertEq(res, abi.encodeWithSelector(_selector, _values[0], _values[1]));
+  }
+
+  function test_read_abi_dynamic_only_3(
+    bytes4 _selector,
+    bytes memory _data1,
+    bytes memory _data2,
+    bytes memory _data3
+  ) external {
+    bool[] memory isDynamic = new bool[](3);
+    bytes[] memory _values = new bytes[](3);
+
+    isDynamic[0] = true;
+    isDynamic[1] = true;
+    isDynamic[2] = true;
+
+    _values[0] = _data1;
+    _values[1] = _data2;
+    _values[2] = _data3;
+
+    bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, encoded.length);
+
+    assertEq(res, abi.encodeWithSelector(_selector, _values[0], _values[1], _values[2]));
+  }
+
+  function test_read_abi_dynamic_only_8(
+    bytes4 _selector,
+    bytes memory _data1,
+    bytes memory _data2,
+    bytes memory _data3,
+    bytes memory _data4,
+    bytes memory _data5,
+    bytes memory _data6,
+    bytes memory _data7,
+    bytes memory _data8
+  ) external {
+    bytes memory r; uint256 el;
+
+    {
+      bool[] memory isDynamic = new bool[](8);
+      bytes[] memory _values = new bytes[](8);
+
+      isDynamic[0] = true;
+      isDynamic[1] = true;
+      isDynamic[2] = true;
+      isDynamic[3] = true;
+      isDynamic[4] = true;
+      isDynamic[5] = true;
+      isDynamic[6] = true;
+      isDynamic[7] = true;
+
+      _values[0] = _data1;
+      _values[1] = _data2;
+      _values[2] = _data3;
+      _values[3] = _data4;
+      _values[4] = _data5;
+      _values[5] = _data6;
+      _values[6] = _data7;
+      _values[7] = _data8;
+
+      bool s;
+      bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+      (s, r) = imp.staticcall(encoded);
+      el = encoded.length;
+      assertTrue(s);
+    }
+
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, el);
+
+    assertEq(res, abi.encodeWithSelector(
+        _selector,
+        _data1,
+        _data2,
+        _data3,
+        _data4,
+        _data5,
+        _data6,
+        _data7,
+        _data8
+      )
+    );
+  }
+
+  function test_read_mixed_2(
+    bytes4 _selector,
+    bytes32 _data1,
+    bytes memory _data2
+  ) external {
+    bool[] memory isDynamic = new bool[](2);
+    bytes[] memory _values = new bytes[](2);
+
+    isDynamic[0] = false;
+    isDynamic[1] = true;
+
+    _values[0] = abi.encodePacked(_data1);
+    _values[1] = _data2;
+
+    bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    bytes memory expected = abi.encodeWithSelector(_selector, _data1, _data2);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, encoded.length);
+
+    assertEq(res, expected);
+  }
+
+  function test_read_mixed_2b(
+    bytes4 _selector,
+    bytes memory _data1,
+    bytes32 _data2
+  ) external {
+    bool[] memory isDynamic = new bool[](2);
+    bytes[] memory _values = new bytes[](2);
+
+    isDynamic[0] = true;
+    isDynamic[1] = false;
+
+    _values[0] = _data1;
+    _values[1] = abi.encodePacked(_data2);
+
+    bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    bytes memory expected = abi.encodeWithSelector(_selector, _data1, _data2);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, encoded.length);
+
+    assertEq(res, expected);
+  }
+
+  function test_read_abi_mixed_8b(
+    bytes4 _selector,
+    bytes32 _data1,
+    bytes memory _data2,
+    bytes32 _data3,
+    bytes memory _data4,
+    bytes memory _data5,
+    bytes memory _data6,
+    bytes32 _data7,
+    bytes32 _data8
+  ) external {
+    bytes memory r; uint256 el;
+
+    {
+      bool[] memory isDynamic = new bool[](8);
+      bytes[] memory _values = new bytes[](8);
+
+      isDynamic[0] = false;
+      isDynamic[1] = true;
+      isDynamic[2] = false;
+      isDynamic[3] = true;
+      isDynamic[4] = true;
+      isDynamic[5] = true;
+      isDynamic[6] = false;
+      isDynamic[7] = false;
+
+      _values[0] = abi.encodePacked(_data1);
+      _values[1] = _data2;
+      _values[2] = abi.encodePacked(_data3);
+      _values[3] = _data4;
+      _values[4] = _data5;
+      _values[5] = _data6;
+      _values[6] = abi.encodePacked(_data7);
+      _values[7] = abi.encodePacked(_data8);
+
+      bool s;
+      bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+      (s, r) = imp.staticcall(encoded);
+      el = encoded.length;
+      assertTrue(s);
+    }
+
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, el);
+
+    assertEq(res, abi.encodeWithSelector(
+        _selector,
+        _data1,
+        _data2,
+        _data3,
+        _data4,
+        _data5,
+        _data6,
+        _data7,
+        _data8
+      )
+    );
+  }
+
+  function test_read_abi_mixed_8b(
+    bytes4 _selector,
+    bytes memory _data1,
+    bytes32 _data2,
+    bytes32 _data3,
+    bytes memory _data4,
+    bytes memory _data5,
+    bytes32 _data6,
+    bytes memory _data7,
+    bytes memory _data8
+  ) external {
+    bytes memory r; uint256 el;
+
+    {
+      bool[] memory isDynamic = new bool[](8);
+      bytes[] memory _values = new bytes[](8);
+
+      isDynamic[0] = true;
+      isDynamic[1] = false;
+      isDynamic[2] = false;
+      isDynamic[3] = true;
+      isDynamic[4] = true;
+      isDynamic[5] = false;
+      isDynamic[6] = true;
+      isDynamic[7] = true;
+
+      _values[0] = _data1;
+      _values[1] = abi.encodePacked(_data2);
+      _values[2] = abi.encodePacked(_data3);
+      _values[3] = _data4;
+      _values[4] = _data5;
+      _values[5] = abi.encodePacked(_data6);
+      _values[6] = _data7;
+      _values[7] = _data8;
+
+      bool s;
+      bytes memory encoded = encode_abi_dynamic(_selector, isDynamic, _values);
+
+      (s, r) = imp.staticcall(encoded);
+      el = encoded.length;
+      assertTrue(s);
+    }
+
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, el);
+
+    assertEq(res, abi.encodeWithSelector(
+        _selector,
+        _data1,
+        _data2,
+        _data3,
+        _data4,
+        _data5,
+        _data6,
+        _data7,
+        _data8
+      )
+    );
   }
 }
