@@ -25,19 +25,6 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     );
   }
 
-  function test_read_flag_bytes32_zero(bytes32 _data) external {
-    (bool s, bytes memory r) = imp.staticcall(
-      abi.encodePacked(hex"00", _data)
-    );
-
-    assertTrue(s);
-    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
-    assertEq(rindex, 1);
-    assertEq(windex, FMS + 32);
-
-    assertEq(abi.encode(uint256(0)), res);
-  }
-
   function test_read_flag_bytes32_one(uint8 _val) external {
     (bool s, bytes memory r) = imp.staticcall(
       abi.encodePacked(hex"01", _val)
@@ -65,7 +52,7 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
   }
 
   function test_read_flag_bytes32_x(uint256 _size, bytes memory _content) public {
-    _size = bound(_size, 0, 32);
+    _size = bound(_size, 1, 32);
   
     (bool s, bytes memory r) = imp.staticcall(
       abi.encodePacked(uint8(_size), _content)
@@ -993,5 +980,39 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(windex, FMS + res.length);
     assertEq(rindex, encoded.length);
     assertEq(res, abi.encode(_val));
+  }
+
+  function test_read_pow_10(uint256 _exp) external {
+    _exp = bound(_exp, 0, 77);
+
+    // First bit means we aren't going to multiply it after
+    bytes memory encoded = abi.encodePacked(uint8(0x00), uint8(_exp) | uint8(0x80));
+
+    (bool s, bytes memory r) = imp.call(encoded);
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(windex, FMS + res.length);
+    assertEq(rindex, encoded.length);
+    assertEq(res, abi.encode(uint256(10 ** _exp)));
+  }
+
+  function test_read_pow_10_and_mul(uint256 _exp, uint8 _factor) external {
+    _exp = bound(_exp, 0, 77);
+
+    // First bit means we aren't going to multiply it after
+    bytes memory encoded = abi.encodePacked(uint8(0x00), uint8(_exp), uint8(_factor));
+
+    (bool s, bytes memory r) = imp.call(encoded);
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    unchecked {
+      assertEq(windex, FMS + res.length);
+      assertEq(rindex, encoded.length);
+      assertEq(res, abi.encode(uint256(10 ** _exp) * uint256(_factor)));
+    }
   }
 }
