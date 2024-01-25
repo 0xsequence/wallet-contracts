@@ -166,9 +166,13 @@
   FLAG_READ_CHAINED_L        // 0x4a
   // end: Sequence specific methods
   FLAG_READ_DYNAMIC_ABI      // 0x4b
+  FLAG_NO_OP                 // 0x4c
+  FLAG_MIRROR_FLAG           // 0x4d
+  FLAG_COPY_CALLDATA         // 0x4e
+  FLAG_READ_STORE_FLAG       // 0x4f
 }
 
-#define constant HIGHEST_FLAG = 0x4b
+#define constant HIGHEST_FLAG = 0x4f
 
 #define macro READ_FLAG() = takes (2) returns (2) {
   nrfs:
@@ -448,6 +452,18 @@
     READ_ABI_DYNAMIC(<nrfs>)
     end jump
 
+  FLAG_NO_OP:
+    end jump
+  FLAG_MIRROR_FLAG:
+    READ_MIRROR_FLAG(<nrfs>)
+    end jump
+  FLAG_COPY_CALLDATA:
+    READ_COPY_CALLDATA()
+    end jump
+  FLAG_READ_STORE_FLAG:
+    READ_STORE_FLAG()
+    end jump
+
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
     // notice that we start at 0x01 since 0x00 can be pushed with the flag 0x00
@@ -467,6 +483,81 @@
   [NESTED_READ_FLAG_RETURN_MSLOT] mload  // [nrfr, windex, rindex]
   0xffff and                             // [nrfr & 0xffff, windex, rindex]
   dup1 jumpi                             // [windex, rindex]
+}
+
+#define macro READ_MIRROR_FLAG(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1                         // [rindex, windex]
+  LOAD_DYNAMIC_SIZE(0x02, 0xf0) // [trindex, rindex, windex]
+  swap1                         // [rindex, trindex, windex]
+  swap2                         // [windex, trindex, rindex]
+
+  PERFORM_NESTED_READ_FLAG(<nrfs>) // [windex, trindex, rindex]
+  swap1                            // [trindex, windex, rindex]
+  pop                              // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_COPY_CALLDATA() = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1                         // [rindex, windex]
+  LOAD_DYNAMIC_SIZE(0x02, 0xf0) // [location, rindex, windex]
+  swap1                         // [rindex, location, windex]
+
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8) // [size, rindex, location, windex]
+
+  dup1                          // [size, size, rindex, location, windex]
+  swap3                         // [location, size, rindex, size, windex]
+  dup5                          // [windex, location, size, rindex, size, windex]
+  calldatacopy                  // [rindex, size, windex]
+
+  swap2                         // [windex, size, rindex]
+  add                           // [(windex + size), rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_STORE_FLAG() = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1                         // [rindex, windex]
+  LOAD_DYNAMIC_SIZE(0x02, 0xf0) // [trindex, rindex, windex]
+
+  dup1                          // [trindex, trindex, rindex, windex]
+  calldataload                  // [data[trindex], trindex, rindex, windex]
+  callvalue byte                // [flag, trindex, rindex, windex]
+
+  swap1                         // [trindex, flag, rindex, windex]
+  0x01 add                      // [trindex + 1, flag, rindex, windex]
+  swap1                         // [flag, trindex, rindex, windex]
+
+  // There are only two cases, either the flag
+  // is storing an address or storing a bytes32
+  // we are going to read the next 32 bytes or the next 20 bytes
+  
+  0x21               // [0x21, flag, trindex, rindex, windex]
+  eq                 // [(0x21 == flag), trindex, rindex, windex]
+  is_addr jumpi      // [trindex, rindex, windex]
+
+  // is_not_addr:
+    calldataload     // [word, rindex, windex]
+
+  end_if jump
+  is_addr:           // [trindex, rindex, windex]
+    calldataload     // [word, rindex, windex]
+    0x60 shr         // [word >> 0x60, rindex, windex]
+
+  end_if:
+
+  dup3               // [windex, word, rindex, windex]
+  mstore             // [rindex, windex]
+  swap1              // [windex, rindex]
+  0x20 add           // [windex + 0x20, rindex]
+
+  // output stack: [windex, rindex]
 }
 
 #define macro PERFORM_NESTED_READ_FLAG(nrfs) = takes(0) returns (0) {
