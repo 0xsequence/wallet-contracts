@@ -199,31 +199,31 @@ function encode_bytes_n(bytes memory _data) pure returns (bytes memory) {
 }
 
 function encode_abi_call(bytes4 _selector) pure returns (bytes memory) {
-  return abi.encodePacked(uint8(0x2d), _selector);
+  return abi.encodePacked(uint8(0x2d), uint8(0x00), _selector);
 }
 
 function encode_abi_call(bytes4 _selector, bytes32 _v1) pure returns (bytes memory) {
-  return abi.encodePacked(uint8(0x2e), _selector, encodeWord(_v1));
+  return abi.encodePacked(uint8(0x2e), uint8(0x00), _selector, encodeWord(_v1));
 }
 
 function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2) pure returns (bytes memory) {
-  return abi.encodePacked(uint8(0x2f), _selector, encodeWord(_v1), encodeWord(_v2));
+  return abi.encodePacked(uint8(0x2f), uint8(0x00), _selector, encodeWord(_v1), encodeWord(_v2));
 }
 
 function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3) pure returns (bytes memory) {
-    return abi.encodePacked(uint8(0x30), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3));
+    return abi.encodePacked(uint8(0x30), uint8(0x00), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3));
 }
 
 function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3, bytes32 _v4) pure returns (bytes memory) {
-    return abi.encodePacked(uint8(0x31), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4));
+    return abi.encodePacked(uint8(0x31), uint8(0x00), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4));
 }
 
 function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3, bytes32 _v4, bytes32 _v5) pure returns (bytes memory) {
-    return abi.encodePacked(uint8(0x32), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4), encodeWord(_v5));
+    return abi.encodePacked(uint8(0x32), uint8(0x00), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4), encodeWord(_v5));
 }
 
 function encode_abi_call(bytes4 _selector, bytes32 _v1, bytes32 _v2, bytes32 _v3, bytes32 _v4, bytes32 _v5, bytes32 _v6) pure returns (bytes memory) {
-    return abi.encodePacked(uint8(0x33), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4), encodeWord(_v5), encodeWord(_v6));
+    return abi.encodePacked(uint8(0x33), uint8(0x00), _selector, encodeWord(_v1), encodeWord(_v2), encodeWord(_v3), encodeWord(_v4), encodeWord(_v5), encodeWord(_v6));
 }
 
 function encode_nested(bytes memory _a, bytes memory _b) pure returns (bytes memory) {
@@ -329,7 +329,7 @@ function encode_abi_dynamic(
   bool[] memory _isDynamic,
   bytes[] memory _values
 ) pure returns (bytes memory) {
-  bytes memory encoded = abi.encodePacked(uint8(0x4b), _selector, uint8(_isDynamic.length));
+  bytes memory encoded = abi.encodePacked(uint8(0x4b), uint8(0x00), _selector, uint8(_isDynamic.length));
   uint8 isDynamicBitmap = 0;
 
   // The first 8 values can be dynamic, this is marked using a bitmap

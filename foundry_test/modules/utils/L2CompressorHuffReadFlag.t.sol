@@ -1052,4 +1052,43 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     bytes memory solidityEncoded = abi.encodeWithSelector(IModuleCalls.selfExecute.selector, _txs);
     assertEq(solidityEncoded, res);
   }
+
+  function test_read_flag_abi_encode_by_index() external {
+    bytes memory encoded = abi.encodePacked(uint8(0x2d), uint8(0x01));
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(hex"a9059cbb", res);
+  }
+
+  function test_read_flag_abi_encode_by_index_2() external {
+    bytes memory encoded = abi.encodePacked(uint8(0x2d), uint8(0x02));
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(hex"095ea7b3", res);
+  }
+
+  function test_read_flag_abi_encode_by_index_2_args(bytes32 _arg) external {
+    bytes memory encoded = abi.encodePacked(uint8(0x2e), uint8(0x02), encodeWord(_arg));
+    (bool s, bytes memory r) = imp.staticcall(encoded);
+
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    assertEq(rindex, encoded.length);
+    assertEq(windex, FMS + res.length);
+    assertEq(abi.encodePacked(hex"095ea7b3", _arg), res);
+  }
 }
