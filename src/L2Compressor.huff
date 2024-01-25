@@ -1,8 +1,7 @@
 #include "./Errors.huff"
 
 #define constant ADDR_BYTES_STORAGE = 0x00
-#define constant FMS = 0xc0
-#define constant NESTED_READ_FLAG_RETURN_MSLOT = 0xa0
+#define constant FMS = 0xa0
 
 #define constant FLAG_READ_BYTES32_2_BYTES = 0x27
 #define constant FLAG_READ_ADDRESS_2_BYTES = 0x23
@@ -176,39 +175,47 @@
 #define constant HIGHEST_FLAG_PLUS_ONE = 0x50
 
 #define macro READ_FLAG() = takes (2) returns (2) {
-  nrfs:
-  FN_READ_FLAG(nrfs)
-}
-
-#define macro FN_READ_FLAG(nrfs) = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
-  dup2            // [rindex, windex, rindex]
-  calldataload    // [cdata[rindex], windex, rindex]
-  callvalue byte  // [flag, windex, rindex]
+  swap1        // [rindex, windex]
+  end          // [end, rindex, windex]
+  swap2        // [windex, rindex, end]
 
-  swap2         // [rindex, windex, flag]
-  0x01 add      // [rindex + 1, windex, flag]
-  swap2         // [flag, windex, rindex + 1]
+  nrfs:
+  FN_READ_FLAG(nrfs) // [windex, rindex]
 
-  dup1                        // [flag, flag, windex, rindex + 1]
-  [HIGHEST_FLAG] lt           // [HIGHEST_FLAG < flag, flag, windex, rindex + 1]
-  default jumpi               // [flag, windex, rindex + 1]
+  end:
+}
+
+#define macro FN_READ_FLAG(nrfs) = takes (3) returns (2) {
+  // input stack: [windex, rindex, jump_to]
+
+  dup2            // [rindex, windex, rindex, jump_to]
+  calldataload    // [cdata[rindex], windex, rindex, jump_to]
+  callvalue byte  // [flag, windex, rindex, jump_to]
+
+  swap2         // [rindex, windex, flag, jump_to]
+  0x01 add      // [rindex + 1, windex, flag, jump_to]
+  swap2         // [flag, windex, rindex + 1, jump_to]
+
+  dup1                        // [flag, flag, windex, rindex + 1, jump_to]
+  [HIGHEST_FLAG] lt           // [HIGHEST_FLAG < flag, flag, windex, rindex + 1, jump_to]
+  default jumpi               // [flag, windex, rindex + 1, jump_to]
 
   // Starts to become cheaper to skip the loading
   // after 5 times, most real world cases will have more than
   // 5 times. Notice that this assumes a single READ_FLAG instance
   callvalue mload no_load jumpi
-    __tablesize(FLAG_TABLE)     // [table_size, flag, windex, rindex + 1]
-    __tablestart(FLAG_TABLE)    // [table_start, table_size, flag, windex, rindex + 1]
-    callvalue                   // [0x00, table_start, table_size, flag, windex, rindex + 1]
+    __tablesize(FLAG_TABLE)     // [table_size, flag, windex, rindex + 1, jump_to]
+    __tablestart(FLAG_TABLE)    // [table_start, table_size, flag, windex, rindex + 1, jump_to]
+    callvalue                   // [0x00, table_start, table_size, flag, windex, rindex + 1, jump_to]
     codecopy                    // [flag, windex, rindex + 1]
   no_load:
 
-  0x01 shl                    // [flag << 0x01, windex, rindex + 1]
-  mload                       // [word, windex, rindex + 1]
-  0xf0 shr                    // [word >> 0xf0, windex, rindex + 1]
-  jump                        // [windex, rindex + 1]
+  0x01 shl                    // [flag << 0x01, windex, rindex + 1, jump_to]
+  mload                       // [word, windex, rindex + 1, jump_to]
+  0xf0 shr                    // [word >> 0xf0, windex, rindex + 1, jump_to]
+  jump                        // [windex, rindex + 1, jump_to]
 
   FLAG_READ_BYTES32_0_BYTES:
     READ_BYTES32_EMPTY()
@@ -468,22 +475,19 @@
   default:
     // The default just pushes the flag as a byte (padded to 32 bytes)
     // notice that we start at 0x01 since 0x00 can be pushed with the flag 0x00
-    [HIGHEST_FLAG_PLUS_ONE] // [HIGHEST_FLAG_PLUS_ONE, flag, windex, rindex]
-    swap1 sub               // [flag - HIGHEST_FLAG_PLUS_ONE, windex, rindex]
-    dup2                    // [windex, flag - HIGHEST_FLAG_PLUS_ONE, windex, rindex]
-    mstore                  // [windex, rindex]
-    0x20 add                // [windex + 0x20, rindex]
+    [HIGHEST_FLAG_PLUS_ONE] // [HIGHEST_FLAG_PLUS_ONE, flag, windex, rindex, jump_to]
+    swap1 sub               // [flag - HIGHEST_FLAG_PLUS_ONE, windex, rindex, jump_to]
+    dup2                    // [windex, flag - HIGHEST_FLAG_PLUS_ONE, windex, rindex, jump_to]
+    mstore                  // [windex, rindex, jump_to]
+    0x20 add                // [windex + 0x20, rindex, jump_to]
 
   end:
 
-  // If the NESTED memory slot is not 0, then we need to jump there
-  // but each "return" only takes 2 bytes, so we need to only jump to
-  // to the last 2 bytes. Notice that this limits nested calls to a depth
-  // of 16 only.
+  swap1                     // [rindex, windex, jump_to]
+  swap2                     // [jump_to, windex, rindex]
+  jump                      // [windex, rindex]
 
-  [NESTED_READ_FLAG_RETURN_MSLOT] mload  // [nrfr, windex, rindex]
-  0xffff and                             // [nrfr & 0xffff, windex, rindex]
-  dup1 jumpi                             // [windex, rindex]
+  // output stack:          // [windex, rindex]
 }
 
 #define macro READ_MIRROR_FLAG(nrfs) = takes (2) returns (2) {
@@ -562,22 +566,15 @@
 }
 
 #define macro PERFORM_NESTED_READ_FLAG(nrfs) = takes(0) returns (0) {
-  // input stack: []
+  // input stack: [windex, rindex]
 
-  [NESTED_READ_FLAG_RETURN_MSLOT] mload // [nrfr]
-  0x10 shl                              // [nrfr << 0x10]
-  back or                               // [nrfr << 0x10 | back]
-  [NESTED_READ_FLAG_RETURN_MSLOT]       // [nrfr, new_nrfr]
-  mstore                                // []
+  swap1        // [rindex, windex]
+  back         // [back, rindex, windex]
+  swap2        // [windex, rindex, back]
 
-  <nrfs> jump // []
+  <nrfs> jump // [windex, rindex]
 
   back:
-
-  // Clear the last callback pointer
-  [NESTED_READ_FLAG_RETURN_MSLOT] mload  // [nrfr]
-  0x10 shr                               // [nrfr >> 0x10]
-  [NESTED_READ_FLAG_RETURN_MSLOT] mstore // []
 }
 
 #define macro BACKREAD_SINGLE_VALUE() = takes (1) returns (2) {
