@@ -131,7 +131,7 @@
   JUMP_READ_BYTES32_4        // 0x29
   JUMP_READ_BYTES32_5        // 0x2a
   JUMP_READ_N_BYTES          // 0x2b
-  JUMP_READ_POWER_OF_2       // 0x2c
+  FLAG_READ_POWER_OF_2       // 0x2c
   FLAG_ABI_0_PARAM           // 0x2d
   FLAG_ABI_1_PARAM           // 0x2e
   FLAG_ABI_2_PARAMS          // 0x2f
@@ -355,8 +355,8 @@
     READ_N_BYTES(<nrfs>)
     end jump
 
-  JUMP_READ_POWER_OF_2:
-    READ_POWER_OF_2()
+  FLAG_READ_POWER_OF_2:
+    READ_POW_2()
     end jump
 
   FLAG_ABI_0_PARAM:
@@ -2145,49 +2145,68 @@
   0x10 mload 0x0000000000000000000000008a745d2b92c6e02e8ed087581c63d073f98f2479 eq ASSERT() // []
 }
 
-// TODO: The first 4/5 bits of the exponent are never going to be used
-// (ther are literals for those values) it may be worth to use them
-// for special cases of power_2 (-1, +1, etc).
-#define macro READ_POWER_OF_2() = takes (2) returns (2) {
+#define macro READ_POW_2() = takes (2) returns (2) {
   // input stack: [windex, rindex]
 
-  0x01           // [0x01, windex, rindex]
-  dup3           // [rindex, 0x01, windex, rindex]
+  swap1        // [rindex, windex]
 
-  calldataload   // [cdata[rindex], 0x01, windex, rindex]
+  LOAD_DYNAMIC_SIZE(0x01, 0xf8)  // [exp, rindex, windex]
 
-  callvalue byte // [cdata[rindex][0:8], 0x01, windex, rindex]
+  // an exp value 0 means that the formula will be 2 ** exp - 1
+  // and we need to read a second exponent
 
-  shl            // [0x01 << cdata[rindex][0:8], windex, rindex]
+  dup1              // [exp, exp, rindex, windex]
+  dont_sub_1 jumpi  // [exp, rindex, windex]
 
-  dup2           // [windex, 0x01 << cdata[rindex][0:8], windex, rindex]
-  mstore         // [windex, rindex]
+  //sub_1:
+    pop             // [rindex, windex]
 
+    LOAD_DYNAMIC_SIZE(0x01, 0xf8)  // [exp, rindex, windex]
+    
+    0x01            // [0x01, exp, rindex, windex]
+    dup1            // [0x01, 0x01, exp, rindex, windex]
+    swap2           // [exp, 0x01, 0x01, rindex, windex]
+    dup3            // [0x01, exp, 0x01, 0x01, rindex, windex]
 
-  0x20 add           // [windex + 0x20, rindex]
-  swap1              // [rindex, windex + 0x20]
-  0x01 add           // [rindex + 0x01, windex + 0x20]
-  swap1              // [windex + 0x20, rindex + 0x01]
+    add             // [(0x01 + exp), 0x01, 0x01, rindex, windex]
+    shl             // [(0x01 << (0x01 + exp)), 0x01, rindex, windex]
+    sub             // [((0x01 << (0x01 + exp)) - 0x01), rindex, windex]
 
-  // output stack: [windex + 0x20, rindex + 0x01]
+    end_if jump
+
+  dont_sub_1:
+    0x01            // [0x01, exp, rindex, windex]
+    swap1           // [exp, 0x01, rindex, windex]
+    shl             // [(0x01 << exp), rindex, windex]
+
+  end_if:
+
+  dup3              // [windex, (0x01 << exp), rindex, windex]
+  swap2             // [rindex, (0x01 << exp), windex, windex]
+  swap3             // [windex, (0x01 << exp), windex, rindex]
+
+  mstore            // [windex, rindex]
+  0x20 add          // [windex + 0x20, rindex]
+
+  // output stack: [windex, rindex]
 }
 
-#[calldata("0x000203ff")]
-#define test TEST_READ_POWER_OF_2() = takes (2) returns (2) {
+#[calldata("0x000203ff00ff")]
+#define test TEST_READ_POW_2() = takes (2) returns (2) {
   0x00 // [rindex]
   0x00 // [windex, rindex]
 
-  READ_POWER_OF_2() // [windex, rindex]
+  READ_POW_2() // [windex, rindex]
 
   0x20 eq ASSERT() // [rindex]
-  0x01 eq ASSERT() // []
+  0x02 eq ASSERT() // []
 
-  0x00 mload 0x01 eq ASSERT() // []
+  0x00 mload 0x07 eq ASSERT() // []
 
   0x01 // [rindex]
   0x20 // [windex, rindex]
 
-  READ_POWER_OF_2() // [windex, rindex]
+  READ_POW_2() // [windex, rindex]
 
   0x40 eq ASSERT() // [rindex]
   0x02 eq ASSERT() // []
@@ -2197,7 +2216,7 @@
   0x02 // [rindex]
   0x05 // [windex, rindex]
 
-  READ_POWER_OF_2() // [windex, rindex]
+  READ_POW_2() // [windex, rindex]
 
   0x25 eq ASSERT() // [rindex]
   0x03 eq ASSERT() // []
@@ -2207,12 +2226,22 @@
   0x03 // [rindex]
   0x00 // [windex, rindex]
 
-  READ_POWER_OF_2() // [windex, rindex]
+  READ_POW_2() // [windex, rindex]
 
   0x20 eq ASSERT() // [rindex]
   0x04 eq ASSERT() // []
 
   0x00 mload 0x8000000000000000000000000000000000000000000000000000000000000000 eq ASSERT() // []
+
+  0x04         // [rindex]
+  0x00         // [windex, rindex]
+
+  READ_POW_2()   // [windex, rindex]
+
+  0x20 eq ASSERT() // [rindex]
+  0x06 eq ASSERT() // []
+
+  0x00 mload 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff eq ASSERT() // []
 }
 
 #define macro READ_MAX_UINT256() = takes (2) returns (2) {
