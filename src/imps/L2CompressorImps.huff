@@ -1,4 +1,4 @@
-#include "../L2Compressor.huff"
+#include "../L2CompressorLib.huff"
 
 #define function testLoadDynamicSize(bytes32 _a, bytes32 _b, uint256, uint256) view returns (uint256, uint256, bytes32)
 #define function testReadBytes32(bytes32 _a, bytes32 _b, uint256, uint256, uint256) view returns (uint256, uint256)

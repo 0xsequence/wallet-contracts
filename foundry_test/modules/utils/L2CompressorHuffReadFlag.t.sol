@@ -1080,7 +1080,7 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
   }
 
   function test_read_flag_abi_encode_by_index_2_args(bytes32 _arg) external {
-    bytes memory encoded = abi.encodePacked(uint8(0x2e), uint8(0x02), encodeWord(_arg));
+    bytes memory encoded = abi.encodePacked(uint8(0x2e), uint8(0x01), encodeWord(_arg));
     (bool s, bytes memory r) = imp.staticcall(encoded);
 
     assertTrue(s);
@@ -1089,6 +1089,6 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
 
     assertEq(rindex, encoded.length);
     assertEq(windex, FMS + res.length);
-    assertEq(abi.encodePacked(hex"095ea7b3", _arg), res);
+    assertEq(abi.encodePacked(hex"a9059cbb", _arg), res);
   }
 }

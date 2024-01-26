@@ -1,4 +1,4 @@
-#include "../L2Compressor.huff"
+#include "../L2CompressorLib.huff"
 
 #define constant FMS = 0xa0
 

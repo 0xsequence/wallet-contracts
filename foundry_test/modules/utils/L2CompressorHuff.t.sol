@@ -82,8 +82,15 @@ contract L2CompressorHuffTest is AdvTest {
     uint96 nonce;
     bytes signature;
   }
+  
+  function test_execute_many_2(BatchMember memory _batch1, BatchMember memory _batch2) external {
+    BatchMember[] memory batch = new BatchMember[](2);
+    batch[0] = _batch1;
+    batch[1] = _batch2;
+    test_execute_many(batch);
+  }
 
-  function test_execute_many(BatchMember[] memory _batch) external {
+  function test_execute_many(BatchMember[] memory _batch) internal {
     vm.assume(_batch.length != 0 && _batch.length <= type(uint8).max);
 
     uint256 size = mayBoundArr(_batch.length);
