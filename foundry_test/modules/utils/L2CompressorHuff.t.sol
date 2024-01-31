@@ -212,17 +212,123 @@ contract L2CompressorHuffTest is AdvTest {
     assertTrue(s);
     assertEq(r, abi.encode(word));
   }
-}
 
-// 0x
-// 01 // batch
-// 04 // size
-// 50 // nonce space = 0
-// 50 // nonce = 0
-// 01 // tx num = 1
-// 00 // FLAG ?
-// 50 // to addr 0 = 0
-// 2b // bytes n opcode = signature
-// 50 // empty signature, size = 0
-// 14 // 20 bytes
-// 88386fc84ba6bc95484008f6362f93160ef3e563 // addr
+  function test_decode_execute(
+    IModuleCalls.Transaction[] calldata _txs,
+    uint160 _space,
+    uint96 _nonce,
+    bytes calldata _signature
+  ) external {
+    vm.assume(_txs.length != 0 && _txs.length <= type(uint8).max);
+
+    bytes32 packedNonce = abi.decode(abi.encodePacked(_space, _nonce), (bytes32));
+
+    bytes memory encoded = abi.encodePacked(
+      hex"06",
+      encodeWord(_space), encodeWord(_nonce),
+      uint8(_txs.length)
+    );
+
+    for (uint256 i = 0; i < _txs.length; i++) {
+      IModuleCalls.Transaction memory t = _txs[i];
+
+      encoded = abi.encodePacked(
+        encoded,
+        build_flag(t.delegateCall, t.revertOnError, t.gasLimit != 0, t.value != 0, t.data.length != 0),
+        t.gasLimit != 0 ? encodeWord(t.gasLimit) : bytes(""),
+        encode_raw_address(t.target),
+        t.value != 0 ? encodeWord(t.value) : bytes(""),
+        t.data.length != 0 ? encode_bytes_n(t.data) : bytes("")
+      );
+    }
+
+    encoded = abi.encodePacked(
+      encoded,
+      encode_bytes_n(_signature),
+      encodeWord(uint256(uint160(address(0xEbD3186Ab4524330A866BE6866bE7bB55A173a23))))
+    );
+
+    (bool s, bytes memory r) = imp.call(encoded);
+    assertTrue(s);
+    assertEq(r, abi.encodePacked(abi.encodeWithSelector(
+      IModuleCalls.execute.selector,
+      _txs,
+      packedNonce,
+      _signature
+    ), uint256(uint160(address(0xEbD3186Ab4524330A866BE6866bE7bB55A173a23)))));
+  }
+
+  function test_decode_execute_many_2(BatchMember memory _batch1, BatchMember memory _batch2) external {
+    BatchMember[] memory batch = new BatchMember[](2);
+    batch[0] = _batch1;
+    batch[1] = _batch2;
+    test_decode_execute_many(batch);
+  }
+
+  function test_decode_execute_many(BatchMember[] memory _batch) internal {
+    vm.assume(_batch.length != 0 && _batch.length <= type(uint8).max);
+
+    uint256 size = mayBoundArr(_batch.length);
+    size = size == 0 ? 1 : size;
+
+    bytes memory encoded = abi.encodePacked(
+      hex"07",
+      uint8(size)
+    );
+
+    bytes memory expected;
+
+    for (uint256 i = 0; i < size; i++) {
+      vm.assume(_batch[i].txs.length <= type(uint8).max);
+
+      if (_batch[i].txs.length == 0) {
+        _batch[i].txs = new IModuleCalls.Transaction[](1);
+      }
+
+      bytes32 packedNonce = abi.decode(abi.encodePacked(_batch[i].space, _batch[i].nonce), (bytes32));
+
+      encoded = abi.encodePacked(
+        encoded,
+        encodeWord(_batch[i].space), encodeWord(_batch[i].nonce),
+        uint8(_batch[i].txs.length)
+      );
+
+      for (uint256 x = 0; x < _batch[i].txs.length; x++) {
+        IModuleCalls.Transaction memory t = _batch[i].txs[x];
+
+        encoded = abi.encodePacked(
+          encoded,
+          build_flag(t.delegateCall, t.revertOnError, t.gasLimit != 0, t.value != 0, t.data.length != 0),
+          t.gasLimit != 0 ? encodeWord(t.gasLimit) : bytes(""),
+          encode_raw_address(t.target),
+          t.value != 0 ? encodeWord(t.value) : bytes(""),
+          t.data.length != 0 ? encode_bytes_n(t.data) : bytes("")
+        );
+      }
+
+      // Derive a random address from i
+      address addr = address(uint160(uint256(keccak256(abi.encode(i)))));
+
+      encoded = abi.encodePacked(
+        encoded,
+        encode_bytes_n(_batch[i].signature),
+        encodeWord(uint256(uint160(addr)))
+      );
+
+      expected = abi.encodePacked(
+        expected,
+        abi.encodeWithSelector(
+          IModuleCalls.execute.selector,
+          _batch[i].txs,
+          packedNonce,
+          _batch[i].signature
+        ),
+        uint256(uint160(addr))
+      );
+    }
+
+    (bool s, bytes memory r) = imp.call{ gas: type(uint64).max }(encoded);
+    assertTrue(s);
+    assertEq(r, expected);
+  }
+}

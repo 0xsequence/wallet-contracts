@@ -629,9 +629,9 @@
 
   normal_flow:
 
-  // The last bit determines if we will multiply this by
+  // The first bit determines if we will multiply this by
   // the next byte or not, this is fine as the maximum value that we
-  // can represent in a word is only 10 ** 78
+  // can represent in a word is only 10 ** 77
   dup1                          // [exp_word, exp_word, rindex, windex]
   0x80 and                      // [not_use_mul, exp_word, rindex, windex]
   swap1                         // [exp_word, not_use_mul, rindex, windex]
