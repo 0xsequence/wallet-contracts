@@ -138,12 +138,12 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(abi.encode(_addr2), res);
 
     (s, r) = imp.staticcall(
-      abi.encodePacked(hex"26", uint40(2))
+      abi.encodePacked(hex"25", uint32(2))
     );
 
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
-    assertEq(rindex, 6);
+    assertEq(rindex, 5);
     assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_addr2), res);
