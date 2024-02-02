@@ -211,12 +211,12 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(abi.encode(_b2), res);
 
     (s, r) = imp.staticcall(
-      abi.encodePacked(hex"2a", uint40(2))
+      abi.encodePacked(hex"29", uint32(2))
     );
 
     assertTrue(s);
     (rindex, windex, res) = abi.decode(r, (uint256, uint256, bytes));
-    assertEq(rindex, 6);
+    assertEq(rindex, 5);
     assertEq(windex, FMS + 32);
 
     assertEq(abi.encode(_b2), res);
@@ -1000,11 +1000,11 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(res, abi.encode(uint256(10 ** _exp)));
   }
 
-  function test_read_pow_10_and_mul(uint256 _exp, uint8 _factor) external {
+  function test_read_pow_10_and_mul(uint256 _exp, uint8 _mantissa) external {
     _exp = bound(_exp, 1, 77);
 
     // First bit means we aren't going to multiply it after
-    bytes memory encoded = abi.encodePacked(uint8(0x00), uint8(_exp), uint8(_factor));
+    bytes memory encoded = abi.encodePacked(uint8(0x00), uint8(_exp), uint8(_mantissa));
 
     (bool s, bytes memory r) = imp.call(encoded);
     assertTrue(s);
@@ -1014,7 +1014,34 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     unchecked {
       assertEq(windex, FMS + res.length);
       assertEq(rindex, encoded.length);
-      assertEq(res, abi.encode(uint256(10 ** _exp) * uint256(_factor)));
+      assertEq(res, abi.encode(uint256(10 ** _exp) * uint256(_mantissa)));
+    }
+  }
+
+  function test_read_pow_10_and_mul_l(uint256 _exp, uint256 _mantissa) external {
+    _exp = bound(_exp, 0, 63);
+    _mantissa = bound(_mantissa, 0, 0x3ffff);
+
+    // Encode the 3 byte word, the first 3 bits are the exponent, the rest is the mantissa
+    bytes3 word = bytes3(uint24(_exp) << 18 | uint24(_mantissa));
+
+    // First bit means we aren't going to multiply it after
+    bytes memory encoded = abi.encodePacked(uint8(0x2a), word);
+
+    (bool s, bytes memory r) = imp.call(encoded);
+    assertTrue(s);
+
+    (uint256 rindex, uint256 windex, bytes memory res) = abi.decode(r, (uint256, uint256, bytes));
+
+    uint256 expected;
+    unchecked {
+      expected = uint256(10 ** _exp) * uint256(_mantissa);
+    }
+
+    unchecked {
+      assertEq(windex, FMS + res.length);
+      assertEq(rindex, encoded.length);
+      assertEq(res, abi.encode(expected));
     }
   }
 

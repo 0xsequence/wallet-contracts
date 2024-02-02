@@ -459,7 +459,8 @@
     end jump                  // [end jump, windex, rindex + 1, jump_to]
 
   JUMP_READ_POW_10_MANTISSA:
-    READ_BYTES32_STORAGE(0x05, 0xd8)
+    __tablestart(POW_10_TABLE)
+    READ_POW_10_MANTISSA(0x05, 0xd8)
     end jump
 
   JUMP_READ_N_BYTES:
@@ -607,6 +608,44 @@
   jump                      // [windex, rindex]
 
   // output stack:          // [windex, rindex]
+}
+
+#define macro READ_POW_10_MANTISSA() = takes (3) returns (2) {
+  // input stack: [table_start, windex, rindex]
+
+  // The first 6 bits are exponent
+
+  dup3         // [rindex, table_start, windex, rindex]
+  calldataload // [data[rindex], table_start, windex, rindex]
+
+  0xfa         // [0xfa, data[rindex], table_start, windex, rindex]
+  shr          // [exp, table_start, windex, rindex]
+
+  POW_10()                 // [windex, rindex]
+  BACKREAD_SINGLE_VALUE()  // [10 ** exp, windex, rindex]
+
+  // The next 18 bits are the mantissa
+
+  dup3         // [rindex, 10 ** exp, windex, rindex]
+  calldataload // [data[rindex], 10 ** exp, windex, rindex]
+
+  0xe8         // [0xe8, data[rindex], 10 ** exp, windex, rindex]
+  shr          // [(data[rindex] >> 0xe8), 10 ** exp, windex, rindex]
+  0x3ffff      // [0x3ffff, (data[rindex] >> 0xe8), 10 ** exp, windex, rindex]
+  and          // [mantissa, 10 ** exp, windex, rindex]
+  mul          // [(mantissa * 10 ** exp), windex, rindex]
+
+  dup2         // [windex, (mantissa * 10 ** exp), windex, rindex]
+  mstore       // [windex, rindex]
+
+  0x20         // [0x20, windex, rindex]
+  add          // [(0x20 + windex), rindex]
+  swap1        // [rindex, (0x20 + windex)]
+  0x03         // [0x03, rindex, (0x20 + windex)]
+  add          // [(0x03 + rindex), (0x20 + windex)]
+  swap1        // [(0x20 + windex), (0x03 + rindex)]
+
+  // input stack: [windex, rindex]
 }
 
 #define macro READ_POW_10_AND_SELF_EXECUTE(nrfs) = takes (3) returns (2) {
