@@ -237,7 +237,7 @@
   JUMP_READ_BYTES32_2        // 0x27
   JUMP_READ_BYTES32_3        // 0x28
   JUMP_READ_BYTES32_4        // 0x29
-  JUMP_READ_BYTES32_5        // 0x2a
+  JUMP_READ_POW_10_MANTISSA  // 0x2a
   JUMP_READ_N_BYTES          // 0x2b
   FLAG_READ_POWER_OF_2       // 0x2c
   FLAG_ABI_0_PARAM           // 0x2d
@@ -326,6 +326,7 @@
   jump                        // [windex, rindex + 1, jump_to]
 
   FLAG_READ_POWER_OF_10_MISC:
+    __tablestart(POW_10_TABLE)
     READ_POW_10_AND_SELF_EXECUTE(<nrfs>)
     end jump
   FLAG_READ_BYTES32_1_BYTES:
@@ -455,8 +456,9 @@
     end jump
   JUMP_READ_BYTES32_4:
     READ_BYTES32_STORAGE(0x04, 0xe0)
-    end jump
-  JUMP_READ_BYTES32_5:
+    end jump                  // [end jump, windex, rindex + 1, jump_to]
+
+  JUMP_READ_POW_10_MANTISSA:
     READ_BYTES32_STORAGE(0x05, 0xd8)
     end jump
 
@@ -573,7 +575,7 @@
     end jump
     
   FLAG_READ_DYNAMIC_ABI:
-    __tablestart(COMMON_4BYTES) // [table_start, windex, rindex]
+    __tablestart(COMMON_4BYTES)
     READ_ABI_DYNAMIC(<nrfs>)
     end jump
 
@@ -607,24 +609,26 @@
   // output stack:          // [windex, rindex]
 }
 
-#define macro READ_POW_10_AND_SELF_EXECUTE(nrfs) = takes (2) returns (2) {
-  // input stack: [windex, rindex]
+#define macro READ_POW_10_AND_SELF_EXECUTE(nrfs) = takes (3) returns (2) {
+  // input stack: [table_start, windex, rindex]
 
-  swap1          // [rindex, windex]
-  LOAD_1_BYTE()  // [exp_word, rindex, windex]
+  swap2          // [rindex, windex, table_start]
+  LOAD_1_BYTE()  // [exp_word, rindex, windex, table_start]
 
   // We didn't had any more pleace for READ_SELF_EXECUTE without expanding
   // the jumptable! so it has to live here. Sorry about that.
   // 10 ** 0 * N is more expensive than just reading 1 byte,
   // so this wasn't useful anyway
 
-  dup1                  // [exp_word, exp_word, rindex, windex]
-  normal_flow jumpi     // [exp_word, rindex, windex]
+  dup1                  // [exp_word, exp_word, rindex, windex, table_start]
+  normal_flow jumpi     // [exp_word, rindex, windex, table_start]
 
     // --- WARNING UGLY CODE ---
 
-    pop                        // [rindex, windex]
-    swap1                      // [windex, rindex]
+    pop                        // [rindex, windex, table_start]
+    swap2                      // [table_start, windex, rindex]
+    pop                        // [windex, rindex]
+
     READ_SELF_EXECUTE(<nrfs>)  // [windex, rindex]
     end_pow_10 jump            // [windex, rindex]
 
@@ -633,28 +637,30 @@
   // The first bit determines if we will multiply this by
   // the next byte or not, this is fine as the maximum value that we
   // can represent in a word is only 10 ** 77
-  dup1                          // [exp_word, exp_word, rindex, windex]
-  0x80 and                      // [not_use_mul, exp_word, rindex, windex]
-  swap1                         // [exp_word, not_use_mul, rindex, windex]
-  0x7f and                      // [exp, not_use_mul, rindex, windex]
+  dup1                          // [exp_word, exp_word, rindex, windex, table_start]
+  0x80 and                      // [not_use_mul, exp_word, rindex, windex, table_start]
+  swap1                         // [exp_word, not_use_mul, rindex, windex, table_start]
+  0x7f and                      // [exp, not_use_mul, rindex, windex, table_start]
 
-  swap3                         // [windex, not_use_mul, rindex, exp_word]
-  swap1                         // [not_use_mul, windex, rindex, exp_word]
-  swap3                         // [exp_word, windex, rindex, not_use_mul]
+  swap2                         // [rindex, not_use_mul, exp_word, windex, table_start]
+  swap4                         // [table_start, not_use_mul, exp_word, windex, rindex]
+  swap1                         // [not_use_mul, table_start, exp_word, windex, rindex]
+  swap3                         // [windex, table_start, exp_word, not_use_mul, rindex]
+  swap2                         // [exp_word, table_start, windex, not_use_mul, rindex]
 
-  POW_10()                      // [windex, rindex, not_use_mul]
-  swap1                         // [rindex, windex, not_use_mul]
-  swap2                         // [not_use_mul, windex, rindex]
+  POW_10()                      // [windex, not_use_mul, rindex]
+
+  swap1                         // [not_use_mul, windex, rindex]
 
   end_pow_10 jumpi              // [windex, rindex]
 
     BACKREAD_SINGLE_VALUE()     // [pow_result, windex, rindex]
     swap2                       // [rindex, windex, pow_result]
-    LOAD_1_BYTE()               // [factor, rindex, windex, pow_result]
-    swap1                       // [rindex, factor, windex, pow_result]
-    swap3                       // [pow_result, factor, windex, rindex]
-    mul                         // [(pow_result * factor), windex, rindex]
-    dup2                        // [windex, (pow_result * factor), windex, rindex]
+    LOAD_1_BYTE()               // [mantissa, rindex, windex, pow_result]
+    swap1                       // [rindex, mantissa, windex, pow_result]
+    swap3                       // [pow_result, mantissa, windex, rindex]
+    mul                         // [(pow_result * mantissa), windex, rindex]
+    dup2                        // [windex, (pow_result * mantissa), windex, rindex]
     mstore                      // [windex, rindex]
     0x20                        // [0x20, windex, rindex]
     add                         // [(0x20 + windex), rindex]
@@ -664,21 +670,20 @@
   // output stack: [windex, rindex]
 }
 
-#define macro POW_10() = takes (2) returns (1) {
-  // input stack: [exp, windex]
+#define macro POW_10() = takes (3) returns (1) {
+  // input stack: [exp, table_start, windex]
 
-  0x05         // [0x05, exp, windex]
-  shl          // [exp * 0x20, windex]
+  0x05         // [0x05, exp, table_start, windex]
+  shl          // [exp * 0x20, table_start, windex]
 
-  __tablestart(POW_10_TABLE)  // [table_start, exp * 0x20, windex]
-  add                         // [(table_start + exp * 0x20), windex]
+  add          // [(table_start + exp * 0x20), windex]
 
-  0x20                        // [0x20, (table_start + exp * 0x20), windex]
-  swap1                       // [(table_start + exp * 0x20), 0x20, windex]
-  dup3                        // [windex, (table_start + exp * 0x20), 0x20, windex]
-  codecopy                    // [windex]
+  0x20         // [0x20, (table_start + exp * 0x20), windex]
+  swap1        // [(table_start + exp * 0x20), 0x20, windex]
+  dup3         // [windex, (table_start + exp * 0x20), 0x20, windex]
+  codecopy     // [windex]
 
-  0x20 add                    // [windex + 0x20]
+  0x20 add     // [windex + 0x20]
 
   // output stack: [windex]
 }
