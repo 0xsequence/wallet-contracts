@@ -888,22 +888,13 @@
 
   // Second we need to read the number of flags we are going to read
 
-  swap1                                     // [rindex, windex]
-  LOAD_DYNAMIC_SIZE(<s_bytes>, <s_offset>)  // [size, rindex, windex]
+  callvalue                                 // [0x00, windex, rindex]
+  swap2                                     // [rindex, windex, 0x00]
 
-  // This should match the number of chained signatures on the chain
-  // we need to write it, it uses 3 bytes
-  dup1                                  // [size, size, rindex, windex]
-  0xe8 shl                              // [size << 0xe8, size, rindex, windex]
-  dup4                                  // [windex, size, size, rindex, windex]
-  mstore                                // [size, rindex, windex]  
+  LOAD_DYNAMIC_SIZE(<s_bytes>, <s_offset>)  // [size, rindex, windex, 0x00]
 
-  callvalue                             // [0x00, size, rindex, windex]
-  swap2                                 // [rindex, size, 0x00, windex]
-  swap1                                 // [size, rindex, 0x00, windex]
-  swap3                                 // [windex, rindex, 0x00, size]
-
-  0x03 add                              // [windex + 0x03, rindex, 0x00, size]
+  swap3                                     // [0x00, rindex, windex, size]
+  swap2                                     // [windex, rindex, 0x00, size]
 
   read_more:  // [windex, rindex, i, size]
 

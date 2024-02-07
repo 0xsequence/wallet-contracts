@@ -538,7 +538,7 @@ contract L2CompressorHuffReadFlagTests is AdvTest {
     assertEq(windex, FMS + res.length);
     assertEq(rindex, encoded.length);
 
-    bytes memory expected = abi.encodePacked(uint8(0x03), uint24(_signatures.length));
+    bytes memory expected = abi.encodePacked(uint8(0x03));
 
     for (uint256 i = 0; i < _signatures.length; i++) {
       expected = abi.encodePacked(expected, uint24(_signatures[i].length), _signatures[i]);
