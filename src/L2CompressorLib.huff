@@ -228,17 +228,17 @@
   FLAG_READ_BYTES32_30_BYTES // 0x1e
   FLAG_READ_BYTES32_31_BYTES // 0x1f
   FLAG_READ_BYTES32_32_BYTES // 0x20
-  JUMP_SAVE_ADDRESS          // 0x21
-  JUMP_SAVE_BYTES32          // 0x22
-  JUMP_READ_ADDRESS_2        // 0x23
-  JUMP_READ_ADDRESS_3        // 0x24
-  JUMP_READ_ADDRESS_4        // 0x25
-  JUMP_READ_EXECUTE          // 0x26
-  JUMP_READ_BYTES32_2        // 0x27
-  JUMP_READ_BYTES32_3        // 0x28
-  JUMP_READ_BYTES32_4        // 0x29
-  JUMP_READ_POW_10_MANTISSA  // 0x2a
-  JUMP_READ_N_BYTES          // 0x2b
+  FLAG_SAVE_ADDRESS          // 0x21
+  FLAG_SAVE_BYTES32          // 0x22
+  FLAG_READ_ADDRESS_2        // 0x23
+  FLAG_READ_ADDRESS_3        // 0x24
+  FLAG_READ_ADDRESS_4        // 0x25
+  FLAG_READ_EXECUTE          // 0x26
+  FLAG_READ_BYTES32_2        // 0x27
+  FLAG_READ_BYTES32_3        // 0x28
+  FLAG_READ_BYTES32_4        // 0x29
+  FLAG_READ_POW_10_MANTISSA  // 0x2a
+  FLAG_READ_N_BYTES          // 0x2b
   FLAG_READ_POWER_OF_2       // 0x2c
   FLAG_ABI_0_PARAM           // 0x2d
   FLAG_ABI_1_PARAM           // 0x2e
@@ -426,44 +426,44 @@
     READ_BYTES32_WORD()
     end jump
 
-  JUMP_SAVE_ADDRESS:
+  FLAG_SAVE_ADDRESS:
     SAVE_ADDRESS()
     end jump
 
-  JUMP_SAVE_BYTES32:
+  FLAG_SAVE_BYTES32:
     SAVE_BYTES32()
     end jump
 
-  JUMP_READ_ADDRESS_2:
+  FLAG_READ_ADDRESS_2:
     READ_ADDRESS_STORAGE(0x02, 0xf0)
     end jump
-  JUMP_READ_ADDRESS_3:
+  FLAG_READ_ADDRESS_3:
     READ_ADDRESS_STORAGE(0x03, 0xe8)
     end jump
-  JUMP_READ_ADDRESS_4:
+  FLAG_READ_ADDRESS_4:
     READ_ADDRESS_STORAGE(0x04, 0xe0)
     end jump
 
-  JUMP_READ_EXECUTE:
+  FLAG_READ_EXECUTE:
     READ_EXECUTE(<nrfs>)
     end jump
 
-  JUMP_READ_BYTES32_2:
+  FLAG_READ_BYTES32_2:
     READ_BYTES32_STORAGE(0x02, 0xf0)
     end jump
-  JUMP_READ_BYTES32_3:
+  FLAG_READ_BYTES32_3:
     READ_BYTES32_STORAGE(0x03, 0xe8)
     end jump
-  JUMP_READ_BYTES32_4:
+  FLAG_READ_BYTES32_4:
     READ_BYTES32_STORAGE(0x04, 0xe0)
     end jump                  // [end jump, windex, rindex + 1, jump_to]
 
-  JUMP_READ_POW_10_MANTISSA:
+  FLAG_READ_POW_10_MANTISSA:
     __tablestart(POW_10_TABLE)
     READ_POW_10_MANTISSA(0x05, 0xd8)
     end jump
 
-  JUMP_READ_N_BYTES:
+  FLAG_READ_N_BYTES:
     READ_N_BYTES(<nrfs>)
     end jump
 
