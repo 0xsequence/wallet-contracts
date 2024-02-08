@@ -15,13 +15,13 @@ import "../../../../utils/LibOptim.sol";
 library SequenceBaseSig {
   using LibBytesPointer for bytes;
 
-  uint256 private constant FLAG_SIGNATURE = 0;
-  uint256 private constant FLAG_ADDRESS = 1;
-  uint256 private constant FLAG_DYNAMIC_SIGNATURE = 2;
-  uint256 private constant FLAG_NODE = 3;
-  uint256 private constant FLAG_BRANCH = 4;
-  uint256 private constant FLAG_SUBDIGEST = 5;
-  uint256 private constant FLAG_NESTED = 6;
+  uint256 internal constant FLAG_SIGNATURE = 0;
+  uint256 internal constant FLAG_ADDRESS = 1;
+  uint256 internal constant FLAG_DYNAMIC_SIGNATURE = 2;
+  uint256 internal constant FLAG_NODE = 3;
+  uint256 internal constant FLAG_BRANCH = 4;
+  uint256 internal constant FLAG_SUBDIGEST = 5;
+  uint256 internal constant FLAG_NESTED = 6;
 
   error InvalidNestedSignature(bytes32 _hash, address _addr, bytes _signature);
   error InvalidSignatureFlag(uint256 _flag);

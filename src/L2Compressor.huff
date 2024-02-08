@@ -1,0 +1,140 @@
+#include "./L2CompressorLib.huff"
+
+
+#define jumptable SELECTORS_TABLE {
+  execute_transaction          // 0x00
+  execute_many_transactions    // 0x01
+  read_address                 // 0x02
+  read_bytes32                 // 0x03
+  sizes                        // 0x04
+  read_storage_slots           // 0x05
+  decompress_transaction       // 0x06
+  decompress_many_transactions // 0x07
+}
+
+#define macro MAIN() = takes (0) returns (0) {
+  // Write the jump table to 0x20
+  // or else the flags jumptable won't get written
+  // all this memory will be reused anyway
+  __tablesize(SELECTORS_TABLE)     // [table_size]
+  __tablestart(SELECTORS_TABLE)    // [table_start, table_size]
+  0x20                        // [0x20, table_start, table_size]
+  codecopy                    // []
+
+  callvalue                   // [0x00]
+  calldataload                // [data[0x00]]
+  callvalue                   // [0x00, data[0x00]]
+  byte                        // [method]
+
+  0x05                        // [0x05, method]
+  shl                         // [(method << 0x05)]
+  0x20 add                    // [method + 0x20]
+  mload                       // [mload[method]]
+  jump                        // []
+
+  execute_transaction:
+    0x01                         // [rindex]
+    PERFORM_EXECUTE(nrfs)        // [rindex]
+    callvalue callvalue return
+
+  execute_many_transactions:
+    0x01                         // [rindex]
+    PERFORM_MANY_EXECUTES(nrfs)  // [rindex, size, i]
+    callvalue callvalue return
+
+  read_address:
+    PERFORM_READ_ADDRESS()
+    0x20 callvalue return
+
+  read_bytes32:
+    PERFORM_READ_BYTES32()
+    0x20 callvalue return
+
+  sizes:
+    PERFORM_READ_SIZES()
+    0x20 callvalue return
+
+  read_storage_slots:
+    PERFORM_READ_SLOTS()         // [size]
+    callvalue                    // [0x00, size]
+    return
+
+  decompress_transaction:
+    0x01                         // [rindex]
+    [FMS]                        // [windex, rindex]
+
+    READ_FULL_EXECUTE(nrfs)      // [windex, rindex]
+
+    [FMS]                        // [FMS, windex, rindex]
+    swap1                        // [windex, FMS, rindex]
+    sub                          // [(windex - FMS), rindex]
+
+    [FMS]                        // [FMS, (windex - FMS), rindex]
+    return                       // [rindex]
+
+  decompress_many_transactions:
+    0x01                          // [rindex]
+    [FMS]                         // [windex, rindex]
+
+    READ_MANY_FULL_EXECUTES(nrfs) // [windex, rindex]
+
+    [FMS]                         // [FMS, windex, rindex]
+    swap1                         // [windex, FMS, rindex]
+    sub                           // [(windex - FMS), rindex]
+
+    [FMS]                         // [FMS, (windex - FMS), rindex]
+    return                        // [rindex]
+
+  // This will be appended at the end
+  // unreachable code as all the method return first
+
+  nrfs:
+  FN_READ_FLAG(nrfs)
+}
+
+
+
+#define macro READ_FULL_EXECUTE(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  READ_EXECUTE(<nrfs>)              // [windex, rindex]
+  PERFORM_NESTED_READ_FLAG(<nrfs>)  // [windex, rindex]
+
+  // output stack: [windex, rindex]
+}
+
+#define macro READ_MANY_FULL_EXECUTES(nrfs) = takes (2) returns (2) {
+  // input stack: [windex, rindex]
+
+  swap1          // [rindex, windex]
+
+  LOAD_1_BYTE()  // [size, rindex, windex]
+  callvalue      // [i, size, rindex, windex]
+  swap2          // [rindex, size, i, windex]
+
+  do_another:                 // [rindex, size, i, windex]
+    swap1                     // [size, rindex, i, windex]
+    swap2                     // [i, rindex, size, windex]
+    swap3                     // [windex, rindex, size, i]
+
+    READ_FULL_EXECUTE(<nrfs>) // [windex, rindex, size, i]
+
+    swap3                     // [i, rindex, size, windex]
+    swap2                     // [size, rindex, i, windex]
+    swap1                     // [rindex, size, i, windex]
+
+    swap2                     // [i, size, rindex, windex]
+    0x01                      // [0x01, i, size, rindex, windex]
+    add                       // [(0x01 + i), size, rindex, windex]
+    swap2                     // [rindex, size, (0x01 + i), windex]
+
+    dup2             // [size, rindex, size, (0x01 + i), windex]
+    dup4             // [(0x01 + i), size, rindex, size, (0x01 + i), windex]
+    lt               // [((0x01 + i) < size), rindex, size, (0x01 + i), windex]
+    do_another jumpi // [rindex, size, (0x01 + i), windex]
+
+  swap1              // [size, rindex, (0x01 + i), windex]
+  swap3              // [windex, rindex, (0x01 + i), size]
+  
+  // output stack: [windex, rindex, (0x01 + i), size]
+}

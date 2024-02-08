@@ -80,4 +80,27 @@ library LibBytes {
       a := shr(224, word)
     }
   }
+
+  function readMBytes4(
+    bytes memory data,
+    uint256 index
+  ) internal pure returns (
+    bytes4 a
+  ) {
+    assembly {
+      let word := mload(add(add(data, 0x20), index))
+      a := and(word, 0xFFFFFFFF00000000000000000000000000000000000000000000000000000000)
+    }
+  }
+
+  function readMBytes32(
+    bytes memory data,
+    uint256 index
+  ) internal pure returns (
+    bytes32 a
+  ) {
+    assembly {
+      a := mload(add(add(data, 0x20), index))
+    }
+  }
 }

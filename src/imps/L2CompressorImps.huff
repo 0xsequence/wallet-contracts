@@ -1,0 +1,52 @@
+#include "../L2CompressorLib.huff"
+
+#define function testLoadDynamicSize(bytes32 _a, bytes32 _b, uint256, uint256) view returns (uint256, uint256, bytes32)
+#define function testReadBytes32(bytes32 _a, bytes32 _b, uint256, uint256, uint256) view returns (uint256, uint256)
+
+// Function Dispatching
+#define macro MAIN() = takes (1) returns (1) {
+  // Identify which function is being called.
+  0x00 calldataload 0xE0 shr          // [func_sig]
+
+  dup1 __FUNC_SIG(testLoadDynamicSize)             eq testLoadDynamicSize           jumpi
+  dup1 __FUNC_SIG(testReadBytes32)                 eq testReadBytes32               jumpi
+
+  // Revert if no match is found.
+  0x00 dup1 revert
+
+  testLoadDynamicSize:
+    IMP_LOAD_DYNAMIC_SIZE()
+
+  testReadBytes32:
+    IMP_READ_BYTES32()
+}
+
+#define macro IMP_LOAD_DYNAMIC_SIZE() = takes (2) returns (0) {
+  0x04 0x40 add calldataload    // [rindex]
+  0x04 0x60 add calldataload    // [size, rindex]
+
+  LOAD_DYNAMIC_SIZE()  // [size bits, rindex + size]
+
+  0x00 mstore          // [rindex + size]
+  0x20 mstore          // []
+
+  0x40 0x00 return
+}
+
+#define macro IMP_READ_BYTES32() = takes (3) returns (2) {
+  0x04 0x40 add calldataload    // [rindex]
+  0x04 0x60 add calldataload    // [windex, rindex]
+  0x04 0x80 add calldataload    // [flag, windex, rindex]
+
+  READ_BYTES32()  // [windex, rindex]
+
+  0x00 mstore          // [rindex]
+  0x20 mstore          // []
+
+  0x04 0x60 add calldataload // [windex]
+  mload                      // [written]
+
+  0x40 mstore          // []
+
+  0x60 0x00 return
+}
