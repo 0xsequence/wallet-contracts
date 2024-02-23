@@ -20,7 +20,7 @@
     "lint:ts": "eslint -c .eslintrc.js \"./**/*.ts\"",
     "lint:ts:fix": "eslint -c .eslintrc.js --fix \"./**/*.ts\"",
     "format": "prettier --write ./**/*.ts",
-    "adapter": "typechain --target ethers-v5 --out-dir gen/typechain \"./artifacts/contracts/**/*[^dbg].json\""
+    "adapter": "typechain --target ethers-v6 --out-dir gen/typechain \"./artifacts/contracts/**/*[^dbg].json\""
   },
   "types": "gen/typechain/index.ts",
   "files": [
@@ -83,8 +83,8 @@
     "extra": ""
   },
   "dependencies": {
-    "@typechain/ethers-v5": "^7.0.1",
-    "ethers": "^5.7.2",
+    "@typechain/ethers-v6": "^0.5.1",
+    "ethers": "^6.11.1",
     "keccak256": "^1.0.6"
   }
 }
