@@ -4,17 +4,17 @@
   "private": true,
   "license": "Apache-2.0",
   "scripts": {
-    "build": "yarn compile && yarn adapter",
+    "build": "pnpm compile && pnpm adapter",
     "compile": "hardhat --max-memory 4096 compile",
     "clean": "rimraf artifacts && rimraf cache",
     "test": "hardhat test",
-    "benchmark": "BENCHMARK=true yarn test",
+    "benchmark": "BENCHMARK=true pnpm test",
     "coverage": "COVERAGE=true NET_ID=1 hardhat coverage",
     "deploy": "hardhat run utils/deploy-contracts.ts --network",
     "verify": "hardhat verify --network",
-    "release": "yarn publish src",
-    "lint": "yarn lint:ts && yarn lint:sol",
-    "lint:fix": "yarn lint:ts:fix && yarn lint:sol:fix",
+    "release": "pnpm publish src",
+    "lint": "pnpm lint:ts && pnpm lint:sol",
+    "lint:fix": "pnpm lint:ts:fix && pnpm lint:sol:fix",
     "lint:sol": "solhint \"./contracts/**/*.sol\"",
     "lint:sol:fix": "solhint \"./contracts/**/*.sol\" --fix",
     "lint:ts": "eslint -c .eslintrc.js \"./**/*.ts\"",
@@ -30,8 +30,8 @@
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "yarn lint",
-      "pre-push": "yarn lint && yarn test"
+      "pre-commit": "pnpm lint",
+      "pre-push": "pnpm lint && pnpm test"
     }
   },
   "devDependencies": {
