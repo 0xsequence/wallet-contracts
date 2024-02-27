@@ -59,7 +59,7 @@
     "eslint-plugin-prettier": "^3.3.1",
     "ethereum-waffle": "^3.4.4",
     "ganache-cli": "6.12.2",
-    "hardhat": "^2.16.1",
+    "hardhat": "^2.20.1",
     "hardhat-gas-reporter": "1.0.4",
     "husky": "^4.2.3",
     "ora": "^5.4.1",
