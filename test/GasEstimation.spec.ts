@@ -66,7 +66,11 @@ contract('Estimate gas usage', () => {
       return Number(res.gas + BigInt(txBaseCost(txData)))
     }
 
-    const guestModuleData = guestModule.interface.encodeFunctionData('execute', [bundleWithDeploy(txData), 0, []])
+    const guestModuleData = guestModule.interface.encodeFunctionData('execute', [
+      await bundleWithDeploy(txData),
+      0,
+      new Uint8Array([])
+    ])
     const res = await estimate(await guestModule.getAddress(), guestModuleData).call()
     return Number(res.gas + BigInt(txBaseCost(txData)))
   }
@@ -122,10 +126,10 @@ contract('Estimate gas usage', () => {
         const estimated = await estimateGasUsage(transactions, wallet, true)
 
         const signature = await wallet.signTransactions(transactions, 0)
-        const executeTxData = bundleWithDeploy(
+        const executeTxData = await bundleWithDeploy(
           wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature])
         )
-        const realTx = await guestModule.execute(executeTxData, 0, [])
+        const realTx = await guestModule.execute(executeTxData, 0, new Uint8Array([]))
 
         expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
       })
@@ -145,10 +149,10 @@ contract('Estimate gas usage', () => {
         const estimated = await estimateGasUsage(transactions, wallet, true)
 
         const signature = await wallet.signTransactions(transactions, 0)
-        const executeTxData = bundleWithDeploy(
+        const executeTxData = await bundleWithDeploy(
           wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature])
         )
-        const realTx = await guestModule.execute(executeTxData, 0, [])
+        const realTx = await guestModule.execute(executeTxData, 0, new Uint8Array([]))
 
         expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
 
@@ -173,10 +177,10 @@ contract('Estimate gas usage', () => {
         const estimated = await estimateGasUsage(transactions, wallet, true)
 
         const signature = await wallet.signTransactions(transactions, 0)
-        const executeTxData = bundleWithDeploy(
+        const executeTxData = await bundleWithDeploy(
           wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature])
         )
-        const realTx = await guestModule.execute(executeTxData, 0, [])
+        const realTx = await guestModule.execute(executeTxData, 0, new Uint8Array([]))
 
         expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
       })
@@ -198,10 +202,10 @@ contract('Estimate gas usage', () => {
         const estimated = await estimateGasUsage(transactions, wallet, true)
 
         const signature = await wallet.signTransactions(transactions, 0)
-        const executeTxData = bundleWithDeploy(
+        const executeTxData = await bundleWithDeploy(
           wallet.mainModule.interface.encodeFunctionData('execute', [applyTxDefaults(transactions), 0, signature])
         )
-        const realTx = await guestModule.execute(executeTxData, 0, [])
+        const realTx = await guestModule.execute(executeTxData, 0, new Uint8Array([]))
 
         expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
       })

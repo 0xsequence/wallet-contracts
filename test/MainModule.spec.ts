@@ -398,13 +398,15 @@ contract('MainModule', (accounts: string[]) => {
               throw new Error('No receipt')
             }
 
-            const ev1 = receipt1.events!.find(l => l.event === 'NonceChange')
-            expect(ev1!.event).to.be.eql('NonceChange')
+            const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+            const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
+            expect(ev1!.eventName).to.be.eql('NonceChange')
             expect(ev1!.args!._space).to.equal(space.toString())
             expect(ev1!.args!._newNonce).to.equal(1)
 
-            const ev2 = receipt2.events!.find(l => l.event === 'NonceChange')
-            expect(ev2!.event).to.be.eql('NonceChange')
+            const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+            const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
+            expect(ev2!.eventName).to.be.eql('NonceChange')
             expect(ev2!.args!._space).to.equal(space.toString())
             expect(ev2!.args!._newNonce).to.equal(2)
           })
@@ -471,13 +473,15 @@ contract('MainModule', (accounts: string[]) => {
             throw new Error('No receipt')
           }
 
-          const ev1 = receipt1.events!.find(l => l.event === 'NonceChange')
-          expect(ev1!.event).to.be.eql('NonceChange')
+          const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+          const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
+          expect(ev1!.eventName).to.be.eql('NonceChange')
           expect(ev1!.args!._space).to.equal(1)
           expect(ev1!.args!._newNonce).to.equal(3)
 
-          const ev2 = receipt2.events!.find(l => l.event === 'NonceChange')
-          expect(ev2!.event).to.be.eql('NonceChange')
+          const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+          const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
+          expect(ev2!.eventName).to.be.eql('NonceChange')
           expect(ev2!.args!._space).to.equal(2)
           expect(ev2!.args!._newNonce).to.equal(1)
         })
@@ -529,7 +533,10 @@ contract('MainModule', (accounts: string[]) => {
       const mock_wallet = ModuleMock.attach(wallet.address)
       const tx = await mock_wallet.ping()
       const receipt = await tx.wait()
-      expect(receipt?.events![0].event).to.equal('Pong')
+
+      const events = receipt!.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      expect(events![0].eventName).to.equal('Pong')
     })
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
@@ -1050,7 +1057,8 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const event = receipt.events!.pop()
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+      const event = events.pop()
 
       const reason = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event!.args!._reason.slice(10))[0]
       expect(reason).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
@@ -1086,9 +1094,10 @@ contract('MainModule', (accounts: string[]) => {
           throw new Error('No receipt')
         }
 
-        const event = receipt.events!.find(l => l.event === 'TxFailed')
+        const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+        const ev = events.find(ev => ev.eventName === 'TxFailed')
 
-        const reason = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event!.args!._reason.slice(10))[0]
+        const reason = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + ev!.args!._reason.slice(10))[0]
         expect(reason).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
 
         expect(await callReceiver2.lastValA()).to.equal(valA)
@@ -1122,8 +1131,10 @@ contract('MainModule', (accounts: string[]) => {
           throw new Error('No receipt')
         }
 
-        const event1 = receipt.events![1]
-        const event2 = receipt.events![2]
+        const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+        const event1 = events[1]
+        const event2 = events[2]
 
         const reason1 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event1.args!._reason.slice(10))[0]
         const reason2 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event2.args!._reason.slice(10))[0]
@@ -1160,8 +1171,10 @@ contract('MainModule', (accounts: string[]) => {
           throw new Error('No receipt')
         }
 
-        const event1 = receipt.events!.pop()
-        const event2 = receipt.events!.pop()
+        const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+        const event1 = events.pop()
+        const event2 = events.pop()
 
         const reason1 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event1!.args!._reason.slice(10))[0]
         const reason2 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event2!.args!._reason.slice(10))[0]
@@ -1334,11 +1347,11 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const event = receipt.events?.find(e => e.event === 'DefinedHook')
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+      const event = events.find(ev => ev.eventName === 'DefineHook')
       expect(event).to.not.be.undefined
-      const decode = event!.decode!(event!.data)
-      expect(decode._signature).to.equal(selector)
-      expect(decode._implementation).to.equal(implementation)
+      expect(event!.args._signature).to.equal(selector)
+      expect(event!.args._implementation).to.equal(implementation)
     })
 
     it('Should emit an event when removing a hook', async () => {
@@ -1855,9 +1868,10 @@ contract('MainModule', (accounts: string[]) => {
       if (!receipt) {
         throw new Error('No receipt')
       }
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
 
-      const log = receipt.events!.pop()
-      expect(log!.event).to.be.equal('TxFailed')
+      const log = events.pop()
+      expect(log!.eventName).to.be.equal('TxFailed')
     })
 
     it('Should continue execution if optional call runs out of gas', async () => {
@@ -1886,9 +1900,11 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const log = receipt.events!.slice(-2)[0]
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
 
-      expect(log.event).to.be.equal('TxFailed')
+      const log = events.slice(-2)[0]
+
+      expect(log.eventName).to.be.equal('TxFailed')
       expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
@@ -1918,9 +1934,11 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const log = receipt.events!.find(l => l.event === 'CreatedContract')
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
 
-      expect(log!.event).to.equal('CreatedContract')
+      const log = events!.find(l => l.eventName === 'CreatedContract')
+
+      expect(log!.eventName).to.equal('CreatedContract')
 
       const deployed = CallReceiverMock.attach(log!.args!._contract)
       await deployed.testCall(12345, '0x552299')
@@ -1946,7 +1964,9 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const log = receipt.events!.find(l => l.event === 'CreatedContract')
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      const log = events!.find(l => l.eventName === 'CreatedContract')
 
       expect(await hethers.provider.getBalance(log!.args!._contract)).to.equal(99)
     })
@@ -1967,7 +1987,9 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const log = receipt.events!.find(l => l.event === 'TxExecuted')!
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      const log = events!.find(l => l.eventName === 'TxExecuted')!
 
       expect(log.topics.length).to.equal(2)
       expect(log.topics[1]).to.be.equal(txHash)
