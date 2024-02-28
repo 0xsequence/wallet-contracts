@@ -2,10 +2,10 @@ import { HardhatUserConfig, task } from 'hardhat/config'
 import { networkConfig } from './utils/config-loader'
 
 import '@nomiclabs/hardhat-truffle5'
-import '@nomiclabs/hardhat-ethers'
+import '@nomicfoundation/hardhat-ethers'
 import '@nomiclabs/hardhat-web3'
 import '@nomiclabs/hardhat-etherscan'
-import "@tenderly/hardhat-tenderly"
+import '@tenderly/hardhat-tenderly'
 
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
@@ -23,7 +23,7 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 500000,
+        runs: 500000
       }
     }
   },
@@ -64,8 +64,8 @@ const config: HardhatUserConfig = {
     showTimeSpent: true
   },
   tenderly: {
-    project: "horizon/sequence-dev-1",
-    username: "Agusx1211-horizon",
+    project: 'horizon/sequence-dev-1',
+    username: 'Agusx1211-horizon'
   }
 }
 
