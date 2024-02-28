@@ -7,6 +7,7 @@
     "build": "pnpm compile && pnpm adapter",
     "compile": "hardhat --max-memory 4096 compile",
     "clean": "rimraf artifacts && rimraf cache",
+    "typecheck": "tsc --noEmit",
     "test": "hardhat test",
     "benchmark": "BENCHMARK=true pnpm test",
     "coverage": "COVERAGE=true NET_ID=1 hardhat coverage",

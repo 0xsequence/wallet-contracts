@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 
 import { expect, expectStaticToBeRejected, randomHex } from './utils'
 import { ContractType, LibBytesImpl, LibBytesPointerImpl } from './utils/contracts'
@@ -6,7 +6,6 @@ import { ContractType, LibBytesImpl, LibBytesPointerImpl } from './utils/contrac
 contract('LibBytes', () => {
   let libBytes: ContractType<typeof LibBytesImpl>
   let libBytesPointer: ContractType<typeof LibBytesPointerImpl>
-
 
   before(async () => {
     libBytes = await LibBytesImpl.deploy()
@@ -45,9 +44,7 @@ contract('LibBytes', () => {
       expect(res).to.equal(bytes32)
     })
     it('Should read bytes32 at given index', async () => {
-      const data = randomHex(12)
-        .concat(bytes32.slice(2))
-        .concat(randomHex(44).slice(2))
+      const data = randomHex(12).concat(bytes32.slice(2)).concat(randomHex(44).slice(2))
 
       const res = await libBytes.readBytes32(data, 12)
       expect(res).to.equal(bytes32)
@@ -61,11 +58,11 @@ contract('LibBytes', () => {
     it('Should read bytes32 out of bounds', async () => {
       const data = randomHex(11).concat(bytes32.slice(2))
       const res = await libBytes.readBytes32(data, 12)
-      expect(res).to.equal("0x" + data.slice(26, 26 + 64) + '00')
+      expect(res).to.equal('0x' + data.slice(26, 26 + 64) + '00')
     })
     it('Should read bytes32 totally out of bounds', async () => {
       const res = await libBytes.readBytes32('0x010203', 3145)
-      expect(res).to.equal(ethers.constants.HashZero)
+      expect(res).to.equal(ethers.ZeroHash)
     })
   })
 
@@ -157,24 +154,24 @@ contract('LibBytes', () => {
   describe('readUint64', () => {
     it('Should read uint64 at index zero', async () => {
       const res = await libBytesPointer.readUint64('0xc1725050681dcb2a', 0)
-      expect(res[0]).to.equal(ethers.BigNumber.from("13939292102939495210"))
+      expect(res[0]).to.equal(13939292102939495210n)
       expect(res[1]).to.equal(8)
     })
     it('Should read uint64 at given index', async () => {
       const res = await libBytesPointer.readUint64('0x0837acc1725050681dcb2a01cc', 3)
-      expect(res[0]).to.equal(ethers.BigNumber.from("13939292102939495210"))
+      expect(res[0]).to.equal(13939292102939495210n)
       expect(res[1]).to.equal(11)
     })
     it('Should read uint64 at last index', async () => {
       const res = await libBytesPointer.readUint64('0x0837acc1725050681dcb2a', 3)
-      expect(res[0]).to.equal(ethers.BigNumber.from("13939292102939495210"))
+      expect(res[0]).to.equal(13939292102939495210n)
       expect(res[1]).to.equal(11)
     })
     it('Should read zeros uint64 out of bounds', async () => {
       const res1 = await libBytesPointer.readUint64('0x5a', 0)
       const res2 = await libBytesPointer.readUint64('0x5a00', 0)
       const res3 = await libBytesPointer.readUint64('0x5a00000000000000', 0)
-      expect(res1[0]).to.equal(ethers.BigNumber.from("6485183463413514240"))
+      expect(res1[0]).to.equal(6485183463413514240n)
       expect(res1[0]).to.equal(res2[0])
       expect(res1[0]).to.equal(res3[0])
       expect(res1[1]).to.equal(8)

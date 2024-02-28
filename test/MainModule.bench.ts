@@ -1,19 +1,18 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 
 import { deploySequenceContext, SequenceContext } from './utils/contracts'
 import { SequenceWallet } from './utils/wallet'
+import { Transaction } from './utils/sequence'
 
-const optimalGasLimit = ethers.constants.Two.pow(22)
+const optimalGasLimit = 2n ** 22n
 const runs = 256
 
 function report2(values: ethers.BigNumberish[]) {
-  const bns = values.map(v => ethers.BigNumber.from(v))
+  const bns = values.map(v => BigInt(v))
 
-  const min = bns.reduce((a, b) => a.lt(b) ? a : b)
-  const max = bns.reduce((a, b) => a.gt(b) ? a : b)
-  const avg = bns
-    .reduce((p, n) => p.add(n))
-    .div(values.length)
+  const min = bns.reduce((a, b) => (a < b ? a : b))
+  const max = bns.reduce((a, b) => (a > b ? a : b))
+  const avg = bns.reduce((p, n) => (p + n) / BigInt(values.length))
 
   return { min, max, avg }
 }
@@ -31,7 +30,7 @@ contract('MainModule', () => {
   })
 
   if (process.env.BENCHMARK) {
-    describe.only('Benchmark', function() {
+    describe.only('Benchmark', function () {
       ;(this as any).timeout(0)
 
       it('Deploy a wallet', async () => {
@@ -39,7 +38,12 @@ contract('MainModule', () => {
 
         for (let i = 0; i < runs; i++) {
           const tx = await SequenceWallet.basicWallet(context).deploy()
-          const receipt = await tx.wait()
+          const receipt = await tx?.wait()
+
+          if (!receipt) {
+            throw new Error('No receipt')
+          }
+
           results.push(receipt.gasUsed)
         }
 
@@ -54,6 +58,10 @@ contract('MainModule', () => {
           await wallet.deploy()
           const tx = await wallet.sendTransactions([{}])
           const receipt = await tx.wait()
+
+          if (!receipt) {
+            throw new Error('No receipt')
+          }
 
           results.push(receipt.gasUsed)
         }
@@ -70,9 +78,9 @@ contract('MainModule', () => {
             delegateCall: false,
             revertOnError: true,
             gasLimit: optimalGasLimit,
-            target: ethers.constants.AddressZero,
-            value: ethers.constants.Zero,
-            data: "0x0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12e0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12e"
+            target: ethers.ZeroAddress,
+            value: 0n,
+            data: '0x0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12e0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12e'
           }))
 
           for (let i = 0; i < runs; i++) {
@@ -80,6 +88,10 @@ contract('MainModule', () => {
             await wallet.deploy()
             const tx = await wallet.sendTransactions(transactions)
             const receipt = await tx.wait()
+
+            if (!receipt) {
+              throw new Error('No receipt')
+            }
 
             results.push(receipt.gasUsed)
           }
@@ -94,25 +106,27 @@ contract('MainModule', () => {
         it(`Relay 1/1 ${ntxs} transactions and ${nfailing} failing transactions`, async () => {
           const results: ethers.BigNumberish[] = []
 
-          const transactions = new Array(ntxs)
+          const transactions: Transaction[] = new Array(ntxs)
             .fill(0)
             .map(() => ({
               delegateCall: false,
               revertOnError: true,
               gasLimit: optimalGasLimit,
-              target: ethers.constants.AddressZero,
-              value: ethers.constants.Zero,
-              data: []
+              target: ethers.ZeroAddress,
+              value: 0n,
+              data: new Uint8Array([])
             }))
             .concat(
-              new Array(nfailing).fill(0).map(() => ({
-                delegateCall: false,
-                revertOnError: false,
-                gasLimit: optimalGasLimit,
-                target: context.factory.address,
-                value: ethers.constants.Zero,
-                data: []
-              }))
+              await Promise.all(
+                new Array(nfailing).fill(0).map(async () => ({
+                  delegateCall: false,
+                  revertOnError: false,
+                  gasLimit: optimalGasLimit,
+                  target: await context.factory.getAddress(),
+                  value: 0n,
+                  data: new Uint8Array([])
+                }))
+              )
             )
 
           for (let i = 0; i < runs; i++) {
@@ -121,6 +135,10 @@ contract('MainModule', () => {
             const tx = await wallet.sendTransactions(transactions)
             const receipt = await tx.wait()
 
+            if (!receipt) {
+              throw new Error('No receipt')
+            }
+
             results.push(receipt.gasUsed)
           }
 
@@ -128,13 +146,13 @@ contract('MainModule', () => {
         })
       })
 
-      const transaction = {
+      const transaction: Transaction = {
         delegateCall: false,
         revertOnError: true,
         gasLimit: optimalGasLimit,
-        target: ethers.constants.AddressZero,
-        value: ethers.constants.Zero,
-        data: []
+        target: ethers.ZeroAddress,
+        value: 0n,
+        data: new Uint8Array([])
       }
 
       it('Relay 2/5 transaction', async () => {
@@ -145,6 +163,10 @@ contract('MainModule', () => {
           await wallet.deploy()
           const tx = await wallet.sendTransactions([transaction])
           const receipt = await tx.wait()
+
+          if (!receipt) {
+            throw new Error('No receipt')
+          }
 
           results.push(receipt.gasUsed)
         }
@@ -161,6 +183,10 @@ contract('MainModule', () => {
 
           const tx = await wallet.sendTransactions([transaction], undefined, { gasLimit: 60000000 })
           const receipt = await tx.wait()
+
+          if (!receipt) {
+            throw new Error('No receipt')
+          }
 
           results.push(receipt.gasUsed)
         }
