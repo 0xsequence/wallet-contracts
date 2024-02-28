@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike, ethers, Wallet } from 'ethers'
-import { CHAIN_ID } from '.'
+import { getChainId } from '.'
 
 export const WALLET_CODE = '0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3'
 
@@ -330,7 +330,8 @@ export function digestOf(txs: Partial<Transaction>[], nonce: ethers.BigNumberish
   )
 }
 
-export function subdigestOf(wallet: string, digest: ethers.BytesLike, chainId: ethers.BigNumberish = CHAIN_ID()) {
+export async function subdigestOf(wallet: string, digest: ethers.BytesLike, chainId?: ethers.BigNumberish) {
+  chainId = chainId ?? (await getChainId())
   return ethers.keccak256(
     ethers.solidityPacked(['string', 'uint256', 'address', 'bytes32'], ['\x19\x01', chainId, wallet, digest])
   )

@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { ethers as hethers } from 'hardhat'
 
-import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } from './utils'
+import { bytes32toAddress, getChainId, expect, expectToBeRejected, randomHex } from './utils'
 
 import {
   CallReceiverMock,
@@ -243,7 +243,7 @@ contract('MainModule', (accounts: string[]) => {
         data: callReceiver.interface.encodeFunctionData('testCall', [5423, randomHex(32)])
       }
 
-      const subdigest = subdigestOf(wallet.address, digestOf([transaction], await wallet.getNonce()))
+      const subdigest = await subdigestOf(wallet.address, digestOf([transaction], await wallet.getNonce()))
       const badNestedSignature = await wallet_b.signDigest(subdigest).then(s => s + '03')
 
       const tx = wallet.sendTransactions([transaction])
@@ -261,7 +261,7 @@ contract('MainModule', (accounts: string[]) => {
       await wallet.deploy()
 
       const signauture = await wallet.signTransactions([{}])
-      const subdigest = subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
+      const subdigest = await subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
 
       const tx = wallet.relayTransactions([{}], signauture)
       await expect(tx).to.be.rejected
@@ -310,14 +310,14 @@ contract('MainModule', (accounts: string[]) => {
 
     describe('Network ID', () => {
       it('Should reject a transaction of another network id', async () => {
-        wallet = wallet.useChainId(CHAIN_ID() + 1)
+        wallet = wallet.useChainId((await getChainId()) + 1n)
         const tx = wallet.sendTransactions([{}])
         await expectToBeRejected(tx, 'InvalidSignature')
       })
 
       describe('Universal network signatures', async () => {
         it('Should reject signature for another network id, even if encoded as universal', async () => {
-          wallet = wallet.useChainId(CHAIN_ID() + 1)
+          wallet = wallet.useChainId((await getChainId()) + 1n)
           const tx = wallet.sendTransactions([{}])
           await expectToBeRejected(tx, 'InvalidSignature')
         })
@@ -438,7 +438,7 @@ contract('MainModule', (accounts: string[]) => {
 
             await wallet.sendTransactions([{}], encodeNonce(space, 0))
 
-            const storageValue = await hethers.provider.getStorageAt(wallet.address, storageKey)
+            const storageValue = await hethers.provider.getStorage(wallet.address, storageKey)
             expect(BigInt(storageValue)).to.equal(1)
           })
         })
@@ -501,7 +501,7 @@ contract('MainModule', (accounts: string[]) => {
 
     it('Should reject signature with bad encoding type', async () => {
       const tx = wallet.relayTransactions([{}], '0x2012')
-      const subdigest = subdigestOf(wallet.address, digestOf([{}], 0))
+      const subdigest = await subdigestOf(wallet.address, digestOf([{}], 0))
       await expectToBeRejected(tx, `InvalidSignatureType("0x20")`)
     })
 
@@ -559,7 +559,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should use implementation storage key', async () => {
       await wallet.updateImageHash(ethers.randomBytes(32))
 
-      const storageValue = await hethers.provider.getStorageAt(wallet.address, wallet.address)
+      const storageValue = await hethers.provider.getStorage(wallet.address, wallet.address)
       expect(bytes32toAddress(storageValue)).to.equal(await context.mainModuleUpgradable.getAddress())
     })
   })
@@ -677,7 +677,7 @@ contract('MainModule', (accounts: string[]) => {
       describe(c.name, () => {
         it('Should reject proof for another subdigest', async () => {
           const digests = new Array(2).fill(0).map(() => ethers.hexlify(ethers.randomBytes(32)))
-          const subdigests = digests.map(d => ({ subdigest: subdigestOf(wallet.address, d, 0) }))
+          const subdigests = await Promise.all(digests.map(async d => ({ subdigest: await subdigestOf(wallet.address, d, 0) })))
           const subdigestsMerkle = merkleTopology([...subdigests])
 
           const prevLeaves = leavesOf(wallet.config.topology)
@@ -700,7 +700,7 @@ contract('MainModule', (accounts: string[]) => {
           wallet = SequenceWallet.basicWallet(context, { signing: 10, idle: 11 })
 
           const digests = new Array(33).fill(0).map(() => ethers.hexlify(ethers.randomBytes(32)))
-          const subdigests = digests.map(d => ({ subdigest: subdigestOf(wallet.address, d, 0) }))
+          const subdigests = await Promise.all(digests.map(async d => ({ subdigest: await subdigestOf(wallet.address, d, 0) })))
           const subdigestsMerkle = merkleTopology([...subdigests])
 
           const prevLeaves = leavesOf(wallet.config.topology)
@@ -891,7 +891,8 @@ contract('MainModule', (accounts: string[]) => {
       })
 
       it('Should perform call a contract and transfer eth in one tx', async () => {
-        await hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+        const signer = await hethers.provider.getSigner()
+        await signer.sendTransaction({ to: wallet.address, value: 100 })
         const receiver = new ethers.Wallet(ethers.hexlify(ethers.randomBytes(32)))
 
         const transactions = [
@@ -913,7 +914,8 @@ contract('MainModule', (accounts: string[]) => {
       })
 
       it('Should fail if one transaction fails', async () => {
-        await hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+        const signer = await hethers.provider.getSigner()
+        await signer.sendTransaction({ to: wallet.address, value: 100 })
 
         await callReceiver.setRevertFlag(true)
 
@@ -1004,11 +1006,13 @@ contract('MainModule', (accounts: string[]) => {
 
   describe('Handle ETH', () => {
     it('Should receive ETH', async () => {
-      hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 1 })
+      const signer = await hethers.provider.getSigner()
+      signer.sendTransaction({ to: wallet.address, value: 1 })
     })
 
     it('Should transfer ETH', async () => {
-      hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+      const signer = await hethers.provider.getSigner()
+      signer.sendTransaction({ to: wallet.address, value: 100 })
 
       const receiver = ethers.Wallet.createRandom().address
 
@@ -1022,7 +1026,8 @@ contract('MainModule', (accounts: string[]) => {
     })
 
     it('Should call payable function', async () => {
-      hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+      const signer = await hethers.provider.getSigner()
+      signer.sendTransaction({ to: wallet.address, value: 100 })
 
       const valA = 63129
       const valB = randomHex(120)
@@ -1124,7 +1129,7 @@ contract('MainModule', (accounts: string[]) => {
           }
         ]
 
-        const txHash = subdigestOf(wallet.address, digestOf(transactions, await wallet.getNonce()))
+        const txHash = await subdigestOf(wallet.address, digestOf(transactions, await wallet.getNonce()))
         const receipt = await wallet.sendTransactions(transactions).then(r => r.wait())
 
         if (!receipt) {
@@ -1286,7 +1291,7 @@ contract('MainModule', (accounts: string[]) => {
           const subkey = ethers.AbiCoder.defaultAbiCoder().encode(['bytes4'], [hookSelector])
           const storageKey = computeStorageKey('org.arcadeum.module.hooks.hooks', subkey)
 
-          const storageValue = await hethers.provider.getStorageAt(wallet.address, storageKey)
+          const storageValue = await hethers.provider.getStorage(wallet.address, storageKey)
 
           const addr = (() => {
             try {
@@ -1302,7 +1307,8 @@ contract('MainModule', (accounts: string[]) => {
 
       it('Should pass calling a non registered hook', async () => {
         const data = ethers.AbiCoder.defaultAbiCoder().encode(['bytes4'], [hookSelector])
-        await hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: data })
+        const signer = await hethers.provider.getSigner()
+        await signer.sendTransaction({ to: wallet.address, data: data })
       })
     })
 
@@ -1317,18 +1323,14 @@ contract('MainModule', (accounts: string[]) => {
 
       await wallet.sendTransactions([transaction])
 
+      const signer = await hethers.provider.getSigner()
+
       // Calling the wallet with '0x112233' should not forward the call to the hook
-      const tx = hethers.provider
-        .getSigner()
-        .sendTransaction({ to: wallet.address, data: '0x112233' })
-        .then(t => t.wait())
+      const tx = signer.sendTransaction({ to: wallet.address, data: '0x112233' }).then(t => t.wait())
       await expect(tx).to.be.fulfilled
 
       // Calling the wallet with '0x11223300' should forward the call to the hook (and thus revert)
-      const tx2 = hethers.provider
-        .getSigner()
-        .sendTransaction({ to: wallet.address, data: '0x11223300' })
-        .then(t => t.wait())
+      const tx2 = signer.sendTransaction({ to: wallet.address, data: '0x11223300' }).then(t => t.wait())
       await expect(tx2).to.be.rejected
     })
 
@@ -1431,7 +1433,7 @@ contract('MainModule', (accounts: string[]) => {
 
       it('Should use image hash storage key', async () => {
         const storageKey = computeStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
-        const storageValue = await hethers.provider.getStorageAt(wallet.address, storageKey)
+        const storageValue = await hethers.provider.getStorage(wallet.address, storageKey)
         expect(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32'], [storageValue])).to.equal(walletb.imageHash)
       })
 
@@ -1463,7 +1465,7 @@ contract('MainModule', (accounts: string[]) => {
 
         it('Should use image hash storage key', async () => {
           const storageKey = computeStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
-          const storageValue = await hethers.provider.getStorageAt(walletb.address, storageKey)
+          const storageValue = await hethers.provider.getStorage(walletb.address, storageKey)
           expect(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32'], [storageValue])).to.equal(walletc.imageHash)
         })
       })
@@ -1950,7 +1952,8 @@ contract('MainModule', (accounts: string[]) => {
     it('Should create a contract with value', async () => {
       const deployCode = CallReceiverMock.factory().bytecode
 
-      await hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+      const signer = await hethers.provider.getSigner()
+      await signer.sendTransaction({ to: wallet.address, value: 100 })
 
       const transaction = {
         target: wallet.address,
@@ -1979,7 +1982,7 @@ contract('MainModule', (accounts: string[]) => {
 
   describe('Transaction events', () => {
     it('Should emit TxExecuted event', async () => {
-      const txHash = subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
+      const txHash = await subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
       const res = await wallet.sendTransactions([{}])
       const receipt = await res.wait()
 
@@ -1997,7 +2000,7 @@ contract('MainModule', (accounts: string[]) => {
     })
 
     it('Should emit multiple TxExecuted events', async () => {
-      const txHash = subdigestOf(wallet.address, digestOf([{}, {}], await wallet.getNonce()))
+      const txHash = await subdigestOf(wallet.address, digestOf([{}, {}], await wallet.getNonce()))
       const receipt = await wallet.sendTransactions([{}, {}]).then(t => t.wait())
 
       if (!receipt) {

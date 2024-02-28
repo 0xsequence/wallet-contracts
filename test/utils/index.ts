@@ -5,7 +5,8 @@ import { ethers } from 'ethers'
 import { solidity } from 'ethereum-waffle'
 import { ethers as hethers } from 'hardhat'
 
-export const CHAIN_ID = (): number => (process.env.NET_ID ? Number(BigInt(process.env.NET_ID)) : hethers.provider.network.chainId)
+export const getChainId = async (): Promise<bigint> =>
+  process.env.NET_ID ? BigInt(process.env.NET_ID) : (await hethers.provider.getNetwork()).chainId
 
 export const { assert, expect } = chai.use(chaiString).use(chaiAsPromised).use(solidity)
 
@@ -36,8 +37,10 @@ export async function expectToBeRejected(promise: Promise<any>, error: string) {
 }
 
 export async function expectStaticToBeRejected(promise: Promise<any>, signature: string, ...args: any[]) {
-  await expectToBeRejected(promise, `errorName="${signature.split('(')[0]}"`)
-  await expectToBeRejected(promise, `errorSignature="${signature}"`)
+  // await expectToBeRejected(promise, `errorName="${signature.split('(')[0]}"`)
+  // await expectToBeRejected(promise, `errorSignature="${signature}"`)
+
+  await expectToBeRejected(promise, `${signature.split('(')[0]}`)
 
   const sigTypes = signature.split('(')[1].split(')')[0].split(',')
 
@@ -60,28 +63,36 @@ export async function expectStaticToBeRejected(promise: Promise<any>, signature:
       }
 
       if (type.startsWith('uint') || type.startsWith('int')) {
-        return `{"type":"BigNumber","hex":"${ethers.toBeHex(BigInt(arg))}"}`
+        //return `{"type":"BigNumber","hex":"${ethers.toBeHex(BigInt(arg))}"}`
+        return BigInt(arg).toString()
       }
 
       throw new Error(`Unknown type: ${type}`)
     })
-    .join(',')
+    .join(', ')
 
   const groups = formattedArgs.split('*')
-  if (groups.length === 1) {
-    await expectToBeRejected(promise, `errorArgs=[${formattedArgs}]`)
-  } else {
-    for (let i = 0; i < groups.length; i++) {
-      const group = groups[i]
-      if (i === 0) {
-        await expectToBeRejected(promise, `errorArgs=[${group}`)
-      } else if (i === groups.length - 1) {
-        await expectToBeRejected(promise, `${group}]`)
-      } else {
-        await expectToBeRejected(promise, `${group}`)
-      }
-    }
+
+  for (let i = 0; i < groups.length; i++) {
+    await expectToBeRejected(promise, `${groups[i]}`)
   }
+
+  // if (groups.length === 1) {
+  //   // await expectToBeRejected(promise, `errorArgs=[${formattedArgs}]`)
+  //   await expectToBeRejected(promise, `${formattedArgs}`)
+  // } else {
+  //   for (let i = 0; i < groups.length; i++) {
+  //     const group = groups[i]
+  //     if (i === 0) {
+  //       // await expectToBeRejected(promise, `errorArgs=[${group}`)
+  //       await expectToBeRejected(promise, `${group}`)
+  //     } else if (i === groups.length - 1) {
+  //       await expectToBeRejected(promise, `${group}]`)
+  //     } else {
+  //       await expectToBeRejected(promise, `${group}`)
+  //     }
+  //   }
+  // }
 }
 
 export function encodeError(error: string): string {

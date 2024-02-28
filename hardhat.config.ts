@@ -1,10 +1,10 @@
 import { HardhatUserConfig, task } from 'hardhat/config'
 import { networkConfig } from './utils/config-loader'
 
-import '@nomiclabs/hardhat-truffle5'
 import '@nomicfoundation/hardhat-ethers'
+import '@nomicfoundation/hardhat-verify'
+import '@nomiclabs/hardhat-truffle5'
 import '@nomiclabs/hardhat-web3'
-import '@nomiclabs/hardhat-etherscan'
 import '@tenderly/hardhat-tenderly'
 
 import 'hardhat-gas-reporter'

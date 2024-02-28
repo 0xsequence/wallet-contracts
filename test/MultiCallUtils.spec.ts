@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 
 import { ethers as hethers } from 'hardhat'
-import { CHAIN_ID, encodeError, expect, expectStaticToBeRejected } from './utils'
+import { getChainId, encodeError, expect, expectStaticToBeRejected } from './utils'
 import { CallReceiverMock, ContractType, MultiCallUtils } from './utils/contracts'
 import { applyTxDefault, applyTxDefaults } from './utils/sequence'
 
@@ -210,7 +210,7 @@ contract('Multi call utils', (accounts: string[]) => {
 
       const txs = await Promise.all(
         [
-          i.encodeFunctionData('callBlockhash', [lastBlock.number - 1]),
+          i.encodeFunctionData('callBlockhash', [lastBlock!.number - 1]),
           i.encodeFunctionData('callCoinbase'),
           i.encodeFunctionData('callDifficulty'),
           i.encodeFunctionData('callGasLimit'),
@@ -258,7 +258,7 @@ contract('Multi call utils', (accounts: string[]) => {
       expect(res[1][4]).to.not.equal(emptyBytes32, 'return block number')
       expect(res[1][5]).to.not.equal(emptyBytes32, 'return timestamp')
       expect(res[1][6]).to.not.equal(emptyBytes32, 'return gas left')
-      expect(BigInt(res[1][7])).to.equal(1, 'return gas price')
+      expect(BigInt(res[1][7])).to.equal(1n, 'return gas price')
       expect(res[1][8]).to.not.equal(emptyBytes32, 'return origin')
       expect(res[1][9]).to.not.equal(emptyBytes32, 'return balance of 0x')
       expect(res[1][10]).to.equal(emptyBytes32, 'return balance of empty account')
@@ -269,14 +269,14 @@ contract('Multi call utils', (accounts: string[]) => {
 
       const codeSize = ethers.AbiCoder.defaultAbiCoder().decode(['uint256'], res[1][12])[0]
       expect(ethers.AbiCoder.defaultAbiCoder().decode(['bytes'], res[1][14])[0].length).to.equal(
-        2 + codeSize * 2,
+        2 + Number(codeSize) * 2,
         'return code of correct size'
       )
 
       expect(res[1][15]).to.not.equal(emptyBytes32)
       expect(res[1][16]).to.not.equal(emptyBytes32)
 
-      expect(ethers.AbiCoder.defaultAbiCoder().decode(['uint256'], Number(res[1][17])[0])).to.equal(CHAIN_ID(), 'return chain id')
+      expect(ethers.AbiCoder.defaultAbiCoder().decode(['uint256'], res[1][17])[0]).to.equal(await getChainId(), 'return chain id')
     })
   })
 })

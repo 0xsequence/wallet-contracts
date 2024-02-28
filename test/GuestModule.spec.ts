@@ -72,7 +72,8 @@ contract('GuestModule', () => {
       await expectToBeRejected(tx, 'DelegateCallNotAllowed(0)')
     })
     it('Should not accept ETH', async () => {
-      const tx = hethers.provider.getSigner().sendTransaction({ value: 1, to: await guestModule.getAddress() })
+      const signer = await hethers.provider.getSigner()
+      const tx = signer.sendTransaction({ value: 1, to: await guestModule.getAddress() })
       await expect(tx).to.be.rejected
     })
     it('Should not implement hooks', async () => {

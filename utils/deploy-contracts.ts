@@ -14,7 +14,6 @@ import { ContractDeployTransaction, ContractFactory, Signer, ethers } from 'ethe
 import fs from 'fs'
 
 const provider = hethers.provider
-const signer = provider.getSigner(0)
 
 const singletonFactoryFactory = {
   address: '0xce0042B868300000d44A59004Da54A005ffdcf9f',
@@ -82,6 +81,7 @@ const deploy = async (
   contract: new (...args: [signer?: Signer]) => ContractFactory,
   ...args: any[]
 ): Promise<ethers.BaseContract> => {
+  const signer = await provider.getSigner(0)
   const singletonFactory = new ethers.Contract(singletonFactoryFactory.address, singletonFactoryFactory.abi, signer)
 
   if (ethers.getBytes(await provider.getCode(await singletonFactory.getAddress())).length <= 2) {
@@ -97,7 +97,7 @@ const deploy = async (
       await tx.wait()
       o.info('Funded. Deploying singleton factory')
     }
-    const tx = await provider.sendTransaction(singletonFactoryDeployTx)
+    const tx = await provider.broadcastTransaction(singletonFactoryDeployTx)
     await tx.wait()
     o.succeed(`Deployed singleton factory`)
   }
@@ -110,7 +110,7 @@ const deploy = async (
     throw new Error(`no data for ${name}`)
   }
 
-  const maxGasLimit = await provider.getBlock('latest').then(b => (b.gasLimit * 4n) / 10n)
+  const maxGasLimit = await provider.getBlock('latest').then(b => (b!.gasLimit * 4n) / 10n)
 
   const address = ethers.getAddress(
     ethers.dataSlice(
@@ -141,9 +141,11 @@ const deploy = async (
 }
 
 const main = async () => {
+  const signer = await provider.getSigner(0)
+  const address = await signer.getAddress()
   prompt.info(`Network Name:           ${network.name}`)
-  prompt.info(`Local Deployer Address: ${await signer.getAddress()}`)
-  prompt.info(`Local Deployer Balance: ${await signer.getBalance()}`)
+  prompt.info(`Local Deployer Address: ${address}`)
+  prompt.info(`Local Deployer Balance: ${await provider.getBalance(address)}`)
 
   const walletFactory = await deploy('Factory', Factory__factory)
   const mainModuleUpgradeable = await deploy('MainModuleUpgradable', MainModuleUpgradable__factory)

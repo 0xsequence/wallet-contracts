@@ -84,8 +84,8 @@ export class SequenceWallet {
   public isSequence = true
   _isSigner: boolean = true
 
-  factoryAddress: string = ''
-  mainModuleAddress: string = ''
+  factoryAddress: string = ethers.ZeroAddress
+  mainModuleAddress: string = ethers.ZeroAddress
 
   constructor(public options: WalletOptions) {
     this.options.context.factory.getAddress().then(address => (this.factoryAddress = address))
@@ -257,7 +257,7 @@ export class SequenceWallet {
   }
 
   async signDigest(digest: ethers.BytesLike): Promise<string> {
-    const subdigest = ethers.getBytes(subdigestOf(this.address, digest, this.options.chainId))
+    const subdigest = ethers.getBytes(await subdigestOf(this.address, digest, this.options.chainId))
     return this.signSubdigest(subdigest)
   }
 

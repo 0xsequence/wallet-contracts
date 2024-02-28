@@ -7,7 +7,7 @@ const cachedFactories: { [name: string]: ethers.ContractFactory } = {}
 async function deploy<Y extends ethers.BaseContract>(name: string, ...args: any[]) {
   const factory = await hethers.getContractFactory(name)
   cachedFactories[name] = factory
-  return (await factory.deploy(...args)) as Y
+  return (await factory.deploy(...args)) as unknown as Y
 }
 
 function attach<Y extends ethers.BaseContract>(name: string, address: string) {
