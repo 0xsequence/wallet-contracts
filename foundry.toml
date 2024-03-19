@@ -3,4 +3,6 @@ src = 'contracts'
 out = 'foundry_artifacts'
 libs = ["node_modules", "lib"]
 test = 'foundry_test'
+
 ffi = true
+max_test_rejects = 2048000
