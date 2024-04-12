@@ -73,7 +73,11 @@ export const deploySequenceContext = async (owner?: string) => {
   const mainModuleUpgradable = await MainModuleUpgradable.deploy()
   const mainModule = await MainModule.deploy(await factory.getAddress(), await mainModuleUpgradable.getAddress())
 
-  return { factory, mainModule, mainModuleUpgradable }
+  return {
+    factory: await factory.waitForDeployment(),
+    mainModule: await mainModule.waitForDeployment(),
+    mainModuleUpgradable: await mainModuleUpgradable.waitForDeployment()
+  }
 }
 
 export type SequenceContext = {

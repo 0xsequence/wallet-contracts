@@ -11,7 +11,7 @@
     "test": "hardhat test",
     "benchmark": "BENCHMARK=true pnpm test",
     "coverage": "COVERAGE=true NET_ID=1 hardhat coverage",
-    "deploy": "hardhat run utils/deploy-contracts.ts --network",
+    "deploy": "hardhat run utils/deploy-contracts.ts --network hardhat",
     "verify": "hardhat verify --network",
     "release": "pnpm publish src",
     "lint": "pnpm lint:ts && pnpm lint:sol",

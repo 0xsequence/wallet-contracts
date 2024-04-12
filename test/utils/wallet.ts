@@ -84,13 +84,7 @@ export class SequenceWallet {
   public isSequence = true
   _isSigner: boolean = true
 
-  factoryAddress: string = ethers.ZeroAddress
-  mainModuleAddress: string = ethers.ZeroAddress
-
-  constructor(public options: WalletOptions) {
-    this.options.context.factory.getAddress().then(address => (this.factoryAddress = address))
-    this.options.context.mainModule.getAddress().then(address => (this.mainModuleAddress = address))
-  }
+  constructor(public options: WalletOptions) {}
 
   static basicWallet(context: SequenceContext, opts?: Partial<BasicWalletOptions>): SequenceWallet {
     const options = { ...{ signing: 1, idle: 0, topologyConverter: defaultTopology }, ...opts }
@@ -188,7 +182,11 @@ export class SequenceWallet {
 
   get address() {
     if (this.options.address) return this.options.address
-    return addressOf(this.factoryAddress, this.mainModuleAddress, this.imageHash)
+    return addressOf(
+      this.options.context.factory.target as string,
+      this.options.context.mainModule.target as string,
+      this.imageHash
+    )
   }
 
   getAddress() {
@@ -212,14 +210,15 @@ export class SequenceWallet {
       return
     }
 
-    return this.options.context.factory.deploy(await this.options.context.mainModule.getAddress(), this.imageHash)
+    await this.options.context.factory.deploy(await this.options.context.mainModule.getAddress(), this.imageHash)
+    return this.options.context.factory.waitForDeployment()
   }
 
   async getNonce(space: ethers.BigNumberish = 0) {
     return this.mainModule.readNonce(space)
   }
 
-  async updateImageHash(input: ethers.BytesLike | WalletConfig) {
+  async updateImageHash(input: ethers.BytesLike | WalletConfig): Promise<ethers.ContractTransactionResponse> {
     if (!ethers.isBytesLike(input)) return this.updateImageHash(imageHash(input))
 
     return this.sendTransactions([
@@ -230,7 +229,10 @@ export class SequenceWallet {
     ])
   }
 
-  async addExtraImageHash(input: ethers.BytesLike | WalletConfig, expiration: ethers.BigNumberish = 2n ** 248n) {
+  async addExtraImageHash(
+    input: ethers.BytesLike | WalletConfig,
+    expiration: ethers.BigNumberish = 2n ** 248n
+  ): Promise<ethers.ContractTransactionResponse> {
     if (!ethers.isBytesLike(input)) return this.addExtraImageHash(imageHash(input))
 
     return this.sendTransactions([

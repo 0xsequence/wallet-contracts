@@ -46,6 +46,7 @@ contract('MainModule', (accounts: string[]) => {
 
   beforeEach(async () => {
     callReceiver = await CallReceiverMock.deploy()
+    await callReceiver.waitForDeployment()
 
     wallet = SequenceWallet.basicWallet(context)
     await wallet.deploy()
