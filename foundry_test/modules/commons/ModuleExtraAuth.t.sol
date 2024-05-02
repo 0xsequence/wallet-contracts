@@ -6,15 +6,31 @@ import "contracts/modules/commons/ModuleExtraAuth.sol";
 import "foundry_test/base/AdvTest.sol";
 
 
-abstract contract ModuleAuthImp is IModuleAuth {
+contract ExtStore {
   mapping(bytes32 => bool) private imageHashToIsValid;
 
   function setValidImageHash(bytes32 _imageHash, bool _isValid) external {
     imageHashToIsValid[_imageHash] = _isValid;
   }
 
-  function _isValidImage(bytes32 _imageHash) internal override virtual view returns (bool) {
+  function isValidImage(bytes32 _imageHash) external view returns (bool) {
     return imageHashToIsValid[_imageHash];
+  }
+}
+
+abstract contract ModuleAuthImp is IModuleAuth {
+  ExtStore private immutable EXT_STORE;
+
+  constructor() {
+    EXT_STORE = new ExtStore();
+  }
+
+  function setValidImageHash(bytes32 _imageHash, bool _isValid) external {
+    EXT_STORE.setValidImageHash(_imageHash, _isValid);
+  }
+
+  function _isValidImage(bytes32 _imageHash) internal override virtual view returns (bool) {
+    return EXT_STORE.isValidImage(_imageHash);
   }
 }
 
