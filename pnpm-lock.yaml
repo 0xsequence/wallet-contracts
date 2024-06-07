@@ -97,8 +97,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4(bufferutil@4.0.8)(hardhat@2.20.1(bufferutil@4.0.8)(ts-node@10.9.1(@types/node@20.11.20)(typescript@4.7.4))(typescript@4.7.4)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
       husky:
-        specifier: ^8.0.0
-        version: 8.0.3
+        specifier: ^9.0.11
+        version: 9.0.11
       ora:
         specifier: ^5.4.1
         version: 5.4.1
@@ -2911,9 +2911,9 @@ packages:
     resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
     engines: {node: '>= 6'}
 
-  husky@8.0.3:
-    resolution: {integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==}
-    engines: {node: '>=14'}
+  husky@9.0.11:
+    resolution: {integrity: sha512-AB6lFlbwwyIqMdHYhwPe+kjOC3Oc5P3nThEoW/AaO2BX3vJDjWPFxYLxokUZOo6RNX20He3AaT8sESs9NJcmEw==}
+    engines: {node: '>=18'}
     hasBin: true
 
   iconv-lite@0.4.24:
@@ -9918,7 +9918,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  husky@8.0.3: {}
+  husky@9.0.11: {}
 
   iconv-lite@0.4.24:
     dependencies:
