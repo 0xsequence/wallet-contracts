@@ -76,7 +76,7 @@ contract('MainModule', (accounts: string[]) => {
       wallet = SequenceWallet.detailedWallet(context, { threshold: 1, signers: [wallet_a] })
       await wallet.deploy()
 
-      const valA = 4123222
+      const valA = 4123222n
       const valB = randomHex(99)
 
       const transaction = {
@@ -103,7 +103,7 @@ contract('MainModule', (accounts: string[]) => {
       wallet = SequenceWallet.detailedWallet(context, { threshold: 1, signers: [wallet_a, wallet_b] })
       await wallet.deploy()
 
-      const valA = 4123222
+      const valA = 4123222n
       const valB = randomHex(99)
 
       const transaction = {
@@ -129,7 +129,7 @@ contract('MainModule', (accounts: string[]) => {
       wallet = SequenceWallet.detailedWallet(context, { threshold: 1, signers: [wallet_a, singer_b] })
       await wallet.deploy()
 
-      const valA = 4123222
+      const valA = 4123222n
       const valB = randomHex(99)
 
       const transaction = {
@@ -210,7 +210,7 @@ contract('MainModule', (accounts: string[]) => {
 
         wallet = (await genWallet(0, c.childs, c.depth)) as SequenceWallet
 
-        const valA = 5423
+        const valA = 5423n
         const valB = randomHex(120)
 
         const transaction = {
@@ -284,7 +284,7 @@ contract('MainModule', (accounts: string[]) => {
       })
       await wallet.deploy()
 
-      const valA = 5423
+      const valA = 5423n
       const valB = randomHex(120)
 
       const transaction = {
@@ -638,8 +638,8 @@ contract('MainModule', (accounts: string[]) => {
             .useConfig({ ...altWallet1.config, address: undefined })
             .useSigners(altWallet1.signers)
 
-          expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.equal(0)
-          expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.equal(0)
+          expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.equal(0n)
+          expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.equal(0n)
 
           await expect(badWallet1.sendTransactions([{}])).to.be.rejected
           await expect(badWallet2.sendTransactions([{}])).to.be.rejected
@@ -841,7 +841,7 @@ contract('MainModule', (accounts: string[]) => {
   })
 
   describe('External calls', () => {
-    let { valA, valB } = { valA: Math.floor(Date.now()), valB: randomHex(120) }
+    let { valA, valB } = { valA: BigInt(Math.floor(Date.now())), valB: randomHex(120) }
 
     it('Should perform call to contract', async () => {
       const transaction = {
@@ -866,7 +866,7 @@ contract('MainModule', (accounts: string[]) => {
     })
     describe('Batch transactions', () => {
       let callReceiver2: ContractType<typeof CallReceiverMock>
-      let { val2A, val2B } = { val2A: 9422, val2B: randomHex(31) }
+      let { val2A, val2B } = { val2A: 9422n, val2B: randomHex(31) }
 
       beforeEach(async () => {
         callReceiver2 = await CallReceiverMock.deploy()
@@ -911,7 +911,7 @@ contract('MainModule', (accounts: string[]) => {
 
         expect(await callReceiver.lastValA()).to.equal(valA)
         expect(await callReceiver.lastValB()).to.equal(valB)
-        expect(await hethers.provider.getBalance(receiver.address)).to.equal(26)
+        expect(await hethers.provider.getBalance(receiver.address)).to.equal(26n)
       })
 
       it('Should fail if one transaction fails', async () => {
@@ -967,7 +967,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const val = BigInt(receipt.logs.slice(-2)[0].data)
-      expect(val).to.equal(45)
+      expect(val).to.equal(45n)
     })
 
     describe('on delegate call revert', () => {
@@ -1023,16 +1023,16 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       await wallet.sendTransactions([transaction])
-      expect(await hethers.provider.getBalance(receiver)).to.equal(25)
+      expect(await hethers.provider.getBalance(receiver)).to.equal(25n)
     })
 
     it('Should call payable function', async () => {
       const signer = await hethers.provider.getSigner()
       signer.sendTransaction({ to: wallet.address, value: 100 })
 
-      const valA = 63129
+      const valA = 63129n
       const valB = randomHex(120)
-      const value = 33
+      const value = 33n
 
       const transaction = {
         target: await callReceiver.getAddress(),
@@ -1072,7 +1072,7 @@ contract('MainModule', (accounts: string[]) => {
 
     describe('With multiple transactions', () => {
       let callReceiver2: ContractType<typeof CallReceiverMock>
-      const { valA, valB } = { valA: 912341, valB: randomHex(30) }
+      const { valA, valB } = { valA: 912341n, valB: randomHex(30) }
 
       beforeEach(async () => {
         callReceiver2 = await CallReceiverMock.deploy()
@@ -1273,7 +1273,7 @@ contract('MainModule', (accounts: string[]) => {
 
         it('Should forward call to external hook', async () => {
           const walletHook = HookMock.attach(wallet.address)
-          expect(await walletHook.onHookMockCall(21)).to.equal(42)
+          expect(await walletHook.onHookMockCall(21)).to.equal(42n)
         })
 
         it('Should not forward call to deregistered hook', async () => {
@@ -2058,16 +2058,16 @@ contract('MainModule', (accounts: string[]) => {
     it('Should execute multiple internal bundles', async () => {
       const data = [
         [
-          { i: 0, a: 142, b: 412 },
-          { i: 1, a: 123, b: 2 }
+          { i: 0, a: 142n, b: 412 },
+          { i: 1, a: 123n, b: 2 }
         ],
         [
-          { i: 2, a: 142, b: 2 },
-          { i: 3, a: 642, b: 33 },
-          { i: 4, a: 122, b: 12 },
-          { i: 5, a: 611, b: 53 }
+          { i: 2, a: 142n, b: 2 },
+          { i: 3, a: 642n, b: 33 },
+          { i: 4, a: 122n, b: 12 },
+          { i: 5, a: 611n, b: 53 }
         ],
-        [{ i: 6, a: 2, b: 1 }],
+        [{ i: 6, a: 2n, b: 1 }],
         []
       ]
 
@@ -2134,8 +2134,8 @@ contract('MainModule', (accounts: string[]) => {
 
       await wallet.sendTransactions(transactions)
 
-      expect(await callReceiver.lastValA()).to.equal(11)
-      expect(await callReceiver2.lastValA()).to.equal(12)
+      expect(await callReceiver.lastValA()).to.equal(11n)
+      expect(await callReceiver2.lastValA()).to.equal(12n)
 
       expect(await callReceiver.lastValB()).to.equal(expected1)
       expect(await callReceiver2.lastValB()).to.equal(expected2)
@@ -2182,9 +2182,9 @@ contract('MainModule', (accounts: string[]) => {
 
       await wallet.sendTransactions(transaction)
 
-      expect(await callReceiver.lastValA()).to.equal(0)
-      expect(await callReceiver2.lastValA()).to.equal(0)
-      expect(await callReceiver3.lastValA()).to.equal(51)
+      expect(await callReceiver.lastValA()).to.equal(0n)
+      expect(await callReceiver2.lastValA()).to.equal(0n)
+      expect(await callReceiver3.lastValA()).to.equal(51n)
 
       expect(await callReceiver.lastValB()).to.equal('0x')
       expect(await callReceiver2.lastValB()).to.equal('0x')
