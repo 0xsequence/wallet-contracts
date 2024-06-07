@@ -20,7 +20,8 @@
     "lint:ts": "eslint -c .eslintrc.js \"./**/*.ts\"",
     "lint:ts:fix": "eslint -c .eslintrc.js --fix \"./**/*.ts\"",
     "format": "prettier --write ./**/*.ts",
-    "adapter": "typechain --target ethers-v5 --out-dir gen/typechain \"./artifacts/contracts/**/*[^dbg].json\""
+    "adapter": "typechain --target ethers-v5 --out-dir gen/typechain \"./artifacts/contracts/**/*[^dbg].json\"",
+    "prepare": "husky install"
   },
   "types": "gen/typechain/index.ts",
   "files": [
@@ -61,7 +62,7 @@
     "ganache-cli": "6.12.2",
     "hardhat": "^2.20.1",
     "hardhat-gas-reporter": "1.0.4",
-    "husky": "^4.2.3",
+    "husky": "^8.0.0",
     "ora": "^5.4.1",
     "rimraf": "^3.0.2",
     "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb",
