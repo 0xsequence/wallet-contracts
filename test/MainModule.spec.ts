@@ -342,12 +342,12 @@ contract('MainModule', (accounts: string[]) => {
       describe('Using non-encoded nonce', () => {
         it('Should default to space zero', async () => {
           await wallet.sendTransactions([{}])
-          expect(await wallet.mainModule.nonce()).to.equal(1)
+          expect(await wallet.mainModule.nonce()).to.equal(1n)
         })
 
         it('Should work with zero as initial nonce', async () => {
           await wallet.sendTransactions([{}])
-          expect(await wallet.mainModule.readNonce(0)).to.equal(1)
+          expect(await wallet.mainModule.readNonce(0)).to.equal(1n)
         })
 
         it('Should emit NonceChange event', async () => {
@@ -388,7 +388,7 @@ contract('MainModule', (accounts: string[]) => {
         describe(`using ${ethers.toBeHex(space)} space`, () => {
           it('Should work with zero as initial nonce', async () => {
             await wallet.sendTransactions([{}], encodeNonce(space, 0))
-            expect(await wallet.mainModule.readNonce(space)).to.equal(1)
+            expect(await wallet.mainModule.readNonce(space)).to.equal(1n)
           })
 
           it('Should emit NonceChange event', async () => {
@@ -416,7 +416,7 @@ contract('MainModule', (accounts: string[]) => {
             await wallet.sendTransactions([{}], encodeNonce(space, 0))
             await wallet.sendTransactions([{}], encodeNonce(space, 1))
 
-            expect(await wallet.mainModule.readNonce(space)).to.equal(2)
+            expect(await wallet.mainModule.readNonce(space)).to.equal(2n)
           })
 
           it('Should fail if nonce did not change', async () => {
@@ -449,18 +449,18 @@ contract('MainModule', (accounts: string[]) => {
         it('Should keep separated nonce counts', async () => {
           await wallet.sendTransactions([{}], encodeNonce(1, 0))
 
-          expect(await wallet.mainModule.readNonce(1)).to.equal(1)
-          expect(await wallet.mainModule.readNonce(2)).to.equal(0)
+          expect(await wallet.mainModule.readNonce(1)).to.equal(1n)
+          expect(await wallet.mainModule.readNonce(2)).to.equal(0n)
 
           await wallet.sendTransactions([{}], encodeNonce(2, 0))
 
-          expect(await wallet.mainModule.readNonce(1)).to.equal(1)
-          expect(await wallet.mainModule.readNonce(2)).to.equal(1)
+          expect(await wallet.mainModule.readNonce(1)).to.equal(1n)
+          expect(await wallet.mainModule.readNonce(2)).to.equal(1n)
           await wallet.sendTransactions([{}], encodeNonce(2, 1))
           await wallet.sendTransactions([{}], encodeNonce(2, 2))
 
-          expect(await wallet.mainModule.readNonce(1)).to.equal(1)
-          expect(await wallet.mainModule.readNonce(2)).to.equal(3)
+          expect(await wallet.mainModule.readNonce(1)).to.equal(1n)
+          expect(await wallet.mainModule.readNonce(2)).to.equal(3n)
         })
 
         it('Should emit different events', async () => {
