@@ -156,7 +156,7 @@ contract('Estimate gas usage', () => {
 
         expect(estimated).to.approximately(await gasUsedFor(realTx), 5000)
 
-        expect(await callReceiver.lastValA()).to.equal(1)
+        expect(await callReceiver.lastValA()).to.equal(1n)
       })
 
       it('Should estimate wallet deployment + upgrade + failed transaction', async () => {
