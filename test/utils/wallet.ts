@@ -1,4 +1,5 @@
 import { ethers, Overrides } from 'ethers'
+import { ethers as hethers } from 'hardhat'
 import { shuffle } from '.'
 import { MainModule, MainModuleUpgradable, SequenceContext } from './contracts'
 import {
@@ -206,7 +207,7 @@ export class SequenceWallet {
   }
 
   async deploy() {
-    if (await this.options.context.factory.getDeployedCode()) {
+    if ((await hethers.provider.getCode(this.address)) !== '0x') {
       return
     }
 
