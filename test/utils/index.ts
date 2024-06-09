@@ -108,12 +108,8 @@ function xor(a: any, b: any) {
 export function interfaceIdOf(int: ethers.Interface): string {
   const signatures: string[] = []
   int.forEachFunction(f => {
-    const sighash = ethers.dataSlice(ethers.id(f.format('full')), 0, 4)
+    const sighash = ethers.dataSlice(ethers.id(f.format('sighash')), 0, 4)
     signatures.push(sighash)
   })
-  // const signatures = Object.keys(int.functions)
-  //   .filter(k => k.indexOf('(') !== -1)
-  //   .map(k => int.getSighash(int.functions[k]))
-
   return signatures.reduce((p, c) => xor(p, c))
 }
