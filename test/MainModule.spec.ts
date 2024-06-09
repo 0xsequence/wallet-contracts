@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { ethers as hethers } from 'hardhat'
 
-import { bytes32toAddress, getChainId, expect, expectToBeRejected, randomHex } from './utils'
+import { bytes32toAddress, getChainId, expect, expectToBeRejected, randomHex, getSigHash } from './utils'
 
 import {
   CallReceiverMock,
@@ -361,14 +361,14 @@ contract('MainModule', (accounts: string[]) => {
           const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
           const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
           expect(ev1!.eventName).to.be.eql('NonceChange')
-          expect(ev1!.args._space).to.equal(0)
-          expect(ev1!.args._newNonce).to.equal(1)
+          expect(ev1!.args._space).to.equal(0n)
+          expect(ev1!.args._newNonce).to.equal(1n)
 
           const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
           const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
           expect(ev2!.eventName).to.be.eql('NonceChange')
-          expect(ev1!.args._space).to.equal(0)
-          expect(ev2!.args._newNonce).to.equal(2)
+          expect(ev1!.args._space).to.equal(0n)
+          expect(ev2!.args._newNonce).to.equal(2n)
         })
 
         it('Should fail if nonce did not change', async () => {
@@ -402,14 +402,14 @@ contract('MainModule', (accounts: string[]) => {
             const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
             const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
             expect(ev1!.eventName).to.be.eql('NonceChange')
-            expect(ev1!.args!._space).to.equal(space.toString())
-            expect(ev1!.args!._newNonce).to.equal(1)
+            expect(ev1!.args!._space).to.equal(space)
+            expect(ev1!.args!._newNonce).to.equal(1n)
 
             const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
             const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
             expect(ev2!.eventName).to.be.eql('NonceChange')
-            expect(ev2!.args!._space).to.equal(space.toString())
-            expect(ev2!.args!._newNonce).to.equal(2)
+            expect(ev2!.args!._space).to.equal(space)
+            expect(ev2!.args!._newNonce).to.equal(2n)
           })
 
           it('Should accept next nonce', async () => {
@@ -440,7 +440,7 @@ contract('MainModule', (accounts: string[]) => {
             await wallet.sendTransactions([{}], encodeNonce(space, 0))
 
             const storageValue = await hethers.provider.getStorage(wallet.address, storageKey)
-            expect(BigInt(storageValue)).to.equal(1)
+            expect(BigInt(storageValue)).to.equal(1n)
           })
         })
       })
@@ -477,14 +477,14 @@ contract('MainModule', (accounts: string[]) => {
           const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
           const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
           expect(ev1!.eventName).to.be.eql('NonceChange')
-          expect(ev1!.args!._space).to.equal(1)
-          expect(ev1!.args!._newNonce).to.equal(3)
+          expect(ev1!.args!._space).to.equal(1n)
+          expect(ev1!.args!._newNonce).to.equal(3n)
 
           const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
           const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
           expect(ev2!.eventName).to.be.eql('NonceChange')
-          expect(ev2!.args!._space).to.equal(2)
-          expect(ev2!.args!._newNonce).to.equal(1)
+          expect(ev2!.args!._space).to.equal(2n)
+          expect(ev2!.args!._newNonce).to.equal(1n)
         })
 
         it('Should not accept nonce of different space', async () => {
@@ -1248,9 +1248,8 @@ contract('MainModule', (accounts: string[]) => {
 
       before(async () => {
         hookMock = await HookMock.deploy()
-        //hookSelector = hookMock.interface.getSighash('onHookMockCall')
         const fragment = hookMock.interface.getFunction('onHookMockCall')
-        hookSelector = ethers.dataSlice(ethers.id(fragment.format('full')), 0, 4)
+        hookSelector = getSigHash(fragment)
       })
 
       it('Should return zero if hook is not registered', async () => {
@@ -1351,7 +1350,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
-      const event = events.find(ev => ev.eventName === 'DefineHook')
+      const event = events.find(ev => ev.eventName === 'DefinedHook')
       expect(event).to.not.be.undefined
       expect(event!.args._signature).to.equal(selector)
       expect(event!.args._implementation).to.equal(implementation)
@@ -1380,7 +1379,7 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
-      const event = events.find(ev => ev.eventName === 'DefineHook')
+      const event = events.find(ev => ev.eventName === 'DefinedHook')
       expect(event).to.not.be.undefined
       expect(event?.args._signature).to.equal(selector)
       expect(event?.args._implementation).to.equal(ethers.ZeroAddress)
@@ -1808,7 +1807,7 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const reported = BigInt(receipt.logs.slice(-2)[0].data)
+      const reported = Number(BigInt(receipt.logs.slice(-2)[0].data))
       expect(reported).to.be.below(gas)
     })
 
@@ -1835,8 +1834,8 @@ contract('MainModule', (accounts: string[]) => {
         throw new Error('No receipt')
       }
 
-      const reportedB = BigInt(receipt.logs.slice(-2)[0].data)
-      const reportedA = BigInt(receipt.logs.slice(-4)[0].data)
+      const reportedB = Number(BigInt(receipt.logs.slice(-2)[0].data))
+      const reportedA = Number(BigInt(receipt.logs.slice(-4)[0].data))
 
       expect(reportedA).to.be.below(gasA)
       expect(reportedB).to.be.below(gasB)
@@ -1880,7 +1879,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should continue execution if optional call runs out of gas', async () => {
       const gas = 10000
 
-      const valA = 9512358833
+      const valA = 9512358833n
       const valB = randomHex(1600)
 
       const transactions = [
@@ -1946,7 +1945,7 @@ contract('MainModule', (accounts: string[]) => {
       const deployed = CallReceiverMock.attach(log!.args!._contract)
       await deployed.testCall(12345, '0x552299')
 
-      expect(await deployed.lastValA()).to.equal(12345)
+      expect(await deployed.lastValA()).to.equal(12345n)
       expect(await deployed.lastValB()).to.equal('0x552299')
     })
 
@@ -1972,7 +1971,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const log = events!.find(l => l.eventName === 'CreatedContract')
 
-      expect(await hethers.provider.getBalance(log!.args!._contract)).to.equal(99)
+      expect(await hethers.provider.getBalance(log!.args!._contract)).to.equal(99n)
     })
 
     it('Should fail to create a contract from non-self', async () => {
@@ -2048,8 +2047,8 @@ contract('MainModule', (accounts: string[]) => {
 
       await wallet.sendTransactions(transaction)
 
-      expect(await callReceiver.lastValA()).to.equal(11)
-      expect(await callReceiver2.lastValA()).to.equal(12)
+      expect(await callReceiver.lastValA()).to.equal(11n)
+      expect(await callReceiver2.lastValA()).to.equal(12n)
 
       expect(await callReceiver.lastValB()).to.equal(expected1)
       expect(await callReceiver2.lastValB()).to.equal(expected2)
