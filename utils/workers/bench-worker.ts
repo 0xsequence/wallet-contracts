@@ -1,8 +1,8 @@
-import { deploySequenceContext, SequenceContext } from "../../test/utils/contracts"
-import { expose } from "threads/worker"
+import { deploySequenceContext, SequenceContext } from '../../test/utils/contracts'
+import { expose } from 'threads/worker'
 import { SequenceWallet } from '../../test/utils/wallet'
-import { ethers } from "ethers"
-import { legacyTopology, merkleTopology } from "../../test/utils/sequence"
+import { ethers } from 'ethers'
+import { legacyTopology, merkleTopology } from '../../test/utils/sequence'
 
 let context: SequenceContext
 let wallet: SequenceWallet
@@ -17,25 +17,17 @@ let topologyConverter: any
 let prevsnapshot: any
 
 function report2(values: ethers.BigNumberish[]) {
-  const bns = values.map(v => ethers.BigNumber.from(v))
+  const bns = values.map(v => BigInt(v))
 
-  const min = bns.reduce((a, b) => a.lt(b) ? a : b)
-  const max = bns.reduce((a, b) => a.gt(b) ? a : b)
-  const avg = bns
-    .reduce((p, n) => p.add(n))
-    .div(values.length)
+  const min = bns.reduce((a, b) => (a < b ? a : b))
+  const max = bns.reduce((a, b) => (a > b ? a : b))
+  const avg = bns.reduce((p, n) => (p + n) / BigInt(values.length))
 
   return { min, max, avg }
 }
 
 const worker = {
-  async setup(
-    signing: number,
-    idle: number,
-    runs: number,
-    topology: 'legacy' | 'merkle',
-    disableTrim: boolean
-  ) {
+  async setup(signing: number, idle: number, runs: number, topology: 'legacy' | 'merkle', disableTrim: boolean) {
     if (!context) {
       context = await deploySequenceContext()
     }
@@ -65,21 +57,25 @@ const worker = {
       const tx = await wallet.relayTransactions([{}], signature)
       const receipt = await tx.wait()
 
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
       results.push(receipt.gasUsed)
-      calldatas.push(ethers.utils.arrayify(signature).length)
+      calldatas.push(ethers.getBytes(signature).length)
     }
 
     const report = report2(results)
     const reportCalldata = report2(calldatas)
 
     return {
-      min: report.min.toNumber(),
-      max: report.max.toNumber(),
-      avg: report.avg.toNumber(),
+      min: Number(report.min),
+      max: Number(report.max),
+      avg: Number(report.avg),
       data: {
-        min: reportCalldata.min.toNumber(),
-        max: reportCalldata.max.toNumber(),
-        avg: reportCalldata.avg.toNumber()
+        min: Number(reportCalldata.min),
+        max: Number(reportCalldata.max),
+        avg: Number(reportCalldata.avg)
       },
       idle: d_idle,
       signing: d_signing,

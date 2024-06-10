@@ -26,7 +26,7 @@ export const getEnvConfig = (env: string) => {
   const envLoad = dotenv.config({ path: envFile })
 
   if (envLoad.error) {
-    return { ETH_MNEMONIC: "client vendor advice erosion deny cute tree fatal fuel bless simple speed" }
+    return { ETH_MNEMONIC: 'client vendor advice erosion deny cute tree fatal fuel bless simple speed' }
   }
 
   return envLoad.parsed || {}

@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { ContractType, deploySequenceContext, ERC165CheckerMock, SequenceContext } from './utils/contracts'
 import { SequenceWallet } from './utils/wallet'
 import { expect, interfaceIdOf, randomHex } from './utils'
@@ -33,8 +33,8 @@ contract('ERC165', () => {
   describe('Implement all interfaces for ERC165 on MainModule', () => {
     interfaceIds.forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {
-        const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
-        expect(ethers.BigNumber.from(interfaceId).isZero()).to.be.false
+        const interfaceId = interfaceIdOf(new ethers.Interface(artifacts.require(element).abi))
+        expect(BigInt(interfaceId) === 0n).to.be.false
 
         const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, interfaceId)
         expect(erc165result).to.be.true
@@ -48,8 +48,8 @@ contract('ERC165', () => {
 
     interfaceIds.concat('IModuleAuthUpgradable').forEach(element => {
       it(`Should return implements ${element} interfaceId`, async () => {
-        const interfaceId = interfaceIdOf(new ethers.utils.Interface(artifacts.require(element).abi))
-        expect(ethers.BigNumber.from(interfaceId).isZero()).to.be.false
+        const interfaceId = interfaceIdOf(new ethers.Interface(artifacts.require(element).abi))
+        expect(BigInt(interfaceId) === 0n).to.be.false
 
         const erc165result = await erc165checker.doesContractImplementInterface(wallet.address, interfaceId)
         expect(erc165result).to.be.true

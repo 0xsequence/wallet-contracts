@@ -1,11 +1,37 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { ethers as hethers } from 'hardhat'
 
-import { bytes32toAddress, CHAIN_ID, expect, expectToBeRejected, randomHex } from './utils'
+import { bytes32toAddress, getChainId, expect, expectToBeRejected, randomHex, getSigHash } from './utils'
 
-import { CallReceiverMock, ContractType, deploySequenceContext, ModuleMock, SequenceContext, DelegateCallMock, HookMock, HookCallerMock, GasBurnerMock, AlwaysRevertMock } from './utils/contracts'
+import {
+  CallReceiverMock,
+  ContractType,
+  deploySequenceContext,
+  ModuleMock,
+  SequenceContext,
+  DelegateCallMock,
+  HookMock,
+  HookCallerMock,
+  GasBurnerMock,
+  AlwaysRevertMock
+} from './utils/contracts'
 import { Imposter } from './utils/imposter'
-import { applyTxDefaults, computeStorageKey, digestOf, encodeNonce, leavesOf, legacyTopology, merkleTopology, optimize2SignersTopology, printTopology, SignatureType, SimplifiedWalletConfig, subdigestOf, toSimplifiedConfig, WalletConfig } from './utils/sequence'
+import {
+  applyTxDefaults,
+  computeStorageKey,
+  digestOf,
+  encodeNonce,
+  leavesOf,
+  legacyTopology,
+  merkleTopology,
+  optimize2SignersTopology,
+  printTopology,
+  SignatureType,
+  SimplifiedWalletConfig,
+  subdigestOf,
+  toSimplifiedConfig,
+  WalletConfig
+} from './utils/sequence'
 import { SequenceWallet, StaticSigner } from './utils/wallet'
 
 contract('MainModule', (accounts: string[]) => {
@@ -20,6 +46,7 @@ contract('MainModule', (accounts: string[]) => {
 
   beforeEach(async () => {
     callReceiver = await CallReceiverMock.deploy()
+    await callReceiver.waitForDeployment()
 
     wallet = SequenceWallet.basicWallet(context)
     await wallet.deploy()
@@ -49,11 +76,11 @@ contract('MainModule', (accounts: string[]) => {
       wallet = SequenceWallet.detailedWallet(context, { threshold: 1, signers: [wallet_a] })
       await wallet.deploy()
 
-      const valA = 4123222
+      const valA = 4123222n
       const valB = randomHex(99)
 
       const transaction = {
-        target: callReceiver.address,
+        target: await callReceiver.getAddress(),
         data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
@@ -76,11 +103,11 @@ contract('MainModule', (accounts: string[]) => {
       wallet = SequenceWallet.detailedWallet(context, { threshold: 1, signers: [wallet_a, wallet_b] })
       await wallet.deploy()
 
-      const valA = 4123222
+      const valA = 4123222n
       const valB = randomHex(99)
 
       const transaction = {
-        target: callReceiver.address,
+        target: await callReceiver.getAddress(),
         data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
@@ -102,11 +129,11 @@ contract('MainModule', (accounts: string[]) => {
       wallet = SequenceWallet.detailedWallet(context, { threshold: 1, signers: [wallet_a, singer_b] })
       await wallet.deploy()
 
-      const valA = 4123222
+      const valA = 4123222n
       const valB = randomHex(99)
 
       const transaction = {
-        target: callReceiver.address,
+        target: await callReceiver.getAddress(),
         data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
@@ -115,51 +142,65 @@ contract('MainModule', (accounts: string[]) => {
       expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
-
-    ;([{
-      name: "2 nested sequence wallets",
-      childs: 1,
-      depth: 2
-    }, {
-      name: "64 nested sequence wallets",
-      childs: 1,
-      depth: 64
-    }, {
-      name: "97 nested sequence wallets",
-      childs: 1,
-      depth: 97
-    }, {
-      name: "binary tree of sequence wallets",
-      childs: 2,
-      depth: 5
-    }, {
-      name: "ternary tree of sequence wallets",
-      childs: 3,
-      depth: 4
-    }, {
-      name: "hexary tree of sequence wallets",
-      childs: 16,
-      depth: 2
-    }, {
-      name: "random tree of sequence wallets (depth 1)",
-      depth: 1
-    }, {
-      name: "random tree of sequence wallets (depth 2)",
-      depth: 2
-    }, {
-      name: "random tree of sequence wallets (depth 3)",
-      depth: 3
-    }, {
-      name: "random tree of sequence wallets (depth 4)",
-      depth: 4
-    }]).map((c) => {
+    ;[
+      {
+        name: '2 nested sequence wallets',
+        childs: 1,
+        depth: 2
+      },
+      {
+        name: '64 nested sequence wallets',
+        childs: 1,
+        depth: 64
+      },
+      {
+        name: '97 nested sequence wallets',
+        childs: 1,
+        depth: 97
+      },
+      {
+        name: 'binary tree of sequence wallets',
+        childs: 2,
+        depth: 5
+      },
+      {
+        name: 'ternary tree of sequence wallets',
+        childs: 3,
+        depth: 4
+      },
+      {
+        name: 'hexary tree of sequence wallets',
+        childs: 16,
+        depth: 2
+      },
+      {
+        name: 'random tree of sequence wallets (depth 1)',
+        depth: 1
+      },
+      {
+        name: 'random tree of sequence wallets (depth 2)',
+        depth: 2
+      },
+      {
+        name: 'random tree of sequence wallets (depth 3)',
+        depth: 3
+      },
+      {
+        name: 'random tree of sequence wallets (depth 4)',
+        depth: 4
+      }
+    ].map(c => {
       it(`Should handle ${c.name}`, async () => {
-        const genWallet = async (depth: number, numChilds: number | undefined, max: number): Promise<SequenceWallet | StaticSigner> => {
+        const genWallet = async (
+          depth: number,
+          numChilds: number | undefined,
+          max: number
+        ): Promise<SequenceWallet | StaticSigner> => {
           if (depth === max) {
             return ethers.Wallet.createRandom()
           }
 
-          const nchilds = numChilds || (Math.floor(Math.random() * 5) + 1)
+          const nchilds = numChilds || Math.floor(Math.random() * 5) + 1
           const childs = await Promise.all(new Array(nchilds).fill(0).map(async () => genWallet(depth + 1, nchilds, max)))
           const wallet = SequenceWallet.detailedWallet(context, { threshold: childs.length, signers: childs })
           await wallet.deploy()
@@ -167,13 +208,13 @@ contract('MainModule', (accounts: string[]) => {
           return wallet
         }
 
-        wallet = await genWallet(0, c.childs, c.depth) as SequenceWallet
+        wallet = (await genWallet(0, c.childs, c.depth)) as SequenceWallet
 
-        const valA = 5423
+        const valA = 5423n
         const valB = randomHex(120)
 
         const transaction = {
-          target: callReceiver.address,
+          target: await callReceiver.getAddress(),
           data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
         }
 
@@ -199,12 +240,12 @@ contract('MainModule', (accounts: string[]) => {
       wallet = wallet.useSigners([wallet_a, wallet_b])
 
       const transaction = {
-        target: callReceiver.address,
+        target: await callReceiver.getAddress(),
         data: callReceiver.interface.encodeFunctionData('testCall', [5423, randomHex(32)])
       }
 
-      const subdigest = subdigestOf(wallet.address, digestOf([transaction], await wallet.getNonce()))
-      const badNestedSignature = await wallet_b.signDigest(subdigest).then((s) => s + '03')
+      const subdigest = await subdigestOf(wallet.address, digestOf([transaction], await wallet.getNonce()))
+      const badNestedSignature = await wallet_b.signDigest(subdigest).then(s => s + '03')
 
       const tx = wallet.sendTransactions([transaction])
       await expectToBeRejected(tx, `InvalidNestedSignature("${subdigest}", "${wallet_b.address}", "${badNestedSignature}")`)
@@ -221,7 +262,7 @@ contract('MainModule', (accounts: string[]) => {
       await wallet.deploy()
 
       const signauture = await wallet.signTransactions([{}])
-      const subdigest = subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
+      const subdigest = await subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
 
       const tx = wallet.relayTransactions([{}], signauture)
       await expect(tx).to.be.rejected
@@ -237,14 +278,17 @@ contract('MainModule', (accounts: string[]) => {
       const wallet_c = SequenceWallet.basicWallet(context)
       await wallet_c.deploy()
 
-      wallet = SequenceWallet.detailedWallet(context, { threshold: 2, signers: [wallet_a, wallet_b, { weight: 2, value: wallet_c }] })
+      wallet = SequenceWallet.detailedWallet(context, {
+        threshold: 2,
+        signers: [wallet_a, wallet_b, { weight: 2, value: wallet_c }]
+      })
       await wallet.deploy()
 
-      const valA = 5423
+      const valA = 5423n
       const valB = randomHex(120)
 
       const transaction = {
-        target: callReceiver.address,
+        target: await callReceiver.getAddress(),
         data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
@@ -267,14 +311,14 @@ contract('MainModule', (accounts: string[]) => {
 
     describe('Network ID', () => {
       it('Should reject a transaction of another network id', async () => {
-        wallet = wallet.useChainId(CHAIN_ID() + 1)
+        wallet = wallet.useChainId((await getChainId()) + 1n)
         const tx = wallet.sendTransactions([{}])
         await expectToBeRejected(tx, 'InvalidSignature')
       })
 
       describe('Universal network signatures', async () => {
         it('Should reject signature for another network id, even if encoded as universal', async () => {
-          wallet = wallet.useChainId(CHAIN_ID() + 1)
+          wallet = wallet.useChainId((await getChainId()) + 1n)
           const tx = wallet.sendTransactions([{}])
           await expectToBeRejected(tx, 'InvalidSignature')
         })
@@ -293,38 +337,38 @@ contract('MainModule', (accounts: string[]) => {
     })
 
     describe('Nonce', () => {
-      const spaces = [
-        ethers.BigNumber.from(0),
-        ethers.BigNumber.from(1),
-        ethers.BigNumber.from(7342),
-        ethers.BigNumber.from(ethers.utils.randomBytes(20)),
-        ethers.constants.Two.pow(160).sub(ethers.constants.One)
-      ]
+      const spaces = [0n, 1n, 7342n, ethers.toBigInt(ethers.randomBytes(20)), 2n ** 160n - 1n]
 
       describe('Using non-encoded nonce', () => {
         it('Should default to space zero', async () => {
           await wallet.sendTransactions([{}])
-          expect(await wallet.mainModule.nonce()).to.equal(1)
+          expect(await wallet.mainModule.nonce()).to.equal(1n)
         })
 
         it('Should work with zero as initial nonce', async () => {
           await wallet.sendTransactions([{}])
-          expect(await wallet.mainModule.readNonce(0)).to.equal(1)
+          expect(await wallet.mainModule.readNonce(0)).to.equal(1n)
         })
 
         it('Should emit NonceChange event', async () => {
-          const receipt1 = await wallet.sendTransactions([{}]).then((t) => t.wait())
-          const receipt2 = await wallet.sendTransactions([{}]).then((t) => t.wait())
+          const receipt1 = await wallet.sendTransactions([{}]).then(t => t.wait())
+          const receipt2 = await wallet.sendTransactions([{}]).then(t => t.wait())
 
-          const ev1 = receipt1.events!.find(l => l.event === 'NonceChange')
-          expect(ev1!.event).to.be.eql('NonceChange')
-          expect(ev1!.args!._space).to.equal(0)
-          expect(ev1!.args!._newNonce).to.equal(1)
+          if (!receipt1 || !receipt2) {
+            throw new Error('No receipt')
+          }
 
-          const ev2 = receipt2.events!.find(l => l.event === 'NonceChange')
-          expect(ev2!.event).to.be.eql('NonceChange')
-          expect(ev1!.args!._space).to.equal(0)
-          expect(ev2!.args!._newNonce).to.equal(2)
+          const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+          const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
+          expect(ev1!.eventName).to.be.eql('NonceChange')
+          expect(ev1!.args._space).to.equal(0n)
+          expect(ev1!.args._newNonce).to.equal(1n)
+
+          const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+          const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
+          expect(ev2!.eventName).to.be.eql('NonceChange')
+          expect(ev1!.args._space).to.equal(0n)
+          expect(ev2!.args._newNonce).to.equal(2n)
         })
 
         it('Should fail if nonce did not change', async () => {
@@ -341,32 +385,38 @@ contract('MainModule', (accounts: string[]) => {
       })
 
       spaces.forEach(space => {
-        describe(`using ${space.toHexString()} space`, () => {
+        describe(`using ${ethers.toBeHex(space)} space`, () => {
           it('Should work with zero as initial nonce', async () => {
             await wallet.sendTransactions([{}], encodeNonce(space, 0))
-            expect(await wallet.mainModule.readNonce(space)).to.equal(1)
+            expect(await wallet.mainModule.readNonce(space)).to.equal(1n)
           })
 
           it('Should emit NonceChange event', async () => {
-            const receipt1 = await wallet.sendTransactions([{}], encodeNonce(space, 0)).then((t) => t.wait())
-            const receipt2 =await wallet.sendTransactions([{}], encodeNonce(space, 1)).then((t) => t.wait())
+            const receipt1 = await wallet.sendTransactions([{}], encodeNonce(space, 0)).then(t => t.wait())
+            const receipt2 = await wallet.sendTransactions([{}], encodeNonce(space, 1)).then(t => t.wait())
 
-            const ev1 = receipt1.events!.find(l => l.event === 'NonceChange')
-            expect(ev1!.event).to.be.eql('NonceChange')
-            expect(ev1!.args!._space).to.equal(space.toString())
-            expect(ev1!.args!._newNonce).to.equal(1)
+            if (!receipt1 || !receipt2) {
+              throw new Error('No receipt')
+            }
 
-            const ev2 = receipt2.events!.find(l => l.event === 'NonceChange')
-            expect(ev2!.event).to.be.eql('NonceChange')
-            expect(ev2!.args!._space).to.equal(space.toString())
-            expect(ev2!.args!._newNonce).to.equal(2)
+            const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+            const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
+            expect(ev1!.eventName).to.be.eql('NonceChange')
+            expect(ev1!.args!._space).to.equal(space)
+            expect(ev1!.args!._newNonce).to.equal(1n)
+
+            const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+            const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
+            expect(ev2!.eventName).to.be.eql('NonceChange')
+            expect(ev2!.args!._space).to.equal(space)
+            expect(ev2!.args!._newNonce).to.equal(2n)
           })
 
           it('Should accept next nonce', async () => {
             await wallet.sendTransactions([{}], encodeNonce(space, 0))
             await wallet.sendTransactions([{}], encodeNonce(space, 1))
 
-            expect(await wallet.mainModule.readNonce(space)).to.equal(2)
+            expect(await wallet.mainModule.readNonce(space)).to.equal(2n)
           })
 
           it('Should fail if nonce did not change', async () => {
@@ -384,13 +434,13 @@ contract('MainModule', (accounts: string[]) => {
           })
 
           it('Should use nonces storage keys', async () => {
-            const subkey = ethers.utils.defaultAbiCoder.encode(['uint256'], [space])
+            const subkey = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [space])
             const storageKey = computeStorageKey('org.arcadeum.module.calls.nonce', subkey)
 
             await wallet.sendTransactions([{}], encodeNonce(space, 0))
 
-            const storageValue = await hethers.provider.getStorageAt(wallet.address, storageKey)
-            expect(ethers.BigNumber.from(storageValue)).to.equal(1)
+            const storageValue = await hethers.provider.getStorage(wallet.address, storageKey)
+            expect(BigInt(storageValue)).to.equal(1n)
           })
         })
       })
@@ -399,36 +449,42 @@ contract('MainModule', (accounts: string[]) => {
         it('Should keep separated nonce counts', async () => {
           await wallet.sendTransactions([{}], encodeNonce(1, 0))
 
-          expect(await wallet.mainModule.readNonce(1)).to.equal(1)
-          expect(await wallet.mainModule.readNonce(2)).to.equal(0)
+          expect(await wallet.mainModule.readNonce(1)).to.equal(1n)
+          expect(await wallet.mainModule.readNonce(2)).to.equal(0n)
 
           await wallet.sendTransactions([{}], encodeNonce(2, 0))
 
-          expect(await wallet.mainModule.readNonce(1)).to.equal(1)
-          expect(await wallet.mainModule.readNonce(2)).to.equal(1)
+          expect(await wallet.mainModule.readNonce(1)).to.equal(1n)
+          expect(await wallet.mainModule.readNonce(2)).to.equal(1n)
           await wallet.sendTransactions([{}], encodeNonce(2, 1))
           await wallet.sendTransactions([{}], encodeNonce(2, 2))
 
-          expect(await wallet.mainModule.readNonce(1)).to.equal(1)
-          expect(await wallet.mainModule.readNonce(2)).to.equal(3)
+          expect(await wallet.mainModule.readNonce(1)).to.equal(1n)
+          expect(await wallet.mainModule.readNonce(2)).to.equal(3n)
         })
 
         it('Should emit different events', async () => {
           await wallet.sendTransactions([{}], encodeNonce(1, 0))
           await wallet.sendTransactions([{}], encodeNonce(1, 1))
 
-          const receipt1 = await wallet.sendTransactions([{}], encodeNonce(1, 2)).then((t) => t.wait())
-          const receipt2 = await wallet.sendTransactions([{}], encodeNonce(2, 0)).then((t) => t.wait())
+          const receipt1 = await wallet.sendTransactions([{}], encodeNonce(1, 2)).then(t => t.wait())
+          const receipt2 = await wallet.sendTransactions([{}], encodeNonce(2, 0)).then(t => t.wait())
 
-          const ev1 = receipt1.events!.find(l => l.event === 'NonceChange')
-          expect(ev1!.event).to.be.eql('NonceChange')
-          expect(ev1!.args!._space).to.equal(1)
-          expect(ev1!.args!._newNonce).to.equal(3)
+          if (!receipt1 || !receipt2) {
+            throw new Error('No receipt')
+          }
 
-          const ev2 = receipt2.events!.find(l => l.event === 'NonceChange')
-          expect(ev2!.event).to.be.eql('NonceChange')
-          expect(ev2!.args!._space).to.equal(2)
-          expect(ev2!.args!._newNonce).to.equal(1)
+          const events1 = receipt1.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+          const ev1 = events1.find(ev => ev.eventName === 'NonceChange')
+          expect(ev1!.eventName).to.be.eql('NonceChange')
+          expect(ev1!.args!._space).to.equal(1n)
+          expect(ev1!.args!._newNonce).to.equal(3n)
+
+          const events2 = receipt2.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+          const ev2 = events2.find(ev => ev.eventName === 'NonceChange')
+          expect(ev2!.eventName).to.be.eql('NonceChange')
+          expect(ev2!.args!._space).to.equal(2n)
+          expect(ev2!.args!._newNonce).to.equal(1n)
         })
 
         it('Should not accept nonce of different space', async () => {
@@ -446,7 +502,7 @@ contract('MainModule', (accounts: string[]) => {
 
     it('Should reject signature with bad encoding type', async () => {
       const tx = wallet.relayTransactions([{}], '0x2012')
-      const subdigest = subdigestOf(wallet.address, digestOf([{}], 0))
+      const subdigest = await subdigestOf(wallet.address, digestOf([{}], 0))
       await expectToBeRejected(tx, `InvalidSignatureType("0x20")`)
     })
 
@@ -470,9 +526,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData(
-          'updateImplementation', [newImplementation.address]
-        )
+        data: wallet.mainModule.interface.encodeFunctionData('updateImplementation', [await newImplementation.getAddress()])
       }
 
       await wallet.sendTransactions([transaction])
@@ -480,50 +534,52 @@ contract('MainModule', (accounts: string[]) => {
       const mock_wallet = ModuleMock.attach(wallet.address)
       const tx = await mock_wallet.ping()
       const receipt = await tx.wait()
-      expect(receipt.events![0].event).to.equal('Pong')
+
+      const events = receipt!.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      expect(events![0].eventName).to.equal('Pong')
     })
     it('Should fail to set implementation to address 0', async () => {
       const transaction = {
         target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData(
-          'updateImplementation', [ethers.constants.AddressZero]
-        )
+        data: wallet.mainModule.interface.encodeFunctionData('updateImplementation', [ethers.ZeroAddress])
       }
 
       const tx = wallet.sendTransactions([transaction])
-      await expectToBeRejected(tx, `InvalidImplementation("${ethers.constants.AddressZero}")`)
+      await expectToBeRejected(tx, `InvalidImplementation("${ethers.ZeroAddress}")`)
     })
     it('Should fail to set implementation to non-contract', async () => {
       const transaction = {
         target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData(
-          'updateImplementation', [accounts[1]]
-        )
+        data: wallet.mainModule.interface.encodeFunctionData('updateImplementation', [accounts[1]])
       }
 
       const tx = wallet.sendTransactions([transaction])
       await expectToBeRejected(tx, `InvalidImplementation("${accounts[1]}")`)
     })
     it('Should use implementation storage key', async () => {
-      await wallet.updateImageHash(ethers.utils.randomBytes(32))
+      await wallet.updateImageHash(ethers.randomBytes(32))
 
-      const storageValue = await hethers.provider.getStorageAt(wallet.address, wallet.address)
-      expect(bytes32toAddress(storageValue)).to.equal(context.mainModuleUpgradable.address)
+      const storageValue = await hethers.provider.getStorage(wallet.address, wallet.address)
+      expect(bytes32toAddress(storageValue)).to.equal(await context.mainModuleUpgradable.getAddress())
     })
   })
 
   describe('Extra image hashes', () => {
-    ([{
-      name: 'using MainModule',
-      beforeEach: () => {},
-    }, {
-      name: 'using MainModuleUpgradable',
-      beforeEach: async () => {
-        const newConfig = SequenceWallet.basicWallet(context)
-        await wallet.updateImageHash(newConfig.imageHash)
-        wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+    ;[
+      {
+        name: 'using MainModule',
+        beforeEach: () => {}
+      },
+      {
+        name: 'using MainModuleUpgradable',
+        beforeEach: async () => {
+          const newConfig = SequenceWallet.basicWallet(context)
+          await wallet.updateImageHash(newConfig.imageHash)
+          wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+        }
       }
-    }]).map((c) => {
+    ].map(c => {
       describe(c.name, () => {
         beforeEach(c.beforeEach)
 
@@ -582,8 +638,8 @@ contract('MainModule', (accounts: string[]) => {
             .useConfig({ ...altWallet1.config, address: undefined })
             .useSigners(altWallet1.signers)
 
-          expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.equal(0)
-          expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.equal(0)
+          expect(await wallet.mainModule.extraImageHash(altWallet1.imageHash)).to.equal(0n)
+          expect(await wallet.mainModule.extraImageHash(altWallet2.imageHash)).to.equal(0n)
 
           await expect(badWallet1.sendTransactions([{}])).to.be.rejected
           await expect(badWallet2.sendTransactions([{}])).to.be.rejected
@@ -605,21 +661,24 @@ contract('MainModule', (accounts: string[]) => {
   })
 
   describe('Static merkle digests', () => {
-    ([{
-      name: 'using MainModule',
-      beforeEach: () => {},
-    }, {
-      name: 'using MainModuleUpgradable',
-      beforeEach: async () => {
-        const newConfig = SequenceWallet.basicWallet(context)
-        await wallet.updateImageHash(newConfig.imageHash)
-        wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+    ;[
+      {
+        name: 'using MainModule',
+        beforeEach: () => {}
+      },
+      {
+        name: 'using MainModuleUpgradable',
+        beforeEach: async () => {
+          const newConfig = SequenceWallet.basicWallet(context)
+          await wallet.updateImageHash(newConfig.imageHash)
+          wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+        }
       }
-    }]).map((c) => {
+    ].map(c => {
       describe(c.name, () => {
         it('Should reject proof for another subdigest', async () => {
-          const digests = new Array(2).fill(0).map(() => ethers.utils.hexlify(ethers.utils.randomBytes(32)))
-          const subdigests = digests.map((d) => ({ subdigest: subdigestOf(wallet.address, d, 0) }))
+          const digests = new Array(2).fill(0).map(() => ethers.hexlify(ethers.randomBytes(32)))
+          const subdigests = await Promise.all(digests.map(async d => ({ subdigest: await subdigestOf(wallet.address, d, 0) })))
           const subdigestsMerkle = merkleTopology([...subdigests])
 
           const prevLeaves = leavesOf(wallet.config.topology)
@@ -632,7 +691,7 @@ contract('MainModule', (accounts: string[]) => {
 
           await wallet.sendTransactions([])
 
-          const subdigest = ethers.utils.hexlify(subdigests[0].subdigest)
+          const subdigest = ethers.hexlify(subdigests[0].subdigest)
           const encoded = wallet.staticSubdigestSign(subdigest)
           const res = await wallet.mainModule['isValidSignature(bytes32,bytes)'](digests[1], encoded)
           expect(res).to.equal('0x00000000')
@@ -641,8 +700,8 @@ contract('MainModule', (accounts: string[]) => {
         it('Should accept merkle proof', async () => {
           wallet = SequenceWallet.basicWallet(context, { signing: 10, idle: 11 })
 
-          const digests = new Array(33).fill(0).map(() => ethers.utils.hexlify(ethers.utils.randomBytes(32)))
-          const subdigests = digests.map((d) => ({ subdigest: subdigestOf(wallet.address, d, 0) }))
+          const digests = new Array(33).fill(0).map(() => ethers.hexlify(ethers.randomBytes(32)))
+          const subdigests = await Promise.all(digests.map(async d => ({ subdigest: await subdigestOf(wallet.address, d, 0) })))
           const subdigestsMerkle = merkleTopology([...subdigests])
 
           const prevLeaves = leavesOf(wallet.config.topology)
@@ -656,7 +715,7 @@ contract('MainModule', (accounts: string[]) => {
           await wallet.sendTransactions([])
 
           for (let i = 0; i < subdigests.length; i++) {
-            const subdigest = ethers.utils.hexlify(subdigests[i].subdigest)
+            const subdigest = ethers.hexlify(subdigests[i].subdigest)
             const encoded = wallet.staticSubdigestSign(subdigest)
             const res = await wallet.mainModule['isValidSignature(bytes32,bytes)'](digests[i], encoded)
             expect(res).to.equal('0x1626ba7e')
@@ -672,13 +731,16 @@ contract('MainModule', (accounts: string[]) => {
       const simplifiedConfig = {
         threshold: 1,
         checkpoint: 2,
-        signers: [{
-          address: ethers.Wallet.createRandom().address,
-          weight: 1
-        }, {
-          ...toSimplifiedConfig(nested.config),
-          weight: 1
-        }]
+        signers: [
+          {
+            address: ethers.Wallet.createRandom().address,
+            weight: 1
+          },
+          {
+            ...toSimplifiedConfig(nested.config),
+            weight: 1
+          }
+        ]
       }
 
       const config = {
@@ -696,13 +758,16 @@ contract('MainModule', (accounts: string[]) => {
       const simplifiedConfig = {
         threshold: 5,
         checkpoint: 2,
-        signers: [{
-          ...toSimplifiedConfig(nested.config),
-          weight: 5
-        }, {
-          address: ethers.Wallet.createRandom().address,
-          weight: 1
-        }]
+        signers: [
+          {
+            ...toSimplifiedConfig(nested.config),
+            weight: 5
+          },
+          {
+            address: ethers.Wallet.createRandom().address,
+            weight: 1
+          }
+        ]
       }
 
       const config = {
@@ -721,13 +786,16 @@ contract('MainModule', (accounts: string[]) => {
       const simplifiedConfig = {
         threshold: 1,
         checkpoint: 2,
-        signers: [{
-          ...toSimplifiedConfig(nested.config),
-          weight: 5
-        }, {
-          address: ethers.Wallet.createRandom().address,
-          weight: 1
-        }]
+        signers: [
+          {
+            ...toSimplifiedConfig(nested.config),
+            weight: 5
+          },
+          {
+            address: ethers.Wallet.createRandom().address,
+            weight: 1
+          }
+        ]
       }
 
       const config = {
@@ -747,13 +815,16 @@ contract('MainModule', (accounts: string[]) => {
       const simplifiedConfig = {
         threshold: 2,
         checkpoint: 2,
-        signers: [{
-          ...toSimplifiedConfig(nested.config),
-          weight: 1
-        }, {
-          address: ethers.Wallet.createRandom().address,
-          weight: 1
-        }]
+        signers: [
+          {
+            ...toSimplifiedConfig(nested.config),
+            weight: 1
+          },
+          {
+            address: ethers.Wallet.createRandom().address,
+            weight: 1
+          }
+        ]
       }
 
       const config = {
@@ -770,11 +841,11 @@ contract('MainModule', (accounts: string[]) => {
   })
 
   describe('External calls', () => {
-    let { valA, valB } = { valA: Math.floor(Date.now()), valB: randomHex(120) }
+    let { valA, valB } = { valA: BigInt(Math.floor(Date.now())), valB: randomHex(120) }
 
     it('Should perform call to contract', async () => {
       const transaction = {
-        target: callReceiver.address,
+        target: await callReceiver.getAddress(),
         data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
@@ -786,8 +857,8 @@ contract('MainModule', (accounts: string[]) => {
       await callReceiver.setRevertFlag(true)
 
       const transaction = {
-        target: callReceiver.address,
-        data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
+        target: await callReceiver.getAddress(),
+        data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
       }
 
       const tx = wallet.sendTransactions([transaction])
@@ -795,20 +866,23 @@ contract('MainModule', (accounts: string[]) => {
     })
     describe('Batch transactions', () => {
       let callReceiver2: ContractType<typeof CallReceiverMock>
-      let { val2A, val2B } = { val2A: 9422, val2B: randomHex(31) }
+      let { val2A, val2B } = { val2A: 9422n, val2B: randomHex(31) }
 
       beforeEach(async () => {
         callReceiver2 = await CallReceiverMock.deploy()
       })
 
       it('Should perform multiple calls to contracts in one tx', async () => {
-        const transactions = [{
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
-        }, {
-          target: callReceiver2.address,
-          data: callReceiver2.interface.encodeFunctionData('testCall', [val2A, val2B])
-        }]
+        const transactions = [
+          {
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
+          },
+          {
+            target: await callReceiver2.getAddress(),
+            data: callReceiver2.interface.encodeFunctionData('testCall', [val2A, val2B])
+          }
+        ]
 
         await wallet.sendTransactions(transactions)
         expect(await callReceiver.lastValA()).to.equal(valA)
@@ -818,36 +892,44 @@ contract('MainModule', (accounts: string[]) => {
       })
 
       it('Should perform call a contract and transfer eth in one tx', async () => {
-        await hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
-        const receiver = new ethers.Wallet(ethers.utils.randomBytes(32))
+        const signer = await hethers.provider.getSigner()
+        await signer.sendTransaction({ to: wallet.address, value: 100 })
+        const receiver = new ethers.Wallet(ethers.hexlify(ethers.randomBytes(32)))
 
-        const transactions = [{
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
-        }, {
-          target: receiver.address,
-          value: 26,
-        }]
+        const transactions = [
+          {
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
+          },
+          {
+            target: receiver.address,
+            value: 26
+          }
+        ]
 
         await wallet.sendTransactions(transactions)
 
         expect(await callReceiver.lastValA()).to.equal(valA)
         expect(await callReceiver.lastValB()).to.equal(valB)
-        expect(await hethers.provider.getBalance(receiver.address)).to.equal(26)
+        expect(await hethers.provider.getBalance(receiver.address)).to.equal(26n)
       })
 
       it('Should fail if one transaction fails', async () => {
-        await hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+        const signer = await hethers.provider.getSigner()
+        await signer.sendTransaction({ to: wallet.address, value: 100 })
 
         await callReceiver.setRevertFlag(true)
 
-        const transactions = [{
-          target: ethers.Wallet.createRandom().address,
-          value: 26
-        }, {
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
-        }]
+        const transactions = [
+          {
+            target: ethers.Wallet.createRandom().address,
+            value: 26
+          },
+          {
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
+          }
+        ]
 
         const tx = wallet.sendTransactions(transactions)
         await expect(tx).to.be.rejectedWith('CallReceiverMock#testCall: REVERT_FLAG')
@@ -865,7 +947,7 @@ contract('MainModule', (accounts: string[]) => {
     it('Should delegate call to module', async () => {
       const transaction1 = {
         delegateCall: true,
-        target: delegateCallMock.address,
+        target: await delegateCallMock.getAddress(),
         data: delegateCallMock.interface.encodeFunctionData('write', [11, 45])
       }
 
@@ -873,30 +955,37 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction2 = {
         delegateCall: true,
-        target: delegateCallMock.address,
+        target: await delegateCallMock.getAddress(),
         data: delegateCallMock.interface.encodeFunctionData('read', [11])
       }
 
       const tx = await wallet.sendTransactions([transaction2])
       const receipt = await tx.wait()
-      const val = ethers.BigNumber.from(receipt.logs.slice(-2)[0].data)
-      expect(val).to.equal(45)
+
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const val = BigInt(receipt.logs.slice(-2)[0].data)
+      expect(val).to.equal(45n)
     })
 
     describe('on delegate call revert', () => {
       beforeEach(async () => {
-        await wallet.sendTransactions([{
-          delegateCall: true,
-          target: delegateCallMock.address,
-          data: delegateCallMock.interface.encodeFunctionData('setRevertFlag', [true])
-        }])
+        await wallet.sendTransactions([
+          {
+            delegateCall: true,
+            target: await delegateCallMock.getAddress(),
+            data: delegateCallMock.interface.encodeFunctionData('setRevertFlag', [true])
+          }
+        ])
       })
 
       it('Should pass if revertOnError is false', async () => {
         const transaction = {
           delegateCall: true,
           revertOnError: false,
-          target: delegateCallMock.address,
+          target: await delegateCallMock.getAddress(),
           data: delegateCallMock.interface.encodeFunctionData('write', [11, 45])
         }
 
@@ -906,7 +995,7 @@ contract('MainModule', (accounts: string[]) => {
       it('Should fail if delegate call fails', async () => {
         const transaction = {
           delegateCall: true,
-          target: delegateCallMock.address,
+          target: await delegateCallMock.getAddress(),
           data: delegateCallMock.interface.encodeFunctionData('write', [11, 45])
         }
 
@@ -918,11 +1007,13 @@ contract('MainModule', (accounts: string[]) => {
 
   describe('Handle ETH', () => {
     it('Should receive ETH', async () => {
-      hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 1 })
+      const signer = await hethers.provider.getSigner()
+      signer.sendTransaction({ to: wallet.address, value: 1 })
     })
 
     it('Should transfer ETH', async () => {
-      hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+      const signer = await hethers.provider.getSigner()
+      signer.sendTransaction({ to: wallet.address, value: 100 })
 
       const receiver = ethers.Wallet.createRandom().address
 
@@ -932,24 +1023,25 @@ contract('MainModule', (accounts: string[]) => {
       }
 
       await wallet.sendTransactions([transaction])
-      expect(await hethers.provider.getBalance(receiver)).to.equal(25)
+      expect(await hethers.provider.getBalance(receiver)).to.equal(25n)
     })
 
     it('Should call payable function', async () => {
-      hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+      const signer = await hethers.provider.getSigner()
+      signer.sendTransaction({ to: wallet.address, value: 100 })
 
-      const valA = 63129
+      const valA = 63129n
       const valB = randomHex(120)
-      const value = 33
+      const value = 33n
 
       const transaction = {
-        target: callReceiver.address,
+        target: await callReceiver.getAddress(),
         value: value,
         data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
       }
 
       await wallet.sendTransactions([transaction])
-      expect(await hethers.provider.getBalance(callReceiver.address)).to.equal(value)
+      expect(await hethers.provider.getBalance(await callReceiver.getAddress())).to.equal(value)
       expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
@@ -961,20 +1053,26 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         revertOnError: false,
-        target: callReceiver.address,
-        data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
+        target: await callReceiver.getAddress(),
+        data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
       }
 
-      const receipt = await wallet.sendTransactions([transaction]).then((r) => r.wait())
-      const event = receipt.events!.pop()
+      const receipt = await wallet.sendTransactions([transaction]).then(r => r.wait())
 
-      const reason = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event!.args!._reason.slice(10))[0]
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+      const event = events.pop()
+
+      const reason = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event!.args!._reason.slice(10))[0]
       expect(reason).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
     })
 
     describe('With multiple transactions', () => {
       let callReceiver2: ContractType<typeof CallReceiverMock>
-      const { valA, valB } = { valA: 912341, valB: randomHex(30) }
+      const { valA, valB } = { valA: 912341n, valB: randomHex(30) }
 
       beforeEach(async () => {
         callReceiver2 = await CallReceiverMock.deploy()
@@ -983,20 +1081,29 @@ contract('MainModule', (accounts: string[]) => {
       it('Should skip failing transaction within batch', async () => {
         await callReceiver.setRevertFlag(true)
 
-        const transactions = [{
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
-        }, {
-          revertOnError: false,
-          target: callReceiver2.address,
-          data: callReceiver2.interface.encodeFunctionData('testCall', [valA, valB])
-        }]
+        const transactions = [
+          {
+            revertOnError: false,
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
+          },
+          {
+            revertOnError: false,
+            target: await callReceiver2.getAddress(),
+            data: callReceiver2.interface.encodeFunctionData('testCall', [valA, valB])
+          }
+        ]
 
-        const receipt = await wallet.sendTransactions(transactions).then((r) => r.wait())
-        const event = receipt.events!.find(l => l.event === 'TxFailed')
+        const receipt = await wallet.sendTransactions(transactions).then(r => r.wait())
 
-        const reason = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event!.args!._reason.slice(10))[0]
+        if (!receipt) {
+          throw new Error('No receipt')
+        }
+
+        const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+        const ev = events.find(ev => ev.eventName === 'TxFailed')
+
+        const reason = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + ev!.args!._reason.slice(10))[0]
         expect(reason).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
 
         expect(await callReceiver2.lastValA()).to.equal(valA)
@@ -1006,27 +1113,37 @@ contract('MainModule', (accounts: string[]) => {
       it('Should skip multiple failing transactions within batch', async () => {
         await callReceiver.setRevertFlag(true)
 
-        const transactions = [{
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
-        }, {
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
-        }, {
-          target: callReceiver2.address,
-          data: callReceiver2.interface.encodeFunctionData('testCall', [valA, valB])
-        }]
+        const transactions = [
+          {
+            revertOnError: false,
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
+          },
+          {
+            revertOnError: false,
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
+          },
+          {
+            target: await callReceiver2.getAddress(),
+            data: callReceiver2.interface.encodeFunctionData('testCall', [valA, valB])
+          }
+        ]
 
-        const txHash = subdigestOf(wallet.address, digestOf(transactions, await wallet.getNonce()))
-        const receipt = await wallet.sendTransactions(transactions).then((r) => r.wait())
+        const txHash = await subdigestOf(wallet.address, digestOf(transactions, await wallet.getNonce()))
+        const receipt = await wallet.sendTransactions(transactions).then(r => r.wait())
 
-        const event1 = receipt.events![1]
-        const event2 = receipt.events![2]
+        if (!receipt) {
+          throw new Error('No receipt')
+        }
 
-        const reason1 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event1.args!._reason.slice(10))[0]
-        const reason2 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event2.args!._reason.slice(10))[0]
+        const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+        const event1 = events[1]
+        const event2 = events[2]
+
+        const reason1 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event1.args!._reason.slice(10))[0]
+        const reason2 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event2.args!._reason.slice(10))[0]
 
         expect(reason1).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
         expect(reason2).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
@@ -1041,22 +1158,32 @@ contract('MainModule', (accounts: string[]) => {
       it('Should skip all failing transactions within a batch', async () => {
         await callReceiver.setRevertFlag(true)
 
-        const transactions = [{
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
-        }, {
-          revertOnError: false,
-          target: callReceiver.address,
-          data: callReceiver.interface.encodeFunctionData('testCall', [0, []])
-        }]
+        const transactions = [
+          {
+            revertOnError: false,
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
+          },
+          {
+            revertOnError: false,
+            target: await callReceiver.getAddress(),
+            data: callReceiver.interface.encodeFunctionData('testCall', [0, new Uint8Array([])])
+          }
+        ]
 
-        const receipt = await wallet.sendTransactions(transactions).then((r) => r.wait())
-        const event1 = receipt.events!.pop()
-        const event2 = receipt.events!.pop()
+        const receipt = await wallet.sendTransactions(transactions).then(r => r.wait())
 
-        const reason1 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event1!.args!._reason.slice(10))[0]
-        const reason2 = ethers.utils.defaultAbiCoder.decode(['string'], "0x" + event2!.args!._reason.slice(10))[0]
+        if (!receipt) {
+          throw new Error('No receipt')
+        }
+
+        const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+        const event1 = events.pop()
+        const event2 = events.pop()
+
+        const reason1 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event1!.args!._reason.slice(10))[0]
+        const reason2 = ethers.AbiCoder.defaultAbiCoder().decode(['string'], '0x' + event2!.args!._reason.slice(10))[0]
 
         expect(reason1).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
         expect(reason2).to.equal('CallReceiverMock#testCall: REVERT_FLAG')
@@ -1088,7 +1215,7 @@ contract('MainModule', (accounts: string[]) => {
 
     describe('ERC1271 Wallet', () => {
       let message = randomHex(250)
-      let hash = ethers.utils.keccak256(ethers.utils.randomBytes(32))
+      let hash = ethers.keccak256(ethers.randomBytes(32))
 
       it('Should validate arbitrary signed data', async () => {
         const signature = await wallet.signMessage(message)
@@ -1121,30 +1248,31 @@ contract('MainModule', (accounts: string[]) => {
 
       before(async () => {
         hookMock = await HookMock.deploy()
-        hookSelector = hookMock.interface.getSighash('onHookMockCall')
+        const fragment = hookMock.interface.getFunction('onHookMockCall')
+        hookSelector = getSigHash(fragment)
       })
 
       it('Should return zero if hook is not registered', async () => {
-        expect(await wallet.mainModule.readHook(hookSelector)).to.be.equal(ethers.constants.AddressZero)
+        expect(await wallet.mainModule.readHook(hookSelector)).to.be.equal(ethers.ZeroAddress)
       })
 
       describe('With registered hook', () => {
         beforeEach(async () => {
           const transaction = {
             target: wallet.address,
-            data: wallet.mainModule.interface.encodeFunctionData('addHook', [hookSelector, hookMock.address])
+            data: wallet.mainModule.interface.encodeFunctionData('addHook', [hookSelector, await hookMock.getAddress()])
           }
 
           await wallet.sendTransactions([transaction])
         })
 
         it('Should read added hook', async () => {
-          expect(await wallet.mainModule.readHook(hookSelector)).to.be.equal(hookMock.address)
+          expect(await wallet.mainModule.readHook(hookSelector)).to.be.equal(await hookMock.getAddress())
         })
 
         it('Should forward call to external hook', async () => {
           const walletHook = HookMock.attach(wallet.address)
-          expect(await walletHook.onHookMockCall(21)).to.equal(42)
+          expect(await walletHook.onHookMockCall(21)).to.equal(42n)
         })
 
         it('Should not forward call to deregistered hook', async () => {
@@ -1160,46 +1288,49 @@ contract('MainModule', (accounts: string[]) => {
         })
 
         it('Should use hooks storage key', async () => {
-          const subkey = ethers.utils.defaultAbiCoder.encode(['bytes4'], [hookSelector])
+          const subkey = ethers.AbiCoder.defaultAbiCoder().encode(['bytes4'], [hookSelector])
           const storageKey = computeStorageKey('org.arcadeum.module.hooks.hooks', subkey)
 
-          const storageValue = await hethers.provider.getStorageAt(wallet.address, storageKey)
+          const storageValue = await hethers.provider.getStorage(wallet.address, storageKey)
 
           const addr = (() => {
             try {
-              return ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], storageValue)[0])
+              return ethers.getAddress(ethers.AbiCoder.defaultAbiCoder().decode(['address'], storageValue)[0])
             } catch {
-              return ethers.utils.getAddress(storageValue)
+              return ethers.getAddress(storageValue)
             }
           })()
 
-          expect(addr).to.equal(hookMock.address)
+          expect(addr).to.equal(await hookMock.getAddress())
         })
       })
 
       it('Should pass calling a non registered hook', async () => {
-        const data = ethers.utils.defaultAbiCoder.encode(['bytes4'], [hookSelector])
-        await hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: data })
+        const data = ethers.AbiCoder.defaultAbiCoder().encode(['bytes4'], [hookSelector])
+        const signer = await hethers.provider.getSigner()
+        await signer.sendTransaction({ to: wallet.address, data: data })
       })
     })
 
     it('Should not forward msg.data with less than 4 bytes', async () => {
       const alwaysRevertMock = await AlwaysRevertMock.deploy()
-      const paddedSelector = "0x11223300"
+      const paddedSelector = '0x11223300'
 
       const transaction = {
         target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData('addHook', [paddedSelector, alwaysRevertMock.address])
+        data: wallet.mainModule.interface.encodeFunctionData('addHook', [paddedSelector, await alwaysRevertMock.getAddress()])
       }
 
       await wallet.sendTransactions([transaction])
 
+      const signer = await hethers.provider.getSigner()
+
       // Calling the wallet with '0x112233' should not forward the call to the hook
-      const tx = hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: "0x112233" }).then((t) => t.wait())
+      const tx = signer.sendTransaction({ to: wallet.address, data: '0x112233' }).then(t => t.wait())
       await expect(tx).to.be.fulfilled
 
       // Calling the wallet with '0x11223300' should forward the call to the hook (and thus revert)
-      const tx2 = hethers.provider.getSigner().sendTransaction({ to: wallet.address, data: "0x11223300" }).then((t) => t.wait())
+      const tx2 = signer.sendTransaction({ to: wallet.address, data: '0x11223300' }).then(t => t.wait())
       await expect(tx2).to.be.rejected
     })
 
@@ -1212,12 +1343,17 @@ contract('MainModule', (accounts: string[]) => {
         data: wallet.mainModule.interface.encodeFunctionData('addHook', [selector, implementation])
       }
 
-      const receipt = await wallet.sendTransactions([transaction]).then((t) => t.wait())
-      const event = receipt.events?.find((e) => e.event === 'DefinedHook')
+      const receipt = await wallet.sendTransactions([transaction]).then(t => t.wait())
+
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+      const event = events.find(ev => ev.eventName === 'DefinedHook')
       expect(event).to.not.be.undefined
-      const decode = event!.decode!(event!.data)
-      expect(decode._signature).to.equal(selector)
-      expect(decode._implementation).to.equal(implementation)
+      expect(event!.args._signature).to.equal(selector)
+      expect(event!.args._implementation).to.equal(implementation)
     })
 
     it('Should emit an event when removing a hook', async () => {
@@ -1228,23 +1364,25 @@ contract('MainModule', (accounts: string[]) => {
         target: wallet.address,
         data: wallet.mainModule.interface.encodeFunctionData('addHook', [selector, implementation])
       }
-      
 
-      await wallet.sendTransactions([transaction1]).then((t) => t.wait())
+      await wallet.sendTransactions([transaction1]).then(t => t.wait())
 
       const transaction2 = {
         target: wallet.address,
         data: wallet.mainModule.interface.encodeFunctionData('removeHook', [selector])
       }
-      
 
-      const receipt = await wallet.sendTransactions([transaction2]).then((t) => t.wait())
+      const receipt = await wallet.sendTransactions([transaction2]).then(t => t.wait())
 
-      const event = receipt.events?.find((e) => e.event === 'DefinedHook')
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+      const event = events.find(ev => ev.eventName === 'DefinedHook')
       expect(event).to.not.be.undefined
-      const decode = event!.decode!(event!.data)
-      expect(decode._signature).to.equal(selector)
-      expect(decode._implementation).to.equal(ethers.constants.AddressZero)
+      expect(event?.args._signature).to.equal(selector)
+      expect(event?.args._implementation).to.equal(ethers.ZeroAddress)
     })
   })
 
@@ -1256,12 +1394,12 @@ contract('MainModule', (accounts: string[]) => {
     })
 
     it('Should fail to update to invalid image hash', async () => {
-      const tx = wallet.updateImageHash(ethers.constants.HashZero)
+      const tx = wallet.updateImageHash(ethers.ZeroHash)
       await expectToBeRejected(tx, 'ImageHashIsZero()')
     })
 
     it('Should fail to change image hash from non-self address', async () => {
-      const tx = wallet.mainModule.updateImageHash(ethers.utils.randomBytes(32))
+      const tx = wallet.mainModule.updateImageHash(ethers.randomBytes(32))
       await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${wallet.address}")`)
     })
 
@@ -1284,19 +1422,19 @@ contract('MainModule', (accounts: string[]) => {
       })
 
       it('Should fail to update to invalid image hash', async () => {
-        const tx = walletb.updateImageHash(ethers.constants.HashZero)
+        const tx = walletb.updateImageHash(ethers.ZeroHash)
         await expectToBeRejected(tx, 'ImageHashIsZero()')
       })
 
       it('Should fail to change image hash from non-self address', async () => {
-        const tx = wallet.mainModuleUpgradable.updateImageHash(ethers.utils.randomBytes(32))
+        const tx = wallet.mainModuleUpgradable.updateImageHash(ethers.randomBytes(32))
         await expectToBeRejected(tx, `OnlySelfAuth("${accounts[0]}", "${wallet.address}")`)
       })
 
       it('Should use image hash storage key', async () => {
         const storageKey = computeStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
-        const storageValue = await hethers.provider.getStorageAt(wallet.address, storageKey)
-        expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(walletb.imageHash)
+        const storageValue = await hethers.provider.getStorage(wallet.address, storageKey)
+        expect(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32'], [storageValue])).to.equal(walletb.imageHash)
       })
 
       it('Should fail to execute transactions on moduleUpgradable implementation', async () => {
@@ -1327,29 +1465,34 @@ contract('MainModule', (accounts: string[]) => {
 
         it('Should use image hash storage key', async () => {
           const storageKey = computeStorageKey('org.arcadeum.module.auth.upgradable.image.hash')
-          const storageValue = await hethers.provider.getStorageAt(walletb.address, storageKey)
-          expect(ethers.utils.defaultAbiCoder.encode(['bytes32'], [storageValue])).to.equal(walletc.imageHash)
+          const storageValue = await hethers.provider.getStorage(walletb.address, storageKey)
+          expect(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32'], [storageValue])).to.equal(walletc.imageHash)
         })
       })
     })
   })
 
   describe('Multisignature', async () => {
-    const modes = [{
-      name: "Forced dynamic part encoding, legacy signature type",
-      encodingOptions: { forceDynamicEncoding: true, signatureType: SignatureType.Legacy }
-    }, {
-      name: "Default part encoding, legacy signature encoding",
-      encodingOptions: { signatureType: SignatureType.Legacy }
-    }, {
-      name: "Forced dynamic part encoding, dynamic signature type",
-      encodingOptions: { forceDynamicEncoding: true, signatureType: SignatureType.Dynamic }
-    }, {
-      name: "Default part encoding, dynamic signature type",
-      encodingOptions: { signatureType: SignatureType.Legacy }
-    }]
+    const modes = [
+      {
+        name: 'Forced dynamic part encoding, legacy signature type',
+        encodingOptions: { forceDynamicEncoding: true, signatureType: SignatureType.Legacy }
+      },
+      {
+        name: 'Default part encoding, legacy signature encoding',
+        encodingOptions: { signatureType: SignatureType.Legacy }
+      },
+      {
+        name: 'Forced dynamic part encoding, dynamic signature type',
+        encodingOptions: { forceDynamicEncoding: true, signatureType: SignatureType.Dynamic }
+      },
+      {
+        name: 'Default part encoding, dynamic signature type',
+        encodingOptions: { signatureType: SignatureType.Legacy }
+      }
+    ]
 
-    modes.map((mode) => {
+    modes.map(mode => {
       describe(mode.name, () => {
         let encodingOptions = mode.encodingOptions
 
@@ -1437,7 +1580,11 @@ contract('MainModule', (accounts: string[]) => {
           let signer3 = ethers.Wallet.createRandom()
 
           beforeEach(async () => {
-            wallet = SequenceWallet.detailedWallet(context, { threshold: 2, signers: [signer1, signer2, signer3], encodingOptions })
+            wallet = SequenceWallet.detailedWallet(context, {
+              threshold: 2,
+              signers: [signer1, signer2, signer3],
+              encodingOptions
+            })
             await wallet.deploy()
           })
 
@@ -1493,7 +1640,9 @@ contract('MainModule', (accounts: string[]) => {
           })
 
           it('Should reject message if signed with a wrong configuration', async () => {
-            const tx = wallet.useConfig(SequenceWallet.detailedWallet(context, { threshold: 3, signers: [signer1, signer2] })).sendTransactions([{}])
+            const tx = wallet
+              .useConfig(SequenceWallet.detailedWallet(context, { threshold: 3, signers: [signer1, signer2] }))
+              .sendTransactions([{}])
             await expect(tx).to.be.rejected
           })
         })
@@ -1529,28 +1678,26 @@ contract('MainModule', (accounts: string[]) => {
 
           it('Should reject message signed by all non-owners', async () => {
             const tx = wallet
-            .useSigners(wallet.signers.map((s) => Imposter.random(s as ethers.Wallet)))
-            .sendTransactions([{}], undefined, { gasLimit: 60000000 })
+              .useSigners(wallet.signers.map(s => Imposter.random(s as ethers.Wallet)))
+              .sendTransactions([{}], undefined, { gasLimit: 60000000 })
 
             await expect(tx).to.be.rejected
           })
 
           it('Should reject message missing a signature', async () => {
-            const tx = wallet
-            .useSigners(wallet.signers.slice(1))
-            .sendTransactions([{}], undefined, { gasLimit: 60000000 })
+            const tx = wallet.useSigners(wallet.signers.slice(1)).sendTransactions([{}], undefined, { gasLimit: 60000000 })
             await expect(tx).to.be.rejected
           })
         })
 
         describe('With weighted owners', () => {
-          let signers: ethers.Wallet[]
+          let signers: ethers.BaseWallet[]
 
           beforeEach(async () => {
             signers = new Array(5).fill(null).map(() => ethers.Wallet.createRandom())
             wallet = SequenceWallet.detailedWallet(context, {
               threshold: 4,
-              signers: ([3, 3, 1, 1, 1]).map((weight, i) => ({ weight, value: signers[i] }))
+              signers: [3, 3, 1, 1, 1].map((weight, i) => ({ weight, value: signers[i] }))
             })
             await wallet.deploy()
           })
@@ -1572,7 +1719,7 @@ contract('MainModule', (accounts: string[]) => {
           })
 
           it('Should reject signed message with (1)/4 weight', async () => {
-            const tx =  wallet.useSigners([signers[3]]).sendTransactions([{}])
+            const tx = wallet.useSigners([signers[3]]).sendTransactions([{}])
             await expect(tx).to.be.rejected
           })
 
@@ -1597,41 +1744,44 @@ contract('MainModule', (accounts: string[]) => {
           })
 
           it('Should reject message signed by non-owner', async () => {
-            const tx =  wallet.useSigners([signers[0], Imposter.random(signers[3])]).sendTransactions([{}])
-            await expect(tx).to.be.rejected
-        })
-
-        describe('Reject invalid signatures', () => {
-          beforeEach(async () => {
-            wallet = SequenceWallet.basicWallet(context, { encodingOptions })
-            await wallet.deploy()
-          })
-
-          it("Should reject invalid signature type", async () => {
-            const signature = await wallet.signTransactions([{}])
-            const badSignature = signature.slice(0, -2) + 'ff'
-            const tx = wallet.relayTransactions([{}], badSignature)
+            const tx = wallet.useSigners([signers[0], Imposter.random(signers[3])]).sendTransactions([{}])
             await expect(tx).to.be.rejected
           })
 
-          it("Should reject invalid s value", async () => {
-            const signature = await wallet.signTransactions([{}])
-            const prefix = mode.encodingOptions.forceDynamicEncoding ? 118 : 74
-            const invalidSignature = signature.slice(0, prefix) + "7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a1" + signature.slice(prefix + 64)
-            const tx = wallet.relayTransactions([{}], invalidSignature)
-            await expect(tx).to.be.reverted
-          })
+          describe('Reject invalid signatures', () => {
+            beforeEach(async () => {
+              wallet = SequenceWallet.basicWallet(context, { encodingOptions })
+              await wallet.deploy()
+            })
 
-          it("Should reject invalid v value", async () => {
-            const signature = await wallet.signTransactions([{}])
-            const prefix = mode.encodingOptions.forceDynamicEncoding ? 182 : 138
-            const invalidSignature = signature.slice(0, prefix) + "1a" + signature.slice(prefix + 2)
-            const tx = wallet.relayTransactions([{}], invalidSignature)
-            await expect(tx).to.be.reverted
+            it('Should reject invalid signature type', async () => {
+              const signature = await wallet.signTransactions([{}])
+              const badSignature = signature.slice(0, -2) + 'ff'
+              const tx = wallet.relayTransactions([{}], badSignature)
+              await expect(tx).to.be.rejected
+            })
+
+            it('Should reject invalid s value', async () => {
+              const signature = await wallet.signTransactions([{}])
+              const prefix = mode.encodingOptions.forceDynamicEncoding ? 118 : 74
+              const invalidSignature =
+                signature.slice(0, prefix) +
+                '7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a1' +
+                signature.slice(prefix + 64)
+              const tx = wallet.relayTransactions([{}], invalidSignature)
+              await expect(tx).to.be.reverted
+            })
+
+            it('Should reject invalid v value', async () => {
+              const signature = await wallet.signTransactions([{}])
+              const prefix = mode.encodingOptions.forceDynamicEncoding ? 182 : 138
+              const invalidSignature = signature.slice(0, prefix) + '1a' + signature.slice(prefix + 2)
+              const tx = wallet.relayTransactions([{}], invalidSignature)
+              await expect(tx).to.be.reverted
+            })
           })
         })
       })
-    })
     })
   })
 
@@ -1647,12 +1797,17 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         gasLimit: gas,
-        target: gasBurner.address,
+        target: await gasBurner.getAddress(),
         data: gasBurner.interface.encodeFunctionData('burnGas', [0])
       }
 
-      const receipt = await wallet.sendTransactions([transaction]).then((t) => t.wait())
-      const reported = ethers.BigNumber.from(receipt.logs.slice(-2)[0].data)
+      const receipt = await wallet.sendTransactions([transaction]).then(t => t.wait())
+
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const reported = Number(BigInt(receipt.logs.slice(-2)[0].data))
       expect(reported).to.be.below(gas)
     })
 
@@ -1660,20 +1815,27 @@ contract('MainModule', (accounts: string[]) => {
       const gasA = 10000
       const gasB = 350000
 
-      const transactions = [{
-        gasLimit: gasA,
-        target: gasBurner.address,
-        data: gasBurner.interface.encodeFunctionData('burnGas', [8000])
-      }, {
-        gasLimit: gasB,
-        target: gasBurner.address,
-        data: gasBurner.interface.encodeFunctionData('burnGas', [340000])
-      }]
+      const transactions = [
+        {
+          gasLimit: gasA,
+          target: await gasBurner.getAddress(),
+          data: gasBurner.interface.encodeFunctionData('burnGas', [8000])
+        },
+        {
+          gasLimit: gasB,
+          target: await gasBurner.getAddress(),
+          data: gasBurner.interface.encodeFunctionData('burnGas', [340000])
+        }
+      ]
 
-      const receipt = await wallet.sendTransactions(transactions).then((t) => t.wait())
+      const receipt = await wallet.sendTransactions(transactions).then(t => t.wait())
 
-      const reportedB = ethers.BigNumber.from(receipt.logs.slice(-2)[0].data)
-      const reportedA = ethers.BigNumber.from(receipt.logs.slice(-4)[0].data)
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const reportedB = Number(BigInt(receipt.logs.slice(-2)[0].data))
+      const reportedA = Number(BigInt(receipt.logs.slice(-4)[0].data))
 
       expect(reportedA).to.be.below(gasA)
       expect(reportedB).to.be.below(gasB)
@@ -1685,7 +1847,7 @@ contract('MainModule', (accounts: string[]) => {
 
       const transaction = {
         gasLimit: gas,
-        target: gasBurner.address,
+        target: await gasBurner.getAddress(),
         data: gasBurner.interface.encodeFunctionData('burnGas', [11000])
       }
 
@@ -1699,36 +1861,52 @@ contract('MainModule', (accounts: string[]) => {
       const transaction = {
         revertOnError: false,
         gasLimit: gas,
-        target: gasBurner.address,
+        target: await gasBurner.getAddress(),
         data: gasBurner.interface.encodeFunctionData('burnGas', [200000])
       }
 
-      const receipt = await wallet.sendTransactions([transaction]).then((t) => t.wait())
-      const log = receipt.events!.pop()
-      expect(log!.event).to.be.equal('TxFailed')
+      const receipt = await wallet.sendTransactions([transaction]).then(t => t.wait())
+
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      const log = events.pop()
+      expect(log!.eventName).to.be.equal('TxFailed')
     })
 
     it('Should continue execution if optional call runs out of gas', async () => {
       const gas = 10000
 
-      const valA = 9512358833
+      const valA = 9512358833n
       const valB = randomHex(1600)
 
-      const transactions = [{
-        revertOnError: false,
-        gasLimit: gas,
-        target: gasBurner.address,
-        data: gasBurner.interface.encodeFunctionData('burnGas', [200000])
-      }, {
-        revertOnError: true,
-        target: callReceiver.address,
-        data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
-      }]
+      const transactions = [
+        {
+          revertOnError: false,
+          gasLimit: gas,
+          target: await gasBurner.getAddress(),
+          data: gasBurner.interface.encodeFunctionData('burnGas', [200000])
+        },
+        {
+          revertOnError: true,
+          target: await callReceiver.getAddress(),
+          data: callReceiver.interface.encodeFunctionData('testCall', [valA, valB])
+        }
+      ]
 
-      const receipt = await wallet.sendTransactions(transactions).then((t) => t.wait())
-      const log = receipt.events!.slice(-2)[0]
+      const receipt = await wallet.sendTransactions(transactions).then(t => t.wait())
 
-      expect(log.event).to.be.equal('TxFailed')
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      const log = events.slice(-2)[0]
+
+      expect(log.eventName).to.be.equal('TxFailed')
       expect(await callReceiver.lastValA()).to.equal(valA)
       expect(await callReceiver.lastValB()).to.equal(valB)
     })
@@ -1752,22 +1930,30 @@ contract('MainModule', (accounts: string[]) => {
         data: wallet.mainModule.interface.encodeFunctionData('createContract', [deployCode])
       }
 
-      const receipt = await wallet.sendTransactions([transaction]).then((t) => t.wait())
-      const log = receipt.events!.find(l => l.event === 'CreatedContract')
+      const receipt = await wallet.sendTransactions([transaction]).then(t => t.wait())
 
-      expect(log!.event).to.equal('CreatedContract')
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      const log = events!.find(l => l.eventName === 'CreatedContract')
+
+      expect(log!.eventName).to.equal('CreatedContract')
 
       const deployed = CallReceiverMock.attach(log!.args!._contract)
       await deployed.testCall(12345, '0x552299')
 
-      expect(await deployed.lastValA()).to.equal(12345)
+      expect(await deployed.lastValA()).to.equal(12345n)
       expect(await deployed.lastValB()).to.equal('0x552299')
     })
 
     it('Should create a contract with value', async () => {
       const deployCode = CallReceiverMock.factory().bytecode
 
-      await hethers.provider.getSigner().sendTransaction({ to: wallet.address, value: 100 })
+      const signer = await hethers.provider.getSigner()
+      await signer.sendTransaction({ to: wallet.address, value: 100 })
 
       const transaction = {
         target: wallet.address,
@@ -1775,10 +1961,17 @@ contract('MainModule', (accounts: string[]) => {
         data: wallet.mainModule.interface.encodeFunctionData('createContract', [deployCode])
       }
 
-      const receipt = await wallet.sendTransactions([transaction]).then((t) => t.wait())
-      const log = receipt.events!.find(l => l.event === 'CreatedContract')
+      const receipt = await wallet.sendTransactions([transaction]).then(t => t.wait())
 
-      expect(await hethers.provider.getBalance(log!.args!._contract)).to.equal(99)
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      const log = events!.find(l => l.eventName === 'CreatedContract')
+
+      expect(await hethers.provider.getBalance(log!.args!._contract)).to.equal(99n)
     })
 
     it('Should fail to create a contract from non-self', async () => {
@@ -1789,30 +1982,41 @@ contract('MainModule', (accounts: string[]) => {
 
   describe('Transaction events', () => {
     it('Should emit TxExecuted event', async () => {
-      const txHash = subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
-      const receipt = await wallet.sendTransactions([{}]).then((t) => t.wait())
+      const txHash = await subdigestOf(wallet.address, digestOf([{}], await wallet.getNonce()))
+      const res = await wallet.sendTransactions([{}])
+      const receipt = await res.wait()
 
-      const log = receipt.events!.find(l => l.event === 'TxExecuted')!
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
+
+      const events = receipt.logs.filter(log => log instanceof ethers.EventLog) as ethers.EventLog[]
+
+      const log = events!.find(l => l.eventName === 'TxExecuted')!
 
       expect(log.topics.length).to.equal(2)
       expect(log.topics[1]).to.be.equal(txHash)
-      expect(log.data).to.be.equal(ethers.utils.solidityPack(['uint256'], [0]))
+      expect(log.data).to.be.equal(ethers.solidityPacked(['uint256'], [0]))
     })
 
     it('Should emit multiple TxExecuted events', async () => {
-      const txHash = subdigestOf(wallet.address, digestOf([{}, {}], await wallet.getNonce()))
-      const receipt = await wallet.sendTransactions([{}, {}]).then((t) => t.wait())
+      const txHash = await subdigestOf(wallet.address, digestOf([{}, {}], await wallet.getNonce()))
+      const receipt = await wallet.sendTransactions([{}, {}]).then(t => t.wait())
+
+      if (!receipt) {
+        throw new Error('No receipt')
+      }
 
       const log1 = receipt.logs[1]
       const log2 = receipt.logs[2]
 
       expect(log1.topics.length).to.equal(2)
       expect(log1.topics[1]).to.be.equal(txHash)
-      expect(log1.data).to.be.equal(ethers.utils.solidityPack(['uint256'], [0]))
+      expect(log1.data).to.be.equal(ethers.solidityPacked(['uint256'], [0]))
 
       expect(log2.topics.length).to.equal(2)
       expect(log1.topics[1]).to.be.equal(txHash)
-      expect(log2.data).to.be.equal(ethers.utils.solidityPack(['uint256'], [1]))
+      expect(log2.data).to.be.equal(ethers.solidityPacked(['uint256'], [1]))
     })
   })
 
@@ -1823,23 +2027,28 @@ contract('MainModule', (accounts: string[]) => {
       const expected1 = randomHex(552)
       const expected2 = randomHex(24)
 
-      const bundle = [{
-        target: callReceiver.address,
-        data: callReceiver.interface.encodeFunctionData('testCall', [11, expected1])
-      }, {
-        target: callReceiver2.address,
-        data: callReceiver2.interface.encodeFunctionData('testCall', [12, expected2])
-      }]
+      const bundle = [
+        {
+          target: await callReceiver.getAddress(),
+          data: callReceiver.interface.encodeFunctionData('testCall', [11, expected1])
+        },
+        {
+          target: await callReceiver2.getAddress(),
+          data: callReceiver2.interface.encodeFunctionData('testCall', [12, expected2])
+        }
+      ]
 
-      const transaction = [{
-        target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(bundle)])
-      }]
+      const transaction = [
+        {
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(bundle)])
+        }
+      ]
 
       await wallet.sendTransactions(transaction)
 
-      expect(await callReceiver.lastValA()).to.equal(11)
-      expect(await callReceiver2.lastValA()).to.equal(12)
+      expect(await callReceiver.lastValA()).to.equal(11n)
+      expect(await callReceiver2.lastValA()).to.equal(12n)
 
       expect(await callReceiver.lastValB()).to.equal(expected1)
       expect(await callReceiver2.lastValB()).to.equal(expected2)
@@ -1848,28 +2057,34 @@ contract('MainModule', (accounts: string[]) => {
     it('Should execute multiple internal bundles', async () => {
       const data = [
         [
-          { i: 0, a: 142, b: 412 },
-          { i: 1, a: 123, b: 2 }
+          { i: 0, a: 142n, b: 412 },
+          { i: 1, a: 123n, b: 2 }
         ],
         [
-          { i: 2, a: 142, b: 2 },
-          { i: 3, a: 642, b: 33 },
-          { i: 4, a: 122, b: 12 },
-          { i: 5, a: 611, b: 53 }
+          { i: 2, a: 142n, b: 2 },
+          { i: 3, a: 642n, b: 33 },
+          { i: 4, a: 122n, b: 12 },
+          { i: 5, a: 611n, b: 53 }
         ],
-        [{ i: 6, a: 2, b: 1 }],
+        [{ i: 6, a: 2n, b: 1 }],
         []
       ]
 
-      const contracts = await Promise.all((data).flat().map(() => CallReceiverMock.deploy()))
-      const expectedb = await Promise.all((data).flat().map((d) => randomHex(d.b)))
+      const contracts = await Promise.all(data.flat().map(() => CallReceiverMock.deploy()))
+      const expectedb = await Promise.all(data.flat().map(d => randomHex(d.b)))
 
-      const bundles = data.map(bundle => {
-        return applyTxDefaults(bundle.map(obj => ({
-          target: contracts[obj.i].address,
-          data: contracts[obj.i].interface.encodeFunctionData('testCall', [obj.a, expectedb[obj.i]])
-        })))
-      })
+      const bundles = await Promise.all(
+        data.map(async bundle => {
+          return applyTxDefaults(
+            await Promise.all(
+              bundle.map(async obj => ({
+                target: await contracts[obj.i].getAddress(),
+                data: contracts[obj.i].interface.encodeFunctionData('testCall', [obj.a, expectedb[obj.i]])
+              }))
+            )
+          )
+        })
+      )
 
       const transactions = bundles.map(bundle => ({
         target: wallet.address,
@@ -1878,8 +2093,8 @@ contract('MainModule', (accounts: string[]) => {
 
       await wallet.sendTransactions(transactions)
 
-      const lastValsA = await Promise.all(contracts.map((c) => c.lastValA()))
-      const lastValsB = await Promise.all(contracts.map((c) => c.lastValB()))
+      const lastValsA = await Promise.all(contracts.map(c => c.lastValA()))
+      const lastValsB = await Promise.all(contracts.map(c => c.lastValB()))
 
       lastValsA.forEach((val, i) => expect(val).to.equal(data.flat()[i].a))
       lastValsB.forEach((val, i) => expect(val).to.equal(expectedb[i]))
@@ -1891,28 +2106,35 @@ contract('MainModule', (accounts: string[]) => {
       const expected1 = randomHex(552)
       const expected2 = randomHex(24)
 
-      const bundle = [{
-        target: callReceiver.address,
-        data: callReceiver.interface.encodeFunctionData('testCall', [11, expected1])
-      }, {
-        target: callReceiver2.address,
-        data: callReceiver2.interface.encodeFunctionData('testCall', [12, expected2])
-      }]
+      const bundle = [
+        {
+          target: await callReceiver.getAddress(),
+          data: callReceiver.interface.encodeFunctionData('testCall', [11, expected1])
+        },
+        {
+          target: await callReceiver2.getAddress(),
+          data: callReceiver2.interface.encodeFunctionData('testCall', [12, expected2])
+        }
+      ]
 
-      const nestedBundle = [{
-        target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(bundle)])
-      }]
+      const nestedBundle = [
+        {
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(bundle)])
+        }
+      ]
 
-      const transactions = [{
-        target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(nestedBundle)])
-      }]
+      const transactions = [
+        {
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(nestedBundle)])
+        }
+      ]
 
       await wallet.sendTransactions(transactions)
 
-      expect(await callReceiver.lastValA()).to.equal(11)
-      expect(await callReceiver2.lastValA()).to.equal(12)
+      expect(await callReceiver.lastValA()).to.equal(11n)
+      expect(await callReceiver2.lastValA()).to.equal(12n)
 
       expect(await callReceiver.lastValB()).to.equal(expected1)
       expect(await callReceiver2.lastValB()).to.equal(expected2)
@@ -1926,66 +2148,75 @@ contract('MainModule', (accounts: string[]) => {
       const expected2 = randomHex(24)
       const expected3 = randomHex(11)
 
-      const bundle = [{
-        target: callReceiver.address,
-        data: callReceiver.interface.encodeFunctionData('testCall', [11, expected1])
-      }, {
-        target: callReceiver2.address,
-        data: callReceiver2.interface.encodeFunctionData('testCall', [12, expected2])
-      }, {
-        // This transaction will revert
-        // because Factory has no fallback
-        revertOnError: true,
-        target: context.factory.address,
-        data: callReceiver.interface.encodeFunctionData('testCall', [12, expected2])
-      }]
+      const bundle = [
+        {
+          target: await callReceiver.getAddress(),
+          data: callReceiver.interface.encodeFunctionData('testCall', [11, expected1])
+        },
+        {
+          target: await callReceiver2.getAddress(),
+          data: callReceiver2.interface.encodeFunctionData('testCall', [12, expected2])
+        },
+        {
+          // This transaction will revert
+          // because Factory has no fallback
+          revertOnError: true,
+          target: await context.factory.getAddress(),
+          data: callReceiver.interface.encodeFunctionData('testCall', [12, expected2])
+        }
+      ]
 
-      const transaction = [{
-        revertOnError: false,
-        target: wallet.address,
-        data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(bundle)])
-      }, {
-        revertOnError: false,
-        target: callReceiver3.address,
-        data: callReceiver3.interface.encodeFunctionData('testCall', [51, expected3])
-      }]
+      const transaction = [
+        {
+          revertOnError: false,
+          target: wallet.address,
+          data: wallet.mainModule.interface.encodeFunctionData('selfExecute', [applyTxDefaults(bundle)])
+        },
+        {
+          revertOnError: false,
+          target: await callReceiver3.getAddress(),
+          data: callReceiver3.interface.encodeFunctionData('testCall', [51, expected3])
+        }
+      ]
 
       await wallet.sendTransactions(transaction)
 
-      expect(await callReceiver.lastValA()).to.equal(0)
-      expect(await callReceiver2.lastValA()).to.equal(0)
-      expect(await callReceiver3.lastValA()).to.equal(51)
+      expect(await callReceiver.lastValA()).to.equal(0n)
+      expect(await callReceiver2.lastValA()).to.equal(0n)
+      expect(await callReceiver3.lastValA()).to.equal(51n)
 
-      expect(await callReceiver.lastValB()).to.equal("0x")
-      expect(await callReceiver2.lastValB()).to.equal("0x")
+      expect(await callReceiver.lastValB()).to.equal('0x')
+      expect(await callReceiver2.lastValB()).to.equal('0x')
       expect(await callReceiver3.lastValB()).to.equal(expected3)
     })
   })
 
   describe('Update imageHash and IPFS at once', () => {
-    ([{
-      name: 'using MainModule',
-      beforeEach: () => {},
-    }, {
-      name: 'using MainModuleUpgradable',
-      beforeEach: async () => {
-        const newConfig = SequenceWallet.basicWallet(context)
-        await wallet.updateImageHash(newConfig.imageHash)
-        wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+    ;[
+      {
+        name: 'using MainModule',
+        beforeEach: () => {}
+      },
+      {
+        name: 'using MainModuleUpgradable',
+        beforeEach: async () => {
+          const newConfig = SequenceWallet.basicWallet(context)
+          await wallet.updateImageHash(newConfig.imageHash)
+          wallet = wallet.useAddress().useConfig(newConfig.config).useSigners(newConfig.signers)
+        }
       }
-    }]).map((c) => {
+    ].map(c => {
       describe(c.name, () => {
         it('Should update imageHash and IPFS at the same time', async () => {
           const ipfs = randomHex(32)
           const imageHash = randomHex(32)
 
-          await wallet.sendTransactions([{
-            target: wallet.address,
-            data: wallet.mainModule.interface.encodeFunctionData(
-              'updateImageHashAndIPFS',
-              [imageHash, ipfs]
-            )
-          }])
+          await wallet.sendTransactions([
+            {
+              target: wallet.address,
+              data: wallet.mainModule.interface.encodeFunctionData('updateImageHashAndIPFS', [imageHash, ipfs])
+            }
+          ])
 
           expect(await wallet.mainModuleUpgradable.imageHash()).to.equal(imageHash)
           expect(await wallet.mainModule.ipfsRootBytes32()).to.equal(ipfs)
@@ -2000,13 +2231,12 @@ contract('MainModule', (accounts: string[]) => {
           const nextWallet = SequenceWallet.basicWallet(context)
           const ipfs = randomHex(32)
 
-          await wallet.sendTransactions([{
-            target: wallet.address,
-            data: wallet.mainModule.interface.encodeFunctionData(
-              'updateImageHashAndIPFS',
-              [nextWallet.imageHash, ipfs]
-            )
-          }])
+          await wallet.sendTransactions([
+            {
+              target: wallet.address,
+              data: wallet.mainModule.interface.encodeFunctionData('updateImageHashAndIPFS', [nextWallet.imageHash, ipfs])
+            }
+          ])
 
           wallet = wallet.useAddress(wallet.address).useConfig(nextWallet.config).useSigners(nextWallet.signers)
           await wallet.sendTransactions([{}])

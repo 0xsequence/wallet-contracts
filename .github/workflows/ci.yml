@@ -7,7 +7,7 @@ jobs:
     name: Benchmark
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/install-dependencies
       - run: pnpm build
       - run: pnpm benchmark
@@ -16,7 +16,7 @@ jobs:
     name: Typescript lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/install-dependencies
       - run: pnpm lint:ts
 
@@ -53,12 +53,12 @@ jobs:
     name: Huff tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Install Huff
-        uses: huff-language/huff-toolchain@v2
+        uses: huff-language/huff-toolchain@v3
         with:
           version: nightly
 
@@ -79,7 +79,7 @@ jobs:
           version: nightly
 
       - name: Install Huff
-        uses: huff-language/huff-toolchain@v2
+        uses: huff-language/huff-toolchain@v3
         with:
           version: nightly
 
@@ -90,7 +90,7 @@ jobs:
     name: Foundry tests (long arrays)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -100,7 +100,7 @@ jobs:
           version: nightly
 
       - name: Install Huff
-        uses: huff-language/huff-toolchain@v2
+        uses: huff-language/huff-toolchain@v3
         with:
           version: nightly
 
