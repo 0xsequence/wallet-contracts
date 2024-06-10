@@ -211,8 +211,7 @@ export class SequenceWallet {
       return
     }
 
-    await this.options.context.factory.deploy(await this.options.context.mainModule.getAddress(), this.imageHash)
-    return this.options.context.factory.waitForDeployment()
+    return await this.options.context.factory.deploy(await this.options.context.mainModule.getAddress(), this.imageHash)
   }
 
   async getNonce(space: ethers.BigNumberish = 0) {
