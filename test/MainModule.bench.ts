@@ -34,20 +34,9 @@ contract('MainModule', () => {
       ;(this as any).timeout(0)
 
       it('Deploy a wallet', async () => {
-        const results: ethers.BigNumberish[] = []
-
         for (let i = 0; i < runs; i++) {
-          const tx = await SequenceWallet.basicWallet(context).deploy()
-          const receipt = await tx?.wait()
-
-          if (!receipt) {
-            throw new Error('No receipt')
-          }
-
-          results.push(receipt.gasUsed)
+          await SequenceWallet.basicWallet(context).deploy()
         }
-
-        report('deploy wallets', results)
       })
 
       it('Relay 1/1 transaction', async () => {
