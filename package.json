@@ -26,9 +26,11 @@
   },
   "types": "gen/typechain/index.ts",
   "files": [
+    "./LICENSE",
+    "./artifacts/contracts/**/*.json",
     "./contracts/**/*.sol",
-    "!**/*Mock*",
-    "./gen/typechain"
+    "./gen/typechain",
+    "./networks"
   ],
   "husky": {
     "hooks": {
