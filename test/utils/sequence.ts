@@ -1,16 +1,16 @@
-import { BigNumberish, BytesLike, ethers, Wallet } from "ethers"
-import { CHAIN_ID } from "."
+import { BigNumberish, BytesLike, ethers, Wallet } from 'ethers'
+import { getChainId } from '.'
 
 export const WALLET_CODE = '0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3'
 
 export enum SignatureType {
   Legacy = 0,
   Dynamic = 1,
-  NoChaindDynamic = 2,
+  NoChaindDynamic = 2
 }
 
 export type SignerLeaf = {
-  address: string,
+  address: string
   weight: BigNumberish
 }
 
@@ -19,48 +19,47 @@ export type SubdigestLeaf = {
 }
 
 export type NestedLeaf = {
-  tree: ConfigTopology,
-  internalThreshold: BigNumberish,
-  externalWeight: BigNumberish,
+  tree: ConfigTopology
+  internalThreshold: BigNumberish
+  externalWeight: BigNumberish
 }
 
 export type ConfigLeaf = SubdigestLeaf | SignerLeaf | NestedLeaf
 
 export type ImageHashNode = {
-  left: ConfigTopology,
+  left: ConfigTopology
   right: ConfigTopology
 }
 
 export type ConfigTopology = ImageHashNode | ConfigLeaf
 
 export type WalletConfig = {
-  threshold: ethers.BigNumberish,
-  checkpoint: ethers.BigNumberish,
+  threshold: ethers.BigNumberish
+  checkpoint: ethers.BigNumberish
   topology: ConfigTopology
 }
 
 export type SimplifiedNestedWalletConfig = {
-  threshold: ethers.BigNumberish,
-  weight: ethers.BigNumberish,
+  threshold: ethers.BigNumberish
+  weight: ethers.BigNumberish
   signers: SimplifiedConfigMember[]
 }
 
 export type SimplifiedWalletConfig = {
-  threshold: BigNumberish,
-  checkpoint: BigNumberish,
+  threshold: BigNumberish
+  checkpoint: BigNumberish
   signers: SimplifiedConfigMember[]
 }
-
 
 export type SimplifiedConfigMember = SignerLeaf | SimplifiedNestedWalletConfig
 
 export type Transaction = {
-  delegateCall: boolean;
-  revertOnError: boolean;
-  gasLimit: BigNumberish;
-  target: string;
-  value: BigNumberish;
-  data: BytesLike;
+  delegateCall: boolean
+  revertOnError: boolean
+  gasLimit: BigNumberish
+  target: string
+  value: BigNumberish
+  data: BytesLike
 }
 
 export enum SignaturePartType {
@@ -74,9 +73,9 @@ export enum SignaturePartType {
 }
 
 export type SignaturePart = {
-  address: string;
-  type: SignaturePartType;
-  signature?: string;
+  address: string
+  type: SignaturePartType
+  signature?: string
 }
 
 export function applyTxDefault(
@@ -87,19 +86,16 @@ export function applyTxDefault(
     gasLimit: 0,
     target: '0xFb8356E7deB64034aBE2b2a8A732634f77A2DAE4', // Random address
     value: 0,
-    data: []
+    data: new Uint8Array([])
   }
 ): Transaction {
   return {
     ...def,
-    ...tx,
+    ...tx
   }
 }
 
-export function applyTxDefaults(
-  tx: Partial<Transaction>[],
-  def?: Transaction
-): Transaction[] {
+export function applyTxDefaults(tx: Partial<Transaction>[], def?: Transaction): Transaction[] {
   return tx.map(t => applyTxDefault(t, def))
 }
 
@@ -196,14 +192,13 @@ export function leavesOf(topology: ConfigTopology): ConfigLeaf[] {
     return [topology]
   }
 
-  return [
-    ...leavesOf(topology.left),
-    ...leavesOf(topology.right)
-  ]
+  return [...leavesOf(topology.left), ...leavesOf(topology.right)]
 }
 
 export function subdigestLeaves(topology: ConfigTopology): string[] {
-  return leavesOf(topology).filter((l) => isSubdigestLeaf(l)).map((l: SubdigestLeaf) => l.subdigest)
+  return leavesOf(topology)
+    .filter(l => isSubdigestLeaf(l))
+    .map((l: SubdigestLeaf) => l.subdigest)
 }
 
 export function toSimplifiedConfig(config: WalletConfig): SimplifiedWalletConfig {
@@ -225,33 +220,22 @@ export function hashNode(node: ConfigTopology): string {
   }
 
   if (isSubdigestLeaf(node)) {
-    return ethers.utils.solidityKeccak256(
-      ['string', 'bytes32'],
-      ['Sequence static digest:\n', node.subdigest]
-    )
+    return ethers.solidityPackedKeccak256(['string', 'bytes32'], ['Sequence static digest:\n', node.subdigest])
   }
 
   if (isNestedLeaf(node)) {
-    return ethers.utils.solidityKeccak256(
+    return ethers.solidityPackedKeccak256(
       ['string', 'bytes32', 'uint256', 'uint256'],
       ['Sequence nested config:\n', hashNode(node.tree), node.internalThreshold, node.externalWeight]
     )
   }
 
-  return ethers.utils.solidityKeccak256(
-    ['bytes32', 'bytes32'],
-    [hashNode(node.left), hashNode(node.right)]
-  )
+  return ethers.solidityPackedKeccak256(['bytes32', 'bytes32'], [hashNode(node.left), hashNode(node.right)])
 }
 
 export function imageHash2(threshold: ethers.BigNumberish, topology: ConfigTopology): string {
   const root = hashNode(topology)
-  return ethers.utils.keccak256(
-    ethers.utils.solidityPack(
-      ['bytes32', 'uint256'],
-      [root, threshold]
-    )
-  )
+  return ethers.keccak256(ethers.solidityPacked(['bytes32', 'uint256'], [root, threshold]))
 }
 
 export function printTopology(topology: ConfigTopology, threshold?: ethers.BigNumberish, inverse = false): string[] {
@@ -293,7 +277,7 @@ export function printTopology(topology: ConfigTopology, threshold?: ethers.BigNu
   let printRight = printTopology(topology.right, undefined, inverse)
 
   if (inverse) {
-    ([printLeft, printRight] = [printRight, printLeft])
+    ;[printLeft, printRight] = [printRight, printLeft]
   }
 
   const result = [`${root}`]
@@ -311,86 +295,59 @@ export function printTopology(topology: ConfigTopology, threshold?: ethers.BigNu
 }
 
 export function addressOf(factory: string, firstModule: string, imageHash: string): string {
-  const codeHash = ethers.utils.keccak256(
-    ethers.utils.solidityPack(
-      ['bytes', 'bytes32'],
-      [WALLET_CODE, ethers.utils.hexZeroPad(firstModule, 32)]
-    )
+  const codeHash = ethers.keccak256(
+    ethers.solidityPacked(['bytes', 'bytes32'], [WALLET_CODE, ethers.zeroPadValue(firstModule, 32)])
   )
 
-  const hash = ethers.utils.keccak256(
-    ethers.utils.solidityPack(
-      ['bytes1', 'address', 'bytes32', 'bytes32'],
-      ['0xff', factory, imageHash, codeHash]
-    )
+  const hash = ethers.keccak256(
+    ethers.solidityPacked(['bytes1', 'address', 'bytes32', 'bytes32'], ['0xff', factory, imageHash, codeHash])
   )
 
-  return ethers.utils.getAddress(ethers.utils.hexDataSlice(hash, 12))
+  return ethers.getAddress(ethers.dataSlice(hash, 12))
 }
 
 export function encodeNonce(space: BigNumberish, nonce: BigNumberish) {
-  return ethers.BigNumber.from(ethers.utils.solidityPack(['uint160', 'uint96'], [space, nonce]))
+  return BigInt(ethers.solidityPacked(['uint160', 'uint96'], [space, nonce]))
 }
 
 export function leafForAddressAndWeight(address: string, weight: ethers.BigNumberish) {
-  return ethers.utils.solidityPack(
-    ['uint96', 'address'],
-    [weight, address]
-  )
+  return ethers.solidityPacked(['uint96', 'address'], [weight, address])
 }
 
 export function imageHash(config: WalletConfig): string {
   const signersRoot = hashNode(config.topology)
 
-  const preImageHash = ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
-      ['bytes32', 'uint256'],
-      [signersRoot, config.threshold]
-    )
+  const preImageHash = ethers.keccak256(
+    ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'uint256'], [signersRoot, config.threshold])
   )
 
-  return ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
-      ['bytes32', 'uint256'],
-      [preImageHash, config.checkpoint]
-    )
-  )
+  return ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'uint256'], [preImageHash, config.checkpoint]))
 }
 
 export function digestOf(txs: Partial<Transaction>[], nonce: ethers.BigNumberish) {
-  return ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
-      ['uint256', MetaTransactionsSolidityType],
-      [nonce, applyTxDefaults(txs)]
-    )
+  return ethers.keccak256(
+    ethers.AbiCoder.defaultAbiCoder().encode(['uint256', MetaTransactionsSolidityType], [nonce, applyTxDefaults(txs)])
   )
 }
 
-export function subdigestOf(wallet: string, digest: ethers.BytesLike, chainId: ethers.BigNumberish = CHAIN_ID()) {
-  return ethers.utils.keccak256(
-    ethers.utils.solidityPack(
-      ['string', 'uint256', 'address', 'bytes32'],
-      ['\x19\x01', chainId, wallet, digest]
-    )
+export async function subdigestOf(wallet: string, digest: ethers.BytesLike, chainId?: ethers.BigNumberish) {
+  chainId = chainId ?? (await getChainId())
+  return ethers.keccak256(
+    ethers.solidityPacked(['string', 'uint256', 'address', 'bytes32'], ['\x19\x01', chainId, wallet, digest])
   )
 }
 
 export function computeStorageKey(key: string, subkey?: string): string {
   if (!subkey) {
-    return ethers.utils.id(key)
+    return ethers.id(key)
   }
 
-  return ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
-      ['bytes32', 'bytes32'],
-      [computeStorageKey(key), subkey]
-    )
-  )
+  return ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'bytes32'], [computeStorageKey(key), subkey]))
 }
 
 export type EncodingOptions = {
-  forceDynamicEncoding?: boolean,
-  signatureType?: SignatureType,
+  forceDynamicEncoding?: boolean
+  signatureType?: SignatureType
   disableTrim?: boolean
 }
 
@@ -410,11 +367,11 @@ function leftSlice(topology: ConfigTopology): ConfigTopology[] {
 }
 
 type DecodedSignatureMember = {
-  weight?: ethers.BigNumberish,
-  address?: string,
-  type: SignaturePartType,
-  value?: string,
-  innerThreshold?: ethers.BigNumberish,
+  weight?: ethers.BigNumberish
+  address?: string
+  type: SignaturePartType
+  value?: string
+  innerThreshold?: ethers.BigNumberish
 }
 
 export class SignatureConstructor {
@@ -440,35 +397,34 @@ export class SignatureConstructor {
     if (first.type !== SignaturePartType.Address && first.type !== SignaturePartType.Node) return
     if (second.type !== SignaturePartType.Address && second.type !== SignaturePartType.Node) return
 
-    const firstNode = first.type === SignaturePartType.Address ? leafForAddressAndWeight(first.address!, first.weight!) : first.value
-    const secondNode = second.type === SignaturePartType.Address ? leafForAddressAndWeight(second.address!, second.weight!) : second.value
+    const firstNode =
+      first.type === SignaturePartType.Address ? leafForAddressAndWeight(first.address!, first.weight!) : first.value
+    const secondNode =
+      second.type === SignaturePartType.Address ? leafForAddressAndWeight(second.address!, second.weight!) : second.value
 
-    const nextNode = ethers.utils.keccak256(
-      ethers.utils.solidityPack(
-        ['bytes32', 'bytes32'],
-        [firstNode, secondNode]
-      )
-    )
+    const nextNode = ethers.keccak256(ethers.solidityPacked(['bytes32', 'bytes32'], [firstNode, secondNode]))
 
-    this.members = [{
-      type: SignaturePartType.Node,
-      value: nextNode
-    }]
+    this.members = [
+      {
+        type: SignaturePartType.Node,
+        value: nextNode
+      }
+    ]
   }
 
   appendPart(weight: ethers.BigNumberish, part: SignaturePart) {
     switch (part.type) {
       case SignaturePartType.Address:
         this.members.push({ weight, address: part.address, type: SignaturePartType.Address })
-        break;
+        break
 
       case SignaturePartType.Signature:
         this.members.push({ weight, address: part.address, type: SignaturePartType.Signature, value: part.signature })
-        break;
+        break
 
       case SignaturePartType.Dynamic:
         this.members.push({ weight, address: part.address, type: SignaturePartType.Dynamic, value: part.signature })
-        break;
+        break
 
       default:
         throw new Error(`Unknown signature part type: ${part.type}`)
@@ -487,7 +443,7 @@ export class SignatureConstructor {
   }
 
   appendSubdigest(subdigest: string) {
-    this.members.push({ type: SignaturePartType.Subdigest, value: subdigest})
+    this.members.push({ type: SignaturePartType.Subdigest, value: subdigest })
   }
 
   appendNested(branch: string, weight: ethers.BigNumberish, innerThreshold: ethers.BigNumberish) {
@@ -500,52 +456,46 @@ export class SignatureConstructor {
     for (const member of this.members) {
       switch (member.type) {
         case SignaturePartType.Address:
-          result = ethers.utils.solidityPack(
+          result = ethers.solidityPacked(
             ['bytes', 'uint8', 'uint8', 'address'],
             [result, SignaturePartType.Address, member.weight, member.address]
           )
-          break;
+          break
 
         case SignaturePartType.Signature:
-          result = ethers.utils.solidityPack(
+          result = ethers.solidityPacked(
             ['bytes', 'uint8', 'uint8', 'bytes'],
             [result, SignaturePartType.Signature, member.weight, member.value]
           )
-          break;
+          break
 
         case SignaturePartType.Dynamic:
-          const signature = ethers.utils.arrayify(member.value ?? [])
-          result = ethers.utils.solidityPack(
+          const signature = ethers.getBytes(member.value ?? new Uint8Array([]))
+          result = ethers.solidityPacked(
             ['bytes', 'uint8', 'uint8', 'address', 'uint24', 'bytes'],
             [result, SignaturePartType.Dynamic, member.weight, member.address, signature.length, signature]
           )
-          break;
+          break
 
         case SignaturePartType.Node:
-          result = ethers.utils.solidityPack(
-            ['bytes', 'uint8', 'bytes32'],
-            [result, SignaturePartType.Node, member.value]
-          )
-          break;
+          result = ethers.solidityPacked(['bytes', 'uint8', 'bytes32'], [result, SignaturePartType.Node, member.value])
+          break
 
         case SignaturePartType.Branch:
-          const branch = ethers.utils.arrayify(member.value ?? [])
-          result = ethers.utils.solidityPack(
+          const branch = ethers.getBytes(member.value ?? new Uint8Array([]))
+          result = ethers.solidityPacked(
             ['bytes', 'uint8', 'uint24', 'bytes'],
             [result, SignaturePartType.Branch, branch.length, branch]
           )
           break
 
         case SignaturePartType.Subdigest:
-          result = ethers.utils.solidityPack(
-            ['bytes', 'uint8', 'bytes32'],
-            [result, SignaturePartType.Subdigest, member.value]
-          )
+          result = ethers.solidityPacked(['bytes', 'uint8', 'bytes32'], [result, SignaturePartType.Subdigest, member.value])
           break
 
         case SignaturePartType.Nested:
-          const nestedBranch = ethers.utils.arrayify(member.value ?? [])
-          result = ethers.utils.solidityPack(
+          const nestedBranch = ethers.getBytes(member.value ?? new Uint8Array([]))
+          result = ethers.solidityPacked(
             ['bytes', 'uint8', 'uint8', 'uint16', 'uint24', 'bytes'],
             [result, SignaturePartType.Nested, member.weight, member.innerThreshold, nestedBranch.length, nestedBranch]
           )
@@ -565,7 +515,7 @@ export function encodeSigners(
   parts: SignaturePart[] | Map<string, SignaturePart>,
   subdigests: string[],
   options?: EncodingOptions
-): { encoded: string, weight: ethers.BigNumber } {
+): { encoded: string; weight: bigint } {
   // Map part to signers
   if (Array.isArray(parts)) {
     const partOfSigner = new Map<string, SignaturePart>()
@@ -576,7 +526,7 @@ export function encodeSigners(
   }
 
   const slice = leftSlice(topology)
-  let weight = ethers.constants.Zero
+  let weight = 0n
 
   const constructor = new SignatureConstructor(options?.disableTrim)
   for (const node of slice) {
@@ -585,18 +535,18 @@ export function encodeSigners(
       // we recurse the encoding, and if the result has any weight
       // we have to embed the whole branch, otherwise we just add the node
       const nested = encodeSigners(node, parts, subdigests, options)
-      if (nested.weight.isZero() && !options?.disableTrim) {
+      if (nested.weight === 0n && !options?.disableTrim) {
         constructor.appendNode(hashNode(node))
       } else {
         constructor.appendBranch(nested.encoded)
-        weight = weight.add(nested.weight)
+        weight = weight + nested.weight
       }
     } else {
       if (isSignerLeaf(node)) {
         // If the node is a signer leaf, we can just add the member
         const part = parts.get(node.address) ?? { type: SignaturePartType.Address, address: node.address }
         if (part.type !== SignaturePartType.Address) {
-          weight = weight.add(node.weight)
+          weight = weight + BigInt(node.weight)
         }
 
         constructor.appendPart(node.weight, part)
@@ -605,13 +555,13 @@ export function encodeSigners(
         // we recurse the encoding, and if the result has any weight
         // we have to embed the whole branch, otherwise we just add the node
         const nested = encodeSigners(node.tree, parts, subdigests, options)
-        if (nested.weight.isZero() && !options?.disableTrim) {
+        if (nested.weight === 0n && !options?.disableTrim) {
           constructor.appendNode(hashNode(node))
         } else {
           // Nested configs only have weight if the inner threshold is met
           // and the weight is always the external weight
-          if (nested.weight.gte(node.internalThreshold)) {
-            weight = weight.add(node.externalWeight)
+          if (nested.weight >= BigInt(node.internalThreshold)) {
+            weight = weight + BigInt(node.externalWeight)
           }
 
           constructor.appendNested(nested.encoded, node.externalWeight, node.internalThreshold)
@@ -619,7 +569,7 @@ export function encodeSigners(
       } else {
         // If the node is a subdigest add the node (unless it's an static subdigest signature)
         if (subdigests.includes(node.subdigest)) {
-          weight = weight.add(ethers.BigNumber.from(2).pow(256).sub(1))
+          weight += 2n ** 256n - 1n
           constructor.appendSubdigest(node.subdigest)
         } else {
           constructor.appendNode(hashNode(node))
@@ -644,18 +594,18 @@ export function encodeSignature(
 
   switch (options?.signatureType || SignatureType.Legacy) {
     case SignatureType.Dynamic:
-      return ethers.utils.solidityPack(
+      return ethers.solidityPacked(
         ['uint8', 'uint16', 'uint32', 'bytes'],
         [SignatureType.Dynamic, config.threshold, config.checkpoint, encodedSigners.encoded]
       )
     case SignatureType.NoChaindDynamic:
-      return ethers.utils.solidityPack(
+      return ethers.solidityPacked(
         ['uint8', 'uint16', 'uint32', 'bytes'],
         [SignatureType.NoChaindDynamic, config.threshold, config.checkpoint, encodedSigners.encoded]
       )
     default:
     case SignatureType.Legacy:
-      return ethers.utils.solidityPack(
+      return ethers.solidityPacked(
         ['uint8', 'uint8', 'uint32', 'bytes'],
         [SignatureType.Legacy, config.threshold, config.checkpoint, encodedSigners.encoded]
       )

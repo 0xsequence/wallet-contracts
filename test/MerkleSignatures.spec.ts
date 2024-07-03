@@ -1,8 +1,7 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { deploySequenceContext, SequenceContext } from './utils/contracts'
 import { legacyTopology, merkleTopology, printTopology, toSimplifiedConfig } from './utils/sequence'
 import { SequenceWallet } from './utils/wallet'
-
 
 contract('MerkleSignatures', () => {
   let context: SequenceContext
@@ -11,7 +10,7 @@ contract('MerkleSignatures', () => {
     context = await deploySequenceContext()
   })
 
-  it("Should display config topology", async () => {
+  it('Should display config topology', async () => {
     const wallet = SequenceWallet.basicWallet(context, { signing: 10 })
     const simplifiedConfig = toSimplifiedConfig(wallet.config)
     const topology1 = legacyTopology(simplifiedConfig)
