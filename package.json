@@ -42,6 +42,7 @@
     "@nomiclabs/hardhat-truffle5": "^2.0.7",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@tenderly/hardhat-tenderly": "^1.0.11",
+    "@types/chai": "^4.3.16",
     "@types/chai-as-promised": "^7.1.0",
     "@types/chai-string": "^1.4.1",
     "@types/mocha": "^8.2.1",

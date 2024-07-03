@@ -33,6 +33,9 @@ importers:
       '@tenderly/hardhat-tenderly':
         specifier: ^1.0.11
         version: 1.0.11(hardhat@2.20.1(bufferutil@4.0.8)(ts-node@10.9.1(@types/node@20.11.20)(typescript@4.7.4))(typescript@4.7.4)(utf-8-validate@5.0.10))
+      '@types/chai':
+        specifier: ^4.3.16
+        version: 4.3.16
       '@types/chai-as-promised':
         specifier: ^7.1.0
         version: 7.1.0
@@ -708,8 +711,8 @@ packages:
   '@types/chai-string@1.4.1':
     resolution: {integrity: sha512-aRNMs6TKgjgPlCHwDfq/YNy5VtRR2hJ4AUWByddrT0TRVVD8eX4MiHW6/iHvmQHRlVuuPZcwnTUE7b4yFt7bEA==}
 
-  '@types/chai@4.3.12':
-    resolution: {integrity: sha512-zNKDHG/1yxm8Il6uCCVsm+dRdEsJlFoDu73X17y09bId6UwoYww+vFBsAcRzl8knM1sab3Dp1VRikFQwDOtDDw==}
+  '@types/chai@4.3.16':
+    resolution: {integrity: sha512-PatH4iOdyh3MyWtmHVFXLWCCIhUbopaltqddG9BzB+gMIzee2MJrvd+jouii9Z3wzQJruGWAm7WOMjgfG8hQlQ==}
 
   '@types/concat-stream@1.6.1':
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
@@ -6451,7 +6454,7 @@ snapshots:
     dependencies:
       '@nomiclabs/hardhat-web3': 2.0.0(hardhat@2.20.1(bufferutil@4.0.8)(ts-node@10.9.1(@types/node@20.11.20)(typescript@4.7.4))(typescript@4.7.4)(utf-8-validate@5.0.10))(web3@1.10.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
       '@nomiclabs/truffle-contract': 4.5.10(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(web3-core-helpers@1.10.4)(web3-core-promievent@1.10.4)(web3-eth-abi@1.10.4)(web3-utils@1.10.4)(web3@1.10.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
-      '@types/chai': 4.3.12
+      '@types/chai': 4.3.16
       chai: 4.3.4
       ethereumjs-util: 7.1.5
       fs-extra: 7.0.1
@@ -6751,13 +6754,13 @@ snapshots:
 
   '@types/chai-as-promised@7.1.0':
     dependencies:
-      '@types/chai': 4.3.12
+      '@types/chai': 4.3.16
 
   '@types/chai-string@1.4.1':
     dependencies:
-      '@types/chai': 4.3.12
+      '@types/chai': 4.3.16
 
-  '@types/chai@4.3.12': {}
+  '@types/chai@4.3.16': {}
 
   '@types/concat-stream@1.6.1':
     dependencies:
