@@ -158,4 +158,24 @@ library LibBytesPointer {
       newPointer := add(_pointer, 32)
     }
   }
+
+  /**
+   * @notice Returns the uint256 value at the given index in the input data and updates the pointer.
+   * @param _data The input data.
+   * @param _pointer The index of the value to retrieve.
+   * @return a The uint256 value at the given index.
+   * @return newPointer The new pointer.
+   */
+  function readUint256(
+    bytes calldata _data,
+    uint256 _pointer
+  ) internal pure returns (
+    uint256 a,
+    uint256 newPointer
+  ) {
+    assembly {
+      a := calldataload(add(_pointer, _data.offset))
+      newPointer := add(_pointer, 32)
+    }
+  }
 }

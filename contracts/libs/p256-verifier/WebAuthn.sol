@@ -20,7 +20,8 @@ library WebAuthn {
   /// https://www.w3.org/TR/webauthn-2/#sctn-verifying-assertion.
   function checkAuthFlags(
     bytes1 flags,
-    bool requireUserVerification
+    bool requireUserVerification,
+    bool requireBackupSanityCheck
   ) internal pure returns (bool) {
     // 17. Verify that the UP bit of the flags in authData is set.
     if (flags & AUTH_DATA_FLAGS_UP != AUTH_DATA_FLAGS_UP) {
@@ -37,11 +38,13 @@ library WebAuthn {
       return false;
     }
 
-    // 19. If the BE bit of the flags in authData is not set, verify that
-    // the BS bit is not set.
-    if (flags & AUTH_DATA_FLAGS_BE != AUTH_DATA_FLAGS_BE) {
-      if (flags & AUTH_DATA_FLAGS_BS == AUTH_DATA_FLAGS_BS) {
-        return false;
+    // // 19. If the BE bit of the flags in authData is not set, verify that
+    // // the BS bit is not set.
+    if (requireBackupSanityCheck) {
+      if (flags & AUTH_DATA_FLAGS_BE != AUTH_DATA_FLAGS_BE) {
+        if (flags & AUTH_DATA_FLAGS_BS == AUTH_DATA_FLAGS_BS) {
+          return false;
+        }
       }
     }
 
@@ -102,6 +105,7 @@ library WebAuthn {
     bytes memory challenge,
     bytes memory authenticatorData,
     bool requireUserVerification,
+    bool requireBackupSanityCheck,
     string memory clientDataJSON,
     uint256 challengeLocation,
     uint256 responseTypeLocation,
@@ -113,7 +117,7 @@ library WebAuthn {
     // Check that authenticatorData has good flags
     if (
       authenticatorData.length < 37 ||
-      !checkAuthFlags(authenticatorData[32], requireUserVerification)
+      !checkAuthFlags(authenticatorData[32], requireUserVerification, requireBackupSanityCheck)
     ) {
       return false;
     }
@@ -137,9 +141,8 @@ library WebAuthn {
     }
 
     // Check that the public key signed sha256(authenticatorData || sha256(clientDataJSON))
-    bytes32 clientDataJSONHash = sha256(bytes(clientDataJSON));
     bytes32 messageHash = sha256(
-      abi.encodePacked(authenticatorData, clientDataJSONHash)
+      abi.encodePacked(authenticatorData, sha256(bytes(clientDataJSON)))
     );
 
     return P256.verifySignature(messageHash, r, s, x, y);
