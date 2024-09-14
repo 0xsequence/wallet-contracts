@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.18;
+pragma solidity ^0.8.18;
 
 import "./commons/gas-estimation/ModuleIgnoreAuthUpgradable.sol";
 import "./commons/gas-estimation/ModuleIgnoreNonceCalls.sol";
