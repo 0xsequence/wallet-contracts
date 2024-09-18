@@ -46,7 +46,7 @@ contract ModuleCallsImp is ModuleCalls {
   }
 }
 
-contract SubModuleNonceTest is AdvTest {
+contract RequireUtilsTest is AdvTest {
   ModuleCallsImp private imp;
   RequireUtils private requireUtils;
   ERC20Mock private erc20;
