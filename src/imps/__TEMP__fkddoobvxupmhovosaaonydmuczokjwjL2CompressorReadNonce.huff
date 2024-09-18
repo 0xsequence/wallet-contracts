@@ -1,0 +1,32 @@
+
+
+#include "../L2CompressorLib.huff"
+
+#define constant FMS = 0xa0
+
+// Function Dispatching
+#define macro MAIN() = takes (1) returns (1) {
+  // readAdvanced with whatever calldata is passed
+  // first 32 bytes returns the new rindex and the next 32 bytes returns the new windex
+
+  0x00          // [rindex]
+  [FMS]         // [windex, rindex]
+
+  READ_NONCE_STANDALONE()   // [windex, rindex]
+
+  [FMS]         // [0xa0, windex, rindex]
+  dup2          // [windex, 0xa0, windex, rindex]
+  sub           // [len, windex, rindex]
+
+  swap2         // [rindex, windex, len]
+
+  0x80 [FMS] sub mstore   // [windex, len]
+  0x60 [FMS] sub mstore   // [len]
+
+  0x60 0x40 [FMS] sub mstore  // [len]
+  dup1 0x20 [FMS] sub mstore  // [len]
+
+  0x80 add      // [len + 0x80]
+
+  0x80 [FMS] sub return
+}

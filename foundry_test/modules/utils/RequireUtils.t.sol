@@ -40,7 +40,7 @@ contract RequireUtilsTest is AdvTest {
   ERC20Mock private erc20;
   ERC721Mock private erc721;
   ERC1155Mock private erc1155;
-
+  
   function setUp() external {
     requireUtils = new RequireUtils();
     ModuleCallsImp template = new ModuleCallsImp();
