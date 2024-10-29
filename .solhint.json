@@ -14,6 +14,8 @@
     "func-order": "off",
     "imports-on-top": "off",
     "ordering": "off",
+    "no-empty-blocks": "off",
+    "avoid-low-level-calls": "off",
     "no-global-import": "off",
     "no-unused-vars": "error",
     "not-rely-on-time": "off",

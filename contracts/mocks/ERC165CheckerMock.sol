@@ -3,8 +3,8 @@ pragma solidity 0.8.19;
 
 
 contract ERC165CheckerMock {
-  bytes4 constant InvalidID = 0xffffffff;
-  bytes4 constant ERC165ID = 0x01ffc9a7;
+  bytes4 private constant InvalidID = 0xffffffff;
+  bytes4 public constant ERC165ID = 0x01ffc9a7;
 
   function doesContractImplementInterface(address _contract, bytes4 _interfaceId) external view returns (bool) {
     uint256 success;

@@ -6,7 +6,7 @@ contract CallReceiverMock {
   uint256 public lastValA;
   bytes public lastValB;
 
-  bool revertFlag;
+  bool private revertFlag;
 
   constructor() payable { }
 

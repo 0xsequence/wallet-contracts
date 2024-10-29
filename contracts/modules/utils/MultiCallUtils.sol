@@ -76,6 +76,7 @@ contract MultiCallUtils {
   }
 
   function callOrigin() external view returns (address) {
+    // solhint-disable-next-line avoid-tx-origin
     return tx.origin;
   }
 
