@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "license": "Apache-2.0",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "build": "yarn compile && yarn adapter",
     "compile": "hardhat --max-memory 4096 compile",
