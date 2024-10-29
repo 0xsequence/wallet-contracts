@@ -11,11 +11,11 @@ contract LibStringImp {
     return LibString.contains(_a, _b, _l);
   }
 
-  function prefixHexadecimal(string memory _a) external pure returns (bool) {
+  function prefixHexadecimal(string memory _a) external pure returns (string memory) {
     return LibString.prefixHexadecimal(_a);
   }
 
-  function prefixBase32(string memory _a) external pure returns (bool) {
+  function prefixBase32(string memory _a) external pure returns (string memory) {
     return LibString.prefixBase32(_a);
   }
 
