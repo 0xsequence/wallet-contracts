@@ -124,6 +124,13 @@ contract ModuleExtraAuthTest is AdvTest {
     uint256 sizeSet = mayBoundArr(_set.length);
     uint256 sizeClear = mayBoundArr(_clear.length);
 
+    // Ensure no duplicate hashes
+    for (uint256 i = 0; i < sizeSet; i++) {
+      for (uint256 j = i + 1; j < sizeSet; j++) {
+        vm.assume(_set[i].imageHash != _set[j].imageHash);
+      }
+    }
+
     imp.setValidImageHash(_base, true);
 
     vm.startPrank(address(imp));
