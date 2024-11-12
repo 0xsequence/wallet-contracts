@@ -41,7 +41,7 @@ your own custom wallet, or perhaps a CLI tool for managing your wallet.
 ### V2 Audits
 
 - [Consensys Diligence](https://github.com/0xsequence/wallet-contracts/blob/master/audits/v2/consensys-horizon-sequence-wallet-audit-2023-02.pdf) - February 2023
-- [Zellic](https://github.com/0xsequence/wallet-contracts/raw/master/audits/Quantstamp_Arcadeum_Report_Final.pdf) - March 2023
+- [Zellic](https://github.com/0xsequence/wallet-contracts/blob/master/audits/v2/Sequence%20Wallet%20-%20Zellic%20Audit%20Report.pdf) - March 2023
 
 ### V1 Audits
 
